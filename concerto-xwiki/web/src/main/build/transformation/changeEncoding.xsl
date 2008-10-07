@@ -22,25 +22,17 @@
  *
 -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>com.xpn.xwiki.platform.applications</groupId>
-    <artifactId>xwiki-applications</artifactId>
-    <version>14</version>
-  </parent>
-  <groupId>org.xwiki.concerto</groupId>
-  <artifactId>xwiki-application-xwootManager</artifactId>
-  <name>XWiki Concerto - XWoot Management Application</name>
-  <version>1.0-SNAPSHOT</version>
-  <packaging>xar</packaging>
-  <description>Basic XWoot management from within XWiki</description>
-  <dependencies>
-    <dependency>
-      <groupId>org.xwiki.concerto</groupId>
-      <artifactId>xwiki-concerto-xwootManager</artifactId>
-      <version>${pom.version}</version>
-      <scope>runtime</scope>
-    </dependency>
-  </dependencies>
-</project>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+<xsl:output method="xml" encoding="ISO-8859-1" doctype-public="-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN" doctype-system="http://java.sun.com/dtd/web-app_2_3.dtd"/>
+
+<xsl:template match="@* | node()">
+   <xsl:copy>
+   <xsl:apply-templates select="@* | node()" />
+   </xsl:copy>
+</xsl:template>
+
+<xsl:template match="init-param[param-name[text() = 'encoding']]/param-value">
+  <param-value>UTF-8</param-value>
+</xsl:template>
+</xsl:stylesheet>

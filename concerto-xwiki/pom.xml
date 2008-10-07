@@ -15,6 +15,7 @@
     <module>xwootManager-application</module>
     <module>wiki</module>
     <module>database</module>
+    <module>web</module>
   </modules>
   <properties>
     <!-- Versions of XWiki dependencies used in Concerto modules -->
