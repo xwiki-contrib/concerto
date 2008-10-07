@@ -25,21 +25,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.xwoot</groupId>
-    <artifactId>xwoot</artifactId>
+    <groupId>org.xwiki.concerto</groupId>
+    <artifactId>concerto</artifactId>
     <version>1.0-SNAPSHOT</version>
   </parent>
-  <artifactId>xwoot-installer-generic</artifactId>
-  <name>XWoot - Installer</name>
+  <artifactId>xwiki-concerto-installer</artifactId>
+  <name>XWiki Concerto - Installer</name>
   <packaging>pom</packaging>
-  <description>XWoot - Generic java-based installer</description>
-  <pluginRepositories> 
-    <pluginRepository>
-      <id>xwiki-repository</id>
-      <name>XWiki Maven repository </name>
-      <url>http://maven.xwiki.org/externals</url>
-    </pluginRepository>
-  </pluginRepositories>
+  <description>XWiki Concerto - Generic java-based installer</description>
   <build>
     <resources>
       <resource>
@@ -133,9 +126,9 @@
                   <outputDirectory>${xwiki.webappDir}</outputDirectory>
                 </artifactItem>
                 <artifactItem>
-                  <groupId>com.xpn.xwiki.products</groupId>
-                  <artifactId>xwiki-enterprise-database-hsqldb</artifactId>
-                  <version>${xwiki.webapp.version}</version>
+                  <groupId>org.xwiki.concerto</groupId>
+                  <artifactId>xwiki-concerto-database</artifactId>
+                  <version>${pom.version}</version>
                   <type>zip</type>
                   <outputDirectory>${xwiki.database}</outputDirectory>
                 </artifactItem>

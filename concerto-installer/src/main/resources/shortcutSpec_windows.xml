@@ -3,12 +3,12 @@
   <skipIfNotSupported/>
   <programGroup defaultName="XWoot" location="applications"/>
   <shortcut
-           name="Start XWoot server"
+           name="Start Concerto server"
            target="$INSTALL_PATH\start_xwiki.bat"
            iconFile="$INSTALL_PATH\xe.ico"
            iconIndex="0"
            workingDirectory="$INSTALL_PATH"
-           description="Starts the XWoot and XWiki Enterprise (if installed) server"
+           description="Starts the XWiki Concerto bundled container"
            initialState="normal"
            programGroup="yes"
            desktop="yes"
@@ -19,32 +19,21 @@
            iconFile="$INSTALL_PATH\xe.ico"
            iconIndex="0"
            workingDirectory="$INSTALL_PATH"
-           description="Stops the XWoot server"
+           description="Stops the XWiki Concerto bundled container"
            initialState="normal"
            programGroup="yes"
            desktop="yes"
            startMenu="no"/>
   <shortcut
-           name="Open XWoot"
-           target="http://localhost:8080/xwootApp/"
-           iconFile="$INSTALL_PATH\xe.ico"
-           iconIndex="0"
-           workingDirectory=""
-           description="Go to the XWoot management page"
-           initialState="normal"
-           programGroup="yes"
-           desktop="no"
-           startMenu="no"/>
-  <shortcut
            name="My Wiki"
-           target="http://localhost:8080/xwiki/bin/view/Main/"
+           target="http://localhost:8080/xwiki/"
            iconFile="$INSTALL_PATH\xe.ico"
            iconIndex="0"
            workingDirectory=""
            description="Go to the local XWiki installation home page"
            initialState="normal"
            programGroup="yes"
-           desktop="no"
+           desktop="yes"
            startMenu="no"/>
   <shortcut
            name="The XWiki Concerto Homepage"
@@ -58,8 +47,8 @@
            desktop="no"
            startMenu="no"/>
   <shortcut
-           name="Documentation"
-           target="http://xwiki.org"
+           name="XWiki Documentation"
+           target="http://www.xwiki.org/"
            iconFile="$INSTALL_PATH\xe.ico"
            iconIndex="0"
            workingDirectory=""

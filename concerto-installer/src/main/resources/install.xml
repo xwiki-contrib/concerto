@@ -2,9 +2,9 @@
 
 <installation version="1.0">
   <info>
-    <appname>XWoot</appname>
+    <appname>XWiki Concerto</appname>
     <appversion>${project.version}</appversion>
-    <url>http://concerto.xwiki.com/xwiki/bin/XWoot/</url>
+    <url>http://concerto.xwiki.com/</url>
     <javaversion>1.5</javaversion>
   </info>
   <guiprefs width="800" height="600" resizable="yes">
@@ -74,7 +74,7 @@
       <file src="${xwiki.shortcut.icon.unix}" targetdir="$INSTALL_PATH" os="unix"/>
       <file src="${xwiki.shortcut.icon.windows}" targetdir="$INSTALL_PATH" os="windows"/>
     </pack>
-    <pack name="Default Wiki" required="no" preselected="no">
+    <pack name="Default Wiki" required="no" preselected="yes">
       <description>A set of default Wiki pages. If you don't install this you'll get an empty Wiki. To be used when upgrading an existing XWiki installation so that your current pages are kept and not overwritten.</description>
       <file src="${xwiki.database}" targetdir="$INSTALL_PATH"/>
     </pack>

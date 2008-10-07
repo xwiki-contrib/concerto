@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
 <shortcuts>
   <skipIfNotSupported/>
-  <programGroup defaultName="XWoot" location="applications"/>
+  <programGroup defaultName="Concerto" location="applications"/>
   <shortcut
-           name="Start XWoot server"
+           name="Start Concerto server"
            programGroup="yes"
            desktop="yes"
            applications="no"
@@ -14,7 +14,7 @@
            iconIndex="0"
            commandLine="8080"
            workingDirectory="$INSTALL_PATH"
-           description="Starts the XWoot and XWiki Enterprise (if installed) server"
+           description="Starts the XWiki Concerto bundled container"
            type="Application"
            encoding="UTF-8"
            terminal="true"
@@ -23,7 +23,7 @@
            categories=""
            createForAll="true"/>
   <shortcut
-           name="Stop XWoot server"
+           name="Stop Concerto server"
            programGroup="yes"
            desktop="yes"
            applications="no"
@@ -34,31 +34,10 @@
            iconIndex="0"
            commandLine=""
            workingDirectory="$INSTALL_PATH"
-           description="Stops the XWoot server"
+           description="Stops the XWiki Concerto bundled container"
            type="Application"
            encoding="UTF-8"
            terminal="true"
-           KdeSubstUID="false"
-           initialState="normal"
-           categories=""
-           createForAll="true"/>
-  <shortcut
-           name="Open XWoot"
-           programGroup="yes"
-           desktop="no"
-           applications="no"
-           startMenu="yes"
-           startup="no"
-           target="firefox"
-           iconFile="$INSTALL_PATH/xe.png"
-           iconIndex="0"
-           commandLine="http://localhost:8080/xwootApp/"
-           workingDirectory=""
-           description="Go to the XWoot management page"
-           type="Application"
-           encoding="UTF-8"
-           terminal="false"
-           url="http://localhost:8080/xwootApp/"
            KdeSubstUID="false"
            initialState="normal"
            categories=""
@@ -69,17 +48,17 @@
            desktop="no"
            applications="no"
            startMenu="yes"
-           startup="no"
+           startup="yes"
            target="firefox"
            iconFile="$INSTALL_PATH/xe.png"
            iconIndex="0"
-           commandLine="http://localhost:8080/xwiki/bin/view/Main/"
+           commandLine="http://localhost:8080/xwiki/"
            workingDirectory=""
            description="Go to the local XWiki installation home page"
            type="Application"
            encoding="UTF-8"
            terminal="false"
-           url="http://localhost:8080/xwiki/bin/view/Main/"
+           url="http://localhost:8080/xwiki/"
            KdeSubstUID="false"
            initialState="normal"
            categories=""
@@ -106,7 +85,7 @@
            categories=""
            createForAll="true"/>
   <shortcut
-           name="Documentation"
+           name="XWiki Documentation"
            programGroup="yes"
            desktop="no"
            applications="no"
@@ -115,7 +94,7 @@
            target="firefox"
            iconFile="$INSTALL_PATH/xe.png"
            iconIndex="0"
-           commandLine="http://xwiki.org/"
+           commandLine="http://www.xwiki.org/"
            workingDirectory=""
            description="XWiki Documentation"
            type="Application"
@@ -141,7 +120,7 @@
            workingDirectory=""
            type="Application"
            encoding="UTF-8"
-           description="Uninstall XWiki"
+           description="Uninstall XWiki Concerto"
            categories=""
            createForAll="true"/>
 </shortcuts>
