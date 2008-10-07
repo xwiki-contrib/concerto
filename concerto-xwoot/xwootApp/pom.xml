@@ -3,8 +3,8 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
 >
   <parent>
-    <artifactId>xwoot</artifactId>
     <groupId>org.xwoot</groupId>
+    <artifactId>xwoot</artifactId>
     <version>1.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -120,28 +120,24 @@
     <finalName>${artifactId}</finalName>
     <resources>
       <resource>
-        <directory>${basedir}/src/main/resources
-        </directory>
+        <directory>${basedir}/src/main/resources</directory>
         <filtering>true</filtering>
       </resource>
       <resource>
-        <directory>${basedir}/src/test/resources
-        </directory>
+        <directory>${basedir}/src/test/resources</directory>
         <filtering>true</filtering>
       </resource>
     </resources>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins
-        </groupId>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
         <version>2.0</version>
         <configuration>
           <webResources>
             <resource>
               <!-- this is relative to the pom.xml directory -->
-              <directory>${basedir}/src/main/webapp
-              </directory>
+              <directory>${basedir}/src/main/webapp</directory>
               <includes>
                 <include>*.properties</include>
               </includes>
@@ -151,24 +147,15 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins
-        </groupId>
-        <artifactId>maven-resources-plugin
-        </artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
         <version>2.2</version>
       </plugin>
       <plugin>
-        <groupId>org.codehaus.cargo</groupId>
-        <artifactId>cargo-maven2-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins
-        </groupId>
-        <artifactId>maven-surefire-plugin
-        </artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <workingDirectory>${project.parent.basedir}
-          </workingDirectory>
+          <workingDirectory>${project.parent.basedir}</workingDirectory>
         </configuration>
       </plugin>
     </plugins>
@@ -180,8 +167,7 @@
         <plugin>
           <inherited>true</inherited>
           <groupId>org.codehaus.cargo</groupId>
-          <artifactId>cargo-maven2-plugin
-          </artifactId>
+          <artifactId>cargo-maven2-plugin</artifactId>
           <executions>
             <execution>
               <id>start-container</id>
@@ -201,13 +187,9 @@
             <configuration>
               <type>runtime</type>
               <properties>
-                <cargo.tomcat.manager.url>
-                  ${var.servlet.container.manager.url}
-                </cargo.tomcat.manager.url>
-                <cargo.remote.username> ${var.servlet.container.user}
-                </cargo.remote.username>
-                <cargo.remote.password> ${var.servlet.container.pwd}
-                </cargo.remote.password>
+                <cargo.tomcat.manager.url>${var.servlet.container.manager.url}</cargo.tomcat.manager.url>
+                <cargo.remote.username> ${var.servlet.container.user}</cargo.remote.username>
+                <cargo.remote.password> ${var.servlet.container.pwd}</cargo.remote.password>
               </properties>
             </configuration>
             <deployer>
@@ -215,16 +197,12 @@
               <deployables>
                 <deployable>
                   <groupId>${pom.groupId}</groupId>
-                  <artifactId>${pom.artifactId}
-                  </artifactId>
+                  <artifactId>${pom.artifactId}</artifactId>
                   <type>${pom.packaging}</type>
                   <properties>
-                    <context>${var.xwoot.app.context}
-                    </context>
+                    <context>${var.xwoot.app.context}</context>
                   </properties>
-                  <pingURL>
-                    ${var.servlet.container.url}/${var.xwoot.app.context}
-                  </pingURL>
+                  <pingURL>${var.servlet.container.url}/${var.xwoot.app.context}</pingURL>
                 </deployable>
               </deployables>
             </deployer>
@@ -233,4 +211,17 @@
       </plugins>
     </pluginManagement>
   </build>
+  <profiles>
+    <profile>
+      <id>deploy</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.cargo</groupId>
+            <artifactId>cargo-maven2-plugin</artifactId>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
