@@ -99,8 +99,10 @@
 </property>
 <property>
 <content>#panelheader('XWoot')
-#if(!$xwoot.isAvailable())
-  #warn("XWoot server is not available.")
+#if("$!{xwoot}" == '')
+  #warning('The XWoot management component is not installed.')
+#elseif(!$xwoot.isAvailable())
+  #warning('XWoot server is not available.')
 #elseif(!$xwoot.isInitialised())
   XWoot is not initialized. Please [bootstrap XWoot&gt;$xwoot.getBootstrapURL()] in order to use XWoot.
 #else
