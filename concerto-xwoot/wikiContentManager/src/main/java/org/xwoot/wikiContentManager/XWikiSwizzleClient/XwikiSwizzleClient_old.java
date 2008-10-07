@@ -1,0 +1,901 @@
+/**
+ * 
+ *        -- class header / Copyright (C) 2008  100 % INRIA / LGPL v2.1 --
+ * 
+ *  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ *  Copyright (C) 2008  100 % INRIA
+ *  Authors :
+ *                       
+ *                       Gerome Canals
+ *                     Nabil Hachicha
+ *                     Gerald Hoster
+ *                     Florent Jouille
+ *                     Julien Maire
+ *                     Pascal Molli
+ * 
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ * 
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ * 
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ *  INRIA disclaims all copyright interest in the application XWoot written
+ *  by :    
+ *          
+ *          Gerome Canals
+ *         Nabil Hachicha
+ *         Gerald Hoster
+ *         Florent Jouille
+ *         Julien Maire
+ *         Pascal Molli
+ * 
+ *  contact : maire@loria.fr
+ *  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ *  
+ */
+
+package org.xwoot.wikiContentManager.XWikiSwizzleClient;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.codehaus.swizzle.confluence.Comment;
+import org.codehaus.swizzle.confluence.Confluence;
+import org.codehaus.swizzle.confluence.ConfluenceException;
+import org.codehaus.swizzle.confluence.Page;
+import org.codehaus.swizzle.confluence.PageSummary;
+import org.codehaus.swizzle.confluence.Space;
+import org.codehaus.swizzle.confluence.SpaceSummary;
+import org.codehaus.swizzle.confluence.SwizzleException;
+
+import org.xwiki.xmlrpc.XWikiXmlRpcClient;
+import org.xwoot.wikiContentManager.WikiContentManager;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+/**
+ * DOCUMENT ME!
+ * 
+ * @author $author$
+ * @version $Revision$
+ */
+public class XwikiSwizzleClient_old implements WikiContentManager
+{
+    private Properties properties;
+
+    private Confluence client;
+
+    private static final String SEPARATECHAR = ".";
+
+    private static final String XWIKI_ENDPOINT = "xwiki.endpoint";
+
+    private static final int VOID_CHARACTER = 67;
+
+    private boolean isPermanentlyConnected;
+
+    private final Log logger = LogFactory.getLog(this.getClass());
+
+    /**
+     * Creates a new XwikiSwizzleClient object.
+     * 
+     * @param path DOCUMENT ME!
+     */
+    public XwikiSwizzleClient_old(String path)
+    {
+        this.loadProperties(path);
+    }
+
+    public XwikiSwizzleClient_old(String url, String login, String pwd)
+    {
+        this.loadProperties(url, login, pwd);
+    }
+
+    private void loadProperties(String path)
+    {
+        if (this.properties == null) {
+            this.properties = new Properties();
+
+            try {
+                File file = new File(path);
+                this.properties.load(new FileInputStream(file)); // "XWiki-XMLRPC-Example.properties"
+                // ));
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
+        } else {
+            return;
+        }
+
+    }
+
+    private void loadProperties(String server, String login, String pwd)
+    {
+        if (this.properties == null) {
+            this.properties = new Properties();
+        }
+        this.properties.put("xwiki.endpoint", server);
+        this.properties.put("xwiki.username", login);
+        this.properties.put("xwiki.password", pwd);
+
+    }
+
+    synchronized private boolean relogin() throws XWikiSwizzleClientException
+    {
+        try {
+            if (this.getClient() != null) {
+                return true;
+            }
+            this.relogin(this.properties.getProperty("xwiki.username"), this.properties.getProperty("xwiki.password"));
+        } catch (SwizzleException e) {
+            throw new XWikiSwizzleClientException("Problem with swizzle login", e);
+        }
+        return false;
+    }
+
+    synchronized private boolean relogin(String username, String password) throws SwizzleException
+    {
+        if (this.getClient() != null) {
+            return true;
+        }
+
+        try {
+            XWikiXmlRpcClient client2 = new XWikiXmlRpcClient(this.properties.getProperty(XWIKI_ENDPOINT));
+            this.client = new Confluence(this.properties.getProperty(XWIKI_ENDPOINT));
+        } catch (MalformedURLException e) {
+            this.logger.warn("XWOOT : WARNING ! Malformed URL : " + this.properties.getProperty(XWIKI_ENDPOINT));
+            e.printStackTrace();
+            System.exit(0);
+        }
+        this.getClient().login(username, password);
+        return false;
+    }
+
+    synchronized public void login() throws XWikiSwizzleClientException
+    {
+        this.relogin();
+    }
+
+    synchronized public void logout() throws XWikiSwizzleClientException
+    {
+        this.logout(false);
+    }
+
+    synchronized private void logout(boolean b) throws XWikiSwizzleClientException
+    {
+        try {
+            if (b || this.getClient() == null || this.isPermanentlyConnected) {
+                return;
+            }
+            this.getClient().logout();
+            this.client = null;
+        } catch (ConfluenceException e) {
+            throw new XWikiSwizzleClientException("Problem with confluence logout", e);
+        } catch (SwizzleException e) {
+            throw new XWikiSwizzleClientException("Problem with swizzle logout", e);
+        }
+    }
+
+    private boolean existSpace(String space) throws XWikiSwizzleClientException
+    {
+        boolean b = this.relogin();
+        boolean result = false;
+        try {
+            List spaces = this.getClient().getSpaces();
+            if (spaces != null) {
+                Iterator i = spaces.iterator();
+                while (i.hasNext() && !result) {
+                    result = space.equals(((SpaceSummary) i.next()).getKey());
+                }
+            }
+        } catch (ConfluenceException e) {
+            this.logger.error("Problem with existSpace (Confluence)" + e.getMessage());
+        } catch (SwizzleException e) {
+            this.logger.error("Problem with existSpace (Swizzle)" + e.getMessage());
+        }
+        this.logout(b);
+        return result;
+
+    }
+
+    private boolean existPage(String pageId) throws XWikiSwizzleClientException
+    {
+        boolean result = false;
+        boolean b = this.relogin();
+        String space = this.getSpaceNameWithPageId(pageId);
+        try {
+            List pages = this.getClient().getPages(space);
+            if (pages != null) {
+                Iterator i = pages.iterator();
+                while (i.hasNext() && !result) {
+                    result = pageId.equals(((PageSummary) i.next()).getId());
+                }
+            }
+        } catch (ConfluenceException e) {
+            this.logger.error("Problem with existPage (Confluence)" + e.getMessage());
+        } catch (SwizzleException e) {
+            this.logger.error("Problem with existPage (Swizzle)" + e.getMessage());
+        }
+        this.logout(b);
+        return result;
+    }
+
+    private byte[] getDigest(String p, String algo) throws NoSuchAlgorithmException
+    {
+        String page = "";
+
+        if (p != null) {
+            page = p;
+        }
+
+        MessageDigest md = MessageDigest.getInstance(algo);
+        byte[] b = page.getBytes();
+        md.update(b);
+
+        return md.digest();
+    }
+
+    private String getPageNameWithPageId(String pageId)
+    {
+        int l = pageId.lastIndexOf(SEPARATECHAR);
+
+        if (l == -1) {
+            return pageId;
+        }
+
+        return pageId.substring(l + SEPARATECHAR.length(), pageId.length());
+    }
+
+    private String getSpaceNameWithPageId(String pageName)
+    {
+        int l = pageName.lastIndexOf(SEPARATECHAR);
+
+        if (l == -1) {
+            return "";
+        }
+
+        return pageName.substring(0, l);
+    }
+
+    private Page getWikiPage(String pageId) throws XWikiSwizzleClientException
+    {
+        // if user have not connected client, method do it for him
+        // else it's to the user to do the connection gestion...
+        if (!this.existPage(pageId)) {
+            return null;
+        }
+        boolean b = this.relogin();
+
+        Page page = null;
+
+        try {
+            page = this.getClient().getPage(pageId);
+        } catch (SwizzleException e) {
+            this.logger.error("Problem with getPage (Swizzle)" + e.getMessage());
+        }
+
+        this.logout(b);
+
+        return page;
+    }
+
+    private Page storeWikiPage(Page page) throws XWikiSwizzleClientException
+    {
+        // if user have not connected client, method do it for him
+        // else it's to the user to do the connection gestion...
+        boolean b = this.relogin();
+        Page result = null;
+        try {
+            result = this.getClient().storePage(page);
+        } catch (ConfluenceException e) {
+            this.logger.error("Problem with storePage (Confluence)" + e.getMessage());
+        } catch (SwizzleException e) {
+            this.logger.error("Problem with storePage (Swizzle)" + e.getMessage());
+        }
+
+        this.logout(b);
+
+        return result;
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @throws XWikiSwizzleClientException
+     */
+    public void disconnect() throws XWikiSwizzleClientException
+    {
+        this.logout(false);
+        this.client = null;
+        this.isPermanentlyConnected = false;
+    }
+
+    public void connect() throws XWikiSwizzleClientException
+    {
+        this.isPermanentlyConnected = true;
+        this.relogin();
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param content DOCUMENT ME!
+     * @param created DOCUMENT ME!
+     * @param creator DOCUMENT ME!
+     * @param id DOCUMENT ME!
+     * @param pageId DOCUMENT ME!
+     * @param title DOCUMENT ME!
+     * @param url DOCUMENT ME!
+     * @return DOCUMENT ME!
+     */
+    public Map createComment(String content, Date created, String creator, String id, String pageId, String title,
+        String url)
+    {
+        Comment com = new Comment(new Hashtable());
+        com.setContent(content);
+
+        if (created != null) {
+            com.setCreated(created);
+        }
+
+        com.setCreator(creator);
+        com.setId(id);
+        com.setPageId(pageId);
+        com.setTitle(title);
+        com.setUrl(url);
+
+        Map result = com.toMap();
+
+        return result;
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param spaceKey DOCUMENT ME!
+     * @throws XWikiSwizzleClientException
+     */
+    public void createSpace(String spaceKey) throws XWikiSwizzleClientException
+    {
+        if (this.existSpace(spaceKey)) {
+            return;
+        }
+        boolean b = this.relogin();
+
+        Space newSpace = new Space(new Hashtable());
+        newSpace.setName(spaceKey);
+        newSpace.setKey(spaceKey);
+
+        try {
+            this.getClient().addSpace(newSpace);
+        } catch (ConfluenceException e) {
+            this.logger.error("Problem with createSpace (Confluence)" + e.getMessage());
+        } catch (SwizzleException e) {
+            this.logger.error("Problem with createSpace (Swizzle)" + e.getMessage());
+        }
+
+        // this.createPage(spaceKey + ".WebHome","");
+
+        this.logout(b);
+    }
+
+    // /**
+    // * DOCUMENT ME!
+    // *
+    // * @param pageId
+    // * DOCUMENT ME!
+    // * @param commentId
+    // * DOCUMENT ME!
+    // *
+    // * @return DOCUMENT ME!
+    // * @throws XWikiSwizzleClientException
+    // */
+    // public Map getComment(String pageId, String commentId)
+    // throws XWikiSwizzleClientException {
+    // this.login();
+    //
+    // Map result = null;
+    // try {
+    // List l = this.getClient().getComments(pageId);
+    // if (l != null) {
+    // Iterator i = l.iterator();
+    //
+    // while (i.hasNext() && result==null) {
+    // Comment com = (Comment) i.next();
+    //
+    // if (com.getId()!=null && com.getId().compareTo(commentId) == 0) {
+    // result=com.toMap();
+    // }
+    // }
+    // }
+    // } catch (ConfluenceException e) {
+    // this.logger.error("Problem with getComment (Confluence)"+e.getMessage());
+    // } catch (SwizzleException e) {
+    // this.logger.error("Problem with getComment (Swizzle)"+e.getMessage());
+    // }
+    //
+    // this.logout();
+    //
+    // return result;
+    //
+    // }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param pageId DOCUMENT ME!
+     * @return DOCUMENT ME!
+     * @throws XWikiSwizzleClientException
+     */
+    public List<Map> getComments(String pageId) throws XWikiSwizzleClientException
+    {
+        if (!this.existPage(pageId)) {
+            return null;
+        }
+        boolean b = this.relogin();
+
+        List<Map> result = new ArrayList<Map>();
+
+        try {
+            List l = this.getClient().getComments(pageId);
+            if (l != null) {
+                Iterator i = l.iterator();
+                while (i.hasNext()) {
+                    Comment com = (Comment) i.next();
+                    if (com != null) {
+                        result.add(com.toMap());
+                    }
+                }
+            }
+        } catch (ConfluenceException e) {
+            this.logger.error("Problem with getComments (Confluence)" + e.getMessage());
+        } catch (SwizzleException e) {
+            this.logger.error("Problem with getComments (Swizzle)" + e.getMessage());
+        }
+
+        this.logout(b);
+        return result;
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param pageId DOCUMENT ME!
+     * @return DOCUMENT ME!
+     * @throws XWikiSwizzleClientException
+     */
+    synchronized public Map<String, String> getFields(String pageId) throws XWikiSwizzleClientException
+    {
+        if (!this.existPage(pageId)) {
+            return null;
+        }
+        boolean b = this.relogin();
+        Map<String, String> result = null;
+
+        try {
+            Page page = this.getWikiPage(pageId);
+            if (page != null) {
+                result = page.toMap();
+            }
+        } catch (XWikiSwizzleClientException e) {
+            this.logger.error("Problem with getFields (Swizzle)" + e.getMessage());
+        }
+        this.logout(b);
+        return result;
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param space DOCUMENT ME!
+     * @return DOCUMENT ME!
+     * @throws XWikiSwizzleClientException
+     */
+    public Collection getListPageId(String space) throws XWikiSwizzleClientException
+    {
+        if (!this.existSpace(space)) {
+            return null;
+        }
+
+        boolean b = this.relogin();
+
+        List<String> result = new ArrayList<String>();
+
+        try {
+            Iterator i;
+            List l = this.getClient().getPages(space);
+            if (l != null) {
+                i = l.iterator();
+                while (i.hasNext()) {
+                    PageSummary ps = (PageSummary) i.next();
+                    if (ps != null) {
+                        String page = ps.getId();
+                        if ((page != null) && !page.equals("")) {
+                            result.add(page);
+                        }
+                    }
+                }
+            }
+        } catch (ConfluenceException e) {
+            this.logger.error("Problem with getListPageId (Confluence)" + e.getMessage());
+        } catch (SwizzleException e) {
+            this.logger.error("Problem with getListPageId (Swizzle)" + e.getMessage());
+        }
+
+        this.logout(b);
+        return result;
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @return DOCUMENT ME!
+     * @throws XWikiSwizzleClientException
+     */
+    public Collection getListSpaceId() throws XWikiSwizzleClientException
+    {
+        boolean b = this.relogin();
+
+        List<String> result = new ArrayList<String>();
+        try {
+            List l = this.getClient().getSpaces();
+            if (l != null) {
+                Iterator i = l.iterator();
+                while (i.hasNext()) {
+                    SpaceSummary ssum = (SpaceSummary) i.next();
+                    if (ssum != null) {
+                        String space = ssum.getKey();
+                        if ((space != null) && (!space.equals(""))) {
+                            result.add(space);
+                        }
+                    }
+                }
+            }
+        } catch (ConfluenceException e) {
+            this.logger.error("Problem with getListSpaceId (Confluence)" + e.getMessage());
+        } catch (SwizzleException e) {
+            this.logger.error("Problem with getListSpaceId (Swizzle)" + e.getMessage());
+        }
+        this.logout(b);
+
+        return result;
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param pageId DOCUMENT ME!
+     * @return DOCUMENT ME!
+     * @throws XWikiSwizzleClientException
+     */
+    synchronized public String getPageContent(String pageId) throws XWikiSwizzleClientException
+    {
+        Page result = this.getWikiPage(pageId);
+
+        if (result == null) {
+            return null;
+        }
+        return result.getContent();
+    }
+
+    public String getWikiURL()
+    {
+        return this.properties.getProperty("xwiki.endpoint").replaceAll("/xmlrpc", "");
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @return DOCUMENT ME!
+     */
+    public boolean isConnected()
+    {
+        return this.getClient() != null;
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param pageId DOCUMENT ME!
+     * @return DOCUMENT ME!
+     * @throws XWikiSwizzleClientException
+     */
+    synchronized public Map<String, String> createPage(String pageId, String content)
+        throws XWikiSwizzleClientException
+    {
+        if (this.existPage(pageId)) {
+            return null;
+        }
+        boolean b = this.relogin();
+
+        // create the new Page
+        Page newPage = new Page(new Hashtable());
+        newPage.setSpace(this.getSpaceNameWithPageId(pageId));
+        newPage.setTitle(this.getPageNameWithPageId(pageId));
+        newPage.setContent(content);
+
+        Page p = this.storeWikiPage(newPage);
+        this.logout(b);
+        Map result = null;
+        if (p != null) {
+            result = p.toMap();
+        }
+        return result;
+
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param pageId DOCUMENT ME!
+     * @param value DOCUMENT ME!
+     * @throws XWikiSwizzleClientException
+     */
+    public void overwritePageContent(String pageId, String value) throws XWikiSwizzleClientException
+    {
+        String space = this.getSpaceNameWithPageId(pageId);
+        if (!this.existSpace(space)) {
+            this.createSpace(space);
+        }
+
+        Page p = null;
+        boolean b = this.relogin();
+        if (this.existPage(pageId)) {
+            try {
+                p = this.getClient().getPage(pageId);
+                p.setContent(value);
+            } catch (ConfluenceException e) {
+                this.logger.error("Problem with overwritePageContent (Confluence)" + e.getMessage());
+            } catch (SwizzleException e) {
+                this.logger.error("Problem with overwritePageContent (Swizzle)" + e.getMessage());
+            }
+            this.storeWikiPage(p);
+        } else {
+            this.createPage(pageId, value);
+        }
+        this.logout(b);
+
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param pageId DOCUMENT ME!
+     * @param comments DOCUMENT ME!
+     * @throws XWikiSwizzleClientException
+     */
+    public void overWriteComments(String pageId, List<Map> comments) throws XWikiSwizzleClientException
+    {
+        if (!this.existPage(pageId)) {
+            this.createPage(pageId, "");
+        }
+        boolean b = this.relogin();
+        try {
+            List c = this.getClient().getComments(pageId);
+            if ((c != null) && !c.isEmpty()) {
+                Iterator i = c.iterator();
+
+                while (i.hasNext()) {
+                    Comment com = (Comment) i.next();
+                    if (com != null) {
+                        this.getClient().removeComment(com.getId());
+                    }
+                }
+            }
+            for (int j = 0; j < comments.size(); j++) {
+                this.getClient().addComment(new Comment(comments.get(j)));
+            }
+        } catch (ConfluenceException e) {
+            this.logger.error("Problem with overwriteComments (Confluence)" + e.getMessage());
+        } catch (SwizzleException e) {
+            this.logger.error("Problem with overwriteComments (Swizzle)" + e.getMessage());
+        }
+
+        this.logout(b);
+
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param pageId DOCUMENT ME!
+     * @return DOCUMENT ME!
+     * @throws XWikiSwizzleClientException
+     */
+    synchronized public boolean removePage(String pageId) throws XWikiSwizzleClientException
+    {
+        // if user have not connected client, method do it for him
+        // else it's to the user to do the connection gestion...
+
+        if (!this.existPage(pageId)) {
+            return false;
+        }
+        boolean b = this.relogin();
+
+        try {
+            this.getClient().removePage(pageId);
+        } catch (Exception e) {
+            this.logger.error("Problem with removePage (Confluence or Swizzle) " + e.getMessage());
+
+            return false;
+        }
+        this.logout(b);
+
+        return true;
+
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param spaceKey DOCUMENT ME!
+     * @return DOCUMENT ME!
+     * @throws XWikiSwizzleClientException
+     */
+    public void removeSpace(String spaceKey) throws XWikiSwizzleClientException
+    {
+        if (!this.existSpace(spaceKey)) {
+            return;
+        }
+        boolean b = this.relogin();
+        try {
+            this.getClient().removeSpace(spaceKey);
+        } catch (SwizzleException e) {
+            this.logger.error("Problem with removeSpace (Confluence or Swizzle)" + e.getMessage());
+        }
+
+        this.logout(b);
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param pageId DOCUMENT ME!
+     * @param comment DOCUMENT ME!
+     * @return DOCUMENT ME!
+     * @throws XWikiSwizzleClientException
+     */
+    public Map setComment(String pageId, Map comment) throws XWikiSwizzleClientException
+    {
+        if (!this.existPage(pageId)) {
+            return null;
+        }
+        boolean b = this.relogin();
+
+        Map result = null;
+        try {
+            Comment c = this.getClient().addComment(new Comment(comment));
+            if (c != null) {
+                result = c.toMap();
+            }
+        } catch (ConfluenceException e) {
+            this.logger.error("Problem with setComment (Confluence)" + e.getMessage());
+        } catch (SwizzleException e) {
+            this.logger.error("Problem with setComment (Swizzle)" + e.getMessage());
+        }
+
+        this.logout(b);
+
+        return result;
+
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param pageId DOCUMENT ME!
+     * @param fields DOCUMENT ME!
+     * @return DOCUMENT ME!
+     * @throws XWikiSwizzleClientException
+     */
+    public Map<String, String> setFields(String pageId, Map<String, String> fields) throws XWikiSwizzleClientException
+    {
+        if (!this.existPage(pageId)) {
+            return null;
+        }
+
+        Page newPage = new Page(fields);
+
+        newPage = this.storeWikiPage(newPage);
+
+        return newPage.toMap();
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param pageId DOCUMENT ME!
+     * @param value DOCUMENT ME!
+     * @param algo DOCUMENT ME!
+     * @param rmd DOCUMENT ME!
+     * @return DOCUMENT ME!
+     * @throws NoSuchAlgorithmException
+     * @throws XWikiSwizzleClientException
+     */
+    synchronized public String setPageContent(String pageId, String value, String algo, byte[] rmd)
+        throws NoSuchAlgorithmException, XWikiSwizzleClientException
+    {
+        String result = null;
+        Page page = null;
+        String pageContent = "";
+
+        // if user have not connected client, method do it for him
+        // else it's to the user to do the connection gestion...
+        boolean b = this.relogin();
+
+        page = this.getWikiPage(pageId);
+
+        if (page != null) {
+            pageContent = page.getContent();
+        }
+
+        byte[] messageDigest = this.getDigest(pageContent, algo);
+
+        if (MessageDigest.isEqual(messageDigest, rmd)) {
+            if (page == null) {
+                Map p = this.createPage(pageId, value);
+                if (p == null) {
+                    throw new XWikiSwizzleClientException("Problem with setPageContent : can't create the page");
+                }
+            } else {
+                page.setContent(value);
+                this.storeWikiPage(page);
+            }
+        } else {
+            if ((pageContent == null)
+                || ((pageContent.length() == 1) && (pageContent.codePointAt(0) == VOID_CHARACTER))
+                || (pageContent.length() < 1)) {
+                result = "";
+            } else {
+                result = pageContent;
+            }
+        }
+
+        this.logout(b);
+
+        return result;
+    }
+
+    // public void essai() throws Exception{
+    // String spaceKey="XWiki";
+    // String pageName="XWiki.XWikiPreferences";
+    // this.login();
+    // List p = this.getClient().getAttachments(pageName);
+    // this.getClient().getSpace(spaceKey);
+    //         
+    // System.out.println(p);
+    // //No such handler getBlogEntry
+    // //System.out.println(this.getClient().getBlogEntry(pageName));
+    //      
+    // this.logout();
+    //
+    //        
+    // }
+    //    
+    synchronized public Confluence getClient()
+    {
+        return this.client;
+    }
+}

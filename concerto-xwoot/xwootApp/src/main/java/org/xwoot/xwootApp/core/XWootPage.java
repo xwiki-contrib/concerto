@@ -1,0 +1,252 @@
+/**
+ * 
+ *        -- class header / Copyright (C) 2008  100 % INRIA / LGPL v2.1 --
+ * 
+ *  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ *  Copyright (C) 2008  100 % INRIA
+ *  Authors :
+ *                       
+ *                       Gerome Canals
+ *                     Nabil Hachicha
+ *                     Gerald Hoster
+ *                     Florent Jouille
+ *                     Julien Maire
+ *                     Pascal Molli
+ * 
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ * 
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ * 
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * 
+ *  INRIA disclaims all copyright interest in the application XWoot written
+ *  by :    
+ *          
+ *          Gerome Canals
+ *         Nabil Hachicha
+ *         Gerald Hoster
+ *         Florent Jouille
+ *         Julien Maire
+ *         Pascal Molli
+ * 
+ *  contact : maire@loria.fr
+ *  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ *  
+ */
+
+package org.xwoot.xwootApp.core;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import org.apache.commons.codec.binary.Base64;
+
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.xml.DomDriver;
+
+/**
+ * DOCUMENT ME!
+ * 
+ * @author $author$
+ * @version $Revision$
+ */
+public class XWootPage implements Serializable
+{
+    /**  */
+    private static final long serialVersionUID = 6228704590406225117L;
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param lastVuePagesDir DOCUMENT ME!
+     * @return DOCUMENT ME!
+     * @throws FileNotFoundException DOCUMENT ME!
+     */
+    static public Collection getManagedPageNames(String lastVuePagesDir) throws FileNotFoundException
+    {
+        File dir = new File(lastVuePagesDir);
+        String[] listPages = dir.list();
+        List<String> coll = new ArrayList<String>();
+
+        // for each space
+        for (String listPage : listPages) {
+            XStream xstream = new XStream(new DomDriver());
+            XWootPage currentPage =
+                (XWootPage) xstream.fromXML(new FileInputStream(lastVuePagesDir + File.separator + listPage));
+            coll.add(currentPage.getPageName());
+        }
+
+        return coll;
+    }
+
+    private String pageName;
+
+    private String content; // file content
+
+    private String filename;
+
+    /**
+     * Creates a new XWootPage object.
+     * 
+     * @param pageName DOCUMENT ME!
+     * @param content DOCUMENT ME!
+     */
+    public XWootPage(String pageName, String content)
+    {
+        this.pageName = pageName;
+        this.content = content;
+        try {
+            this.filename = new String(Base64.encodeBase64(pageName.getBytes("UTF-8")), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            // This won't happen.
+        }
+    }
+
+    public void createPage(String lastVuePagesDir) throws FileNotFoundException
+    {
+        if (!this.existPage(lastVuePagesDir)) {
+            XStream xstream = new XStream();
+            PrintWriter pw =
+                new PrintWriter(new FileOutputStream(lastVuePagesDir + File.separator + this.getFileName()));
+            pw.print(xstream.toXML(this));
+            pw.flush();
+            pw.close();
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param lastVuePagesDir DOCUMENT ME!
+     * @return DOCUMENT ME!
+     * @throws Exception DOCUMENT ME!
+     */
+    public boolean existPage(String lastVuePagesDir)
+    {
+        File dir = new File(lastVuePagesDir);
+        String[] listPages = dir.list();
+
+        // for each page on the site
+        for (String listPage : listPages) {
+            if (listPage.equals(this.getFileName())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @return DOCUMENT ME!
+     */
+    public String getContent()
+    {
+        return this.content;
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @return DOCUMENT ME!
+     */
+    public String getFileName()
+    {
+        return this.filename;
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @return DOCUMENT ME!
+     */
+    public String getPageName()
+    {
+        return this.pageName;
+    }
+
+    public synchronized void loadPage(String lastVuePagesDir) throws FileNotFoundException
+    {
+        if (!this.existPage(lastVuePagesDir)) {
+            this.createPage(lastVuePagesDir);
+        }
+
+        XStream xstream = new XStream(new DomDriver());
+        XWootPage page =
+            (XWootPage) xstream.fromXML(new FileInputStream(lastVuePagesDir + File.separator + this.getFileName()));
+
+        if ((page.getContent() == null)
+            || ((page.getContent().length() == 1) && (page.getContent().codePointAt(0) == 67))
+            || (page.getContent().length() < 1)) {
+            page.setContent("");
+        }
+
+        this.setContent(page.getContent());
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param content DOCUMENT ME!
+     */
+    public void setContent(String content)
+    {
+        this.content = content;
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param pageName DOCUMENT ME!
+     */
+    public void setPageName(String pageName)
+    {
+        this.pageName = pageName;
+        try {
+            this.filename = new String(Base64.encodeBase64(pageName.getBytes("UTF-8")), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            // This won't happen.
+        }
+    }
+
+    private synchronized void storePage(String lastVuePagesDir) throws FileNotFoundException
+    {
+        XStream xstream = new XStream();
+
+        OutputStreamWriter osw =
+            new OutputStreamWriter(new FileOutputStream(lastVuePagesDir + File.separator + this.getFileName()), Charset
+                .forName(System.getProperty("file.encoding")));
+        PrintWriter output = new PrintWriter(osw);
+
+        output.print(xstream.toXML(this));
+        output.flush();
+        output.close();
+    }
+
+    public synchronized void unloadPage(String lastVuePagesDir) throws FileNotFoundException
+    {
+        this.storePage(lastVuePagesDir);
+        System.runFinalization();
+        System.gc();
+    }
+}
