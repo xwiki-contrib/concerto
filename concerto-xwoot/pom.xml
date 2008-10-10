@@ -161,6 +161,11 @@
   </pluginRepositories>
   <repositories>
     <repository>
+      <id>maven-restlet</id>
+      <name>Public online Restlet repository</name>
+      <url>http://maven.restlet.org</url>
+    </repository>
+    <repository>
       <id>mc-release</id>
       <name>Local Maven repository of releases</name>
       <url>http://mc-repo.googlecode.com/svn/maven2/releases
@@ -227,6 +232,8 @@
     <module>lpbcast</module>
     <!-- to synchronize flate structure like string datas -->
     <module>wootEngine</module>
+    <!-- Interface with Iphone -->
+    <module>iwoot</module>
   </modules>
   <build>
     <plugins>
