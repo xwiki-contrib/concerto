@@ -88,7 +88,7 @@ public class PageManagement extends HttpServlet
             return;
         }
 
-        System.out.print("Site " + XWootSite.getInstance().getXWootEngine().getPeerId() + " : Page management page -");
+        System.out.print("Site " + XWootSite.getInstance().getXWootEngine().getXWootPeerId() + " : Page management page -");
 
         Collection spaces;
 

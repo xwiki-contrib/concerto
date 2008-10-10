@@ -55,6 +55,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.xwoot.xwootApp.XWoot;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.core.XWootPage;
 import org.xwoot.xwootApp.web.XWootSite;
@@ -123,7 +124,7 @@ public class Information extends HttpServlet
                             result.append("<error>You must specify a page name</error>");
                         } else {
                             XWootPage page = new XWootPage(pagename, null);
-                            result.append("<managed name=\"" + pagename + "\">" + xwoot.isPageManaged(page)
+                            result.append("<managed name=\"" + pagename + "\">" + ((XWoot)xwoot).isPageManaged(page)
                                 + "</managed>");
                         }
                     } else if (info.equals("listPeers")) {

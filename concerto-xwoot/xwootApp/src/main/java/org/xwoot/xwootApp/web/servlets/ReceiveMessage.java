@@ -80,7 +80,7 @@ public class ReceiveMessage extends HttpServletReceiverAPI
     @Override
     public String getPeerId()
     {
-        return XWootSite.getInstance().getXWootEngine().getPeerId();
+        return XWootSite.getInstance().getXWootEngine().getXWootPeerId();
     }
 
     public boolean isReceiverConnected()

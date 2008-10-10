@@ -563,7 +563,7 @@ public class TestBasic extends AbstractXWootTest
     {
 
         // configure neighbors
-        this.lpbCast1.addNeighbor(this.xwoot1.getPeerId(), this.xwoot2);
+        this.lpbCast1.addNeighbor(this.xwoot1.getXWootPeerId(), this.xwoot2);
         this.lpbCast1.addNeighbor(this.xwoot1, this.xwoot3);
         this.lpbCast2.addNeighbor(this.xwoot2, this.xwoot1);
         this.lpbCast2.addNeighbor(this.xwoot2, this.xwoot3);

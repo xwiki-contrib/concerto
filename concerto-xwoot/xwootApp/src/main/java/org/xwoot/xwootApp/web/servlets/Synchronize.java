@@ -86,7 +86,7 @@ public class Synchronize extends HttpServlet
     @Override
     public void service(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
     {
-        System.out.print("Site " + XWootSite.getInstance().getXWootEngine().getPeerId() + " : Synchronize page -");
+        System.out.print("Site " + XWootSite.getInstance().getXWootEngine().getXWootPeerId() + " : Synchronize page -");
         if (request.getParameter("test") != null) {
 
             if (!XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork()) {
@@ -95,7 +95,7 @@ public class Synchronize extends HttpServlet
                 response.setHeader("connected", "false");
             } else {
                 response.setHeader("connected", "true");
-                System.out.println("Neighbor " + XWootSite.getInstance().getXWootEngine().getPeerId()
+                System.out.println("Neighbor " + XWootSite.getInstance().getXWootEngine().getXWootPeerId()
                     + " is connected.");
             }
             return;
@@ -262,7 +262,7 @@ public class Synchronize extends HttpServlet
     private void customPageManagement(HttpServletRequest request) throws WikiContentManagerException,
         FileNotFoundException
     {
-        System.out.print("Site " + XWootSite.getInstance().getXWootEngine().getPeerId() + " : Page management page -");
+        System.out.print("Site " + XWootSite.getInstance().getXWootEngine().getXWootPeerId() + " : Page management page -");
 
         if (!XWootSite.getInstance().getXWootEngine().isContentManagerConnected()) {
             return;

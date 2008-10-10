@@ -4,12 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 
-import org.xwoot.xwootApp.core.XWootPage;
-
 public interface XWootAPI
 {
 
-    boolean addNeighbour(String neighborURL);
+    //TODO : Verifier le rechargement des donnees (fichiers) en cas d'arret de l'application 
+    // (rechargement de l'instance)
 
     /**
      * To create/update model. The given file is the woot storage computed by the network creator (computed with
@@ -36,6 +35,10 @@ public interface XWootAPI
      */
     void initialiseWootStorage() throws Exception;
 
+    boolean isWootStorageComputed();
+
+    void doAntiEntropy(String neighborURL) throws Exception;
+
     /**
      * @throws Exception
      */
@@ -45,29 +48,25 @@ public interface XWootAPI
 
     boolean isContentManagerConnected();
 
+    boolean joinNetwork(String neighborURL) throws Exception;
+
+    boolean createNetwork() throws Exception;
+
     void reconnectToP2PNetwork() throws IOException, ClassNotFoundException, Exception;
 
     void disconnectFromP2PNetwork() throws Exception;
 
     boolean isConnectedToP2PNetwork();
 
-    void doAntiEntropy(String neighborURL) throws Exception;
+    boolean addNeighbour(String neighborURL);
 
     Collection<String> getNeighborsList() throws Exception;
 
     void removeNeighbor(String neighborURL) throws Exception;
 
-    boolean joinNetwork(String neighborURL) throws Exception;
-
-    boolean createNetwork() throws Exception;
-
     void synchronizePages() throws Exception;
 
-    String getPeerId();
+    String getXWootPeerId();
 
     String getContentManagerURL();
-
-    boolean isWootStorageComputed();
-
-    boolean isPageManaged(XWootPage page);
 }

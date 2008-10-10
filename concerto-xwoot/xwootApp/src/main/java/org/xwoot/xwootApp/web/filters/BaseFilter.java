@@ -128,14 +128,14 @@ public class BaseFilter implements Filter
                     return;
                 }
             } else {
-                request.setAttribute("serverUrl", XWootSite.getInstance().getXWootEngine().getPeerId());
+                request.setAttribute("serverUrl", XWootSite.getInstance().getXWootEngine().getXWootPeerId());
 
                 // Service gestion : if another xwoot send his url
                 String neighbor = request.getParameter("url");
 
                 if (!StringUtils.isBlank(neighbor)
                     && XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork()) {
-                    System.out.println("Site " + XWootSite.getInstance().getXWootEngine().getPeerId()
+                    System.out.println("Site " + XWootSite.getInstance().getXWootEngine().getXWootPeerId()
                         + " : Base servlet - another xwoot send his url : " + NetUtil.normalize(neighbor) + " -");
                     if (!XWootSite.getInstance().getXWootEngine().getNeighborsList().contains(neighbor)
                         && ((XWoot) XWootSite.getInstance().getXWootEngine()).forceAddNeighbour(neighbor)) {

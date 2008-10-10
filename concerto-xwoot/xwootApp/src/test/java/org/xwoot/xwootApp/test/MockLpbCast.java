@@ -145,7 +145,7 @@ public class MockLpbCast implements LpbCastAPI, Serializable {
                 ran=(XWoot)neighbor;
             } 
             
-            if (rafrom.getPeerId().equals(ran.getPeerId())){
+            if (rafrom.getXWootPeerId().equals(ran.getXWootPeerId())){
                 return false;
             }
             
@@ -199,7 +199,7 @@ public class MockLpbCast implements LpbCastAPI, Serializable {
 
         for (int i = 0; i < this.receivers.size(); i++) {
             try {
-                result.add(this.receivers.get(i).getPeerId());
+                result.add(this.receivers.get(i).getXWootPeerId());
             } catch (Exception e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -233,7 +233,7 @@ public class MockLpbCast implements LpbCastAPI, Serializable {
         message.setRound(r);
         XWoot rn=(XWoot) this.getNeighborRandomly();
         if (rn!=null) {
-            message.setRandNeighbor(rn.getPeerId());
+            message.setRandNeighbor(rn.getXWootPeerId());
         }
        
 
@@ -372,7 +372,7 @@ public class MockLpbCast implements LpbCastAPI, Serializable {
         Iterator i=this.receivers.iterator();
         while(i.hasNext()){
             XWoot r=(XWoot)i.next();
-            if (r.getPeerId().equals(originalPeerId)){
+            if (r.getXWootPeerId().equals(originalPeerId)){
                 result=r;
             }        
         }

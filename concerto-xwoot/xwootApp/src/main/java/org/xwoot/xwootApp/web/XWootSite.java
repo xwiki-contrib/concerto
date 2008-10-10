@@ -222,10 +222,10 @@ public class XWootSite
             new XWoot(wiki, wootEngine, lpbCast, xwootDir.toString(), peerId, Integer.valueOf(siteId), tre, ae);
 
         this.started = true;
-        System.out.println("Site " + this.xWootEngine.getPeerId() + " initialisation");
+        System.out.println("Site " + this.xWootEngine.getXWootPeerId() + " initialisation");
 
         this.started = true;
-        System.out.println("Site " + this.xWootEngine.getPeerId() + " initialisation");
+        System.out.println("Site " + this.xWootEngine.getXWootPeerId() + " initialisation");
     }
 
     /**

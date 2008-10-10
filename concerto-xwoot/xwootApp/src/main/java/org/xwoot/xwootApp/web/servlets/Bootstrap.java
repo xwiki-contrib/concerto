@@ -71,7 +71,7 @@ public class Bootstrap extends HttpServlet
     {
         try {
             if (XWootSite.getInstance().isStarted()) {
-                System.out.println("Site: " + XWootSite.getInstance().getXWootEngine().getPeerId()
+                System.out.println("Site: " + XWootSite.getInstance().getXWootEngine().getXWootPeerId()
                     + " Bootstrap - instance already started");
                 response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/synchronize.do"));
                 return;
@@ -100,7 +100,7 @@ public class Bootstrap extends HttpServlet
                         (String) p_xwiki.get(XWootSite.XWIKI_ENDPOINT), (String) p_xwiki.get(XWootSite.XWIKI_USERNAME),
                         (String) p_xwiki.get(XWootSite.XWIKI_PASSWORD));
 
-                    System.out.println("Site :" + XWootSite.getInstance().getXWootEngine().getPeerId()
+                    System.out.println("Site :" + XWootSite.getInstance().getXWootEngine().getXWootPeerId()
                         + " Bootstrap - starting instance -");
                     response
                         .sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapNetwork.do"));

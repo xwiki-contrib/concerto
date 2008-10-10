@@ -321,9 +321,9 @@ public class XWoot implements XWootAPI
         // send the new patch
         Patch newPatch = this.getWootEngine().createPatch(contentData, mDContentData, pageName, this.siteId.intValue());
         Message message =
-            this.sender.getNewMessage(this.getPeerId(), newPatch, LpbCastAPI.LOG_AND_GOSSIP_OBJECT, this.sender
+            this.sender.getNewMessage(this.getXWootPeerId(), newPatch, LpbCastAPI.LOG_AND_GOSSIP_OBJECT, this.sender
                 .getRound());
-        this.sender.gossip(this.getPeerId(), message);
+        this.sender.gossip(this.getXWootPeerId(), message);
         this.getAntiEntropy().logMessage(message.getId(), message);
         return newPatch;
     }
@@ -714,11 +714,11 @@ public class XWoot implements XWootAPI
                 }
 
                 message.setRound(message.getRound() - 1);
-                message.setOriginalPeerId(this.getPeerId());
+                message.setOriginalPeerId(this.getXWootPeerId());
 
                 if (message.getRound() > 0) {
                     this.logger.info(this.siteId + " : Received message : round >0 ; gossip message.");
-                    this.sender.gossip(this.getPeerId(), message);
+                    this.sender.gossip(this.getXWootPeerId(), message);
                 } else {
                     this.logger.info(this.siteId + " : Received message : round=0 ; stop gossip message.");
                 }
@@ -730,7 +730,7 @@ public class XWoot implements XWootAPI
                 this.logger.info(this.siteId + " : Message ask antientropy diff -- sending it.");
 
                 Collection content = this.antiEntropy.answerAntiEntropy(message.getContent());
-                Message toSend = this.sender.getNewMessage(this.getPeerId(), content, LpbCastAPI.LOG_OBJECT, 0);
+                Message toSend = this.sender.getNewMessage(this.getXWootPeerId(), content, LpbCastAPI.LOG_OBJECT, 0);
 
                 this.logger
                     .debug(this.siteId
@@ -772,7 +772,7 @@ public class XWoot implements XWootAPI
 
         if (this.getNeighborsList().contains(neighborURL) || this.addNeighbour(neighborURL)) {
             if (s == null) {
-                s = this.askState(this.getPeerId(), neighborURL);
+                s = this.askState(this.getXWootPeerId(), neighborURL);
                 if (s == null) {
                     this.logger.warn(this.siteId + " : problem to get state of neighbor : " + neighborURL);
                     return false;
@@ -787,7 +787,7 @@ public class XWoot implements XWootAPI
     public File askState(String from, String to) throws IOException, URISyntaxException
     {
 
-        System.out.println(this.getPeerId() + " Ask state to " + NetUtil.normalize(to));
+        System.out.println(this.getXWootPeerId() + " Ask state to " + NetUtil.normalize(to));
         URL getNeighborState =
             new URL(NetUtil.normalize(to) + HttpServletLpbCast.SENDSTATECONTEXT + "?neighbor=" + from
                 + "&file=stateFile");
@@ -800,7 +800,7 @@ public class XWoot implements XWootAPI
     
     public Message[] askAE(String from, String to) throws IOException, URISyntaxException, ClassNotFoundException
     {
-        System.out.println(this.getPeerId() + " Ask antiEntropy to " + NetUtil.normalize(to));
+        System.out.println(this.getXWootPeerId() + " Ask antiEntropy to " + NetUtil.normalize(to));
         URL getNeighborAE =
             new URL(NetUtil.normalize(to) + HttpServletLpbCast.SENDAEDIFFCONTEXT + "?neighbor=" + from
                 + "&file=stateFile");
@@ -902,7 +902,7 @@ public class XWoot implements XWootAPI
         this.logger.info(this.siteId + " : Asking antiEntropy with : " + neighborURL);
 
         Message message =
-            this.sender.getNewMessage(this.getPeerId(), this.antiEntropy.getContentForAskAntiEntropy(),
+            this.sender.getNewMessage(this.getXWootPeerId(), this.antiEntropy.getContentForAskAntiEntropy(),
                 LpbCastAPI.ANTI_ENTROPY, 0);
         this.logger
             .debug(this.siteId + " : New message -- content : log patches -- Action : ANTI_ENTROPY -- round : 0");
@@ -1123,6 +1123,7 @@ public class XWoot implements XWootAPI
         return true;
     }
 
+    
     /**
      * DOCUMENT ME!
      * 
@@ -1143,158 +1144,6 @@ public class XWoot implements XWootAPI
         return result;
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param page DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
-     */
-    public boolean isPageManaged(XWootPage page)
-    {
-        return page.existPage(this.lastVuePagesDir);
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param contentManagerPages DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws FileNotFoundException DOCUMENT ME!
-     */
-    public HashMap isPagesManaged(Collection contentManagerPages) throws FileNotFoundException
-    {
-        Collection managedPages = XWootPage.getManagedPageNames(this.lastVuePagesDir);
-        HashMap<String, Boolean> result = new HashMap<String, Boolean>();
-
-        if (contentManagerPages == null) {
-            return result;
-        }
-
-        Iterator<String> i = ((Collection<String>) contentManagerPages).iterator();
-
-        while (i.hasNext()) {
-            String current = i.next();
-            result.put(current, Boolean.valueOf((managedPages.contains(current))));
-        }
-
-        return result;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param page DOCUMENT ME!
-     * @throws FileNotFoundException
-     * @throws Exception DOCUMENT ME!
-     */
-    public void addPageManagement(XWootPage page) throws FileNotFoundException
-    {
-        page.createPage(this.lastVuePagesDir);
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param space DOCUMENT ME!
-     * @param managedPages DOCUMENT ME!
-     * @throws FileNotFoundException
-     * @throws WikiContentManagerException
-     */
-    public void setPageManagement(String space, List<String> managedPages) throws FileNotFoundException,
-        WikiContentManagerException
-    {
-        if (!this.contentManagerConnected) {
-            return;
-        }
-        Collection pages = this.contentManager.getListPageId(space);
-        if (pages != null) {
-
-            Iterator i = pages.iterator();
-
-            while (i.hasNext()) {
-                String currentPage = (String) i.next();
-                XWootPage page = new XWootPage(currentPage, null);
-
-                if (!managedPages.contains(currentPage) && page.existPage(this.lastVuePagesDir)) {
-                    this.removeManagedPage(page);
-                } else if (managedPages.contains(currentPage) && !page.existPage(this.lastVuePagesDir)) {
-                    this.addPageManagement(page);
-                }
-            }
-
-        }
-
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @throws WikiContentManagerException
-     * @throws Exception DOCUMENT ME!
-     */
-    public void addAllPageManagement() throws FileNotFoundException, WikiContentManagerException
-    {
-        if (!this.contentManagerConnected) {
-            return;
-        }
-        Collection spaces = this.contentManager.getListSpaceId();
-
-        Iterator i = spaces.iterator();
-
-        // for each space
-        while (i.hasNext()) {
-            String space = (String) i.next();
-            Collection pages = this.contentManager.getListPageId(space);
-
-            if (pages != null) {
-                Iterator j = pages.iterator();
-
-                while (j.hasNext()) {
-                    String page = (String) j.next();
-                    XWootPage xWootPage = new XWootPage(page, null);
-
-                    if (!this.isPageManaged(xWootPage)) {
-                        this.addPageManagement(xWootPage);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @throws FileNotFoundException
-     * @throws Exception DOCUMENT ME!
-     */
-    public void removeAllManagedPages() throws FileNotFoundException
-    {
-        Collection managedPages = XWootPage.getManagedPageNames(this.lastVuePagesDir);
-        Iterator i = managedPages.iterator();
-
-        while (i.hasNext()) {
-            String page = (String) i.next();
-            XWootPage xWootPage = new XWootPage(page, null);
-
-            if (xWootPage.existPage(this.lastVuePagesDir)) {
-                this.removeManagedPage(xWootPage);
-            }
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param page DOCUMENT ME!
-     * @return DOCUMENT ME!
-     */
-    public boolean removeManagedPage(XWootPage page)
-    {
-        File file = new File(this.lastVuePagesDir + File.separator + page.getFileName());
-        return file.delete();
-    }
-
     public void removeNeighbor(String neighborURL) throws Exception
     {
         this.sender.removeNeighbor(neighborURL);
@@ -1302,7 +1151,7 @@ public class XWoot implements XWootAPI
 
     public boolean addNeighbour(String neighborURL)
     {
-        return this.getSender().addNeighbor(this.getPeerId(), neighborURL);
+        return this.getSender().addNeighbor(this.getXWootPeerId(), neighborURL);
 
     }
 
@@ -1365,7 +1214,7 @@ public class XWoot implements XWootAPI
         return this.contentManagerURL;
     }
 
-    public String getPeerId()
+    public String getXWootPeerId()
     {
         return this.peerId;
     }
@@ -1373,5 +1222,157 @@ public class XWoot implements XWootAPI
     public String getStateFilePath()
     {
         return this.stateDir + File.separatorChar + STATEFILENAME;
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @throws WikiContentManagerException
+     * @throws Exception DOCUMENT ME!
+     */
+    public void addAllPageManagement() throws FileNotFoundException, WikiContentManagerException
+    {
+        if (!this.contentManagerConnected) {
+            return;
+        }
+        Collection spaces = this.contentManager.getListSpaceId();
+    
+        Iterator i = spaces.iterator();
+    
+        // for each space
+        while (i.hasNext()) {
+            String space = (String) i.next();
+            Collection pages = this.contentManager.getListPageId(space);
+    
+            if (pages != null) {
+                Iterator j = pages.iterator();
+    
+                while (j.hasNext()) {
+                    String page = (String) j.next();
+                    XWootPage xWootPage = new XWootPage(page, null);
+    
+                    if (!this.isPageManaged(xWootPage)) {
+                        this.addPageManagement(xWootPage);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @throws FileNotFoundException
+     * @throws Exception DOCUMENT ME!
+     */
+    public void removeAllManagedPages() throws FileNotFoundException
+    {
+        Collection managedPages = XWootPage.getManagedPageNames(this.lastVuePagesDir);
+        Iterator i = managedPages.iterator();
+    
+        while (i.hasNext()) {
+            String page = (String) i.next();
+            XWootPage xWootPage = new XWootPage(page, null);
+    
+            if (xWootPage.existPage(this.lastVuePagesDir)) {
+                this.removeManagedPage(xWootPage);
+            }
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param page DOCUMENT ME!
+     * @return DOCUMENT ME!
+     * @throws Exception DOCUMENT ME!
+     */
+    public boolean isPageManaged(XWootPage page)
+    {
+        return page.existPage(this.lastVuePagesDir);
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param contentManagerPages DOCUMENT ME!
+     * @return DOCUMENT ME!
+     * @throws FileNotFoundException DOCUMENT ME!
+     */
+    public HashMap isPagesManaged(Collection contentManagerPages) throws FileNotFoundException
+    {
+        Collection managedPages = XWootPage.getManagedPageNames(this.lastVuePagesDir);
+        HashMap<String, Boolean> result = new HashMap<String, Boolean>();
+    
+        if (contentManagerPages == null) {
+            return result;
+        }
+    
+        Iterator<String> i = ((Collection<String>) contentManagerPages).iterator();
+    
+        while (i.hasNext()) {
+            String current = i.next();
+            result.put(current, Boolean.valueOf((managedPages.contains(current))));
+        }
+    
+        return result;
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param page DOCUMENT ME!
+     * @throws FileNotFoundException
+     * @throws Exception DOCUMENT ME!
+     */
+    public void addPageManagement(XWootPage page) throws FileNotFoundException
+    {
+        page.createPage(this.lastVuePagesDir);
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param space DOCUMENT ME!
+     * @param managedPages DOCUMENT ME!
+     * @throws FileNotFoundException
+     * @throws WikiContentManagerException
+     */
+    public void setPageManagement(String space, List<String> managedPages) throws FileNotFoundException,
+        WikiContentManagerException
+    {
+        if (!this.contentManagerConnected) {
+            return;
+        }
+        Collection pages = this.contentManager.getListPageId(space);
+        if (pages != null) {
+    
+            Iterator i = pages.iterator();
+    
+            while (i.hasNext()) {
+                String currentPage = (String) i.next();
+                XWootPage page = new XWootPage(currentPage, null);
+    
+                if (!managedPages.contains(currentPage) && page.existPage(this.lastVuePagesDir)) {
+                    this.removeManagedPage(page);
+                } else if (managedPages.contains(currentPage) && !page.existPage(this.lastVuePagesDir)) {
+                    this.addPageManagement(page);
+                }
+            }
+    
+        }
+    
+    }
+
+    /**
+     * DOCUMENT ME!
+     * 
+     * @param page DOCUMENT ME!
+     * @return DOCUMENT ME!
+     */
+    public boolean removeManagedPage(XWootPage page)
+    {
+        File file = new File(this.lastVuePagesDir + File.separator + page.getFileName());
+        return file.delete();
     }
 }
