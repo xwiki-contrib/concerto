@@ -77,20 +77,19 @@ public abstract class Neighbors
      * 
      * @param neighborsFilePath DOCUMENT ME!
      * @param maxNumber DOCUMENT ME!
-     * @throws Exception
-     * @throws Exception DOCUMENT ME!
+     * 
      */
-    public Neighbors(String directoryPath, int maxNumber, Integer id) throws Exception
+    public Neighbors(String directoryPath, int maxNumber, Integer id) throws NeighborsException
     {
         File f = new File(directoryPath);
         if (!f.exists()) {
             if (!f.mkdir()) {
-                throw new Exception("Can't create directory: " + directoryPath);
+                throw new NeighborsException(this.id+" : Can't create directory: " + directoryPath);
             }
         } else if (!f.isDirectory()) {
-            throw new Exception("given path : " + directoryPath + " -- is not a directory");
+            throw new NeighborsException(this.id+" : given path : " + directoryPath + " -- is not a directory");
         } else if (!f.canWrite()) {
-            throw new Exception("given path : " + directoryPath + " -- isn't writable");
+            throw new NeighborsException(this.id+" : given path : " + directoryPath + " -- isn't writable");
         }
 
         this.neighborsFilePath = directoryPath + File.separator + "neighbors";
@@ -100,7 +99,7 @@ public abstract class Neighbors
         // this.loadNeighbors();
     }
 
-    public void clearWorkingDir() throws Exception
+    public void clearWorkingDir()
     {
         File f = new File(this.neighborsFilePath);
         if (f.exists()) {
@@ -114,11 +113,10 @@ public abstract class Neighbors
      * 
      * @param neighbor DOCUMENT ME!
      * @return DOCUMENT ME!
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws Exception DOCUMENT ME!
+     * @throws NeighborsException 
+     * 
      */
-    public int addNeighbor(Object neighbor) throws IOException, ClassNotFoundException
+    public int addNeighbor(Object neighbor) throws NeighborsException
     {
         int result = 0;
 
@@ -152,11 +150,10 @@ public abstract class Neighbors
     // remove all neighbors
     /**
      * DOCUMENT ME!
+     * @throws NeighborsException 
      * 
-     * @throws IOException
-     * @throws Exception DOCUMENT ME!
      */
-    public void clearNeighbors() throws IOException
+    public void clearNeighbors() throws NeighborsException
     {
         this.neighbors = new HashSet<Object>();
         this.storeNeighbors();
@@ -177,11 +174,9 @@ public abstract class Neighbors
      * DOCUMENT ME!
      * 
      * @return DOCUMENT ME!
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws Exception DOCUMENT ME!
+     * @throws NeighborsException 
      */
-    public Object getNeighborRandomly() throws IOException, ClassNotFoundException
+    public Object getNeighborRandomly() throws NeighborsException
     {
         this.loadNeighbors();
 
@@ -202,11 +197,10 @@ public abstract class Neighbors
      * DOCUMENT ME!
      * 
      * @return DOCUMENT ME!
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws Exception DOCUMENT ME!
+     * @throws NeighborsException 
+     * 
      */
-    public boolean isConnected() throws IOException, ClassNotFoundException
+    public boolean isConnected() throws NeighborsException
     {
         this.loadNeighbors();
 
@@ -215,7 +209,7 @@ public abstract class Neighbors
 
     // methods for persistent storage
     @SuppressWarnings("unchecked")
-    private void loadNeighbors() throws IOException, ClassNotFoundException
+    private void loadNeighbors() throws NeighborsException 
     {
         File neighborsFile = new File(this.neighborsFilePath);
 
@@ -226,11 +220,18 @@ public abstract class Neighbors
         }
 
         ObjectInputStream ois = null;
-        ois = new ObjectInputStream(new FileInputStream(neighborsFile));
+        try {
+            ois = new ObjectInputStream(new FileInputStream(neighborsFile));
+            HashSet<Object> readObject = (HashSet<Object>) ois.readObject();
+            this.neighbors = readObject;
+            ois.close();
+        } catch (IOException e) {
+            throw new NeighborsException("Problem to load neighbors file "+this.neighborsFilePath+"\n"+e);
+        } catch (ClassNotFoundException e) {
+            throw new NeighborsException("Problem when loading neighbors file with class cast "+this.neighborsFilePath+"\n"+e);
+        }
 
-        HashSet<Object> readObject = (HashSet<Object>) ois.readObject();
-        this.neighbors = readObject;
-        ois.close();
+      
     }
 
     // get neighbors list
@@ -238,11 +239,10 @@ public abstract class Neighbors
      * DOCUMENT ME!
      * 
      * @return DOCUMENT ME!
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws Exception DOCUMENT ME!
+     * @throws NeighborsException 
+     * 
      */
-    public Collection neighborsList() throws IOException, ClassNotFoundException
+    public Collection neighborsList() throws NeighborsException
     {
         this.loadNeighbors();
 
@@ -257,11 +257,10 @@ public abstract class Neighbors
      * DOCUMENT ME!
      * 
      * @return DOCUMENT ME!
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws Exception DOCUMENT ME!
+     * @throws NeighborsException 
+     * 
      */
-    public int neighborsListSize() throws IOException, ClassNotFoundException
+    public int neighborsListSize() throws NeighborsException 
     {
         this.loadNeighbors();
 
@@ -271,7 +270,7 @@ public abstract class Neighbors
         return result;
     }
 
-    public abstract void notifyNeighbor(Object neighbor, Object message) throws IOException;
+    public abstract void notifyNeighbor(Object neighbor, Object message);
 
     public abstract void notifyNeighbors(Object message);
 
@@ -280,11 +279,10 @@ public abstract class Neighbors
      * DOCUMENT ME!
      * 
      * @param neighbor DOCUMENT ME!
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws Exception DOCUMENT ME!
+     * @throws NeighborsException 
+     * 
      */
-    public void removeNeighbor(Object neighbor) throws IOException, ClassNotFoundException
+    public void removeNeighbor(Object neighbor) throws NeighborsException
     {
         this.loadNeighbors();
         this.neighbors.remove(neighbor);
@@ -293,7 +291,7 @@ public abstract class Neighbors
 
     // private
     // remove one neighbor ramdomly
-    private void removeNeighborRandomly() throws IOException, ClassNotFoundException
+    private void removeNeighborRandomly() throws NeighborsException
     {
         this.loadNeighbors();
 
@@ -303,7 +301,7 @@ public abstract class Neighbors
         this.storeNeighbors();
     }
 
-    private void storeNeighbors() throws IOException
+    private void storeNeighbors() throws NeighborsException
     {
         if (this.neighbors.isEmpty()) {
             File neighborsFile = new File(this.neighborsFilePath);
@@ -317,11 +315,16 @@ public abstract class Neighbors
 
         FileOutputStream fout = null;
         ObjectOutputStream oos = null;
-        fout = new FileOutputStream(this.neighborsFilePath);
-        oos = new ObjectOutputStream(fout);
-        oos.writeObject(this.neighbors);
-        oos.flush();
-        oos.close();
-        fout.close();
+        try {
+            fout = new FileOutputStream(this.neighborsFilePath);
+            oos = new ObjectOutputStream(fout);
+            oos.writeObject(this.neighbors);
+            oos.flush();
+            oos.close();
+            fout.close();
+        } catch (IOException e) {
+            throw new NeighborsException(this.id+" : Problem to store neighbors file "+this.neighborsFilePath+"\n"+e);
+        }
+       
     }
 }

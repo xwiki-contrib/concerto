@@ -160,7 +160,7 @@ public interface WikiContentManager
      * 
      * @param name DOCUMENT ME!
      * @param value DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
+     * @throws WikiContentManagerException DOCUMENT ME!
      */
     void overwritePageContent(String name, String value) throws WikiContentManagerException;
 
@@ -170,7 +170,7 @@ public interface WikiContentManager
      * 
      * @param pageName DOCUMENT ME!
      * @return DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
+     * @throws WikiContentManagerException DOCUMENT ME!
      */
     Map<String, String> createPage(String pageName, String content) throws WikiContentManagerException;
 
@@ -179,7 +179,7 @@ public interface WikiContentManager
      * 
      * @param pageId DOCUMENT ME!
      * @return DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
+     * @throws WikiContentManagerException DOCUMENT ME!
      */
     List<Map> getComments(String pageId) throws WikiContentManagerException;
 
@@ -188,7 +188,7 @@ public interface WikiContentManager
      * 
      * @param pageId DOCUMENT ME!
      * @return DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
+     * @throws WikiContentManagerException DOCUMENT ME!
      */
     Map<String, String> getFields(String pageId) throws WikiContentManagerException;
 
@@ -197,7 +197,7 @@ public interface WikiContentManager
      * 
      * @param space DOCUMENT ME!
      * @return DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
+     * @throws WikiContentManagerException DOCUMENT ME!
      */
     Collection getListPageId(String space) throws WikiContentManagerException;
 
@@ -205,8 +205,7 @@ public interface WikiContentManager
      * DOCUMENT ME!
      * 
      * @return DOCUMENT ME!
-     * @throws SwizzleException
-     * @throws Exception DOCUMENT ME!
+     * @throws WikiContentManagerException DOCUMENT ME!
      */
     Collection getListSpaceId() throws WikiContentManagerException;
 
@@ -216,7 +215,7 @@ public interface WikiContentManager
      * 
      * @param name DOCUMENT ME!
      * @return DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
+     * @throws WikiContentManagerException DOCUMENT ME!
      */
     String getPageContent(String name) throws WikiContentManagerException;
 
@@ -225,7 +224,7 @@ public interface WikiContentManager
      * 
      * @param Name DOCUMENT ME!
      * @return DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
+     * @throws WikiContentManagerException DOCUMENT ME!
      */
     String getWikiURL();
 
@@ -234,7 +233,7 @@ public interface WikiContentManager
      * 
      * @param pageId DOCUMENT ME!
      * @param comment DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
+     * @throws WikiContentManagerException DOCUMENT ME!
      */
     void overWriteComments(String pageId, List<Map> comment) throws WikiContentManagerException;
 
@@ -243,7 +242,7 @@ public interface WikiContentManager
      * 
      * @param pageName DOCUMENT ME!
      * @return DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
+     * @throws WikiContentManagerException DOCUMENT ME!
      */
     boolean removePage(String pageName) throws WikiContentManagerException;
 
@@ -255,7 +254,7 @@ public interface WikiContentManager
      * @param pageId DOCUMENT ME!
      * @param comment DOCUMENT ME!
      * @return DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
+     * @throws WikiContentManagerException DOCUMENT ME!
      */
     Map setComment(String pageId, Map comment) throws WikiContentManagerException;
 
@@ -267,7 +266,6 @@ public interface WikiContentManager
      * @param pageId DOCUMENT ME!
      * @param fields DOCUMENT ME!
      * @return DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
      */
     Map<String, String> setFields(String pageId, Map<String, String> fields) throws WikiContentManagerException;
 
@@ -280,7 +278,7 @@ public interface WikiContentManager
      * @param rmd DOCUMENT ME!
      * @return DOCUMENT ME!
      * @throws NoSuchAlgorithmException DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
+     * @throws WikiContentManagerException DOCUMENT ME!
      */
     String setPageContent(String name, String value, String algo, byte[] rmd) throws NoSuchAlgorithmException,
         WikiContentManagerException;

@@ -70,7 +70,7 @@ public class Patch implements Serializable
      * @return DOCUMENT ME!
      * @throws Exception DOCUMENT ME!
      */
-    public Iterable getData() throws Exception
+    public Iterable getData()
     {
         return this.elements;
     }

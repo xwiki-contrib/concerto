@@ -3,7 +3,11 @@ package org.xwoot.lpbcast.neighbors.httpservletneighbors;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Iterator;
+
+
+import org.xwoot.lpbcast.LpbCastException;
 import org.xwoot.lpbcast.neighbors.Neighbors;
+import org.xwoot.lpbcast.neighbors.NeighborsException;
 import org.xwoot.lpbcast.util.NetUtil;
 
 public class HttpServletNeighbors extends Neighbors
@@ -21,11 +25,17 @@ public class HttpServletNeighbors extends Neighbors
             this.neighbor = neighbor;
         }
 
-        protected void call(Object n) throws IOException
+        protected void call(Object n) throws ServletNeighborsException 
         {
             System.out.println("Send message to : " + n);
-            URL to = new URL(n + "/receiveMessage.do");
-            NetUtil.sendObjectViaHTTPRequest(to, this.message);
+            URL to;
+            try {
+                to = new URL(n + "/receiveMessage.do");
+                NetUtil.sendObjectViaHTTPRequest(to, this.message);
+            } catch (IOException e) {
+               throw new ServletNeighborsException(this.neighbor+" : Problem to call neighbor "+n+"/receiveMessage.do"+"\n"+e);
+            }
+            
         }
 
         /**
@@ -44,24 +54,20 @@ public class HttpServletNeighbors extends Neighbors
         @Override
         public void run()
         {
-            try {
+            try{
                 if (this.neighbor != null) {
                     this.call(this.neighbor);
                 } else {
-                    for (Iterator i = HttpServletNeighbors.this.neighborsList().iterator(); i.hasNext();) {
-                        try {
-                            // TODO externalize the communication
-                            Object n = i.next();
-                            this.call(n);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                    for (Iterator i = HttpServletNeighbors.this.neighborsList().iterator(); i.hasNext();) {   
+                        // TODO externalize the communication
+                        Object n = i.next();
+                        this.call(n);
                     }
                 }
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
+            }catch(LpbCastException e){
                 e.printStackTrace();
             }
+          
         }
 
         /**
@@ -76,7 +82,7 @@ public class HttpServletNeighbors extends Neighbors
         }
     }
 
-    public HttpServletNeighbors(String neighborsFilePath, int maxNumber, Integer id) throws Exception
+    public HttpServletNeighbors(String neighborsFilePath, int maxNumber, Integer id) throws NeighborsException 
     {
         super(neighborsFilePath, maxNumber, id);
     }
@@ -87,11 +93,10 @@ public class HttpServletNeighbors extends Neighbors
      * 
      * @param neighbor DOCUMENT ME!
      * @param message DOCUMENT ME!
-     * @throws IOException
-     * @throws Exception DOCUMENT ME!
+     * 
      */
     @Override
-    public void notifyNeighbor(Object neighbor, Object message) throws IOException
+    public void notifyNeighbor(Object neighbor, Object message)
     {
         NotifyNeighbors notify = new NotifyNeighbors();
         notify.setMessage(message);
@@ -104,7 +109,6 @@ public class HttpServletNeighbors extends Neighbors
      * DOCUMENT ME!
      * 
      * @param message DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
      */
     @Override
     public void notifyNeighbors(Object message)

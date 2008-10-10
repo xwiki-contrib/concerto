@@ -44,11 +44,11 @@
 
 package org.xwoot.xwootApp.web.servlets;
 
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Collection;
 
 import org.xwoot.lpbcast.message.Message;
+import org.xwoot.lpbcast.sender.SenderException;
 import org.xwoot.xwootApp.XWoot;
 import org.xwoot.xwootApp.web.XWootSite;
 
@@ -75,7 +75,7 @@ public class SendAEDiff extends HttpServlet
      * @throws Exception DOCUMENT ME!
      */
     @Override
-    public void service(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
+    public void service(HttpServletRequest request, HttpServletResponse response) throws ServletException
     {
         Message[] log=null;
         Collection diff=null;
@@ -89,7 +89,11 @@ public class SendAEDiff extends HttpServlet
             throw new ServletException(e);
         }
         if (diff!=null) {
-            ((XWoot) XWootSite.getInstance().getXWootEngine()).getSender().processSendAE(request, response, diff);
+            try {
+                ((XWoot) XWootSite.getInstance().getXWootEngine()).getSender().processSendAE(request, response, diff);
+            } catch (SenderException e) {
+                throw new ServletException(e);
+            }
         }
     }
 }

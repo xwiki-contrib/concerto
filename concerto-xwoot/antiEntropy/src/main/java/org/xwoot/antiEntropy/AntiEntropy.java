@@ -47,7 +47,6 @@ package org.xwoot.antiEntropy;
 import org.xwoot.antiEntropy.Log.Log;
 
 import java.io.File;
-import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -69,20 +68,20 @@ public class AntiEntropy
      * Creates a new AntiEntropy object.
      * 
      * @param logPath : the filepath for log persistence storage with serialization.
-     * @throws IOException
-     * @throws Exception : TODO better exception gestion ... exceptions concerning log serializing
+     * @throws AntiEntropyException 
+     * 
      */
-    public AntiEntropy(String logPath) throws IOException
+    public AntiEntropy(String logPath) throws AntiEntropyException 
     {
         File f = new File(logPath);
         if (!f.exists()) {
             if (!f.mkdir()) {
-                throw new IOException("Can't create directory: " + logPath);
+                throw new AntiEntropyException("Can't create directory: " + logPath);
             }
         } else if (!f.isDirectory()) {
-            throw new IOException("given path : " + logPath + " -- is not a directory");
+            throw new AntiEntropyException("given path : " + logPath + " -- is not a directory");
         } else if (!f.canWrite()) {
-            throw new IOException("given path : " + logPath + " -- isn't writable");
+            throw new AntiEntropyException("given path : " + logPath + " -- isn't writable");
         }
         this.log = new Log(logPath + File.separator + "log");
     }
@@ -98,11 +97,10 @@ public class AntiEntropy
      * 
      * @param site2ids : table of all remote log keys
      * @return : collection of all local keys which are not in the given table
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws Exception : TODO better exception gestion ... exceptions concerning log serializing
+     * @throws AntiEntropyException 
+     * 
      */
-    public Collection answerAntiEntropy(Object site2ids) throws IOException, ClassNotFoundException
+    public Collection answerAntiEntropy(Object site2ids) throws AntiEntropyException
     {
         // diff with local log
         Object[] diff = this.log.getDiffKey((Object[])site2ids);
@@ -120,11 +118,10 @@ public class AntiEntropy
      * To get the table of all message keys in log
      * 
      * @return the table of all message keys in log
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws Exception : TODO better exception gestion ... exceptions concerning log serializing
+     * @throws AntiEntropyException
+     * 
      */
-    public Object[] getContentForAskAntiEntropy() throws IOException, ClassNotFoundException
+    public Object[] getContentForAskAntiEntropy() throws AntiEntropyException
     {
         return this.log.getMessagesId();
     }
@@ -144,11 +141,10 @@ public class AntiEntropy
      * 
      * @param id : the key of the message to add
      * @param message : the message to add
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws Exception : TODO better exception gestion ... exceptions concerning log serializing
+     * @throws AntiEntropyException 
+     * 
      */
-    public void logMessage(Object id, Object message) throws IOException, ClassNotFoundException
+    public void logMessage(Object id, Object message) throws AntiEntropyException
     {
         this.log.addMessage(id, message);
     }

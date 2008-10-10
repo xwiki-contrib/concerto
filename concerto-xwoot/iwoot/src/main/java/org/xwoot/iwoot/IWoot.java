@@ -22,8 +22,9 @@ public class IWoot
         this.wcm = wcm;
     }
 
-    public synchronized Map<String, Map> getPages() throws WikiContentManagerException
+    public synchronized Map<String, Map> getPages() throws Exception
     {
+        this.reconnectXwoot();
         HashMap< String, Map> result=new HashMap<String, Map>();
         Collection spaces=this.wcm.getListSpaceId();
         Iterator i=spaces.iterator();
@@ -37,13 +38,25 @@ public class IWoot
                 result.put(page, pageMap);
             }
         }
+        this.disconnectXWoot();
         return result;
-        
     }
     
-    public synchronized List<String> getPagesNames() throws WikiContentManagerException
+    private void disconnectXWoot() throws Exception
     {
-        
+        this.xwoot.disconnectFromContentManager();
+        this.xwoot.disconnectFromP2PNetwork();     
+    }
+
+    private void reconnectXwoot() throws Exception
+    {
+        this.xwoot.reconnectToP2PNetwork();
+        this.xwoot.connectToContentManager(); 
+    }
+
+    public synchronized List<String> getPagesNames() throws Exception
+    { 
+        this.reconnectXwoot();
         ArrayList< String> result=new ArrayList<String>();
         Collection spaces=this.wcm.getListSpaceId();
         Iterator i=spaces.iterator();
@@ -52,6 +65,7 @@ public class IWoot
             Collection pages=this.wcm.getListPageId(space);
             result.addAll(pages);
         }
+        this.disconnectXWoot();
         return result;
     }
 

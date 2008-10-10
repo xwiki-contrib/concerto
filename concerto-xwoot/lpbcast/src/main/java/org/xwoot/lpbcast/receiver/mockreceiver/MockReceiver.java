@@ -1,8 +1,6 @@
 package org.xwoot.lpbcast.receiver.mockreceiver;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
 
 import org.xwoot.lpbcast.message.Message;
 import org.xwoot.lpbcast.receiver.ReceiverApi;
@@ -40,7 +38,7 @@ public class MockReceiver implements ReceiverApi
 
     }
 
-    public File askState(Object from, String to) throws IOException, URISyntaxException, ClassNotFoundException
+    public File askState() 
     {
         // TODO Auto-generated method stub
         return null;

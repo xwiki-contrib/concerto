@@ -163,8 +163,7 @@ public class PersistentClock implements Serializable, Clock
      * To store current clock value
      * 
      * @throws PersistentClockException
-     * @throws Exception : TODO better exception gestion ... file gestion exception
-     * @throws RuntimeException : TODO better exception gestion ... file gestion exception
+     * 
      */
     public synchronized void store() throws PersistentClockException
     {

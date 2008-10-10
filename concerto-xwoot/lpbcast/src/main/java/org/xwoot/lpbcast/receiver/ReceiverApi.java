@@ -1,8 +1,5 @@
 package org.xwoot.lpbcast.receiver;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-
 import org.xwoot.lpbcast.message.Message;
 
 public interface ReceiverApi
@@ -25,8 +22,8 @@ public interface ReceiverApi
      * DOCUMENT ME!
      * 
      * @param content DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
+     * @throws ReceiverException 
      */
-    void receive(Message message) throws IOException, ClassNotFoundException, URISyntaxException;
+    void receive(Message message) throws ReceiverException;
 
 }

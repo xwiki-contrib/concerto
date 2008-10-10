@@ -44,7 +44,6 @@
 
 package org.xwoot.xwootApp.web.servlets;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
@@ -65,6 +64,7 @@ import org.apache.commons.lang.StringUtils;
 import org.xwoot.lpbcast.util.NetUtil;
 import org.xwoot.wikiContentManager.WikiContentManagerException;
 import org.xwoot.xwootApp.XWoot;
+import org.xwoot.xwootApp.XWootException;
 import org.xwoot.xwootApp.web.XWootSite;
 
 /**
@@ -128,10 +128,11 @@ public class Synchronize extends HttpServlet
                 } else if ("custom".equals(request.getParameter("val"))) {
                     this.customPageManagement(request);
                 }
-            } catch (FileNotFoundException e) {
-                throw new ServletException(e);
             } catch (WikiContentManagerException e) {
                 throw new ServletException(e);
+            } catch (XWootException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
             }
 
         } else if ("removeNeighbor".equals(request.getParameter("action"))) {
@@ -139,8 +140,6 @@ public class Synchronize extends HttpServlet
             System.out.println(" remove neighbour : " + neighbor + " -");
             try {
                 XWootSite.getInstance().getXWootEngine().removeNeighbor(NetUtil.normalize(neighbor));
-            } catch (ClassNotFoundException e) {
-                throw new ServletException(e);
             } catch (URISyntaxException e) {
                 throw new ServletException(e);
             } catch (Exception e) {
@@ -259,8 +258,7 @@ public class Synchronize extends HttpServlet
         return;
     }
 
-    private void customPageManagement(HttpServletRequest request) throws WikiContentManagerException,
-        FileNotFoundException
+    private void customPageManagement(HttpServletRequest request) throws WikiContentManagerException,XWootException
     {
         System.out.print("Site " + XWootSite.getInstance().getXWootEngine().getXWootPeerId() + " : Page management page -");
 

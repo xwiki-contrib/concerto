@@ -84,19 +84,18 @@ public class Log implements Serializable
      * 
      * @param logFilePath : the file path used to serialize the log
      * @throws LogException
-     * @throws IOException
      */
-    public Log(String directoryPath) throws IOException
+    public Log(String directoryPath) throws LogException
     {
         File f = new File(directoryPath);
         if (!f.exists()) {
             if (!f.mkdir()) {
-                throw new IOException("Can't create directory: " + directoryPath);
+                throw new LogException("Can't create directory: " + directoryPath);
             }
         } else if (!f.isDirectory()) {
-            throw new IOException("given path : " + directoryPath + " -- is not a directory");
+            throw new LogException("given path : " + directoryPath + " -- is not a directory");
         } else if (!f.canWrite()) {
-            throw new IOException("given path : " + directoryPath + " -- isn't writable");
+            throw new LogException("given path : " + directoryPath + " -- isn't writable");
         }
 
         this.logFilePath = directoryPath + File.separator + "clock";
@@ -115,11 +114,9 @@ public class Log implements Serializable
      * 
      * @param id : Key for new log entry
      * @param message : the new log entry
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws Exception : TODO better exception gestion ... exceptions concerning object serializing
+     * @throws LogException 
      */
-    public synchronized void addMessage(Object id, Object message) throws IOException, ClassNotFoundException
+    public synchronized void addMessage(Object id, Object message) throws LogException
     {
         this.loadLog();
         this.log.put(id, message);
@@ -128,11 +125,10 @@ public class Log implements Serializable
 
     /**
      * To remove all entries in log
+     * @throws LogException 
      * 
-     * @throws IOException
-     * @throws Exception : TODO better exception gestion ... exceptions concerning object serializing
      */
-    public void clearLog() throws IOException
+    public void clearLog() throws LogException
     {
         this.log = new Hashtable<Object, Object>();
         this.storeLog();
@@ -143,11 +139,9 @@ public class Log implements Serializable
      * 
      * @param messageId The searched key
      * @return a boolean value
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws Exception TODO better exception gestion ... exceptions concerning object serializing
+     * @throws LogException 
      */
-    public boolean existInLog(Object messageId) throws IOException, ClassNotFoundException
+    public boolean existInLog(Object messageId) throws LogException 
     {
         this.loadLog();
 
@@ -158,11 +152,10 @@ public class Log implements Serializable
      * to get an hashtable with all log entries
      * 
      * @return all entries in a hashtable
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws Exception TODO better exception gestion ... exceptions concerning object serializing
+     * @throws LogException 
+     * 
      */
-    public Map<Object, Object> getAllEntries() throws IOException, ClassNotFoundException
+    public Map<Object, Object> getAllEntries() throws LogException 
     {
         this.loadLog();
 
@@ -174,11 +167,10 @@ public class Log implements Serializable
      * 
      * @param site2ids a table of keys
      * @return all of log entries that associate key isn't in the given table
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws Exception TODO better exception gestion ... exceptions concerning object serializing
+     * @throws LogException 
+     * 
      */
-    public Object[] getDiffKey(Object[] site2ids) throws IOException, ClassNotFoundException
+    public Object[] getDiffKey(Object[] site2ids) throws LogException
     {
         this.loadLog();
 
@@ -198,11 +190,10 @@ public class Log implements Serializable
      * 
      * @param id : the key associate with the wanted log entry
      * @return the wanted log entry or null if key's not present in log
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws Exception TODO better exception gestion ... exceptions concerning object serializing
+     * @throws LogException 
+     * 
      */
-    public Object getMessage(Object id) throws IOException, ClassNotFoundException
+    public Object getMessage(Object id) throws LogException
     {
         this.loadLog();
 
@@ -213,11 +204,10 @@ public class Log implements Serializable
      * To get all keys in log.
      * 
      * @return a table with all keys
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws Exception TODO better exception gestion ... exceptions concerning object serializing
+     * @throws LogException 
+     * 
      */
-    public Object[] getMessagesId() throws IOException, ClassNotFoundException
+    public Object[] getMessagesId() throws LogException
     {
         this.loadLog();
 
@@ -227,7 +217,7 @@ public class Log implements Serializable
     // private
     // methods for persistent storage. Load the log from file.
     @SuppressWarnings("unchecked")
-    private void loadLog() throws IOException, ClassNotFoundException
+    private void loadLog() throws LogException
     {
         File logFile = new File(this.logFilePath);
 
@@ -236,34 +226,46 @@ public class Log implements Serializable
             this.storeLog();
             return;
         }
-        FileInputStream fis = new FileInputStream(logFile);
-        ObjectInputStream ois = null;
-        ois = new ObjectInputStream(fis);
-
-        Map<Object, Object> readObject = (Map<Object, Object>) ois.readObject();
-        this.log = readObject;
-        ois.close();
-        fis.close();
+        FileInputStream fis;
+        try {
+            fis = new FileInputStream(logFile);
+           
+            ObjectInputStream ois = null;
+            ois = new ObjectInputStream(fis);
+    
+            Map<Object, Object> readObject = (Map<Object, Object>) ois.readObject();
+            this.log = readObject;
+            ois.close();
+            fis.close();
+        } catch (IOException e) {
+           throw new LogException("Problem to load log file "+this.logFilePath);
+        } catch (ClassNotFoundException e) {
+           throw new LogException("Problem during loading log file with class cast "+this.logFilePath);
+        }
     }
 
     /**
      * to get the number of entries in log
      * 
      * @return : the number of entries in log
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws Exception : TODO better exception gestion ... exceptions concerning object serializing
+     * @throws LogException 
+     * 
      */
-    public int logSize() throws IOException, ClassNotFoundException
+    public int logSize() throws LogException 
     {
         this.loadLog();
 
         return this.log.size();
     }
 
-    // private
-    // methods for persistent storage. Store the log in file.
-    private void storeLog() throws IOException
+    /**
+     *
+     * private
+     * methods for persistent storage. Store the log in file.
+     * 
+     */
+     
+    private void storeLog() throws LogException
     {
         if (this.log.isEmpty()) {
             File logFile = new File(this.logFilePath);
@@ -277,11 +279,16 @@ public class Log implements Serializable
 
         FileOutputStream fout = null;
         ObjectOutputStream oos = null;
-        fout = new FileOutputStream(this.logFilePath);
-        oos = new ObjectOutputStream(fout);
-        oos.writeObject(this.log);
-        oos.flush();
-        oos.close();
-        fout.close();
+        try {
+            fout = new FileOutputStream(this.logFilePath);
+        
+            oos = new ObjectOutputStream(fout);
+            oos.writeObject(this.log);
+            oos.flush();
+            oos.close();
+            fout.close();
+        } catch (IOException e) {
+           throw new LogException("Problem when storing log in file "+this.logFilePath);
+        }
     }
 }

@@ -46,15 +46,14 @@ package org.xwoot.lpbcast.receiver.httpservletreceiver;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.net.URISyntaxException;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.xwoot.lpbcast.message.Message;
 import org.xwoot.lpbcast.receiver.ReceiverApi;
+import org.xwoot.lpbcast.receiver.ReceiverException;
 
 /**
  * DOCUMENT ME!
@@ -82,32 +81,30 @@ public abstract class HttpServletReceiverAPI extends HttpServlet implements Rece
      * 
      * @param request DOCUMENT ME!
      * @param response DOCUMENT ME!
-     * @throws ServletException
-     * @throws URISyntaxException
-     * @throws ClassNotFoundException
-     * @throws Exception DOCUMENT ME!
+     * @throws HttpServletReceiverException 
      */
-    public void processReceiveMessage(HttpServletRequest request, HttpServletResponse response) throws IOException,
-        ServletException, URISyntaxException
+    public void processReceiveMessage(HttpServletRequest request, HttpServletResponse response) throws
+       ReceiverException
     {
         if (this.isReceiverConnected()) {
             System.out.println("Site " + this.getPeerId() + " : Receive message -");
             if (request.getParameter("test") != null) {
                 System.out.println("It's a neighbor test... ");
             } else {
-
-                ObjectInputStream ois = new ObjectInputStream(request.getInputStream());
-                Message message = null;
-
+                ObjectInputStream ois;
                 try {
+                    ois = new ObjectInputStream(request.getInputStream());
+                    Message message = null;
+
+                    
                     message = (Message) ois.readObject();
                     ois.close();
                     this.receive(message);
-                } catch (ClassNotFoundException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                } catch (IOException e1) {
+                   throw new HttpServletReceiverException(this.getPeerId()+" : Problem to read message from http connexion"+e1);         
+                } catch (ClassNotFoundException e) { 
+                    throw new HttpServletReceiverException(this.getPeerId()+" : Problem when reading message from http connexion with class cast "+e);
                 }
-
             }
         }
     }
@@ -116,10 +113,9 @@ public abstract class HttpServletReceiverAPI extends HttpServlet implements Rece
      * DOCUMENT ME!
      * 
      * @param content DOCUMENT ME!
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws URISyntaxException
-     * @throws Exception DOCUMENT ME!
+     * @throws HttpServletReceiverException 
+     * @throws ReceiverException 
+     * 
      */
-    public abstract void receive(Message message) throws IOException, ClassNotFoundException, URISyntaxException;
+    public abstract void receive(Message message) throws ReceiverException;
 }

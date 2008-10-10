@@ -45,15 +45,16 @@
 package org.xwoot.xwootApp.web.servlets;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.xwoot.lpbcast.message.Message;
+import org.xwoot.lpbcast.receiver.ReceiverException;
 import org.xwoot.lpbcast.receiver.httpservletreceiver.HttpServletReceiverAPI;
 import org.xwoot.xwootApp.XWoot;
+import org.xwoot.xwootApp.XWootException;
 import org.xwoot.xwootApp.web.XWootSite;
 
 /**
@@ -89,9 +90,13 @@ public class ReceiveMessage extends HttpServletReceiverAPI
     }
 
     @Override
-    public void receive(Message message) throws IOException, ClassNotFoundException, URISyntaxException
+    public void receive(Message message) throws ReceiverException
     {
-        ((XWoot) XWootSite.getInstance().getXWootEngine()).receivePatch(message);
+        try {
+            ((XWoot) XWootSite.getInstance().getXWootEngine()).receivePatch(message);
+        } catch (XWootException e) {
+           throw new ReceiverException("Problem to receive message \n"+e);
+        }
     }
 
     @Override

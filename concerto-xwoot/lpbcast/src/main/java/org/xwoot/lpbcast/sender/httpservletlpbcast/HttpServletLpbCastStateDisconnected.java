@@ -1,7 +1,6 @@
 package org.xwoot.lpbcast.sender.httpservletlpbcast;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 
 import javax.servlet.http.HttpServletRequest;
@@ -44,8 +43,7 @@ public class HttpServletLpbCastStateDisconnected extends HttpServletLpbCastState
         return this.connection.getNeighbors();
     }
 
-    public Message getNewMessage(Object creatorPeerId, Object content, int action, int round) throws IOException,
-        ClassNotFoundException
+    public Message getNewMessage(Object creatorPeerId, Object content, int action, int round)
     {
         return this.connection.getNewMessage(creatorPeerId, content, action, round);
     }
@@ -55,7 +53,7 @@ public class HttpServletLpbCastStateDisconnected extends HttpServletLpbCastState
         return this.connection.getRound();
     }
 
-    public void gossip(Object from, Object message) throws IOException, ClassNotFoundException
+    public void gossip(Object from, Object message)
     {
         this.connection.logger.info(this.connection.getId()
             + " Try to send message when sender is disconnected -- send nothing.");
@@ -68,37 +66,35 @@ public class HttpServletLpbCastStateDisconnected extends HttpServletLpbCastState
     }
 
     public void processSendState(HttpServletRequest request, HttpServletResponse response, File state)
-        throws IOException
     {
         this.connection.logger.info(" Try to send state when sender is disconnected -- send nothing.");
 
     }
 
-    public void sendTo(Object peerId, Object toSend) throws IOException
+    public void sendTo(Object peerId, Object toSend)
     {
         this.connection.logger.info(this.connection.getId() + " Try to send message to -- " + peerId
             + " -- when sender is disconnected -- send nothing.");
 
     }
 
-    public Collection getNeighborsList() throws IOException, ClassNotFoundException
+    public Collection getNeighborsList() throws HttpServletLpbCastException
     {
         return this.connection.getNeighborsList();
     }
 
-    public void removeNeighbor(Object neighbor) throws IOException, ClassNotFoundException
+    public void removeNeighbor(Object neighbor) throws HttpServletLpbCastException
     {
         this.connection.removeNeighbor(neighbor);
 
     }
 
-    public void clearWorkingDir() throws Exception
+    public void clearWorkingDir() 
     {
         this.connection.clearWorkingDir();
     }
 
-    public void processSendAE(HttpServletRequest request, HttpServletResponse response, Collection ae) 
-        throws IOException
+    public void processSendAE(HttpServletRequest request, HttpServletResponse response, Collection ae)
     {
         this.connection.logger.info(" Try to send anti entropy diff when sender is disconnected -- send nothing.");
     }

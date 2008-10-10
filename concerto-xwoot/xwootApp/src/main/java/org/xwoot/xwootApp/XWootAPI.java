@@ -1,7 +1,6 @@
 package org.xwoot.xwootApp;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 
 public interface XWootAPI
@@ -17,9 +16,8 @@ public interface XWootAPI
      * 
      * @param wst : a zip file (must be computed by an XWoot neighbor)
      * @return true if import success
-     * @throws Exception
      */
-    boolean importWootStorage(File wst) throws Exception;
+    boolean importWootStorage(File wst) throws XWootException;
 
     /**
      * To get woot storage. No need to be connected with P2P/contentManager.
@@ -31,40 +29,38 @@ public interface XWootAPI
     /**
      * To compute woot storage. Need to be connected with content provider.
      * 
-     * @throws Exception
      */
-    void initialiseWootStorage() throws Exception;
+    void initialiseWootStorage() throws XWootException;
 
     boolean isWootStorageComputed();
 
-    void doAntiEntropy(String neighborURL) throws Exception;
+    void doAntiEntropy(String neighborURL) throws XWootException;
 
-    /**
-     * @throws Exception
-     */
-    void connectToContentManager() throws Exception;
+    void doAntiEntropyWithAllNeighbors() throws XWootException;
 
-    void disconnectFromContentManager() throws Exception;
+    void connectToContentManager() throws XWootException;
+
+    void disconnectFromContentManager() throws XWootException;
 
     boolean isContentManagerConnected();
 
-    boolean joinNetwork(String neighborURL) throws Exception;
+    boolean joinNetwork(String neighborURL) throws XWootException;
 
-    boolean createNetwork() throws Exception;
+    boolean createNetwork() throws XWootException;
 
-    void reconnectToP2PNetwork() throws IOException, ClassNotFoundException, Exception;
+    void reconnectToP2PNetwork() throws XWootException;
 
-    void disconnectFromP2PNetwork() throws Exception;
+    void disconnectFromP2PNetwork() throws XWootException;
 
     boolean isConnectedToP2PNetwork();
 
     boolean addNeighbour(String neighborURL);
 
-    Collection<String> getNeighborsList() throws Exception;
+    Collection<String> getNeighborsList() throws XWootException;
 
-    void removeNeighbor(String neighborURL) throws Exception;
+    void removeNeighbor(String neighborURL) throws XWootException;
 
-    void synchronizePages() throws Exception;
+    void synchronizePages() throws XWootException;
 
     String getXWootPeerId();
 

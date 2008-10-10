@@ -78,12 +78,12 @@ public class Timestamp implements Comparable, Serializable
      * 
      * @param o DOCUMENT ME!
      * @return DOCUMENT ME!
-     * @throws ClassCastException DOCUMENT ME!
+     * 
      */
     public int compareTo(Object o)
     {
         if (!(o instanceof Timestamp)) {
-            throw new ClassCastException("Timestamp expected");
+            throw new ClassCastException("Class cast problem : Timestamp expected");
         }
 
         Timestamp with = (Timestamp) o;

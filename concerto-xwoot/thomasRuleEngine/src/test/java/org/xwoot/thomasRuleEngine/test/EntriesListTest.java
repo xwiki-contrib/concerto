@@ -47,6 +47,7 @@ package org.xwoot.thomasRuleEngine.test;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.xwoot.thomasRuleEngine.ThomasRuleEngineException;
 import org.xwoot.thomasRuleEngine.core.EntriesList;
 import org.xwoot.thomasRuleEngine.core.Entry;
 import org.xwoot.thomasRuleEngine.mock.MockIdentifier;
@@ -98,12 +99,11 @@ public class EntriesListTest
 
     /**
      * DOCUMENT ME!
+     * @throws ThomasRuleEngineException 
      * 
-     * @throws IOException DOCUMENT ME!
-     * @throws ClassNotFoundException DOCUMENT ME!
      */
     @Test
-    public void testAddEntry() throws IOException, ClassNotFoundException
+    public void testAddEntry() throws ThomasRuleEngineException
     {
         // create new List
         EntriesList el = new EntriesList(WORKINGDIR, FILENAME);
@@ -170,12 +170,11 @@ public class EntriesListTest
 
     /**
      * DOCUMENT ME!
+     * @throws ThomasRuleEngineException 
      * 
-     * @throws IOException DOCUMENT ME!
-     * @throws ClassNotFoundException DOCUMENT ME!
      */
     @Test
-    public void testRemoveEntry() throws IOException, ClassNotFoundException
+    public void testRemoveEntry() throws ThomasRuleEngineException 
     {
         // create new List
         EntriesList el = new EntriesList(WORKINGDIR, FILENAME);
@@ -197,12 +196,11 @@ public class EntriesListTest
 
     /**
      * DOCUMENT ME!
+     * @throws ThomasRuleEngineException 
      * 
-     * @throws IOException DOCUMENT ME!
-     * @throws ClassNotFoundException DOCUMENT ME!
      */
     @Test
-    public void testSetEntry() throws IOException, ClassNotFoundException
+    public void testSetEntry() throws ThomasRuleEngineException 
     {
         // create new List
         EntriesList el = new EntriesList(WORKINGDIR, FILENAME);

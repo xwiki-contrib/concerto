@@ -50,7 +50,6 @@ import org.xwoot.lpbcast.sender.LpbCastAPI;
 import org.xwoot.xwootApp.XWoot;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -168,7 +167,7 @@ public class MockLpbCast implements LpbCastAPI, Serializable {
      * @throws Exception
      *             DOCUMENT ME!
      */
-    public File askState(Object from,String neighbor) {
+    public File askState(String neighbor) {
         try {
             //ReceiverApi r= this.getReceiver(neighbor);
             return new File("MockFile");
@@ -354,7 +353,7 @@ public class MockLpbCast implements LpbCastAPI, Serializable {
      * @throws Exception
      *             DOCUMENT ME!
      */
-    public void sendTo(Object to, Object toSend) throws IOException {
+    public void sendTo(Object to, Object toSend) {
         if (to instanceof String){
             try {
                 this.notifyNeighbor(this.getReceiver((String) to),toSend);
@@ -383,15 +382,13 @@ public class MockLpbCast implements LpbCastAPI, Serializable {
         return null;
     }
 
-    public void clearWorkingDir() throws Exception
+    public void clearWorkingDir() 
     {
         // TODO Auto-generated method stub
         
     }
 
-    public void processSendAE(HttpServletRequest request, HttpServletResponse response, Collection ae)
-        throws IOException
-    {
+    public void processSendAE(HttpServletRequest request, HttpServletResponse response, Collection ae){
         // TODO Auto-generated method stub
         
     }

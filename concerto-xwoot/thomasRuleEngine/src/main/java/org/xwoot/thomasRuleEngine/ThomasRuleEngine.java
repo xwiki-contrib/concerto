@@ -58,7 +58,6 @@ import org.xwoot.thomasRuleEngine.op.ThomasRuleOpNew;
 import org.xwoot.thomasRuleEngine.op.ThomasRuleOpSet;
 
 import java.io.File;
-import java.io.IOException;
 
 import java.util.Calendar;
 
@@ -113,11 +112,10 @@ public class ThomasRuleEngine
      * 
      * @param o DOCUMENT ME!
      * @return DOCUMENT ME!
-     * @throws IOException DOCUMENT ME!
-     * @throws ClassNotFoundException DOCUMENT ME!
-     * @throws ClassCastException DOCUMENT ME!
+     * @throws ThomasRuleEngineException 
+     * 
      */
-    synchronized public Entry applyOp(ThomasRuleOp op) throws IOException, ClassNotFoundException
+    synchronized public Entry applyOp(ThomasRuleOp op) throws ThomasRuleEngineException 
     {
         if (op == null) {
             return null;
@@ -142,10 +140,10 @@ public class ThomasRuleEngine
      * @param id DOCUMENT ME!
      * @param value DOCUMENT ME!
      * @return DOCUMENT ME!
-     * @throws IOException DOCUMENT ME!
-     * @throws ClassNotFoundException DOCUMENT ME!
+     * @throws ThomasRuleEngineException 
+     * 
      */
-    synchronized public ThomasRuleOp getOp(Identifier id, Value value) throws IOException, ClassNotFoundException
+    synchronized public ThomasRuleOp getOp(Identifier id, Value value) throws ThomasRuleEngineException 
     {
         Entry e = this.entriesList.getEntry(id);
 
@@ -198,10 +196,9 @@ public class ThomasRuleEngine
      * 
      * @param id DOCUMENT ME!
      * @return DOCUMENT ME!
-     * @throws IOException DOCUMENT ME!
-     * @throws ClassNotFoundException DOCUMENT ME!
+     * @throws ThomasRuleEngineException 
      */
-    synchronized public Value getValue(Identifier id) throws IOException, ClassNotFoundException
+    synchronized public Value getValue(Identifier id) throws ThomasRuleEngineException 
     {
         Entry e = this.entriesList.getEntry(id);
 
@@ -238,10 +235,10 @@ public class ThomasRuleEngine
      * DOCUMENT ME!
      * 
      * @return DOCUMENT ME!
-     * @throws IOException DOCUMENT ME!
-     * @throws ClassNotFoundException DOCUMENT ME!
+     * @throws ThomasRuleEngineException 
+     * 
      */
-    public int size() throws IOException, ClassNotFoundException
+    public int size() throws ThomasRuleEngineException
     {
         return this.entriesList.size();
     }

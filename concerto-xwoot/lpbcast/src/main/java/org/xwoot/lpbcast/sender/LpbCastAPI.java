@@ -45,8 +45,6 @@
 package org.xwoot.lpbcast.sender;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Collection;
 
 import javax.servlet.http.HttpServletRequest;
@@ -77,10 +75,6 @@ public interface LpbCastAPI
      * 
      * @param neighbor DOCUMENT ME!
      * @return DOCUMENT ME!
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws URISyntaxException
-     * @throws Exception DOCUMENT ME!
      */
     boolean addNeighbor(Object from, Object neighbor);
 
@@ -88,7 +82,7 @@ public interface LpbCastAPI
 
     void disconnectSender();
 
-    void clearWorkingDir() throws Exception;
+    void clearWorkingDir() throws SenderException;
 
     /**
      * DOCUMENT ME!
@@ -97,12 +91,9 @@ public interface LpbCastAPI
      * @param action DOCUMENT ME!
      * @param round DOCUMENT ME!
      * @return DOCUMENT ME!
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws Exception DOCUMENT ME!
+     * 
      */
-    Message getNewMessage(Object creatorPeerId, Object content, int action, int round) throws IOException,
-        ClassNotFoundException;
+    Message getNewMessage(Object creatorPeerId, Object content, int action, int round) ;
 
     /**
      * DOCUMENT ME!
@@ -117,30 +108,28 @@ public interface LpbCastAPI
      * 
      * @param message DOCUMENT ME!
      * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws URISyntaxException
-     * @throws Exception DOCUMENT ME!
+     * @throws SenderException
+
      */
-    void gossip(Object from, Object message) throws IOException, ClassNotFoundException, URISyntaxException;
+    void gossip(Object from, Object message) throws SenderException;
 
     boolean isSenderConnected();
 
-    void processSendState(HttpServletRequest request, HttpServletResponse response, File state) throws IOException;
-    void processSendAE(HttpServletRequest request, HttpServletResponse response, Collection ae) throws IOException;
+    void processSendState(HttpServletRequest request, HttpServletResponse response, File state) throws SenderException;
+    void processSendAE(HttpServletRequest request, HttpServletResponse response, Collection ae) throws SenderException;
 
     /**
      * DOCUMENT ME!
      * 
      * @param originalPeerId DOCUMENT ME!
      * @param toSend DOCUMENT ME!
-     * @throws IOException
-     * @throws Exception DOCUMENT ME!
+     * @throws SenderException
      */
-    void sendTo(Object to, Object toSend) throws IOException;
+    void sendTo(Object to, Object toSend) throws SenderException;
 
-    Collection getNeighborsList() throws IOException, ClassNotFoundException;
+    Collection getNeighborsList() throws SenderException;
 
-    void removeNeighbor(Object neighbor) throws IOException, ClassNotFoundException;
+    void removeNeighbor(Object neighbor) throws SenderException;
 
     Neighbors getNeighbors();
 

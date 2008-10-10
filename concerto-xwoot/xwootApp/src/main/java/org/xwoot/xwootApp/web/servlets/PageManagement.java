@@ -57,6 +57,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.xwoot.xwootApp.XWoot;
+import org.xwoot.xwootApp.XWootException;
 import org.xwoot.xwootApp.core.XWootPage;
 import org.xwoot.xwootApp.web.XWootSite;
 
@@ -110,7 +111,12 @@ public class PageManagement extends HttpServlet
             } catch (Exception e) {
                 throw new ServletException(e);
             }
-            Map managedPagesMap = ((XWoot) XWootSite.getInstance().getXWootEngine()).isPagesManaged(pages);
+            Map managedPagesMap;
+            try {
+                managedPagesMap = ((XWoot) XWootSite.getInstance().getXWootEngine()).isPagesManaged(pages);
+            } catch (XWootException e) {
+                throw new ServletException(e);  
+            }
 
             request.setAttribute("currentSpace", currentSpace);
             request.setAttribute("managedPages", managedPagesMap);

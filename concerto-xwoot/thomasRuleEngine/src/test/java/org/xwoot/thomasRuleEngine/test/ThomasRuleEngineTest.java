@@ -48,6 +48,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngine;
+import org.xwoot.thomasRuleEngine.ThomasRuleEngineException;
 import org.xwoot.thomasRuleEngine.core.Identifier;
 import org.xwoot.thomasRuleEngine.core.Timestamp;
 import org.xwoot.thomasRuleEngine.core.Value;
@@ -59,7 +60,6 @@ import org.xwoot.thomasRuleEngine.op.ThomasRuleOpNew;
 import org.xwoot.thomasRuleEngine.op.ThomasRuleOpSet;
 
 import java.io.File;
-import java.io.IOException;
 
 import junit.framework.Assert;
 
@@ -106,12 +106,11 @@ public class ThomasRuleEngineTest
 
     /**
      * DOCUMENT ME!
+     * @throws ThomasRuleEngineException 
      * 
-     * @throws IOException DOCUMENT ME!
-     * @throws ClassNotFoundException DOCUMENT ME!
      */
     @Test
-    public void testApplyOp() throws IOException, ClassNotFoundException
+    public void testApplyOp() throws ThomasRuleEngineException 
     {
         ThomasRuleEngine tre1 = new ThomasRuleEngine(1, WORKINGDIR);
         ThomasRuleEngine tre2 = new ThomasRuleEngine(2, WORKINGDIR);
@@ -254,13 +253,12 @@ public class ThomasRuleEngineTest
 
     /**
      * DOCUMENT ME!
+     * @throws ThomasRuleEngineException 
+     * @throws InterruptedException 
      * 
-     * @throws IOException DOCUMENT ME!
-     * @throws ClassNotFoundException DOCUMENT ME!
-     * @throws InterruptedException
      */
     @Test
-    public void testGetOp() throws IOException, ClassNotFoundException, InterruptedException
+    public void testGetOp() throws ThomasRuleEngineException, InterruptedException 
     {
         ThomasRuleEngine tre1 = new ThomasRuleEngine(1, WORKINGDIR);
 

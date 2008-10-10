@@ -59,6 +59,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
+import org.xwoot.xwootApp.XWootException;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
@@ -79,9 +80,10 @@ public class XWootPage implements Serializable
      * 
      * @param lastVuePagesDir DOCUMENT ME!
      * @return DOCUMENT ME!
+     * @throws XWootException 
      * @throws FileNotFoundException DOCUMENT ME!
      */
-    static public Collection getManagedPageNames(String lastVuePagesDir) throws FileNotFoundException
+    static public Collection getManagedPageNames(String lastVuePagesDir) throws XWootException 
     {
         File dir = new File(lastVuePagesDir);
         String[] listPages = dir.list();
@@ -90,9 +92,14 @@ public class XWootPage implements Serializable
         // for each space
         for (String listPage : listPages) {
             XStream xstream = new XStream(new DomDriver());
-            XWootPage currentPage =
-                (XWootPage) xstream.fromXML(new FileInputStream(lastVuePagesDir + File.separator + listPage));
-            coll.add(currentPage.getPageName());
+            XWootPage currentPage;
+            try {
+                currentPage = (XWootPage) xstream.fromXML(new FileInputStream(lastVuePagesDir + File.separator + listPage));
+                coll.add(currentPage.getPageName());
+            } catch (FileNotFoundException e) {
+                throw new XWootException("File not found : "+lastVuePagesDir + File.separator + listPage+"\n",e);
+            }
+            
         }
 
         return coll;
@@ -121,15 +128,20 @@ public class XWootPage implements Serializable
         }
     }
 
-    public void createPage(String lastVuePagesDir) throws FileNotFoundException
+    public void createPage(String lastVuePagesDir) throws XWootException
     {
         if (!this.existPage(lastVuePagesDir)) {
             XStream xstream = new XStream();
-            PrintWriter pw =
-                new PrintWriter(new FileOutputStream(lastVuePagesDir + File.separator + this.getFileName()));
-            pw.print(xstream.toXML(this));
-            pw.flush();
-            pw.close();
+            try {
+                PrintWriter pw =
+                    new PrintWriter(new FileOutputStream(lastVuePagesDir + File.separator + this.getFileName()));
+                pw.print(xstream.toXML(this));
+                pw.flush();
+                pw.close();
+            }catch (FileNotFoundException e) {
+                throw new XWootException("File not found : "+lastVuePagesDir + File.separator + this.getFileName()+"\n",e);
+            }
+           
         }
     }
 
@@ -185,23 +197,28 @@ public class XWootPage implements Serializable
         return this.pageName;
     }
 
-    public synchronized void loadPage(String lastVuePagesDir) throws FileNotFoundException
+    public synchronized void loadPage(String lastVuePagesDir) throws XWootException 
     {
         if (!this.existPage(lastVuePagesDir)) {
             this.createPage(lastVuePagesDir);
         }
 
         XStream xstream = new XStream(new DomDriver());
-        XWootPage page =
-            (XWootPage) xstream.fromXML(new FileInputStream(lastVuePagesDir + File.separator + this.getFileName()));
+        XWootPage page;
+        try {
+            page = (XWootPage) xstream.fromXML(new FileInputStream(lastVuePagesDir + File.separator + this.getFileName()));
+            if ((page.getContent() == null)
+                || ((page.getContent().length() == 1) && (page.getContent().codePointAt(0) == 67))
+                || (page.getContent().length() < 1)) {
+                page.setContent("");
+            }
 
-        if ((page.getContent() == null)
-            || ((page.getContent().length() == 1) && (page.getContent().codePointAt(0) == 67))
-            || (page.getContent().length() < 1)) {
-            page.setContent("");
+            this.setContent(page.getContent());
+        } catch (FileNotFoundException e) { 
+            throw new XWootException("File not found : "+lastVuePagesDir + File.separator + this.getFileName()+"\n",e);
         }
 
-        this.setContent(page.getContent());
+       
     }
 
     /**
@@ -229,21 +246,26 @@ public class XWootPage implements Serializable
         }
     }
 
-    private synchronized void storePage(String lastVuePagesDir) throws FileNotFoundException
+    private synchronized void storePage(String lastVuePagesDir) throws XWootException
     {
         XStream xstream = new XStream();
 
-        OutputStreamWriter osw =
-            new OutputStreamWriter(new FileOutputStream(lastVuePagesDir + File.separator + this.getFileName()), Charset
+        OutputStreamWriter osw;
+        try {
+            osw = new OutputStreamWriter(new FileOutputStream(lastVuePagesDir + File.separator + this.getFileName()), Charset
                 .forName(System.getProperty("file.encoding")));
-        PrintWriter output = new PrintWriter(osw);
+            PrintWriter output = new PrintWriter(osw);
 
-        output.print(xstream.toXML(this));
-        output.flush();
-        output.close();
+            output.print(xstream.toXML(this));
+            output.flush();
+            output.close();
+        } catch (FileNotFoundException e) { 
+            throw new XWootException("File not found : "+lastVuePagesDir + File.separator + this.getFileName()+"\n",e);
+        }
+       
     }
 
-    public synchronized void unloadPage(String lastVuePagesDir) throws FileNotFoundException
+    public synchronized void unloadPage(String lastVuePagesDir) throws XWootException
     {
         this.storePage(lastVuePagesDir);
         System.runFinalization();

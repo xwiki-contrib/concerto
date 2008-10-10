@@ -72,8 +72,9 @@ public class Pool implements Serializable
 
     /**
      * Creates a new instance of Pool
+     * @throws WootEngineException 
      */
-    public Pool(String location)
+    public Pool(String location) throws WootEngineException
     {
         this.poolFile = new File(location);
         this.initializePool(false);
@@ -131,8 +132,9 @@ public class Pool implements Serializable
      * {@link #getContent()})
      * 
      * @param override Indicate if the method must override any existing log
+     * @throws WootEngineException 
      */
-    public void initializeLog(boolean override)
+    public void initializeLog(boolean override) throws WootEngineException
     {
         if (this.getPoolFile().exists() && override) {
             this.getPoolFile().delete();
@@ -147,7 +149,7 @@ public class Pool implements Serializable
                 oos.flush();
                 oos.close();
             } catch (Exception e) {
-                e.printStackTrace();
+               throw new WootEngineException("problem when initializing pool\n"+e);
             }
         }
     }
@@ -156,8 +158,9 @@ public class Pool implements Serializable
      * DOCUMENT ME!
      * 
      * @param overwrite DOCUMENT ME!
+     * @throws WootEngineException 
      */
-    private void initializePool(boolean overwrite)
+    private void initializePool(boolean overwrite) throws WootEngineException
     {
         if ((this.poolFile.exists() && overwrite) || !(this.poolFile.exists())) {
             try {
@@ -168,15 +171,16 @@ public class Pool implements Serializable
                 oos.flush();
                 oos.close();
             } catch (Exception e) {
-                e.printStackTrace();
+                throw new WootEngineException("problem when initializing pool\n"+e);  
             }
         }
     }
 
     /**
      * DOCUMENT ME!
+     * @throws WootEngineException 
      */
-    public synchronized void loadPool()
+    public synchronized void loadPool() throws WootEngineException
     {
         FileInputStream fin = null;
         ObjectInputStream ois = null;
@@ -188,15 +192,15 @@ public class Pool implements Serializable
             List<WootOp> readObject = (ArrayList<WootOp>) ois.readObject();
             this.setContent(readObject);
         } catch (Exception e) {
-            e.printStackTrace();
-
+            throw new WootEngineException("problem when loading pool\n"+e);  
+          
             // make sure the file is properly close
         } finally {
             if (fin != null) {
                 try {
                     fin.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    throw new WootEngineException("problem when closing pool\n"+e);  
                 }
             }
         }
@@ -236,8 +240,9 @@ public class Pool implements Serializable
 
     /**
      * DOCUMENT ME!
+     * @throws WootEngineException 
      */
-    public synchronized final void storePool()
+    public synchronized final void storePool() throws WootEngineException
     {
         FileOutputStream fout = null;
         ObjectOutputStream oos = null;
@@ -248,7 +253,8 @@ public class Pool implements Serializable
             oos.writeObject(this.getContent());
             oos.flush();
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new WootEngineException("problem when storing pool\n"+e);  
+           
 
             // make sure the file is properly close
         } finally {
@@ -256,7 +262,7 @@ public class Pool implements Serializable
                 try {
                     fout.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    throw new WootEngineException("problem when closing pool\n"+e);  
                 }
             }
         }
@@ -264,8 +270,9 @@ public class Pool implements Serializable
 
     /**
      * DOCUMENT ME!
+     * @throws WootEngineException 
      */
-    public synchronized final void unLoadPool()
+    public synchronized final void unLoadPool() throws WootEngineException
     {
         FileOutputStream fout = null;
         ObjectOutputStream oos = null;
@@ -279,15 +286,14 @@ public class Pool implements Serializable
             // and calling garbage collector
             this.free();
         } catch (Exception e) {
-            e.printStackTrace();
-
+            throw new WootEngineException("problem when closing pool\n"+e);  
             // make sure the file is properly close
         } finally {
             if (fout != null) {
                 try {
                     fout.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    throw new WootEngineException("problem when closing pool\n"+e);  
                 }
             }
         }

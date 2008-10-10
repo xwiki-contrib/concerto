@@ -45,6 +45,7 @@
 package org.xwoot.wootEngine.core;
 
 import org.xwoot.wootEngine.FileUtil;
+import org.xwoot.wootEngine.WootEngineException;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
@@ -140,16 +141,19 @@ public class WootPage implements Serializable
      * @return DOCUMENT ME!
      * @throws UnsupportedEncodingException DOCUMENT ME!
      */
-    public String getFileName() throws UnsupportedEncodingException
+    public String getFileName() throws WootEngineException
     {
         String filename = "";
-
-        if (this.isSavedPage) {
-            filename = FileUtil.getEncodedFileName(this.getPageName() + WootPage.SAVEDFILEEXTENSION);
-
-            /* filename=this.getPageName()+WootPage.SAVEDFILEEXTENSION; */
-        } else {
-            filename = FileUtil.getEncodedFileName(this.getPageName());
+        
+        try {
+            if (this.isSavedPage) {
+                filename = FileUtil.getEncodedFileName(this.getPageName() + WootPage.SAVEDFILEEXTENSION);
+            }
+             else {
+                filename = FileUtil.getEncodedFileName(this.getPageName());
+            }
+        }catch (UnsupportedEncodingException e) {
+           throw new WootEngineException("Problem with filename encoding");
         }
 
         /* filename=this.getPageName(); */

@@ -3,7 +3,6 @@ package org.xwoot.antiEntropy.test;
 import static org.junit.Assert.*;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 
 import org.junit.After;
@@ -11,6 +10,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.xwoot.antiEntropy.AntiEntropy;
+import org.xwoot.antiEntropy.AntiEntropyException;
 
 public class AntiEntropyTest
 {
@@ -67,7 +67,7 @@ public class AntiEntropyTest
     }
 
     @Test
-    public void testAntiEntropy() throws IOException, ClassNotFoundException
+    public void testAntiEntropy() throws AntiEntropyException 
     {
         assertEquals(this.ae1.getLog().logSize(), 0);
         assertEquals(this.ae2.getLog().logSize(), 0);

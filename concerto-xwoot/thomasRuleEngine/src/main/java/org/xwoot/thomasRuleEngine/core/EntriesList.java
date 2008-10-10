@@ -46,6 +46,7 @@ package org.xwoot.thomasRuleEngine.core;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -55,6 +56,8 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
+import org.xwoot.thomasRuleEngine.ThomasRuleEngineException;
 
 /**
  * DOCUMENT ME!
@@ -113,14 +116,13 @@ public class EntriesList
      * DOCUMENT ME!
      * 
      * @param entry DOCUMENT ME!
-     * @throws IOException DOCUMENT ME!
-     * @throws ClassNotFoundException DOCUMENT ME!
-     * @throws NullPointerException DOCUMENT ME!
+     * @throws ThomasRuleEngineException 
+     * 
      */
-    public void addEntry(Entry entry) throws IOException, ClassNotFoundException
+    public void addEntry(Entry entry) throws ThomasRuleEngineException 
     {
         if ((entry == null) || (entry.getId() == null)) {
-            throw new NullPointerException("Parameters must not be null");
+            throw new ThomasRuleEngineException("Parameters must not be null");
         }
 
         this.load();
@@ -133,11 +135,9 @@ public class EntriesList
      * 
      * @param id DOCUMENT ME!
      * @return DOCUMENT ME!
-     * @throws IOException DOCUMENT ME!
-     * @throws ClassNotFoundException DOCUMENT ME!
-     * @throws NullPointerException DOCUMENT ME!
+     * @throws ThomasRuleEngineException 
      */
-    public Entry getEntry(Identifier id) throws IOException, ClassNotFoundException
+    public Entry getEntry(Identifier id) throws ThomasRuleEngineException
     {
         if (id == null) {
             throw new NullPointerException("Parameters must not be null");
@@ -158,7 +158,7 @@ public class EntriesList
         return this.workingDir;
     }
 
-    private void load() throws IOException, ClassNotFoundException
+    private void load() throws ThomasRuleEngineException
     {
         File file = new File(this.filePath);
         ObjectInputStream ois = null;
@@ -168,22 +168,27 @@ public class EntriesList
 
             return;
         }
-
-        ois = new ObjectInputStream(new FileInputStream(file));
-
-        this.entriesList = (Hashtable<Identifier, Entry>) ois.readObject();
-        ois.close();
+        try {
+            ois = new ObjectInputStream(new FileInputStream(file));
+            this.entriesList = (Hashtable<Identifier, Entry>) ois.readObject();
+            ois.close();
+        } catch (FileNotFoundException e) {
+          throw new ThomasRuleEngineException("File not found"+this.filePath);
+        } catch (IOException e) {
+          throw new ThomasRuleEngineException("Problem to load file"+this.filePath);
+        } catch (ClassNotFoundException e) {
+          throw new ThomasRuleEngineException("Class cast problem when loading file "+this.filePath);
+        }   
     }
 
     /**
      * DOCUMENT ME!
      * 
      * @param id DOCUMENT ME!
-     * @throws IOException DOCUMENT ME!
-     * @throws ClassNotFoundException DOCUMENT ME!
-     * @throws NullPointerException DOCUMENT ME!
+     * @throws ThomasRuleEngineException 
+     * 
      */
-    public void removeEntry(Identifier id) throws IOException, ClassNotFoundException
+    public void removeEntry(Identifier id) throws ThomasRuleEngineException
     {
         if (id == null) {
             throw new NullPointerException("Parameters must not be null");
@@ -198,17 +203,17 @@ public class EntriesList
      * DOCUMENT ME!
      * 
      * @return DOCUMENT ME!
-     * @throws IOException DOCUMENT ME!
-     * @throws ClassNotFoundException DOCUMENT ME!
+     * @throws ThomasRuleEngineException 
+     * 
      */
-    public int size() throws IOException, ClassNotFoundException
+    public int size() throws ThomasRuleEngineException
     {
         this.load();
 
         return this.entriesList.size();
     }
 
-    private void store() throws IOException
+    private void store() throws ThomasRuleEngineException
     {
         if (this.entriesList.isEmpty()) {
             File file = new File(this.filePath);
@@ -222,12 +227,17 @@ public class EntriesList
 
         FileOutputStream fout = null;
         ObjectOutputStream oos = null;
-        fout = new FileOutputStream(this.filePath);
-        oos = new ObjectOutputStream(fout);
-        oos.writeObject(this.entriesList);
-        oos.flush();
-        oos.close();
-        fout.close();
+        try {
+            fout = new FileOutputStream(this.filePath);
+            oos = new ObjectOutputStream(fout);
+            oos.writeObject(this.entriesList);
+            oos.flush();
+            oos.close();
+            fout.close();
+        } catch (IOException e) {
+            throw new ThomasRuleEngineException("Problem to store file : "+this.filePath);
+        }
+       
     }
 
     /**
@@ -238,12 +248,11 @@ public class EntriesList
     @Override
     public String toString()
     {
+       
         try {
             this.load();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+        } catch (ThomasRuleEngineException e1) {
+           e1.printStackTrace();
         }
 
         String result = "List : ";

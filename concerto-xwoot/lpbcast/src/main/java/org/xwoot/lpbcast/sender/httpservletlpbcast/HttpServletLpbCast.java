@@ -49,12 +49,12 @@ import org.apache.commons.logging.LogFactory;
 
 import org.xwoot.lpbcast.message.Message;
 import org.xwoot.lpbcast.neighbors.Neighbors;
+import org.xwoot.lpbcast.neighbors.NeighborsException;
 import org.xwoot.lpbcast.neighbors.httpservletneighbors.HttpServletNeighbors;
 import org.xwoot.lpbcast.sender.LpbCastAPI;
+import org.xwoot.lpbcast.sender.SenderException;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Collection;
 
 import javax.servlet.http.HttpServletRequest;
@@ -99,13 +99,17 @@ public class HttpServletLpbCast implements LpbCastAPI
      * @param messagesRound DOCUMENT ME!
      * @param maxNeighbors DOCUMENT ME!
      * @param peerId DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
+     * @throws HttpServletLpbCastException 
      */
-    public HttpServletLpbCast(String workingDirPath, int messagesRound, int maxNeighbors, Integer id) throws Exception
+    public HttpServletLpbCast(String workingDirPath, int messagesRound, int maxNeighbors, Integer id) throws HttpServletLpbCastException 
     {
         this.round = messagesRound;
         this.id = id;
-        this.neighbors = new HttpServletNeighbors(workingDirPath, maxNeighbors, this.id);
+        try {
+            this.neighbors = new HttpServletNeighbors(workingDirPath, maxNeighbors, this.id);
+        } catch (NeighborsException e) {
+           throw new HttpServletLpbCastException(this.id+" : Problem when creating neighbors \n"+e);
+        }
         this.logger.info(this.id + " LPBCast created.");
         this.state = this.DISCONNECTED;
     }
@@ -119,7 +123,7 @@ public class HttpServletLpbCast implements LpbCastAPI
         return this.state.addNeighbor(from, neighbor);
     }
 
-    public void clearWorkingDir() throws Exception
+    public void clearWorkingDir() 
     {
         this.neighbors.clearWorkingDir();
     }
@@ -147,8 +151,7 @@ public class HttpServletLpbCast implements LpbCastAPI
      * (non-Javadoc)
      * @see org.xwoot.lpbcast.LpbCastAPI#getNewMessage(java.lang.Object, int, int)
      */
-    public Message getNewMessage(Object creatorPeerId, Object content, int action, int r) throws IOException,
-        ClassNotFoundException
+    public Message getNewMessage(Object creatorPeerId, Object content, int action, int r) 
     {
         this.logger.debug(this.getId() + " Creating new message to send.");
 
@@ -157,7 +160,11 @@ public class HttpServletLpbCast implements LpbCastAPI
         result.setContent(content);
         result.setRound(r);
         result.setOriginalPeerId(creatorPeerId);
-        result.setRandNeighbor(this.getNeighbors().getNeighborRandomly());
+        try {
+            result.setRandNeighbor(this.getNeighbors().getNeighborRandomly());
+        } catch (NeighborsException e) {
+            result.setRandNeighbor(null);
+        }
 
         return result;
     }
@@ -175,7 +182,7 @@ public class HttpServletLpbCast implements LpbCastAPI
      * (non-Javadoc)
      * @see org.xwoot.lpbcast.LpbCastAPI#gossip(java.lang.Object)
      */
-    public void gossip(Object from, Object message) throws IOException, ClassNotFoundException, URISyntaxException
+    public void gossip(Object from, Object message) throws SenderException
     {
         this.state.gossip(from, message);
 
@@ -186,14 +193,14 @@ public class HttpServletLpbCast implements LpbCastAPI
         return this.state.isSenderConnected();
     }
 
-    public void processSendState(HttpServletRequest request, HttpServletResponse response, File stateFile)
-        throws IOException
+    public void processSendState(HttpServletRequest request, HttpServletResponse response, File stateFile) throws SenderException
+        
     {
         this.state.processSendState(request, response, stateFile);
     }
     
-    public void processSendAE(HttpServletRequest request, HttpServletResponse response, Collection ae)
-    throws IOException
+    public void processSendAE(HttpServletRequest request, HttpServletResponse response, Collection ae) throws SenderException
+    
     {
         this.state.processSendAE(request, response, ae);
     }
@@ -202,7 +209,7 @@ public class HttpServletLpbCast implements LpbCastAPI
      * (non-Javadoc)
      * @see org.xwoot.lpbcast.LpbCastAPI#sendTo(java.lang.Object, java.lang.Object)
      */
-    public void sendTo(Object neighbor, Object toSend) throws IOException
+    public void sendTo(Object neighbor, Object toSend) throws SenderException
     {
         this.state.sendTo(neighbor, toSend);
     }
@@ -213,14 +220,22 @@ public class HttpServletLpbCast implements LpbCastAPI
         this.state = state;
     }
 
-    public Collection getNeighborsList() throws IOException, ClassNotFoundException
+    public Collection getNeighborsList() throws HttpServletLpbCastException
     {
-        return this.neighbors.neighborsList();
+        try {
+            return this.neighbors.neighborsList();
+        } catch (NeighborsException e) {
+            throw new HttpServletLpbCastException(this.id+" : Problem to get neighbors list\n"+e);
+        }
     }
 
-    public void removeNeighbor(Object neighbor) throws IOException, ClassNotFoundException
+    public void removeNeighbor(Object neighbor) throws HttpServletLpbCastException
     {
-        this.neighbors.removeNeighbor(neighbor);
+        try {
+            this.neighbors.removeNeighbor(neighbor);
+        } catch (NeighborsException e) {
+            throw new HttpServletLpbCastException(this.id+" : Problem to remove neighbor\n"+e);
+        }
 
     }
 }
