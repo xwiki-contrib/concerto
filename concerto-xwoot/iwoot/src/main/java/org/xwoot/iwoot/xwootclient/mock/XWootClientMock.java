@@ -1,10 +1,10 @@
 package org.xwoot.iwoot.xwootclient.mock;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 
 import org.xwoot.xwootApp.XWootAPI;
+import org.xwoot.xwootApp.XWootException;
 
 public class XWootClientMock implements XWootAPI
 {
@@ -15,31 +15,31 @@ public class XWootClientMock implements XWootAPI
         return false;
     }
 
-    public void connectToContentManager() throws Exception
+    public void connectToContentManager() 
     {
         // TODO Auto-generated method stub
         
     }
 
-    public boolean createNetwork() throws Exception
+    public boolean createNetwork() 
     {
         // TODO Auto-generated method stub
         return false;
     }
 
-    public void disconnectFromContentManager() throws Exception
+    public void disconnectFromContentManager() 
     {
         // TODO Auto-generated method stub
         
     }
 
-    public void disconnectFromP2PNetwork() throws Exception
+    public void disconnectFromP2PNetwork() 
     {
         // TODO Auto-generated method stub
         
     }
 
-    public void doAntiEntropy(String neighborURL) throws Exception
+    public void doAntiEntropy(String neighborURL) 
     {
         // TODO Auto-generated method stub
         
@@ -57,7 +57,7 @@ public class XWootClientMock implements XWootAPI
         return null;
     }
 
-    public Collection<String> getNeighborsList() throws Exception
+    public Collection<String> getNeighborsList() 
     {
         // TODO Auto-generated method stub
         return null;
@@ -69,13 +69,13 @@ public class XWootClientMock implements XWootAPI
         return null;
     }
 
-    public boolean importWootStorage(File wst) throws Exception
+    public boolean importWootStorage(File wst) 
     {
         // TODO Auto-generated method stub
         return false;
     }
 
-    public void initialiseWootStorage() throws Exception
+    public void initialiseWootStorage() 
     {
         // TODO Auto-generated method stub
         
@@ -99,25 +99,31 @@ public class XWootClientMock implements XWootAPI
         return false;
     }
 
-    public boolean joinNetwork(String neighborURL) throws Exception
+    public boolean joinNetwork(String neighborURL) 
     {
         // TODO Auto-generated method stub
         return false;
     }
 
-    public void reconnectToP2PNetwork() throws IOException, ClassNotFoundException, Exception
+    public void reconnectToP2PNetwork() 
     {
         // TODO Auto-generated method stub
         
     }
 
-    public void removeNeighbor(String neighborURL) throws Exception
+    public void removeNeighbor(String neighborURL) 
     {
         // TODO Auto-generated method stub
         
     }
 
-    public void synchronizePages() throws Exception
+    public void synchronizePages()
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public void doAntiEntropyWithAllNeighbors() throws XWootException
     {
         // TODO Auto-generated method stub
         

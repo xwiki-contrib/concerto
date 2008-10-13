@@ -15,8 +15,8 @@ import org.restlet.resource.Representation;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.StreamRepresentation;
 import org.restlet.resource.Variant;
+import org.xwoot.iwoot.IWootException;
 import org.xwoot.iwoot.restApplication.RestApplication;
-import org.xwoot.wikiContentManager.WikiContentManagerException;
 
 public class PageResource extends BaseResource
 {
@@ -37,7 +37,7 @@ public class PageResource extends BaseResource
         // Get the item directly from the "persistence layer".
         try {
             this.page = ((RestApplication)Application.getCurrent()).getPage(this.id);
-        } catch (WikiContentManagerException e) {
+        } catch (IWootException e) {
             e.printStackTrace();
             this.page=null;
         }
@@ -63,7 +63,7 @@ public class PageResource extends BaseResource
             // Remove the item from the list.
             try {
                 isRemoved=((RestApplication)Application.getCurrent()).removePage(this.id);
-            } catch (WikiContentManagerException e) {
+            } catch (IWootException e) {
                 e.printStackTrace();
                 this.page=null;
             }
@@ -119,7 +119,7 @@ public class PageResource extends BaseResource
         if (pageTemp!=null) {
             try {
                 ((RestApplication)Application.getCurrent()).storePage(this.id,pageTemp);
-            } catch (WikiContentManagerException e) {
+            } catch (IWootException e) {
                 e.printStackTrace();
             }
         }

@@ -13,7 +13,6 @@ import org.xwoot.iwoot.xwootclient.XWootClientException;
 import org.xwoot.iwoot.xwootclient.XWootClientFactory;
 import org.xwoot.wikiContentManager.WikiContentManagerException;
 import org.xwoot.wikiContentManager.WikiContentManagerFactory;
-import org.xwoot.wikiContentManager.mockWikiContentManager.MockWikiContentManager;
 
 public class PageResourceTest
 {
@@ -22,7 +21,7 @@ public class PageResourceTest
     @Before
     public void setup() throws XWootClientException, WikiContentManagerException{
         IWoot iwoot=new IWoot(XWootClientFactory.getMockFactory().createXWootClient()
-            ,WikiContentManagerFactory.getMockFactory().createWCM());
+            ,WikiContentManagerFactory.getMockFactory().createWCM(),Integer.valueOf(1));
         this.restapi = new RestApplication(iwoot);
     }
     

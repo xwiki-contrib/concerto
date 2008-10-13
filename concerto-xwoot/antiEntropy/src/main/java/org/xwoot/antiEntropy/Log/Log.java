@@ -238,9 +238,9 @@ public class Log implements Serializable
             ois.close();
             fis.close();
         } catch (IOException e) {
-           throw new LogException("Problem to load log file "+this.logFilePath);
+           throw new LogException("Problem to load log file "+this.logFilePath,e);
         } catch (ClassNotFoundException e) {
-           throw new LogException("Problem during loading log file with class cast "+this.logFilePath);
+           throw new LogException("Problem during loading log file with class cast "+this.logFilePath,e);
         }
     }
 
@@ -288,7 +288,7 @@ public class Log implements Serializable
             oos.close();
             fout.close();
         } catch (IOException e) {
-           throw new LogException("Problem when storing log in file "+this.logFilePath);
+           throw new LogException("Problem when storing log in file "+this.logFilePath,e);
         }
     }
 }

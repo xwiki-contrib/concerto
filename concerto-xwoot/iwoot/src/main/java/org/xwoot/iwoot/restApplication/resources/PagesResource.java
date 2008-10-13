@@ -21,8 +21,8 @@ import org.restlet.resource.StreamRepresentation;
 
 import org.restlet.resource.Variant;
 
+import org.xwoot.iwoot.IWootException;
 import org.xwoot.iwoot.restApplication.RestApplication;
-import org.xwoot.wikiContentManager.WikiContentManagerException;
 
 
 public class PagesResource extends BaseResource
@@ -36,7 +36,7 @@ public class PagesResource extends BaseResource
         // Get the items directly from the "persistence layer".
         try {
             this.pagesNames = ((RestApplication)Application.getCurrent()).getPagesNames();
-        } catch (WikiContentManagerException e) {    
+        } catch (IWootException e) {    
             e.printStackTrace();
             this.pagesNames =null;
         }

@@ -67,7 +67,7 @@ public class HttpServletLpbCastStateConnected extends HttpServletLpbCastState
                 this.connection.getNeighbors().notifyNeighbors(message);
             }
         } catch (NeighborsException e) {
-            throw new HttpServletLpbCastException(this.connection.getId()+" : Problem to get neighbors list"+e);
+            throw new HttpServletLpbCastException(this.connection.getId()+" : Problem to get neighbors list",e);
         }
     }
 
@@ -97,7 +97,7 @@ public class HttpServletLpbCastStateConnected extends HttpServletLpbCastState
                 out.flush();
                 out.close();
             } catch (IOException e) {
-               throw new HttpServletLpbCastException(this.connection.getId()+" : Problem to write message in http request\n"+e);
+               throw new HttpServletLpbCastException(this.connection.getId()+" : Problem to write message in http request\n",e);
             }
           
         } else {
@@ -116,7 +116,7 @@ public class HttpServletLpbCastStateConnected extends HttpServletLpbCastState
                 out.flush();
                 out.close();
             } catch (IOException e) {
-               throw new HttpServletLpbCastException(this.connection.getId()+" : Problem to write message in http request\n"+e);
+               throw new HttpServletLpbCastException(this.connection.getId()+" : Problem to write message in http request\n",e);
             }
         }else {
             response.setHeader("Content-type", "null");

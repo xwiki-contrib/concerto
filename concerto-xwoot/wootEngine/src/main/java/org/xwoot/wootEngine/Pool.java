@@ -149,7 +149,7 @@ public class Pool implements Serializable
                 oos.flush();
                 oos.close();
             } catch (Exception e) {
-               throw new WootEngineException("problem when initializing pool\n"+e);
+               throw new WootEngineException("problem when initializing pool\n",e);
             }
         }
     }
@@ -171,7 +171,7 @@ public class Pool implements Serializable
                 oos.flush();
                 oos.close();
             } catch (Exception e) {
-                throw new WootEngineException("problem when initializing pool\n"+e);  
+                throw new WootEngineException("problem when initializing pool\n",e);  
             }
         }
     }
@@ -192,7 +192,7 @@ public class Pool implements Serializable
             List<WootOp> readObject = (ArrayList<WootOp>) ois.readObject();
             this.setContent(readObject);
         } catch (Exception e) {
-            throw new WootEngineException("problem when loading pool\n"+e);  
+            throw new WootEngineException("problem when loading pool\n",e);  
           
             // make sure the file is properly close
         } finally {
@@ -200,7 +200,7 @@ public class Pool implements Serializable
                 try {
                     fin.close();
                 } catch (IOException e) {
-                    throw new WootEngineException("problem when closing pool\n"+e);  
+                    throw new WootEngineException("problem when closing pool\n",e);  
                 }
             }
         }
@@ -253,7 +253,7 @@ public class Pool implements Serializable
             oos.writeObject(this.getContent());
             oos.flush();
         } catch (Exception e) {
-            throw new WootEngineException("problem when storing pool\n"+e);  
+            throw new WootEngineException("problem when storing pool\n",e);  
            
 
             // make sure the file is properly close
@@ -262,7 +262,7 @@ public class Pool implements Serializable
                 try {
                     fout.close();
                 } catch (IOException e) {
-                    throw new WootEngineException("problem when closing pool\n"+e);  
+                    throw new WootEngineException("problem when closing pool\n",e);  
                 }
             }
         }
@@ -286,14 +286,14 @@ public class Pool implements Serializable
             // and calling garbage collector
             this.free();
         } catch (Exception e) {
-            throw new WootEngineException("problem when closing pool\n"+e);  
+            throw new WootEngineException("problem when closing pool\n",e);  
             // make sure the file is properly close
         } finally {
             if (fout != null) {
                 try {
                     fout.close();
                 } catch (IOException e) {
-                    throw new WootEngineException("problem when closing pool\n"+e);  
+                    throw new WootEngineException("problem when closing pool\n",e);  
                 }
             }
         }

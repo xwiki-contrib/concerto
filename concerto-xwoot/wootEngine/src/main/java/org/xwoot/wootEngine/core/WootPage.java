@@ -153,7 +153,7 @@ public class WootPage implements Serializable
                 filename = FileUtil.getEncodedFileName(this.getPageName());
             }
         }catch (UnsupportedEncodingException e) {
-           throw new WootEngineException("Problem with filename encoding");
+           throw new WootEngineException("Problem with filename encoding",e);
         }
 
         /* filename=this.getPageName(); */

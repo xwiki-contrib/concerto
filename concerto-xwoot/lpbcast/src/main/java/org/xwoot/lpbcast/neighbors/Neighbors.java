@@ -226,9 +226,9 @@ public abstract class Neighbors
             this.neighbors = readObject;
             ois.close();
         } catch (IOException e) {
-            throw new NeighborsException("Problem to load neighbors file "+this.neighborsFilePath+"\n"+e);
+            throw new NeighborsException("Problem to load neighbors file "+this.neighborsFilePath+"\n",e);
         } catch (ClassNotFoundException e) {
-            throw new NeighborsException("Problem when loading neighbors file with class cast "+this.neighborsFilePath+"\n"+e);
+            throw new NeighborsException("Problem when loading neighbors file with class cast "+this.neighborsFilePath+"\n",e);
         }
 
       
@@ -323,7 +323,7 @@ public abstract class Neighbors
             oos.close();
             fout.close();
         } catch (IOException e) {
-            throw new NeighborsException(this.id+" : Problem to store neighbors file "+this.neighborsFilePath+"\n"+e);
+            throw new NeighborsException(this.id+" : Problem to store neighbors file "+this.neighborsFilePath+"\n",e);
         }
        
     }

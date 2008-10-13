@@ -33,7 +33,7 @@ public class HttpServletNeighbors extends Neighbors
                 to = new URL(n + "/receiveMessage.do");
                 NetUtil.sendObjectViaHTTPRequest(to, this.message);
             } catch (IOException e) {
-               throw new ServletNeighborsException(this.neighbor+" : Problem to call neighbor "+n+"/receiveMessage.do"+"\n"+e);
+               throw new ServletNeighborsException(this.neighbor+" : Problem to call neighbor "+n+"/receiveMessage.do"+"\n",e);
             }
             
         }

@@ -95,7 +95,7 @@ public class ReceiveMessage extends HttpServletReceiverAPI
         try {
             ((XWoot) XWootSite.getInstance().getXWootEngine()).receivePatch(message);
         } catch (XWootException e) {
-           throw new ReceiverException("Problem to receive message \n"+e);
+           throw new ReceiverException("Problem to receive message \n",e);
         }
     }
 

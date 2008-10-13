@@ -173,11 +173,11 @@ public class EntriesList
             this.entriesList = (Hashtable<Identifier, Entry>) ois.readObject();
             ois.close();
         } catch (FileNotFoundException e) {
-          throw new ThomasRuleEngineException("File not found"+this.filePath);
+          throw new ThomasRuleEngineException("File not found"+this.filePath,e);
         } catch (IOException e) {
-          throw new ThomasRuleEngineException("Problem to load file"+this.filePath);
+          throw new ThomasRuleEngineException("Problem to load file"+this.filePath,e);
         } catch (ClassNotFoundException e) {
-          throw new ThomasRuleEngineException("Class cast problem when loading file "+this.filePath);
+          throw new ThomasRuleEngineException("Class cast problem when loading file "+this.filePath,e);
         }   
     }
 
@@ -235,7 +235,7 @@ public class EntriesList
             oos.close();
             fout.close();
         } catch (IOException e) {
-            throw new ThomasRuleEngineException("Problem to store file : "+this.filePath);
+            throw new ThomasRuleEngineException("Problem to store file : "+this.filePath,e);
         }
        
     }

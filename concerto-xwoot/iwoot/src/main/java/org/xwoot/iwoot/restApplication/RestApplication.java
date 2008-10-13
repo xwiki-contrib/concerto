@@ -6,6 +6,7 @@ import org.restlet.Application;
 import org.restlet.Restlet;
 import org.restlet.Router;
 import org.xwoot.iwoot.IWoot;
+import org.xwoot.iwoot.IWootException;
 import org.xwoot.iwoot.restApplication.resources.PagesResource;
 import org.xwoot.iwoot.restApplication.resources.PageResource;
 import org.xwoot.wikiContentManager.WikiContentManagerException;
@@ -39,9 +40,10 @@ public class RestApplication extends Application
      * Returns the list of pages.
      *
      * @return the list of pages.
-     * @throws WikiContentManagerException 
+     * @throws IWootException 
+     * 
      */
-    public Map<String,Map> getPages() throws WikiContentManagerException {
+    public Map<String,Map> getPages() throws IWootException {
         return this.iwoot.getPages();
     }
 
@@ -49,9 +51,10 @@ public class RestApplication extends Application
      * Returns the list of pages ids.
      *
      * @return the list of pages ids.
-     * @throws WikiContentManagerException 
+     * @throws IWootException 
+     *  
      */
-    public List getPagesNames() throws WikiContentManagerException {
+    public List getPagesNames() throws IWootException  {
         return this.iwoot.getPagesNames();
     }
     
@@ -61,8 +64,9 @@ public class RestApplication extends Application
      * @param id : the id of the wanted page
      * @return the page id.
      * @throws WikiContentManagerException 
+     * @throws WikiContentManagerException 
      */
-    public Map getPage(String id) throws WikiContentManagerException {
+    public Map getPage(String id) throws IWootException{
         return this.iwoot.getPage(id);
     }
     
@@ -73,7 +77,7 @@ public class RestApplication extends Application
      * @return boolean
      * @throws WikiContentManagerException 
      */
-    public boolean removePage(String id) throws WikiContentManagerException {
+    public boolean removePage(String id) throws IWootException {
         return this.iwoot.removepage(id);
     }
     
@@ -84,7 +88,7 @@ public class RestApplication extends Application
      * @return boolean
      * @throws WikiContentManagerException 
      */
-    public boolean storePage(String id,Map page) throws WikiContentManagerException{
+    public boolean storePage(String id,Map page) throws IWootException{
         return this.iwoot.storePage(id,page);
     }
 

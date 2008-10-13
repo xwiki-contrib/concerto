@@ -247,14 +247,14 @@ public class XWoot implements XWootAPI
             try {
                 wootContent = this.getWootEngine().getPage(pageName);
             } catch (WootEngineException e) {
-                this.logger.error("Problem when loading woot page -- "+pageName+"\n"+e);
+                this.logger.error("Problem when loading woot page -- "+pageName+"\n",e);
             }
 
             if (wootContent!=null){
                 try {
                     this.contentManager.overwritePageContent(pageName, wootContent);
                 } catch (WikiContentManagerException e) {
-                    this.logger.error("Problem when overwritting page content -- "+pageName+" \n"+e);
+                    this.logger.error("Problem when overwritting page content -- "+pageName+" \n",e);
                 }
 
                 // overwrite fields
@@ -262,7 +262,7 @@ public class XWoot implements XWootAPI
                 try {
                     fields = this.contentManager.getFields(pageName);
                 } catch (WikiContentManagerException e) {
-                    this.logger.error("Problem when overwritting page MD  -- "+pageName+" \n"+e);
+                    this.logger.error("Problem when overwritting page MD  -- "+pageName+" \n",e);
                 }
                 if (fields != null) {
                     for (PAGEMDTABLE pageMd : PAGEMDTABLE.values()) {
@@ -270,7 +270,7 @@ public class XWoot implements XWootAPI
                         try {
                             v = this.tre.getValue(new MDIdentifier(pageName, String.valueOf(pageMd)));
                         } catch (ThomasRuleEngineException e) {
-                            this.logger.error("Problem when getting tre value for page : "+pageName+"\n"+e);
+                            this.logger.error("Problem when getting tre value for page : "+pageName+"\n",e);
                         } 
                         if (v != null) {
                             fields.put(String.valueOf(pageMd),(String)v.get());
@@ -279,7 +279,7 @@ public class XWoot implements XWootAPI
                     try {
                         this.contentManager.setFields(pageName, fields);
                     } catch (WikiContentManagerException e) {
-                        this.logger.error("Problem when overwritting page fields -- "+pageName+" \n"+e);
+                        this.logger.error("Problem when overwritting page fields -- "+pageName+" \n",e);
                     }
                 }
 
@@ -288,14 +288,14 @@ public class XWoot implements XWootAPI
                 try {
                     value = (CommentsValue) this.tre.getValue(new MDIdentifier(pageName, WikiContentManager.COMMENT));
                 } catch (ThomasRuleEngineException e) {
-                    this.logger.error("Problem when getting tre comment for page : "+pageName+"\n"+e);
+                    this.logger.error("Problem when getting tre comment for page : "+pageName+"\n",e);
                 } 
                 if (value != null) {
                     List<Map> comments = (List<Map>) value.get();
                     try {
                         this.contentManager.overWriteComments(pageName, comments);
                     } catch (WikiContentManagerException e) {
-                        this.logger.error("Problem when overwritting page comments -- "+pageName+" \n"+e);
+                        this.logger.error("Problem when overwritting page comments -- "+pageName+" \n",e);
                     }
                 }
                 this.logger.info(this.siteId + " : overwrite page : " + pageName + " OK");
@@ -362,9 +362,9 @@ public class XWoot implements XWootAPI
                 this.sender.gossip(this.getXWootPeerId(), message);
                 this.getAntiEntropy().logMessage(message.getId(), message);
             } catch (SenderException e) {
-                throw new XWootException("Can't send new Message "+e);  
+                throw new XWootException("Can't send new Message ",e);  
             } catch (AntiEntropyException e) {
-                throw new XWootException("Can't send new Message "+e);    
+                throw new XWootException("Can't send new Message ",e);    
             }
         }
         return newPatch;
@@ -490,8 +490,8 @@ public class XWoot implements XWootAPI
                 try {
                     fields = this.contentManager.createPage(pageName, "");
                 } catch (WikiContentManagerException e) {
-                    this.logger.error("Problem with page : " + pageName + " -- can't get it, can't create it."+e);
-                    throw new XWootException("Problem with page : " + pageName + " -- can't get it, can't create it."+e);
+                    this.logger.error("Problem with page : " + pageName + " -- can't get it, can't create it.",e);
+                    throw new XWootException("Problem with page : " + pageName + " -- can't get it, can't create it.",e);
                 }
 
             }
@@ -525,14 +525,14 @@ public class XWoot implements XWootAPI
             try {
                 this.contentManager.setFields(pageName, fields);
             } catch (WikiContentManagerException e) {
-                this.logger.error("Problem when setting page "+pageName+"\n"+e);
+                this.logger.error("Problem when setting page "+pageName+"\n",e);
             }
 
             if (comments != null) {
                 try {
                     this.contentManager.overWriteComments(pageName, comments);
                 } catch (WikiContentManagerException e) {
-                    this.logger.error("Problem when overwritting comments "+pageName+"\n"+e);
+                    this.logger.error("Problem when overwritting comments "+pageName+"\n",e);
                 }
                 this.logger.debug(this.siteId + " : set comments : " + comments);
             }
@@ -551,7 +551,7 @@ public class XWoot implements XWootAPI
         try {
             wootContent = this.getWootEngine().getPage(pageName);
         } catch (WootEngineException e) {
-            this.logger.error("Can't synchronize page : "+pageName+"\n"+e);
+            this.logger.error("Can't synchronize page : "+pageName+"\n",e);
             return;
         }
 
@@ -561,7 +561,7 @@ public class XWoot implements XWootAPI
         try {
             fields = this.contentManager.getFields(pageName);
         } catch (WikiContentManagerException e) {
-            this.logger.error("Can't synchronize page : "+pageName+"\n"+e);
+            this.logger.error("Can't synchronize page : "+pageName+"\n",e);
             return;
         }
         String contentManagerContent = "";
@@ -587,7 +587,7 @@ public class XWoot implements XWootAPI
             try {
                 this.getWootEngine().copyPage(pageName);
             } catch (WootEngineException e) {
-                this.logger.error("Can't synchronize page : "+pageName+"\n"+e);
+                this.logger.error("Can't synchronize page : "+pageName+"\n",e);
                 return;
             } 
         }
@@ -602,7 +602,7 @@ public class XWoot implements XWootAPI
             }
 
         } catch (WikiContentManagerException e) {
-            this.logger.error("Problem when getting comments for page "+pageName+"\n"+e);
+            this.logger.error("Problem when getting comments for page "+pageName+"\n",e);
         }
 
         // CreatePatch if necessary
@@ -657,7 +657,7 @@ public class XWoot implements XWootAPI
                             result.add(op);
                         }
                     } catch (ThomasRuleEngineException e) {
-                        this.logger.error(this.siteId + " : problem to get an op \n"+e);
+                        this.logger.error(this.siteId + " : problem to get an op \n",e);
                     } 
                 }
             }
@@ -679,7 +679,7 @@ public class XWoot implements XWootAPI
         try {
             d.diff(oldContent, newContent);
         } catch (IOException e) {
-            this.logger.error(this.siteId + " : Problem with diff when synchronizing content"+e);
+            this.logger.error(this.siteId + " : Problem with diff when synchronizing content",e);
         }
 
         List l = d.getHunks();
@@ -690,7 +690,7 @@ public class XWoot implements XWootAPI
             try {
                 this.wootEngine.loadClock();
             } catch (ClockException e) {
-                throw new XWootException(this.siteId+" : Problem when synchronizing content"+e);
+                throw new XWootException(this.siteId+" : Problem when synchronizing content",e);
             }
             WootPage page = null;
             try {
@@ -701,7 +701,7 @@ public class XWoot implements XWootAPI
                 }
             }
             catch (WootEngineException e) {
-                throw new XWootException(this.siteId+" : Problem when synchronizing content"+e);
+                throw new XWootException(this.siteId+" : Problem when synchronizing content",e);
 
             } 
             do {
@@ -719,7 +719,7 @@ public class XWoot implements XWootAPI
                         try {
                             ins = this.getWootEngine().ins(page, line, (pos + i));
                         } catch (WootEngineException e) {
-                            throw new XWootException(this.siteId+" : Problem when synchronizing content"+e);
+                            throw new XWootException(this.siteId+" : Problem when synchronizing content",e);
                         }
                         data.add(ins);
                         i++;
@@ -734,23 +734,23 @@ public class XWoot implements XWootAPI
                         try {
                             del = this.getWootEngine().del(page, pos);
                         } catch (WootEngineException e) {
-                            throw new XWootException(this.siteId+" : Problem when synchronizing content"+e); 
+                            throw new XWootException(this.siteId+" : Problem when synchronizing content",e); 
                         }
                         data.add(del);
                     }
                 } else if (hunk instanceof HunkChange) {
-                    throw new RuntimeException("HunkChange might not be detected, check the jlibdiff configuration");
+                    throw new XWootException("HunkChange might not be detected, check the jlibdiff configuration");
                 }
             } while (lIt.hasNext());
             try {
                 this.wootEngine.unloadClock();
             } catch (ClockException e) {
-                this.logger.error(this.siteId+" : Problem when synchronizing content"+e);
+                this.logger.error(this.siteId+" : Problem when synchronizing content",e);
             }
             try {
                 this.wootEngine.unloadPage(page);
             } catch (WootEngineException e) {
-                this.logger.error(this.siteId+" : Problem when synchronizing content"+e);
+                this.logger.error(this.siteId+" : Problem when synchronizing content",e);
             } 
         }
 
@@ -823,7 +823,7 @@ public class XWoot implements XWootAPI
                             this.treatePatch((Patch)mess.getContent());
                         }
                     } catch (AntiEntropyException e) {
-                        throw new XWootException(this.siteId+" : Problem to send a message"+e);
+                        throw new XWootException(this.siteId+" : Problem to send a message",e);
                     } 
                 }
                 break;
@@ -839,7 +839,7 @@ public class XWoot implements XWootAPI
                         this.logger.info(this.siteId + " : received message : already in log.");
                     }
                 } catch (AntiEntropyException e) {
-                    throw new XWootException(this.siteId+" : Problem to log message"+e);
+                    throw new XWootException(this.siteId+" : Problem to log message",e);
                 } 
 
                 message.setRound(message.getRound() - 1);
@@ -850,7 +850,7 @@ public class XWoot implements XWootAPI
                     try {
                         this.sender.gossip(this.getXWootPeerId(), message);
                     } catch (SenderException e) {
-                        throw new XWootException(this.siteId+" : Problem to gossip message"+e);
+                        throw new XWootException(this.siteId+" : Problem to gossip message",e);
                     } 
                 } else {
                     this.logger.info(this.siteId + " : Received message : round=0 ; stop gossip message.");
@@ -866,7 +866,7 @@ public class XWoot implements XWootAPI
                 try {
                     content = this.antiEntropy.answerAntiEntropy(message.getContent());
                 } catch (AntiEntropyException e) {
-                    throw new XWootException(this.siteId+" : Problem to do antiEntropy \n"+e);   
+                    throw new XWootException(this.siteId+" : Problem to do antiEntropy \n",e);   
                 }
                 Message toSend;
 
@@ -878,7 +878,7 @@ public class XWoot implements XWootAPI
                 try {
                     this.sender.sendTo(message.getOriginalPeerId(), toSend);
                 } catch (SenderException e) {
-                    throw new XWootException(this.siteId+" : Problem to send a Message \n"+e);
+                    throw new XWootException(this.siteId+" : Problem to send a Message \n",e);
                 }
 
                 break;
@@ -942,11 +942,11 @@ public class XWoot implements XWootAPI
 
             return state;
         } catch (IOException e) {
-            this.logger.error(this.peerId+" : Problem to get file via http request \n"+e);
-            throw new XWootException(this.peerId+" : Problem to get file via http request \n"+e);
+            this.logger.error(this.peerId+" : Problem to get file via http request \n",e);
+            throw new XWootException(this.peerId+" : Problem to get file via http request \n",e);
         } catch (URISyntaxException e) {
-            this.logger.error(this.peerId+" : Problem to get file via http request \n"+e);
-            throw new XWootException(this.peerId+" : Problem to get file via http request \n"+e);
+            this.logger.error(this.peerId+" : Problem to get file via http request \n",e);
+            throw new XWootException(this.peerId+" : Problem to get file via http request \n",e);
         }
 
     }
@@ -964,11 +964,11 @@ public class XWoot implements XWootAPI
             return null;
             //NetUtil.sendObjectViaHTTPRequest(getNeighborAE, log);
         }catch (IOException e) {
-            this.logger.error(this.peerId+" : Problem to get file via http request \n"+e);
-            throw new XWootException(this.peerId+" : Problem to get file via http request \n"+e);
+            this.logger.error(this.peerId+" : Problem to get file via http request \n",e);
+            throw new XWootException(this.peerId+" : Problem to get file via http request \n",e);
         } catch (URISyntaxException e) {
-            this.logger.error(this.peerId+" : Problem to get file via http request \n"+e);
-            throw new XWootException(this.peerId+" : Problem to get file via http request \n"+e);
+            this.logger.error(this.peerId+" : Problem to get file via http request \n",e);
+            throw new XWootException(this.peerId+" : Problem to get file via http request \n",e);
         } 
     }
 
@@ -977,16 +977,16 @@ public class XWoot implements XWootAPI
         try {
             this.wootEngine.clearWorkingDir();
         } catch (WootEngineException e) {
-            this.logger.error(this.peerId+" : Problem when clearing wootEngine dir\n"+e);
-            throw new XWootException(this.peerId+" : Problem when clearing wootEngine dir\n"+e);
+            this.logger.error(this.peerId+" : Problem when clearing wootEngine dir\n",e);
+            throw new XWootException(this.peerId+" : Problem when clearing wootEngine dir\n",e);
         }
         this.tre.clearWorkingDir();
         this.antiEntropy.clearWorkingDir();
         try {
             this.sender.clearWorkingDir();
         } catch (SenderException e) {
-            this.logger.error(this.peerId+" : Problem when clearing sender dir\n"+e);
-            throw new XWootException(this.peerId+" : Problem when clearing  sender dir\n"+e);
+            this.logger.error(this.peerId+" : Problem when clearing sender dir\n",e);
+            throw new XWootException(this.peerId+" : Problem when clearing  sender dir\n",e);
         }
         this.clearWorkingDir();
         this.logger.info(this.siteId + " : all datas clears");
@@ -1076,8 +1076,8 @@ public class XWoot implements XWootAPI
             message = this.sender.getNewMessage(this.getXWootPeerId(), this.antiEntropy.getContentForAskAntiEntropy(),
                 LpbCastAPI.ANTI_ENTROPY, 0);
         } catch (AntiEntropyException e) {
-            this.logger.error(this.peerId+" : Problem to get content for antiEntropy \n"+e);
-            throw new XWootException(this.peerId+" : Problem to get content for antiEntropy \n"+e);
+            this.logger.error(this.peerId+" : Problem to get content for antiEntropy \n",e);
+            throw new XWootException(this.peerId+" : Problem to get content for antiEntropy \n",e);
         }
         this.logger
         .debug(this.siteId + " : New message -- content : log patches -- Action : ANTI_ENTROPY -- round : 0");
@@ -1085,8 +1085,8 @@ public class XWoot implements XWootAPI
 
             this.sender.sendTo(neighborURL, message);
         } catch (SenderException e) {
-            this.logger.error(this.peerId+" : Problem to send message\n"+e);
-            throw new XWootException(this.peerId+" : Problem to send message\n"+e);
+            this.logger.error(this.peerId+" : Problem to send message\n",e);
+            throw new XWootException(this.peerId+" : Problem to send message\n",e);
         }
     }
 
@@ -1118,9 +1118,9 @@ public class XWoot implements XWootAPI
             }
         } catch (SenderException e) {
             this.logger.error(this.peerId+
-                " : Can't initialize woot Storage : Problem to get neighbors list.\n"+e);
+                " : Can't initialize woot Storage : Problem to get neighbors list.\n",e);
             throw new XWootException(this.peerId+
-                " : Can't initialize woot Storage : Problem to get neighbors list.\n"+e);
+                " : Can't initialize woot Storage : Problem to get neighbors list.\n",e);
         }
 
         // initialization of the state directory
@@ -1166,8 +1166,8 @@ public class XWoot implements XWootAPI
         try {
             wootState = this.getWootEngine().getState();
         } catch (WootEngineException e) {
-            this.logger.error(this.peerId+" : Problem to get woot engine state \n"+e);
-            throw new XWootException(this.peerId+" : Problem to get woot engine state \n"+e);
+            this.logger.error(this.peerId+" : Problem to get woot engine state \n",e);
+            throw new XWootException(this.peerId+" : Problem to get woot engine state \n",e);
         }
 
         File copy0 = new File(this.stateDir + File.separatorChar + WootEngine.STATEFILENAME);
@@ -1194,8 +1194,8 @@ public class XWoot implements XWootAPI
 
             return result;
         } catch (IOException e) {
-            this.logger.error(this.peerId+" : Problem to zip xwoot datas \n"+e);
-            throw new XWootException(this.peerId+" : Problem to zip xwoot datas \n"+e);
+            this.logger.error(this.peerId+" : Problem to zip xwoot datas \n",e);
+            throw new XWootException(this.peerId+" : Problem to zip xwoot datas \n",e);
         }
 
 
@@ -1288,11 +1288,11 @@ public class XWoot implements XWootAPI
                 return null;
             }
         } catch (WootEngineException e) {
-            this.logger.error(this.peerId+" : Problem to get woot engine state \n"+e);
-            throw new XWootException(this.peerId+" : Problem to get woot engine state \n"+e);
+            this.logger.error(this.peerId+" : Problem to get woot engine state \n",e);
+            throw new XWootException(this.peerId+" : Problem to get woot engine state \n",e);
         } catch (IOException e) {
-            this.logger.error(this.peerId+" : Problem with files when computing state \n"+e);
-            throw new XWootException(this.peerId+" : Problem with files when computing state \n"+e);
+            this.logger.error(this.peerId+" : Problem with files when computing state \n",e);
+            throw new XWootException(this.peerId+" : Problem with files when computing state \n",e);
         }
         return null;
 
@@ -1327,8 +1327,8 @@ public class XWoot implements XWootAPI
             try {
                 FileUtil.copyFile(wst.toString(), state.toString());
             } catch (IOException e) {
-                this.logger.error(this.peerId+" : Problem when copying state file "+e);
-                throw new XWootException(this.peerId+" : Problem when copying state file "+e);
+                this.logger.error(this.peerId+" : Problem when copying state file ",e);
+                throw new XWootException(this.peerId+" : Problem when copying state file ",e);
             }
         }
         Collection list =this.setWootStorage(wst);
@@ -1363,8 +1363,8 @@ public class XWoot implements XWootAPI
         try {
             this.sender.removeNeighbor(neighborURL);
         } catch (SenderException e) {
-            this.logger.error(this.peerId+" : Problem to remove neighbor \n"+e);
-            throw new XWootException(this.peerId+" : Problem to remove neighbor \n"+e);
+            this.logger.error(this.peerId+" : Problem to remove neighbor \n",e);
+            throw new XWootException(this.peerId+" : Problem to remove neighbor \n",e);
         }
     }
 
@@ -1385,8 +1385,8 @@ public class XWoot implements XWootAPI
         try {
             return this.sender.getNeighborsList();
         } catch (SenderException e) {
-            this.logger.error(this.peerId+" : Problem to get neigbors list \n"+e);
-            throw new XWootException(this.peerId+" : Problem to get neigbors list \n"+e);
+            this.logger.error(this.peerId+" : Problem to get neigbors list \n",e);
+            throw new XWootException(this.peerId+" : Problem to get neigbors list \n",e);
         }
     }
 
@@ -1462,8 +1462,8 @@ public class XWoot implements XWootAPI
         try {
             spaces = this.contentManager.getListSpaceId();
         } catch (WikiContentManagerException e) {
-            this.logger.error(this.peerId+" : Problem to get space list \n"+e);
-            throw new XWootException(this.peerId+" : Problem to get space list \n"+e);
+            this.logger.error(this.peerId+" : Problem to get space list \n",e);
+            throw new XWootException(this.peerId+" : Problem to get space list \n",e);
         }
 
         Iterator i = spaces.iterator();
@@ -1487,8 +1487,8 @@ public class XWoot implements XWootAPI
                     }
                 }
             } catch (WikiContentManagerException e) {
-                this.logger.error(this.peerId+" : Problem to get page list for space "+space+" \n"+e);
-                throw new XWootException(this.peerId+" : Problem to get page list for space "+space+" \n"+e);
+                this.logger.error(this.peerId+" : Problem to get page list for space "+space+" \n",e);
+                throw new XWootException(this.peerId+" : Problem to get page list for space "+space+" \n",e);
             }
         }
     }
@@ -1595,8 +1595,8 @@ public class XWoot implements XWootAPI
 
             }
         } catch (WikiContentManagerException e) {
-            this.logger.error(this.peerId+" : Problem to get page list for space "+space+" \n"+e);
-            throw new XWootException(this.peerId+" : Problem to get page list for space "+space+" \n"+e);
+            this.logger.error(this.peerId+" : Problem to get page list for space "+space+" \n",e);
+            throw new XWootException(this.peerId+" : Problem to get page list for space "+space+" \n",e);
         }
 
     }

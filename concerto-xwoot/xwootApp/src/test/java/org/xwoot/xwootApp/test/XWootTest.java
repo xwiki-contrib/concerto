@@ -12,11 +12,12 @@ import org.xwoot.thomasRuleEngine.ThomasRuleEngine;
 
 import org.xwoot.wikiContentManager.XWikiSwizzleClient.XwikiSwizzleClient;
 import org.xwoot.xwootApp.XWoot;
+import org.xwoot.xwootApp.XWootException;
 
 public class XWootTest extends AbstractXWootTest
 {
 
-    @Test(expected = RuntimeException.class)
+    @Test(expected = XWootException.class)
     public void testXWoot1() throws Exception
     {
         this.xwoot1 =
@@ -37,7 +38,7 @@ public class XWootTest extends AbstractXWootTest
                 new ThomasRuleEngine(1, WORKINGDIR), this.ae1);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test(expected = XWootException.class)
     public void testXWoot3() throws Exception
     {
         File f = new File(WORKINGDIR + File.separatorChar + "folder");

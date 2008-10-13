@@ -108,7 +108,7 @@ public class HttpServletLpbCast implements LpbCastAPI
         try {
             this.neighbors = new HttpServletNeighbors(workingDirPath, maxNeighbors, this.id);
         } catch (NeighborsException e) {
-           throw new HttpServletLpbCastException(this.id+" : Problem when creating neighbors \n"+e);
+           throw new HttpServletLpbCastException(this.id+" : Problem when creating neighbors \n",e);
         }
         this.logger.info(this.id + " LPBCast created.");
         this.state = this.DISCONNECTED;
@@ -225,7 +225,7 @@ public class HttpServletLpbCast implements LpbCastAPI
         try {
             return this.neighbors.neighborsList();
         } catch (NeighborsException e) {
-            throw new HttpServletLpbCastException(this.id+" : Problem to get neighbors list\n"+e);
+            throw new HttpServletLpbCastException(this.id+" : Problem to get neighbors list\n",e);
         }
     }
 
@@ -234,7 +234,7 @@ public class HttpServletLpbCast implements LpbCastAPI
         try {
             this.neighbors.removeNeighbor(neighbor);
         } catch (NeighborsException e) {
-            throw new HttpServletLpbCastException(this.id+" : Problem to remove neighbor\n"+e);
+            throw new HttpServletLpbCastException(this.id+" : Problem to remove neighbor\n",e);
         }
 
     }

@@ -174,8 +174,8 @@ public class WootEngine
             pw.flush();
             pw.close();
         } catch (FileNotFoundException e) {
-            this.logger.error(this.wootEngineId +"Problem to create file for page : "+pageName+"\n"+e);
-            throw new WootEngineException(this.wootEngineId +"Problem to create file for page : "+pageName+"\n"+e);
+            this.logger.error(this.wootEngineId +"Problem to create file for page : "+pageName+"\n",e);
+            throw new WootEngineException(this.wootEngineId +"Problem to create file for page : "+pageName+"\n",e);
         }
         return wootPage;
     }
@@ -310,8 +310,8 @@ public class WootEngine
                     del.setOpid(new WootId(this.wootEngineId, temp));
                     this.getOpLocalClock().setValue(temp + 1);
                 } catch (ClockException e) {
-                    this.logger.error(this.wootEngineId +"Clock problem \n"+e);
-                    throw new WootEngineException(this.wootEngineId +"Clock problem \n"+e);
+                    this.logger.error(this.wootEngineId +"Clock problem \n",e);
+                    throw new WootEngineException(this.wootEngineId +"Clock problem \n",e);
                 }
                 del.setPageName(page.getPageName());
                 del.setIndexRow(idxV);
@@ -368,7 +368,7 @@ public class WootEngine
                     return (WootIns) ins;
                 } catch (ClockException e) {
                     this.logger.error(this.wootEngineId +"Clock problem \n"+e );
-                    throw new WootEngineException(this.wootEngineId + "Clock problem \n"+e);
+                    throw new WootEngineException(this.wootEngineId + "Clock problem \n",e);
                 }
             }
 
@@ -551,8 +551,8 @@ public class WootEngine
         try {
             stateFilePath = FileUtil.zipDirectory(pagesDir.getAbsolutePath());
         } catch (IOException e) {
-            this.logger.error(this.wootEngineId+" Problem to zip state\n"+e);
-            throw new WootEngineException(this.wootEngineId+" Problem to zip state\n"+e);
+            this.logger.error(this.wootEngineId+" Problem to zip state\n",e);
+            throw new WootEngineException(this.wootEngineId+" Problem to zip state\n",e);
         }
 
         if (stateFilePath == null) {
@@ -601,8 +601,8 @@ public class WootEngine
                     res[i] = FileUtil.getDecodedFileName(res[i]);
                 }
             } catch (UnsupportedEncodingException e) {
-               this.logger.error(this.wootEngineId+" Problem with filename encoding\n"+e);
-               throw new WootEngineException(this.wootEngineId+"Problem with filename encoding\n"+e);
+               this.logger.error(this.wootEngineId+" Problem with filename encoding\n",e);
+               throw new WootEngineException(this.wootEngineId+"Problem with filename encoding\n",e);
             }
         }
 
@@ -629,8 +629,8 @@ public class WootEngine
         try {
             filename = FileUtil.getEncodedFileName(pageId);
         } catch (UnsupportedEncodingException e) {
-            this.logger.error(this.wootEngineId+"Problem with filename encoding of page : "+pageId+"\n"+e);
-            throw new WootEngineException(this.wootEngineId+"Problem with filename encoding of page : "+pageId+"\n"+e);
+            this.logger.error(this.wootEngineId+"Problem with filename encoding of page : "+pageId+"\n",e);
+            throw new WootEngineException(this.wootEngineId+"Problem with filename encoding of page : "+pageId+"\n",e);
         }
 
         XStream xstream = new XStream(new DomDriver());
@@ -640,9 +640,9 @@ public class WootEngine
                 + File.separator + filename));
         } catch (FileNotFoundException e) {
             this.logger.error(this.wootEngineId+"Can't find file : "+this.getWorkingDir() + File.separator + "pages"
-                + File.separator + filename+"\n"+e);
+                + File.separator + filename+"\n",e);
             throw new WootEngineException(this.wootEngineId+"Can't find file : "+this.getWorkingDir() + File.separator + "pages"
-                + File.separator + filename+"\n"+e);
+                + File.separator + filename+"\n",e);
         }
     }
 
@@ -674,8 +674,8 @@ public class WootEngine
         try {
             filename = FileUtil.getEncodedFileName(savePageName);
         } catch (UnsupportedEncodingException e) {
-            this.logger.error(this.wootEngineId +"Problem with filename encoding\n"+e);
-           throw new WootEngineException(this.wootEngineId +"Problem with filename encoding\n"+e);
+            this.logger.error(this.wootEngineId +"Problem with filename encoding\n",e);
+           throw new WootEngineException(this.wootEngineId +"Problem with filename encoding\n",e);
         }
 
         XStream xstream = new XStream(new DomDriver());
@@ -688,8 +688,8 @@ public class WootEngine
             result.setPageName(pageId);
             return result;
         } catch (FileNotFoundException e) {
-            this.logger.error(this.wootEngineId +"File not found \n"+e);
-            throw new WootEngineException(this.wootEngineId +"File not found \n"+e);
+            this.logger.error(this.wootEngineId +"File not found \n",e);
+            throw new WootEngineException(this.wootEngineId +"File not found \n",e);
         }
        
     }
@@ -707,8 +707,8 @@ public class WootEngine
         try {
             filename = FileUtil.getEncodedFileName(pageName);
         } catch (UnsupportedEncodingException e) {
-            this.logger.error(this.wootEngineId +"Problem with filename encoding for page "+pageName+"\n"+e);
-            throw new WootEngineException(this.wootEngineId +"Problem with filename encoding for page "+pageName+"\n"+e);
+            this.logger.error(this.wootEngineId +"Problem with filename encoding for page "+pageName+"\n",e);
+            throw new WootEngineException(this.wootEngineId +"Problem with filename encoding for page "+pageName+"\n",e);
         }
         File f = new File(this.workingDir + File.separator + "pages" + File.separator + filename);
 
@@ -747,11 +747,11 @@ public class WootEngine
                 return true;
             } catch (ZipException e) {
                 
-                this.logger.error(this.wootEngineId+"Problem to unzip the state file\n "+e);
-               throw new WootEngineException(this.wootEngineId+"Problem to unzip the state file\n "+e);
+                this.logger.error(this.wootEngineId+"Problem to unzip the state file\n ",e);
+               throw new WootEngineException(this.wootEngineId+"Problem to unzip the state file\n ",e);
             } catch (IOException e) {
-                this.logger.error(this.wootEngineId+"Problem to unzip the state file\n "+e);
-                throw new WootEngineException(this.wootEngineId+"Problem to unzip the state file\n "+e);
+                this.logger.error(this.wootEngineId+"Problem to unzip the state file\n ",e);
+                throw new WootEngineException(this.wootEngineId+"Problem to unzip the state file\n ",e);
             }
 
         }
@@ -788,8 +788,8 @@ public class WootEngine
             output.flush();
             output.close();
         } catch (FileNotFoundException e) {
-            this.logger.error(this.wootEngineId+"Problem to store page "+wootPage.getPageName()+"\n"+e);
-            throw new WootEngineException(this.wootEngineId+"Problem to store page "+wootPage.getPageName()+"\n"+e);
+            this.logger.error(this.wootEngineId+"Problem to store page "+wootPage.getPageName()+"\n",e);
+            throw new WootEngineException(this.wootEngineId+"Problem to store page "+wootPage.getPageName()+"\n",e);
         }
 
 

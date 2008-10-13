@@ -101,9 +101,9 @@ public abstract class HttpServletReceiverAPI extends HttpServlet implements Rece
                     ois.close();
                     this.receive(message);
                 } catch (IOException e1) {
-                   throw new HttpServletReceiverException(this.getPeerId()+" : Problem to read message from http connexion"+e1);         
+                   throw new HttpServletReceiverException(this.getPeerId()+" : Problem to read message from http connexion",e1);         
                 } catch (ClassNotFoundException e) { 
-                    throw new HttpServletReceiverException(this.getPeerId()+" : Problem when reading message from http connexion with class cast "+e);
+                    throw new HttpServletReceiverException(this.getPeerId()+" : Problem when reading message from http connexion with class cast ",e);
                 }
             }
         }

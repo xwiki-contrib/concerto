@@ -46,20 +46,26 @@ package org.xwoot.xwootApp.web;
 
 import org.apache.commons.lang.StringUtils;
 import org.xwoot.antiEntropy.AntiEntropy;
+import org.xwoot.antiEntropy.AntiEntropyException;
 import org.xwoot.clockEngine.Clock;
+import org.xwoot.clockEngine.ClockException;
 import org.xwoot.clockEngine.ClockFactory;
 
 import org.xwoot.lpbcast.sender.httpservletlpbcast.HttpServletLpbCast;
+import org.xwoot.lpbcast.sender.httpservletlpbcast.HttpServletLpbCastException;
 
 import org.xwoot.thomasRuleEngine.ThomasRuleEngine;
 
 import org.xwoot.wikiContentManager.WikiContentManager;
+import org.xwoot.wikiContentManager.WikiContentManagerException;
 import org.xwoot.wikiContentManager.WikiContentManagerFactory;
 
 import org.xwoot.wootEngine.WootEngine;
+import org.xwoot.wootEngine.WootEngineException;
 
 import org.xwoot.xwootApp.XWoot;
 import org.xwoot.xwootApp.XWootAPI;
+import org.xwoot.xwootApp.XWootException;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -171,11 +177,16 @@ public class XWootSite
      * @param workingDirPath DOCUMENT ME!
      * @param messagesRound DOCUMENT ME!
      * @param maxNeighbors DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
      * @throws RuntimeException DOCUMENT ME!
+     * @throws ClockException 
+     * @throws WikiContentManagerException 
+     * @throws WootEngineException 
+     * @throws HttpServletLpbCastException 
+     * @throws AntiEntropyException 
+     * @throws XWootException 
      */
     public void init(int siteId, String peerId, String workingDirPath, int messagesRound, /* int logDelay, */
-    int maxNeighbors, String url, String login, String pwd) throws Exception
+    int maxNeighbors, String url, String login, String pwd) throws RuntimeException, ClockException, WikiContentManagerException, WootEngineException, HttpServletLpbCastException, AntiEntropyException, XWootException
     {
 
         File pbCastDir = new File(workingDirPath + File.separator + PBCAST_DIR_NAME);

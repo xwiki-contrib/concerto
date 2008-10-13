@@ -192,7 +192,7 @@ public class FileUtil
         String workingDir = xwootProps.getProperty("xwoot.working.dir");
 
         if (workingDir == null) {
-            throw new Exception("Please specify a working directory.");
+            throw new RuntimeException("Please specify a working directory.");
         }
 
         try {
@@ -202,7 +202,7 @@ public class FileUtil
                 security.checkWrite(workingDir);
             }
         } catch (SecurityException e) {
-            throw new Exception("The specified directory \"" + workingDir + "\" is not writable !", e);
+            throw new RuntimeException("The specified directory \"" + workingDir + "\" is not writable !", e);
         }
 
         // check delay
@@ -212,11 +212,11 @@ public class FileUtil
         try {
             siteId = Integer.parseInt(siteIdString);
         } catch (NumberFormatException e) {
-            throw new Exception("Invalid site id value ! [unable to read an integer]", e);
+            throw new RuntimeException("Invalid site id value ! [unable to read an integer]", e);
         }
 
         if (!(siteId > 0)) {
-            throw new Exception("Invalid site id value ! [must be > 0]");
+            throw new RuntimeException("Invalid site id value ! [must be > 0]");
         }
 
         // check server url
@@ -225,7 +225,7 @@ public class FileUtil
         try {
             new URL(serverUrlString);
         } catch (MalformedURLException e) {
-            throw new Exception("Invalid server url !", e);
+            throw new RuntimeException("Invalid server url !", e);
         }
 
         // check delay
@@ -235,11 +235,11 @@ public class FileUtil
         try {
             delay = Integer.parseInt(delayString);
         } catch (NumberFormatException e) {
-            throw new Exception("Invalid delay value ! [unable to read an integer]", e);
+            throw new RuntimeException("Invalid delay value ! [unable to read an integer]", e);
         }
 
         if (!(delay > 0)) {
-            throw new Exception("Invalid delay value ! [must be > 0]");
+            throw new RuntimeException("Invalid delay value ! [must be > 0]");
         }
 
         // check neighbors number
@@ -249,11 +249,11 @@ public class FileUtil
         try {
             neighborsNumber = Integer.parseInt(neighborsNumbersString);
         } catch (NumberFormatException e) {
-            throw new Exception("Invalid neighbors number value ! [unable to read an integer]", e);
+            throw new RuntimeException("Invalid neighbors number value ! [unable to read an integer]", e);
         }
 
         if (!(neighborsNumber > 0)) {
-            throw new Exception("Invalid neighborsNumber value ! [must be > 0]");
+            throw new RuntimeException("Invalid neighborsNumber value ! [must be > 0]");
         }
 
         // check neighbors number
@@ -263,11 +263,11 @@ public class FileUtil
         try {
             round = Integer.parseInt(roundString);
         } catch (NumberFormatException e) {
-            throw new Exception("Invalid round value ! [unable to read an integer]", e);
+            throw new RuntimeException("Invalid round value ! [unable to read an integer]", e);
         }
 
         if (!(round > 0)) {
-            throw new Exception("Invalid round value ! [must be > 0]");
+            throw new RuntimeException("Invalid round value ! [must be > 0]");
         }
 
         String serverName = xwootProps.getProperty("xwoot.server.name");
