@@ -218,7 +218,7 @@ public class XwikiSwizzleClient implements WikiContentManager
 
     }
 
-    private boolean existPage(String pageId) throws XWikiSwizzleClientException
+    public boolean existPage(String pageId) throws XWikiSwizzleClientException
     {
         boolean result = false;
         boolean b = this.relogin();

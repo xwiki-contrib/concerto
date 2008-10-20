@@ -87,7 +87,7 @@ public class IWoot
                 Collection pages=this.wcm.getListPageId(space);
                 result.addAll(pages);
             } catch(WikiContentManagerException e ){
-                throw new IWootException(this.id+" : Problem with WikiContentManager (getListSpaceId)",e);
+                throw new IWootException(this.id+" : Problem with WikiContentManager (getListPageId)",e);
             }  
         }
         this.disconnectXWoot();
@@ -113,11 +113,32 @@ public class IWoot
     
     public synchronized boolean storePage(String pageId,Map page) throws IWootException{
         try {
-            this.wcm.setFields(pageId, page);
+            return (!(this.wcm.setFields(pageId, page)==null));          
         } catch (WikiContentManagerException e) {
             throw new IWootException(this.id+" : Problem with WikiContentManager (setFields)",e);
         }
-        return true;
+    }
+
+    public boolean existPage(String pageId) throws IWootException
+    {
+        try {
+            return this.wcm.existPage(pageId);
+        } catch (WikiContentManagerException e) {
+            throw new IWootException(this.id+" : Problem with WikiContentManager (existPage)",e);  
+        }
+    }
+
+    public boolean createPage(Map<String, String> valuesMap) throws IWootException
+    {
+        if (!valuesMap.containsKey(WikiContentManager.ID) || !valuesMap.containsKey(WikiContentManager.CONTENT)){
+            return false;
+        }
+        try {
+            this.wcm.createPage(valuesMap.get(WikiContentManager.ID), valuesMap.get(WikiContentManager.CONTENT));
+        } catch (WikiContentManagerException e) {
+            throw new IWootException(this.id+" : Problem with WikiContentManager (createPage)",e);
+        }
+        return true;       
     }
     
 }

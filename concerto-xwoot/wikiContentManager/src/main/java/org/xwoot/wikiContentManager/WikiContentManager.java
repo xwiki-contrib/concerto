@@ -289,5 +289,7 @@ public interface WikiContentManager
      * @param spaceKey DOCUMENT ME!
      * @throws Exception
      */
-    public void createSpace(String spaceKey) throws WikiContentManagerException;
+    void createSpace(String spaceKey) throws WikiContentManagerException;
+    
+    boolean existPage(String pageKey) throws WikiContentManagerException;
 }

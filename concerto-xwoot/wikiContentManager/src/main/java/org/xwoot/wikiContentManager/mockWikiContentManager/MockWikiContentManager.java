@@ -447,4 +447,9 @@ public class MockWikiContentManager implements WikiContentManager
         return;
 
     }
+
+    public boolean existPage(String pageKey) throws WikiContentManagerException
+    {
+        return this.pages.containsKey(pageKey);
+    }
 }
