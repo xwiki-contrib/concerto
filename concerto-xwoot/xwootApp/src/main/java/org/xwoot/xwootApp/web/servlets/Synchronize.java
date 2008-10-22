@@ -87,6 +87,8 @@ public class Synchronize extends HttpServlet
     public void service(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
     {
         System.out.print("Site " + XWootSite.getInstance().getXWootEngine().getXWootPeerId() + " : Synchronize page -");
+        
+        // test 
         if (request.getParameter("test") != null) {
 
             if (!XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork()) {
@@ -101,18 +103,46 @@ public class Synchronize extends HttpServlet
             return;
         }
 
+        // add neighbor
         else if ("addNeighbor".equals(request.getParameter("action"))) {
             String neighbor = request.getParameter("neighbor");
-
-            try {
-                System.out.println(" receive neighbour : " + neighbor + " -");
-                if (XWootSite.getInstance().getXWootEngine().addNeighbour(neighbor)) {
-                    XWootSite.getInstance().getXWootEngine().doAntiEntropy(neighbor);
+            if (neighbor!=null && !neighbor.trim().equals("")){
+                try {
+                    System.out.println(" receive neighbour : " + neighbor + " -");
+                    if (XWootSite.getInstance().getXWootEngine().addNeighbour(neighbor)) {
+                        XWootSite.getInstance().getXWootEngine().doAntiEntropy(neighbor);
+                    }
+                } catch (Exception e) {
+                    throw new ServletException(e);
                 }
-            } catch (Exception e) {
-                throw new ServletException(e);
             }
-        } else if ("pageManagement".equals(request.getParameter("action"))
+            else{
+                System.out.println(" want to add a neighbor");
+                request.setAttribute("action", "addneighbor");
+            }  
+        }
+        
+      //remove neighbor
+        else if ("removeNeighbor".equals(request.getParameter("action"))) {
+            String neighbor = request.getParameter("neighbor");
+            System.out.println(" remove neighbour : " + neighbor + " -");
+            try {
+                XWootSite.getInstance().getXWootEngine().removeNeighbor(NetUtil.normalize(neighbor));
+            } catch (URISyntaxException e) {
+                throw new ServletException(e);
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        } 
+        
+//      else if ("true".equals(request.getParameter("addneighbor"))) {
+//      System.out.println(" want to add a neighbor");
+//      request.setAttribute("addneighbor", Boolean.TRUE);
+//      } 
+        
+        //page management 
+        else if ("pageManagement".equals(request.getParameter("action"))
             && XWootSite.getInstance().getXWootEngine().isContentManagerConnected())
         {
             System.out.print("pageManagement -- ");
@@ -134,19 +164,12 @@ public class Synchronize extends HttpServlet
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-
-        } else if ("removeNeighbor".equals(request.getParameter("action"))) {
-            String neighbor = request.getParameter("neighbor");
-            System.out.println(" remove neighbour : " + neighbor + " -");
-            try {
-                XWootSite.getInstance().getXWootEngine().removeNeighbor(NetUtil.normalize(neighbor));
-            } catch (URISyntaxException e) {
-                throw new ServletException(e);
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        } else if ("synchronize".equals(request.getParameter("action"))
+        } 
+        
+        
+        
+        //synchronize
+        else if ("synchronize".equals(request.getParameter("action"))
             && XWootSite.getInstance().getXWootEngine().isContentManagerConnected())
         {
             System.out.println(" start synchronize ! -");
@@ -155,10 +178,10 @@ public class Synchronize extends HttpServlet
             } catch (Exception e) {
                 throw new ServletException(e);
             }
-        } else if ("true".equals(request.getParameter("addneighbor"))) {
-            System.out.println(" want to add a neighbor");
-            request.setAttribute("addneighbor", Boolean.TRUE);
-        } else if ("antiEntropy".equals(request.getParameter("action"))
+        } 
+        
+        //anti entropy
+        else if ("antiEntropy".equals(request.getParameter("action"))
             && XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork())
         {
             String neighbor = request.getParameter("neighbor");
@@ -167,7 +190,10 @@ public class Synchronize extends HttpServlet
             } catch (Exception e) {
                 throw new ServletException(e);
             }
-        } else if ("p2pnetworkconnection".equals(request.getParameter("action"))) {
+        } 
+        
+        //p2p connection
+        else if ("p2pnetworkconnection".equals(request.getParameter("action"))) {
             System.out.println("P2P connection gestion ...");
             try {
                 String mode = request.getParameter("switch");
@@ -189,7 +215,10 @@ public class Synchronize extends HttpServlet
             } catch (Exception e) {
                 throw new ServletException(e);
             }
-        } else if ("cpconnection".equals(request.getParameter("action"))) {
+        } 
+        
+        // cp connection 
+        else if ("cpconnection".equals(request.getParameter("action"))) {
             System.out.println("Content Provider connection gestion ...");
             try {
                 String mode = request.getParameter("switch");

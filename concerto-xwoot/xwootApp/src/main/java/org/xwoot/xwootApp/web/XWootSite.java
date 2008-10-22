@@ -245,7 +245,7 @@ public class XWootSite
      * @return DOCUMENT ME!
      * @throws Exception DOCUMENT ME!
      */
-    public boolean isStarted() throws Exception
+    public boolean isStarted()
     {
         return this.started;
     }

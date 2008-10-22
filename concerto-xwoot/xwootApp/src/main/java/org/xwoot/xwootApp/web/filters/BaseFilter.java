@@ -45,6 +45,7 @@
 package org.xwoot.xwootApp.web.filters;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -58,6 +59,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
 import org.xwoot.lpbcast.util.NetUtil;
 import org.xwoot.xwootApp.XWoot;
+import org.xwoot.xwootApp.XWootException;
 import org.xwoot.xwootApp.web.XWootSite;
 
 /**
@@ -78,7 +80,7 @@ public class BaseFilter implements Filter
 
     /** The filter configuration, used for accessing the servlet context. */
     private FilterConfig config = null;
-
+    
     /**
      * {@inheritDoc}
      * 
@@ -151,7 +153,9 @@ public class BaseFilter implements Filter
 
             // Let the request be further processed.
             chain.doFilter(request, response);
-        } catch (Exception e) {
+        } catch (URISyntaxException e) {
+            throw new ServletException(e);
+        } catch (XWootException e) {
             throw new ServletException(e);
         }
     }
