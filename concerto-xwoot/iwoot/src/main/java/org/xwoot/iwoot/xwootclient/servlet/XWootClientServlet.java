@@ -1,132 +1,133 @@
 package org.xwoot.iwoot.xwootclient.servlet;
 
-import java.io.File;
-import java.util.Collection;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 
-import org.xwoot.xwootApp.XWootAPI;
+import org.jdom.Document;
+import org.jdom.JDOMException;
+import org.jdom.input.SAXBuilder;
+import org.xwoot.iwoot.xwootclient.XWootClientAPI;
 
-public class XWootClientServlet implements XWootAPI
+public class XWootClientServlet implements XWootClientAPI
 {
-    String xWootURL; 
 
-    public boolean addNeighbour(String neighborURL)
+    final String xwootUrl;
+
+    final String addNeighborContext = "/synchronize.do?action=addNeighbor";
+
+    final String cpConnectionContext = "/synchronize.do?action=cpconnection";
+
+    final String informationContext = "/information?request=";
+
+    final String isXWootInitialized=  "isXWootInitialized";
+
+    final String isCPConnected="isWikiConnected";
+
+    final String isP2PNetworkConnected="isP2PNetworkConnected";
+
+    public XWootClientServlet(String xwootURL)
     {
-        // TODO Auto-generated method stub
-        return false;
+        this.xwootUrl = xwootURL;
     }
+
+//    public boolean addNeighbour(String neighborURL)
+//    {
+//        URL to;
+//        try {
+//            to = new URL(this.xwootUrl + this.addNeighborContext + "&neighbor=" + neighborURL);
+//            HttpURLConnection init = (HttpURLConnection) to.openConnection();
+//            init.disconnect();
+//        } catch (MalformedURLException e) {
+//            e.printStackTrace();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        // TODO Auto-generated method stub
+//        return true;
+//    }
+
+    private Boolean getInfos(String wantedValue) {
+        try {
+            URL url = new URL(this.xwootUrl+this.informationContext+wantedValue);
+
+            try {
+                URLConnection URLconnection = url.openConnection ();
+                HttpURLConnection httpConnection = (HttpURLConnection)URLconnection;
+
+                int responseCode = httpConnection.getResponseCode ();
+                if ( responseCode == HttpURLConnection.HTTP_OK) 
+                {
+                    InputStream in = httpConnection.getInputStream ();
+                    SAXBuilder sxb = new SAXBuilder();
+                    try
+                    {
+                        Document document = sxb.build(in);
+                        return Boolean.valueOf(document.getRootElement().getValue());
+                    } catch(JDOMException e) {
+                        e.printStackTrace ();
+                    }
+                } else 
+                {
+                    System.out.println("HTTP connection response != HTTP_OK" );
+                } 
+            } catch ( IOException e ) { 
+                e.printStackTrace ( ) ;
+            } 
+        } catch ( MalformedURLException e ) {  
+            e.printStackTrace ( ) ;
+        } 
+        return null;
+    } 
 
     public void connectToContentManager()
     {
-        // TODO Auto-generated method stub
-        
+        URL to;
+        try {
+            to = new URL(this.xwootUrl + this.cpConnectionContext + "&switch=on");
+            HttpURLConnection init = (HttpURLConnection) to.openConnection();
+            init.disconnect();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public boolean createNetwork() 
+    public void disconnectFromContentManager()
     {
-        // TODO Auto-generated method stub
-        return false;
-    }
+        URL to;
+        try {
+            to = new URL(this.xwootUrl + this.cpConnectionContext + "&switch=off");
+            HttpURLConnection init = (HttpURLConnection) to.openConnection();
+            init.disconnect();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-    public void disconnectFromContentManager() 
-    {
-        // TODO Auto-generated method stub
-        
-    }
-
-    public void disconnectFromP2PNetwork() 
-    {
-        // TODO Auto-generated method stub
-        
-    }
-
-    public void doAntiEntropy(String neighborURL) 
-    {
-        // TODO Auto-generated method stub
-        
-    }
-
-    public File exportWootStorage()
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public String getContentManagerURL()
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public Collection<String> getNeighborsList()
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public String getXWootPeerId()
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public boolean importWootStorage(File wst)
-    {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    public void initialiseWootStorage()
-    {
-        // TODO Auto-generated method stub
-        
-    }
-
-    public boolean isConnectedToP2PNetwork()
-    {
-        // TODO Auto-generated method stub
-        return false;
     }
 
     public boolean isContentManagerConnected()
     {
-        // TODO Auto-generated method stub
-        return false;
+        Boolean result=getInfos(this.isCPConnected);
+        if (result==null){
+            return false;
+        }
+        return result.booleanValue();
     }
-
-    public boolean isWootStorageComputed()
+    
+    public boolean isConnectedToP2PNetwork()
     {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    public boolean joinNetwork(String neighborURL)
-    {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    public void reconnectToP2PNetwork() 
-    {
-        // TODO Auto-generated method stub
+        Boolean result=getInfos(this.isP2PNetworkConnected);
+        if (result==null){
+            return false;
+        }
+        return result.booleanValue();
         
     }
-
-    public void removeNeighbor(String neighborURL) 
-    {
-        // TODO Auto-generated method stub
-        
-    }
-
-    public void synchronizePages() 
-    {
-        // TODO Auto-generated method stub
-        
-    }
-
-    public void doAntiEntropyWithAllNeighbors() 
-    {
-        // TODO Auto-generated method stub
-        
-    }
-
 }

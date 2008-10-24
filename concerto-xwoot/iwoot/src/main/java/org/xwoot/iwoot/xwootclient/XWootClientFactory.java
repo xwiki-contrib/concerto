@@ -1,7 +1,5 @@
 package org.xwoot.iwoot.xwootclient;
 
-import org.xwoot.xwootApp.XWootAPI;
-
 public abstract class XWootClientFactory
 {
     private final static String SERVLET = "org.xwoot.iwoot.xwootclient.servlet.XWootClientServletFactory";
@@ -33,6 +31,9 @@ public abstract class XWootClientFactory
         }
     }
 
-    public abstract XWootAPI createXWootClient() throws XWootClientException;
+    public abstract XWootClientAPI createXWootClient() throws XWootClientException;
+    
+    public abstract XWootClientAPI createXWootClient(String url) throws XWootClientException;
+    
 
 }

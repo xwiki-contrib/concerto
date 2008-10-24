@@ -49,7 +49,7 @@
                 <img class="icon" src="images/P2Ponoff.png"/>
                 <a href="synchronize.do?action=p2pnetworkconnection" title="Disconnect from P2P Network."><img class="icon" src="images/P2Poff.png"/></a>
             </c:if>
-            <a href="synchronize.do?addneighbor=true" title="Add a new neighbor."><img class="icon" src="images/AddNeighbor.png"/></a>
+            <a href="synchronize.do?action=addneighbor" title="Add a new neighbor."><img class="icon" src="images/AddNeighbor.png"/></a>
             <img class="icon" src="images/barre.png"/>
             <c:if test="${cpconnection eq false}">
                 <a href="synchronize.do?action=cpconnection" title="Connect to xwiki server."><img class="icon" src="images/xwikion.png"/></a>
@@ -156,7 +156,7 @@
                 </c:if>
                     
                 </div>
-                <c:if test="${addneighbor eq true}">
+                <c:if test="${action eq 'addneighbor'}">
                     <div class="menu_margin">
                         <form id="button" method="post" action="synchronize.do?action=addNeighbor">
                                 <input type="text" name="neighbor" size="50" />

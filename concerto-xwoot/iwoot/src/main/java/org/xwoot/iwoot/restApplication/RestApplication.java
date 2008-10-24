@@ -11,15 +11,47 @@ import org.xwoot.iwoot.IWoot;
 import org.xwoot.iwoot.IWootException;
 import org.xwoot.iwoot.restApplication.resources.PagesResource;
 import org.xwoot.iwoot.restApplication.resources.PageResource;
+import org.xwoot.iwoot.xwootclient.XWootClientException;
+import org.xwoot.iwoot.xwootclient.XWootClientFactory;
+import org.xwoot.wikiContentManager.WikiContentManager;
+import org.xwoot.wikiContentManager.WikiContentManagerFactory;
 
 public class RestApplication extends Application
 {
    private IWoot iwoot;
    public final static MediaType USINGMEDIATYPE=MediaType.APPLICATION_JAVA_OBJECT;
     
+    public RestApplication() {
+        super();
+        System.out.println("Bootstrap IWoot !");
+        // Create a new WikiContentManager (resources container)
+        WikiContentManager WCM;
+     
+        // Create a new IWoot module (interface between IPhone and XWoot)
+        try {
+            
+            WCM = WikiContentManagerFactory.getMockFactory().createWCM();
+           
+            
+            this.iwoot = new IWoot(XWootClientFactory.getMockFactory().createXWootClient(), WCM, Integer.valueOf(1));
+
+            String pageId="test.page0";
+            String pageContent="Content of existing page";
+            WCM.createPage(pageId, pageContent);
+
+      
+        } catch (XWootClientException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     public RestApplication(IWoot iwoot) {
         super();
         this.iwoot=iwoot;
+        
     }
 
     /**

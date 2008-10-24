@@ -1,13 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE web-app PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN" "http://java.sun.com/dtd/web-app_2_3.dtd">
-<web-app id="WebApp_ID">
-<display-name>iwoot_old</display-name>
-<welcome-file-list>
-<welcome-file>index.html</welcome-file>
-<welcome-file>index.htm</welcome-file>
-<welcome-file>index.jsp</welcome-file>
-<welcome-file>default.html</welcome-file>
-<welcome-file>default.htm</welcome-file>
-<welcome-file>default.jsp</welcome-file>
-</welcome-file-list>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
+  <display-name>IWoot</display-name>
+	<context-param>
+      <param-name>org.restlet.application</param-name>
+      <param-value>
+        org.xwoot.iwoot.restApplication.RestApplication
+      </param-value>
+   </context-param> 
+   
+	<!-- Restlet adapter -->
+	<servlet>
+		<servlet-name>RestletServlet</servlet-name>
+		<servlet-class>com.noelios.restlet.ext.servlet.ServerServlet</servlet-class>
+   </servlet>
+
+	<!-- Catch all rest requests -->
+	<servlet-mapping>
+		<servlet-name>RestletServlet</servlet-name>
+		<url-pattern>/rest/*</url-pattern>
+	</servlet-mapping>
+  
+  <!-- bootstrap >
+    <servlet>
+        <servlet-name>bootstrap</servlet-name>
+        <servlet-class>org.xwoot.iwoot.Bootstrap</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>bootstrap</servlet-name>
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>bootstrap</servlet-name>
+        <url-pattern>/bootstrap.do</url-pattern>
+    </servlet-mapping-->
+  
 </web-app>

@@ -6,20 +6,24 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.xwoot.iwoot.xwootclient.XWootClientAPI;
 import org.xwoot.wikiContentManager.WikiContentManager;
 import org.xwoot.wikiContentManager.WikiContentManagerException;
-import org.xwoot.xwootApp.XWootAPI;
-import org.xwoot.xwootApp.XWootException;
 
 public class IWoot
 {
-    private XWootAPI xwoot;
+    private XWootClientAPI xwoot;
     private WikiContentManager wcm;
     private Integer id;
     
-    public IWoot(XWootAPI wootAPI, WikiContentManager wcm, Integer id)
-    {
-        super();
+    //logger
+    private final Log logger = LogFactory.getLog(this.getClass());
+    
+    public IWoot(XWootClientAPI wootAPI, WikiContentManager wcm, Integer id)
+    { 
         this.xwoot = wootAPI;
         this.wcm = wcm;
         this.id=id;
@@ -50,24 +54,14 @@ public class IWoot
         return result;
     }
     
-    private void disconnectXWoot() throws IWootException
+    private void disconnectXWoot()
     {
-        try {
-            this.xwoot.disconnectFromContentManager();
-            this.xwoot.disconnectFromP2PNetwork();
-        } catch (XWootException e) {
-            throw new IWootException(this.id+" : Problem with XWoot",e);
-        }  
+        this.xwoot.disconnectFromContentManager();  
     }
 
-    private void reconnectXwoot() throws IWootException
+    private void reconnectXwoot() 
     {
-        try {
-            this.xwoot.reconnectToP2PNetwork();
-            this.xwoot.connectToContentManager(); 
-        } catch (XWootException e) {
-            throw new IWootException(this.id+" : Problem with XWoot",e);
-        }  
+        this.xwoot.connectToContentManager(); 
     }
 
     public synchronized List<String> getPagesNames() throws IWootException
