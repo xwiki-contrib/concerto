@@ -1132,13 +1132,16 @@ public class XWoot implements XWootAPI
         /*********************************************/
         /** TODO WARNING BE CARREFUL ! **/
         /* this.addAllPageManagement(); */
-        Collection l= new ArrayList<String>();
+        Collection l=null;
         try {
             l = this.contentManager.getListPageId("test");
         } catch (WikiContentManagerException e) {
             //void
         }
-        l.add("Main.WebHome");
+        if (l==null){
+            l= new ArrayList<String>();
+            l.add("Main.WebHome");
+        }
         //        if (l==null){
         //            this.contentManager.createSpace("test");
         //            this.contentManager.createPage("test.WebHome", "");
