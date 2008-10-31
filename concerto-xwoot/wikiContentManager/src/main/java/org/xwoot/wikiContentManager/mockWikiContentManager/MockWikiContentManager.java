@@ -52,7 +52,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -80,7 +79,7 @@ public class MockWikiContentManager implements WikiContentManager
      */
     public MockWikiContentManager()
     {
-        this.pages = new HashMap<String, Map>();
+        this.pages = new Hashtable<String, Map>();
     }
 
     /**
@@ -347,8 +346,7 @@ public class MockWikiContentManager implements WikiContentManager
      */
     public void removeSpace(String spaceKey)
     {
-        Collection c = this.pages.entrySet();
-        Iterator i = c.iterator();
+        Iterator i = this.pages.entrySet().iterator();
         String s = "";
         while (i.hasNext()) {
             Entry e = (Entry) i.next();
@@ -356,7 +354,8 @@ public class MockWikiContentManager implements WikiContentManager
             if (m != null)
                 s = (String) m.get(WikiContentManager.SPACE);
             if ((s != null) && s.equals(spaceKey)) {
-                this.pages.remove(e.getKey());
+                i.remove();
+               // this.pages.remove(e.getKey());
             }
         }
     }

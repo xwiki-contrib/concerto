@@ -1,23 +1,18 @@
 package org.xwoot.iwoot.restApplication.resources;
 
-import java.io.Serializable;
-
-import java.util.List;
+import java.io.IOException;
 
 import org.restlet.Context;
-
-import org.restlet.data.Form;
+import org.restlet.data.MediaType;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 import org.restlet.data.Status;
-
+import org.restlet.resource.DomRepresentation;
 import org.restlet.resource.Representation;
-import org.restlet.resource.StringRepresentation;
-
 import org.restlet.resource.ResourceException;
-
 import org.restlet.resource.Variant;
-
+import org.w3c.dom.Document;
+import org.xwoot.iwoot.IWoot;
 import org.xwoot.iwoot.IWootException;
 import org.xwoot.iwoot.restApplication.RestApplication;
 
@@ -25,18 +20,20 @@ import org.xwoot.iwoot.restApplication.RestApplication;
 public class PagesResource extends BaseResource
 {
     /** List of items. */
-    List pagesNames;
+    Document pageList;
+
     public final static String KEY="pages";
 
     public PagesResource(Context context, Request request, Response response) {
         super(context, request, response);
 
         // Get the items directly from the "persistence layer".
+
         try {
-            this.pagesNames = ((RestApplication)getApplication()).getPagesNames();
-        } catch (IWootException e) {    
+            this.pageList = ((RestApplication)getApplication()).getPageList(this.getRequest().getOriginalRef().toString());
+        } catch (IWootException e) {
             e.printStackTrace();
-            this.pagesNames =null;
+            this.pageList = null;
         }
 
         // modifications of this resource via POST requests are not allow 
@@ -51,8 +48,8 @@ public class PagesResource extends BaseResource
      */
     @Override
     public Representation represent(Variant variant) throws ResourceException {
-        if (this.pagesNames!=null){
-            return this.getRepresentation(variant, (Serializable)this.pagesNames);
+        if (this.pageList!=null){
+            return new DomRepresentation(MediaType.APPLICATION_XML,this.pageList);
         }   
         return null;
     }
@@ -70,16 +67,27 @@ public class PagesResource extends BaseResource
     @Override
     public void acceptRepresentation(Representation entity)
     throws ResourceException {
-        // Parse the given representation and retrieve pair of
-        // "name=value" tokens.
-        Form form = new Form(entity);
-        String pageId = form.getFirstValue(PageResource.KEY);
+        DomRepresentation rep=null;
+        Document document=null;
+        if (entity.getMediaType().equals(MediaType.APPLICATION_XML)){
+             try {
+                 rep=new DomRepresentation(entity);
+                 document= rep.getDocument();
+            } catch (IOException e) {
+              throw new ResourceException(e);
+            }
+        }
+        else{
+            getResponse().setStatus(Status.CLIENT_ERROR_UNPROCESSABLE_ENTITY);
+            return ;
+        }
+        String pageId=document.getFirstChild().getAttributes().getNamedItem(IWoot.XML_ATTRIBUTE_NAME_XWIKIPAGEID).getTextContent();
         try{
             // Check that the item is not already registered.
             if (((RestApplication)getApplication()).exist(pageId)) {
                 getResponse().setStatus(Status.CLIENT_ERROR_CONFLICT);
             }else {
-                if (!((RestApplication)getApplication()).createPage(form)){
+                if (!((RestApplication)getApplication()).createPage(document)){
                     getResponse().setStatus(Status.CLIENT_ERROR_UNPROCESSABLE_ENTITY);
                 }
             }
@@ -90,8 +98,8 @@ public class PagesResource extends BaseResource
 
         // Set the response's status and entity
         getResponse().setStatus(Status.SUCCESS_CREATED);
-        Representation rep = new StringRepresentation("Item created",RestApplication.USINGMEDIATYPE);
         // Indicates where is located the new resource.
+       
         rep.setIdentifier(getRequest().getResourceRef().getIdentifier()
             + "/" + pageId);
         getResponse().setEntity(rep);

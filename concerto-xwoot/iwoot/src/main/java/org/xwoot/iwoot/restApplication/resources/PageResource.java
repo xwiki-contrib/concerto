@@ -1,29 +1,30 @@
 package org.xwoot.iwoot.restApplication.resources;
 
-import java.io.Serializable;
-import java.util.Map;
+import java.io.IOException;
 
 import org.restlet.Application;
 import org.restlet.Context;
-import org.restlet.data.Form;
+import org.restlet.data.MediaType;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 import org.restlet.data.Status;
+import org.restlet.resource.DomRepresentation;
 import org.restlet.resource.Representation;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.Variant;
+import org.w3c.dom.Document;
 import org.xwoot.iwoot.IWootException;
 import org.xwoot.iwoot.restApplication.RestApplication;
 
 public class PageResource extends BaseResource
 {
-    
+
     /** The sequence of characters that identifies the resource. */
     String id;
 
     /** The underlying resource object. */
-    Map page;
-    
+    Document page;
+
     public final static String KEY="id";
 
     public PageResource(Context context, Request request, Response response) {
@@ -35,12 +36,12 @@ public class PageResource extends BaseResource
 
         // Get the page directly from the "persistence layer".
         try {
-            this.page = ((RestApplication)getApplication()).getPage(this.id);
+            this.page = ((RestApplication)getApplication()).getPage(this.id,request.getOriginalRef().toString());
         } catch (IWootException e) {
             e.printStackTrace();
             this.page=null;
         }
-  
+
         if (this.page != null) {
             // Define the supported variant.
             getVariants().add(new Variant(RestApplication.USINGMEDIATYPE));
@@ -65,7 +66,7 @@ public class PageResource extends BaseResource
     @Override
     public void removeRepresentations() throws ResourceException {
         boolean isRemoved=true;
-        
+
         if (this.page != null) {
             // Remove the item from the list.
             try {
@@ -88,7 +89,9 @@ public class PageResource extends BaseResource
 
     @Override
     public Representation represent(Variant variant) throws ResourceException {
-           return this.getRepresentation(variant, (Serializable) this.page);
+        // return this.getObjectRepresentation(variant, (Serializable) this.page);
+        return new DomRepresentation(MediaType.APPLICATION_XML,this.page);
+
     }
 
     /**
@@ -107,26 +110,35 @@ public class PageResource extends BaseResource
         boolean creation = (this.page == null);
 
         // The PUT request updates or creates the resource.
-       /* if (this.page == null) {
+        /* if (this.page == null) {
             this.page = new Map...;
         }*/
-        Map pageTemp=this.getPage(entity);
-           
-        if (pageTemp!=null) {
+        //Map pageTemp=this.getPage(entity);
+        //Document page=this.getPage(entity);
+
+        if (entity==null || !entity.getMediaType().equals(MediaType.APPLICATION_XML)){
+            getResponse().setStatus(Status.CLIENT_ERROR_UNPROCESSABLE_ENTITY);
+            return ;
+        }
+        
+        if (!creation) {
             try {
-                if (!((RestApplication)Application.getCurrent()).storePage(this.id,pageTemp)){
+                if (!((RestApplication)Application.getCurrent()).storePage(this.id,new DomRepresentation(entity).getDocument())){
                     getResponse().setStatus(Status.CLIENT_ERROR_UNPROCESSABLE_ENTITY);
                     return ;
                 }
             } catch (IWootException e) {
                 e.printStackTrace();
                 getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
+            } catch (IOException e) {
+                e.printStackTrace();
+                getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
             }
         }
         else {
             try {
-                Form form = new Form(entity);
-                if (!((RestApplication)Application.getCurrent()).createPage(form)){
+                Document newPage=this.getPage(entity);
+                if (newPage==null || !((RestApplication)Application.getCurrent()).createPage(newPage)){
                     getResponse().setStatus(Status.CLIENT_ERROR_UNPROCESSABLE_ENTITY);
                 }
             } catch (IWootException e) {
@@ -134,7 +146,7 @@ public class PageResource extends BaseResource
                 getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
             }
         }
-        
+
         if (creation) {
             getResponse().setStatus(Status.SUCCESS_CREATED);
         } else {

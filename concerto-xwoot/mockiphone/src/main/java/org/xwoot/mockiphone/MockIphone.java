@@ -228,7 +228,9 @@ public class MockIphone
         List l=this.iwootRestClient.getPageList();
         MockIphonePage.savePageList(this.workingDir,l);
         Collection list=MockIphonePage.getManagedPageNames(this.workingDir);
-        l.removeAll(list);
+        if (l!=null && list!=null){
+            l.removeAll(list);
+        }
         return l;
     }
     

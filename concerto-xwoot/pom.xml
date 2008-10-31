@@ -24,12 +24,12 @@
   </distributionManagement>
   <scm>
     <connection>
-      scm:svn:https://svn.xwiki.org/svnroot/xwiki/sandbox/org.xwoot
+      scm:svn:https://svn.xwiki.org/svnroot/xwiki/sandbox/concerto/concerto-xwoot
     </connection>
     <developerConnection>
-      scm:svn:https://svn.xwiki.org/svnroot/xwiki/sandbox/org.xwoot
+      scm:svn:https://svn.xwiki.org/svnroot/xwiki/sandbox/concerto/concerto-xwoot
     </developerConnection>
-    <url>https://svn.xwiki.org/svnroot/xwiki/sandbox/org.xwoot
+    <url>https://svn.xwiki.org/svnroot/xwiki/sandbox/concerto/concerto-xwoot
     </url>
   </scm>
 
@@ -60,16 +60,17 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <properties>
+        <var.working.dir>/home/maire/Projet</var.working.dir>
+        <var.localhost>http://concerto.loria.fr:8080
+        </var.localhost>
         <!-- ############################################ -->
         <!-- # servlet container properties (ex : tomcat) # -->
         <!-- ############################################ -->
-        <var.servlet.container.url>http://concerto.loria.fr:8080
-        </var.servlet.container.url>
         <var.servlet.container.manager.url>
-          ${var.servlet.container.url}/manager
+          ${var.localhost}/manager
         </var.servlet.container.manager.url>
         <var.servlet.container.home>
-          /home/maire/Projet/apache-tomcat-5.5.20
+         ${var.working.dir}/apache-tomcat-5.5.20
         </var.servlet.container.home>
         <var.servlet.container.user>maven
         </var.servlet.container.user>
@@ -80,7 +81,7 @@
         <!-- # xwoot properties (file xwoot.properties) # -->
         <!-- ############################################ -->
         <!-- xwiki xml-rpc interface endpoint -->
-        <var.xwiki.endpoint>${var.servlet.container.url}/xwiki-enterprise-web-1.5.2/xmlrpc
+        <var.xwiki.endpoint>${var.localhost}/xwiki-enterprise-web-1.5.2/xmlrpc
         </var.xwiki.endpoint>
         <!-- xwiki user for access (read/write) -->
         <var.xwiki.username>Admin</var.xwiki.username>
@@ -94,14 +95,14 @@
           choose an existing and writable working directory for xwoot
           files
         -->
-        <var.xwoot.working.dir>/home/maire/Projet/xwoot_data/${var.xwoot.app.context}
+        <var.xwoot.working.dir>${var.working.dir}/xwoot_data/${var.xwoot.app.context}
         </var.xwoot.working.dir>
 
         <!-- the site id ; must be unique on the the xwoot network -->
         <var.xwoot.site.id>152811180</var.xwoot.site.id>
 
         <!-- the server url (do not use localhost) -->
-        <var.xwoot.server.url>http://concerto.loria.fr:8080/${var.xwoot.app.context}
+        <var.xwoot.server.url>${var.localhost}/${var.xwoot.app.context}
         </var.xwoot.server.url>
 
         <!-- the server name (not required) -->
@@ -116,6 +117,18 @@
         </var.xwoot.neighbors.list.size>
         <!--   number of round for messages propagation -->
         <var.xwoot.pbcast.round>2</var.xwoot.pbcast.round>
+        
+         <!--############################################-->
+        <!--# iwoot properties (file iwoot.properties) #-->
+        <!--############################################-->
+        
+        <var.iwoot.app.context>iwoot</var.iwoot.app.context>
+        
+        <!-- IWoot use 'mock' or 'real' components -->
+        <var.iwoot.wcm>mock</var.iwoot.wcm>
+        <var.iwoot.xwoot>mock</var.iwoot.xwoot>
+        <var.iwoot.xwoot.real.url> ${var.localhost}/${var.iwoot.app.context}/rest</var.iwoot.xwoot.real.url>
+        
       </properties>
     </profile>
   </profiles>

@@ -7,47 +7,30 @@ import org.restlet.Restlet;
 import org.restlet.Router;
 import org.restlet.data.Form;
 import org.restlet.data.MediaType;
+import org.w3c.dom.Document;
 import org.xwoot.iwoot.IWoot;
 import org.xwoot.iwoot.IWootException;
 import org.xwoot.iwoot.restApplication.resources.PagesResource;
 import org.xwoot.iwoot.restApplication.resources.PageResource;
-import org.xwoot.iwoot.xwootclient.XWootClientException;
-import org.xwoot.iwoot.xwootclient.XWootClientFactory;
-import org.xwoot.wikiContentManager.WikiContentManager;
-import org.xwoot.wikiContentManager.WikiContentManagerFactory;
 
 public class RestApplication extends Application
 {
-   private IWoot iwoot;
-   public final static MediaType USINGMEDIATYPE=MediaType.APPLICATION_JAVA_OBJECT;
+   public IWoot getIwoot()
+    {
+        return this.iwoot;
+    }
+    public void setIwoot(IWoot iwoot)
+    {
+        this.iwoot = iwoot;
+    }
+
+private IWoot iwoot;
+   public final static MediaType USINGMEDIATYPE=MediaType.APPLICATION_XML;
     
     public RestApplication() {
         super();
-        System.out.println("Bootstrap IWoot !");
-        // Create a new WikiContentManager (resources container)
-        WikiContentManager WCM;
-     
-        // Create a new IWoot module (interface between IPhone and XWoot)
-        try {
-            
-            WCM = WikiContentManagerFactory.getMockFactory().createWCM();
-           
-            
-            this.iwoot = new IWoot(XWootClientFactory.getMockFactory().createXWootClient(), WCM, Integer.valueOf(1));
-
-            String pageId="test.page0";
-            String pageContent="Content of existing page";
-            WCM.createPage(pageId, pageContent);
-
-      
-        } catch (XWootClientException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
     }
+    
     public RestApplication(IWoot iwoot) {
         super();
         this.iwoot=iwoot;
@@ -71,34 +54,15 @@ public class RestApplication extends Application
         return router;
     }
 
-    /**
-     * Returns the list of pages.
-     *
-     * @return the list of pages.
-     * 
-     */
-    public Map<String,Map> getPages() throws IWootException {
-        return this.iwoot.getPages();
-    }
-
-    /**
-     * Returns the list of pages ids.
-     *
-     * @return the list of pages ids.
-     *  
-     */
-    public List getPagesNames() throws IWootException  {
-        return this.iwoot.getPagesNames();
-    }
-    
+   
     /**
      * Return the page id.
      *
      * @param id : the id of the wanted page
      * @return the page id.
      */
-    public Map getPage(String id) throws IWootException{
-        return this.iwoot.getPage(id);
+    public Document getPage(String id, String href) throws IWootException{
+        return this.iwoot.getPage(id,href);
     }
     
     /**
@@ -114,11 +78,11 @@ public class RestApplication extends Application
     /**
      * Store the page .
      *
-     * @param page : the page to store
+     * @param document : the page to store
      * @return boolean
      */
-    public boolean storePage(String id,Map page) throws IWootException{
-        return this.iwoot.storePage(id,page);
+    public boolean storePage(String id,Document document) throws IWootException{
+        return this.iwoot.storePage(id,document);
     }
 
     public boolean exist(String pageId) throws IWootException
@@ -126,9 +90,13 @@ public class RestApplication extends Application
         return this.iwoot.existPage(pageId);
     }
 
-    public boolean createPage(Form form) throws IWootException
+    public boolean createPage(Document newPage) throws IWootException
     {
-       return this.iwoot.createPage(form.getValuesMap());
+       return this.iwoot.createPage(newPage);
+    }
+    public Document getPageList(String pagesHRef) throws IWootException
+    {
+        return this.iwoot.getPageList(pagesHRef);
     }
     
 }

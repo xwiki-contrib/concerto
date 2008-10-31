@@ -116,7 +116,7 @@ public class Bootstrap extends HttpServlet
             System.out.println("EXCEPTION catched !!");
             e.printStackTrace();
             request.setAttribute("error", e.getMessage());
-            request.getRequestDispatcher("/pages/Bootstrap.jsp").forward(request, response);
+            //request.getRequestDispatcher("/pages/Bootstrap.jsp").forward(request, response);
             return;
         }
     }

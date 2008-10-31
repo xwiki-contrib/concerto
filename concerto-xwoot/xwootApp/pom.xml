@@ -264,7 +264,7 @@
                     </context>
                   </properties>
                   <pingURL>
-                    ${var.servlet.container.url}/${var.xwoot.app.context}
+                    ${var.localhost}/${var.xwoot.app.context}
                   </pingURL>
                 </deployable>
               </deployables>

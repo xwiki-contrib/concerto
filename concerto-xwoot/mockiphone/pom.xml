@@ -233,7 +233,7 @@
                     </context>
                   </properties>
                   <pingURL>
-                    ${var.servlet.container.url}/MockIphone
+                    ${var.localhost}/MockIphone
                   </pingURL>
                 </deployable>
               </deployables>
