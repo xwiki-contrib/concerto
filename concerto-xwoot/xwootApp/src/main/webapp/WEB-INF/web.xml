@@ -58,16 +58,6 @@
         <servlet-name>stateManagement</servlet-name>
         <url-pattern>/stateManagement.do</url-pattern>
     </servlet-mapping>    
-    
- <!-- pageManagement -->
-    <servlet>
-        <servlet-name>pageManagement</servlet-name>
-        <servlet-class>org.xwoot.xwootApp.web.servlets.PageManagement</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>pageManagement</servlet-name>
-        <url-pattern>/pageManagement.do</url-pattern>
-    </servlet-mapping>
 
 <!--receiveMessage-->
     <servlet>
