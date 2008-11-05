@@ -1,31 +1,51 @@
 package org.xwoot.antiEntropy;
 
+/**
+ * Exception handling for AntiEntropy.
+ * 
+ * @version $Id: $Revision$
+ */
 public class AntiEntropyException extends Exception
 {
 
     /**
-     * 
+     * Unique ID used in the serialization process.
      */
     private static final long serialVersionUID = -2568698052987298242L;
 
+    /**
+     * @see Exception#Exception()
+     */
     public AntiEntropyException()
     {
         super();
     }
 
-    public AntiEntropyException(Throwable arg0)
+    /**
+     * @param cause : the cause
+     * @see Exception#Exception(Throwable)
+     */
+    public AntiEntropyException(Throwable cause)
     {
-        super(arg0);
-        // TODO Auto-generated constructor stub
+        super(cause);
     }
 
-    public AntiEntropyException(String arg0)
+    /**
+     * @param message : the message
+     * @see Exception#Exception(String)
+     */
+    public AntiEntropyException(String message)
     {
-        super(arg0);
+        super(message);
     }
 
-    public AntiEntropyException(String arg0, Throwable t)
+    /**
+     * @param message : the message
+     * @param cause : the cause
+     * @see Exception#Exception(String, Throwable)
+     */
+    public AntiEntropyException(String message, Throwable cause)
     {
-        super(arg0, t);
+        super(message, cause);
     }
 }

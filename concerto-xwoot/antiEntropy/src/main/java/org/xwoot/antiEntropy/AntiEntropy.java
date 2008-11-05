@@ -47,89 +47,79 @@ package org.xwoot.antiEntropy;
 import org.xwoot.antiEntropy.Log.Log;
 
 import java.io.File;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 /**
- * DOCUMENT ME!
+ * This class provides the antiEntropy service. It's used by the receiver engine to process antientropy messages.
  * 
- * @author $author$
- * @version $Revision$ This object give the antientropy service. It's used by receiver engine to response at an asked
- *          antientropy message.
+ * @version $Id: $Revision$
  */
 public class AntiEntropy
 {
-    /** log : the associate log */
+    /** The name of the working directory for the Log. */
+    public static final String LOG_DIRECTORY_NAME = "log";
+    
+    /**
+     * The associated log.
+     * 
+     * @see org.xwoot.antiEntropy.Log.Log
+     **/
     private Log log;
 
     /**
      * Creates a new AntiEntropy object.
      * 
-     * @param logPath : the filepath for log persistence storage with serialization.
-     * @throws AntiEntropyException 
-     * 
+     * @param logPath : the directory on drive for log persistence storage.
+     * @throws AntiEntropyException if the log does not initialize correctly.
      */
-    public AntiEntropy(String logPath) throws AntiEntropyException 
+    public AntiEntropy(String logPath) throws AntiEntropyException
     {
-        File f = new File(logPath);
-        if (!f.exists()) {
-            if (!f.mkdir()) {
-                throw new AntiEntropyException("Can't create directory: " + logPath);
-            }
-        } else if (!f.isDirectory()) {
-            throw new AntiEntropyException("given path : " + logPath + " -- is not a directory");
-        } else if (!f.canWrite()) {
-            throw new AntiEntropyException("given path : " + logPath + " -- isn't writable");
-        }
-        this.log = new Log(logPath + File.separator + "log");
+        this.log = new Log(logPath + File.separator + LOG_DIRECTORY_NAME);
     }
 
+    /**
+     * @see Log#clearWorkingDir()
+     */
     public void clearWorkingDir()
     {
         this.log.clearWorkingDir();
     }
 
     /**
-     * To get diff between content of a remote log and content of the local log.Use it to get message <b>keys</b> in the
-     * local log which are not in a given remote log.
+     * Computes the diff between content of a remote log and content of the local log by comparing keys. 
      * 
-     * @param site2ids : table of all remote log keys
-     * @return : collection of all local keys which are not in the given table
-     * @throws AntiEntropyException 
-     * 
+     * @param site2ids : object representing an array of remote log keys that need to be checked.
+     * @return collection of all local messages corresponding to the keys that are not in the given array.
+     * @throws AntiEntropyException if problems while reading the log occur.
      */
+    @SuppressWarnings("unchecked")
     public Collection answerAntiEntropy(Object site2ids) throws AntiEntropyException
     {
         // diff with local log
-        Object[] diff = this.log.getDiffKey((Object[])site2ids);
-        List<Object> toSend = new ArrayList<Object>();
+        Object[] diff = this.log.getDiffKey((Object[]) site2ids);
+        List<Object> missingMessages = new ArrayList<Object>();
 
         for (Object id : diff) {
             Object missingMessage = this.log.getMessage(id);
-            toSend.add(missingMessage);
+            missingMessages.add(missingMessage);
         }
 
-        return toSend;
+        return missingMessages;
     }
 
     /**
-     * To get the table of all message keys in log
-     * 
      * @return the table of all message keys in log
-     * @throws AntiEntropyException
-     * 
+     * @throws AntiEntropyException if problems while reading the log occur.
      */
-    public Object[] getContentForAskAntiEntropy() throws AntiEntropyException
+    public Object[] getMessageIdsForAskAntiEntropy() throws AntiEntropyException
     {
-        return this.log.getMessagesId();
+        return this.log.getMessageIds();
     }
 
     /**
-     * To get the log
-     * 
-     * @return the log
+     * @return the {@link Log} object
      */
     public Log getLog()
     {
@@ -137,12 +127,11 @@ public class AntiEntropy
     }
 
     /**
-     * To add a message in log.
+     * Adds a message in the log.
      * 
-     * @param id : the key of the message to add
-     * @param message : the message to add
-     * @throws AntiEntropyException 
-     * 
+     * @param id : the id of the message
+     * @param message : the message
+     * @throws AntiEntropyException if problems occur while handling the log.
      */
     public void logMessage(Object id, Object message) throws AntiEntropyException
     {

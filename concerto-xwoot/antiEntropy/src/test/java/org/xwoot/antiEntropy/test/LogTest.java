@@ -51,34 +51,72 @@ import org.xwoot.antiEntropy.Log.Log;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.List;
 
 import junit.framework.Assert;
 
 /**
- * This junit class test all log functions
+ * This junit class test all log functions.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id: $Revision$
  */
 public class LogTest
 {
+    /** The test working directory for Log. */
+    private static final String WORKING_DIR = "/tmp/xwootTests/LogTest";
+
+    /** The test Log file path. */
     private String logFilePath;
 
+    /** The test Log object. */
     private Log log;
 
-    private final static String WORKINGDIR = "/tmp/antiEntropyTest";
+    /** Test id to be added in the log. */
+    private String testId1 = "1";
 
+    /** Test id to be added in the log. */
+    private String testId2 = "2";
+
+    /** Test id to be added in the log. */
+    private String testId3 = "3";
+
+    /** Test id to be added in the log. */
+    private String testId4 = "4";
+
+    /** Test message to be added in the log. */
+    private String testMessage1 = "titi";
+
+    /** Test message to be added in the log. */
+    private String testMessage2 = "tata";
+
+    /** Test message to be added in the log. */
+    private String testMessage3 = "tutu";
+
+    /** Test message to be added in the log. */
+    private String testMessage4 = "toto";
+
+    /**
+     * Makes sure the working dir exists and creates the test Log object.
+     * 
+     * @throws Exception if IO problems occur.
+     */
     @Before
     public void setUp() throws Exception
     {
-        File working = new File(WORKINGDIR);
+        File working = new File(WORKING_DIR);
         if (!working.exists() && !working.mkdir()) {
-            throw new Exception("Can't create working directory: " + WORKINGDIR);
+            throw new Exception("Can't create working directory: " + WORKING_DIR);
         }
-        this.logFilePath = WORKINGDIR + File.separator + "log";
+        this.logFilePath = WORKING_DIR + File.separator + Log.LOG_FILE_NAME;
         this.log = new Log(this.logFilePath);
     }
 
+    /**
+     * Clears the log's contents.
+     * 
+     * @throws Exception if problems occur.
+     */
     @After
     public void tearDown() throws Exception
     {
@@ -87,94 +125,99 @@ public class LogTest
     }
 
     /**
-     * Test the add message
+     * Test the add message by adding a message and getting it back.
      * 
-     * @throws Exception : TODO best exception gestion ... exceptions concerning log file
+     * @throws Exception if problems occur.
      */
     @Test
     public void testAdd() throws Exception
     {
-        String message = "toto";
-        this.log.addMessage("message1", message);
+        this.log.addMessage(testId1, testMessage1);
         Assert.assertEquals(this.log.logSize(), 1);
+
+        Assert.assertEquals(testMessage1, log.getMessage(testId1));
     }
 
     /**
-     * Test the diff function ...
+     * Test the diff function by adding all the messages in the log and after making a diff by half of them you should
+     * end up with the other half.
      * 
-     * @throws Exception : TODO best exception gestion ... exceptions concerning log file
+     * @throws Exception if problems occur.
      */
     @Test
     public void testDiff() throws Exception
     {
-        String message0 = "toto";
-        String id0 = "message0";
-        this.log.addMessage(id0, message0);
+        this.log.addMessage(testId1, testMessage1);
+        this.log.addMessage(testId2, testMessage2);
+        this.log.addMessage(testId3, testMessage3);
+        this.log.addMessage(testId4, testMessage4);
 
-        String message1 = "titi";
-        String id1 = "message1";
-        this.log.addMessage(id1, message1);
-
-        String message2 = "tata";
-        this.log.addMessage("message2", message2);
-
-        String message3 = "tutu";
-        this.log.addMessage("message3", message3);
-
-        Serializable[] list = new Serializable[] {id0, id1};
+        Serializable[] list = new Serializable[] {testId1, testId2};
         Object[] diff = this.log.getDiffKey(list);
         Assert.assertEquals(diff.length, 2);
+
+        List<Object> diffAsList = Arrays.asList(diff);
+        Assert.assertTrue(diffAsList.contains(testId3) && diffAsList.contains(testId4));
     }
 
     /**
      * The the function existInLog. The added message must exist in the log.
      * 
-     * @throws Exception : TODO best exception gestion ... exceptions concerning log file
+     * @throws Exception if problems occur.
      */
     @Test
     public void testExist() throws Exception
     {
-        String message = "toto";
-        this.log.addMessage("message", message);
-        Assert.assertTrue(this.log.existInLog("message"));
+        this.log.addMessage(testId1, testMessage1);
+        Assert.assertTrue(this.log.existInLog(testId1));
     }
 
     /**
-     * Test getting a log object. The got object must be the same than the put object if the used key is the same in the
-     * two operations.
+     * Test getting a log object. The returned object must be the same than the added object if the key used is the same
+     * in both operations.
      * 
-     * @throws Exception : TODO best exception gestion ... exceptions concerning log file
+     * @throws Exception if problems occur.
      */
     @Test
     public void testGetMessage() throws Exception
     {
-        String message = "toto";
-        this.log.addMessage("message", message);
+        this.log.addMessage(testId1, testMessage1);
 
-        String message2 = (String) this.log.getMessage("message");
-        Assert.assertEquals(message2, "toto");
+        String message = (String) this.log.getMessage(testId1);
+        Assert.assertEquals(message, testMessage1);
     }
 
     /**
-     * The the function which return all add messages keys.
+     * The the function which return all add messages keys. After adding 100 messages, 100 message ids should exist in
+     * the log.
      * 
-     * @throws Exception : TODO best exception gestion ... exceptions concerning log file
+     * @throws Exception if problems occur.
      */
     @Test
     public void testGetMessagesId() throws Exception
     {
-        for (int i = 0; i < 100; i++) {
-            String message = "toto" + i;
-            this.log.addMessage("message" + i, message);
-        }
+        add100Messages();
 
-        Assert.assertEquals(this.log.getMessagesId().length, 100);
+        Assert.assertEquals(this.log.getMessageIds().length, 100);
     }
 
     /**
-     * Init log tests
+     * The log size must be equals to the number of objects that it contains.
      * 
-     * @throws Exception : TODO best exception gestion ... exceptions concerning log file
+     * @throws Exception if problems occur.
+     */
+    @Test
+    public void testSize() throws Exception
+    {
+        add100Messages();
+
+        Assert.assertEquals(this.log.logSize(), 100);
+    }
+
+    /**
+     * Init log tests.
+     * 
+     * @throws Exception if problems occur.
      */
     @Test
     public void testInit() throws Exception
@@ -183,32 +226,28 @@ public class LogTest
     }
 
     /**
-     * The log size must be equals to the number of differents objects that it contains.
+     * Helper class for adding 100 messages.
      * 
-     * @throws Exception : TODO best exception gestion ... exceptions concerning log file
-     */
-    @Test
-    public void testSize() throws Exception
+     * @throws Exception if problems occur.
+     **/
+    private void add100Messages() throws Exception
     {
         for (int i = 0; i < 100; i++) {
-            String message = "toto" + i;
-            this.log.addMessage("message" + i, message);
+            String message = testMessage1 + i;
+            this.log.addMessage(testId1 + i, message);
         }
-
-        Assert.assertEquals(this.log.logSize(), 100);
     }
 
     /**
-     * Test adding the same message two times ; log must contains only one occurence
+     * Test adding the same message two times. Log must contains only one occurrence.
      * 
-     * @throws Exception : TODO best exception gestion ... exceptions concerning log file
+     * @throws Exception if problems occur.
      */
     @Test
     public void testUnicity() throws Exception
     {
-        String message = "titi";
-        this.log.addMessage("message", message);
-        this.log.addMessage("message", message);
+        this.log.addMessage(testId1, testMessage1);
+        this.log.addMessage(testId1, testMessage1);
         Assert.assertEquals(this.log.logSize(), 1);
     }
 }

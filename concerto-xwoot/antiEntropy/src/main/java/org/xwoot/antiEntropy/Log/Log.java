@@ -57,50 +57,62 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * DOCUMENT ME!
+ * This class embeds a {@link Hashtable} used to store messages having ids as keys. The embedded hashtable is serialized
+ * in a given file.
+ * <p>
+ * Log is used by {@link org.xwoot.antiEntropy.AntiEntropy AntiEntropy} to store generated and received messages.
  * 
- * @author $author$
- * @version $Revision$ this class embed an hashtable used to store objects. Like with a hashtable each object can be
- *          load with his key. The embedded hashtable is serialized in a given file. Log is used by antiEntropy to store
- *          generated and received messages.
+ * @version $Id: $Revision$
+ * @see org.xwoot.antiEntropy.AntiEntropy
  */
 public class Log implements Serializable
 {
     /**
-     * serialVersionUID : (for serialize) log : the embedded hashtable store the objects logFilePath : the file path to
-     * serialize the log
+     * The name of the file where the hashtable will be serialized.
+     */
+    public static final String LOG_FILE_NAME = "log";
+
+    /**
+     * Unique ID used in the serialization process.
      */
     private static final long serialVersionUID = -3836149914436685731L;
 
+    /**
+     * The serialized hashtable storing key-value having the id as key and the message as value.
+     */
     private Map<Object, Object> log;
 
+    /**
+     * The path on drive where to serialize the log.
+     */
     private String logFilePath;
 
-    public static final String LOGFILENAME = "log";
-
-    // constructor
     /**
      * Creates a new Log object.
      * 
-     * @param logFilePath : the file path used to serialize the log
-     * @throws LogException
+     * @param logFilePath : the file path used to serialize the log. If it does not exist, it will be created.
+     * @throws LogException if the specified path is not a writable directory.
      */
-    public Log(String directoryPath) throws LogException
+    public Log(String logFilePath) throws LogException
     {
-        File f = new File(directoryPath);
-        if (!f.exists()) {
-            if (!f.mkdir()) {
-                throw new LogException("Can't create directory: " + directoryPath);
+        File directory = new File(logFilePath);
+
+        if (!directory.exists()) {
+            if (!directory.mkdirs()) {
+                throw new LogException("Can't create directory: " + logFilePath);
             }
-        } else if (!f.isDirectory()) {
-            throw new LogException("given path : " + directoryPath + " -- is not a directory");
-        } else if (!f.canWrite()) {
-            throw new LogException("given path : " + directoryPath + " -- isn't writable");
+        } else if (!directory.isDirectory()) {
+            throw new LogException(logFilePath + " -- is not a directory");
+        } else if (!directory.canWrite()) {
+            throw new LogException(logFilePath + " -- isn't writable");
         }
 
-        this.logFilePath = directoryPath + File.separator + "clock";
+        this.logFilePath = logFilePath + File.separator + LOG_FILE_NAME;
     }
 
+    /**
+     * Deletes the working directory containing the log file.
+     */
     public void clearWorkingDir()
     {
         File f = new File(this.logFilePath);
@@ -110,11 +122,9 @@ public class Log implements Serializable
     }
 
     /**
-     * To add an entry in log.
-     * 
-     * @param id : Key for new log entry
-     * @param message : the new log entry
-     * @throws LogException 
+     * @param id : key for new log entry.
+     * @param message : the value of the new log entry.
+     * @throws LogException if log serialization/deserialization problems occur.
      */
     public synchronized void addMessage(Object id, Object message) throws LogException
     {
@@ -124,9 +134,9 @@ public class Log implements Serializable
     }
 
     /**
-     * To remove all entries in log
-     * @throws LogException 
+     * Removes all entries in the log.
      * 
+     * @throws LogException if serialization problems occur.
      */
     public void clearLog() throws LogException
     {
@@ -135,13 +145,11 @@ public class Log implements Serializable
     }
 
     /**
-     * To test if a key exist in log
-     * 
-     * @param messageId The searched key
-     * @return a boolean value
-     * @throws LogException 
+     * @param messageId : the searched message's id
+     * @return true if the message exists in the log, false otherwise.
+     * @throws LogException if deserialization problems occur.
      */
-    public boolean existInLog(Object messageId) throws LogException 
+    public boolean existInLog(Object messageId) throws LogException
     {
         this.loadLog();
 
@@ -149,13 +157,10 @@ public class Log implements Serializable
     }
 
     /**
-     * to get an hashtable with all log entries
-     * 
-     * @return all entries in a hashtable
-     * @throws LogException 
-     * 
+     * @return a Map of all the entries in the log.
+     * @throws LogException if deserialization problems occur.
      */
-    public Map<Object, Object> getAllEntries() throws LogException 
+    public Map<Object, Object> getAllEntries() throws LogException
     {
         this.loadLog();
 
@@ -163,35 +168,29 @@ public class Log implements Serializable
     }
 
     /**
-     * this function compute the diff beetween a given table ok keys and the log's keys.
+     * Computes the diff beetween a given table of keys and the log's keys.
      * 
-     * @param site2ids a table of keys
-     * @return all of log entries that associate key isn't in the given table
-     * @throws LogException 
-     * 
+     * @param site2ids : an array of message ids.
+     * @return an array of all the message ids, excluding the ones in the given array.
+     * @throws LogException if deserialization problems occur.
      */
     public Object[] getDiffKey(Object[] site2ids) throws LogException
     {
         this.loadLog();
 
-        Set diff = this.log.keySet();
+        Set<Object> diff = this.log.keySet();
 
         for (Object id : site2ids) {
-            if (this.log.keySet().contains(id)) {
-                diff.remove(id);
-            }
+            diff.remove(id);
         }
 
         return diff.toArray();
     }
 
     /**
-     * To get an entry in log with his key
-     * 
-     * @param id : the key associate with the wanted log entry
-     * @return the wanted log entry or null if key's not present in log
-     * @throws LogException 
-     * 
+     * @param id : the key associate with the wanted log entry.
+     * @return the wanted log entry or null if key's not present in log.
+     * @throws LogException if deserialization problems occur.
      */
     public Object getMessage(Object id) throws LogException
     {
@@ -201,21 +200,21 @@ public class Log implements Serializable
     }
 
     /**
-     * To get all keys in log.
-     * 
-     * @return a table with all keys
-     * @throws LogException 
-     * 
+     * @return a table with all message ids.
+     * @throws LogException if deserialization problems occur.
      */
-    public Object[] getMessagesId() throws LogException
+    public Object[] getMessageIds() throws LogException
     {
         this.loadLog();
 
         return this.log.keySet().toArray();
     }
 
-    // private
-    // methods for persistent storage. Load the log from file.
+    /**
+     * Method for persistent storage. Loads the log from file.
+     * 
+     * @throws LogException if problems occur while accessing or reading the log from file.
+     */
     @SuppressWarnings("unchecked")
     private void loadLog() throws LogException
     {
@@ -226,32 +225,31 @@ public class Log implements Serializable
             this.storeLog();
             return;
         }
-        FileInputStream fis;
+
+        FileInputStream fis = null;
+        ObjectInputStream ois = null;
         try {
             fis = new FileInputStream(logFile);
-           
-            ObjectInputStream ois = null;
             ois = new ObjectInputStream(fis);
-    
-            Map<Object, Object> readObject = (Map<Object, Object>) ois.readObject();
-            this.log = readObject;
-            ois.close();
-            fis.close();
-        } catch (IOException e) {
-           throw new LogException("Problem to load log file "+this.logFilePath,e);
-        } catch (ClassNotFoundException e) {
-           throw new LogException("Problem during loading log file with class cast "+this.logFilePath,e);
+
+            this.log = (Map<Object, Object>) ois.readObject();
+        } catch (Exception e) {
+            throw new LogException("Problem while loading log file " + this.logFilePath, e);
+        } finally {
+            try {
+                ois.close();
+                fis.close();
+            } catch (IOException e) {
+                throw new LogException("Problem closing log file after loading " + this.logFilePath, e);
+            }
         }
     }
 
     /**
-     * to get the number of entries in log
-     * 
-     * @return : the number of entries in log
-     * @throws LogException 
-     * 
+     * @return the number of entries in log
+     * @throws LogException if deserialization problems occur.
      */
-    public int logSize() throws LogException 
+    public int logSize() throws LogException
     {
         this.loadLog();
 
@@ -259,12 +257,10 @@ public class Log implements Serializable
     }
 
     /**
-     *
-     * private
-     * methods for persistent storage. Store the log in file.
+     * Method for persistent storage. Store the log on file.
      * 
+     * @throws LogException if problems occur while accessing or writing the log to file.
      */
-     
     private void storeLog() throws LogException
     {
         if (this.log.isEmpty()) {
@@ -281,14 +277,19 @@ public class Log implements Serializable
         ObjectOutputStream oos = null;
         try {
             fout = new FileOutputStream(this.logFilePath);
-        
             oos = new ObjectOutputStream(fout);
+
             oos.writeObject(this.log);
             oos.flush();
-            oos.close();
-            fout.close();
-        } catch (IOException e) {
-           throw new LogException("Problem when storing log in file "+this.logFilePath,e);
+        } catch (Exception e) {
+            throw new LogException("Problem when storing log in file " + this.logFilePath, e);
+        } finally {
+            try {
+                oos.close();
+                fout.close();
+            } catch (Exception e) {
+                throw new LogException("Problem closing log file after saving " + this.logFilePath, e);
+            }
         }
     }
 }

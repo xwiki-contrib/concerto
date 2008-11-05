@@ -2,32 +2,52 @@ package org.xwoot.antiEntropy.Log;
 
 import org.xwoot.antiEntropy.AntiEntropyException;
 
+/**
+ * Exception handling for Log manipulation.
+ * 
+ * @version $Id: $Revision$
+ */
 public class LogException extends AntiEntropyException
 {
 
     /**
-     * 
+     * Unique ID used in the serialization process.
      */
     private static final long serialVersionUID = -2568698052987298242L;
 
+    /**
+     * @see Exception#Exception()
+     */
     public LogException()
     {
         super();
     }
 
-    public LogException(Throwable arg0)
+    /**
+     * @param cause : the cause
+     * @see Exception#Exception(Throwable)
+     */
+    public LogException(Throwable cause)
     {
-        super(arg0);
-        // TODO Auto-generated constructor stub
+        super(cause);
     }
 
-    public LogException(String arg0)
+    /**
+     * @param message : the message
+     * @see Exception#Exception(String)
+     */
+    public LogException(String message)
     {
-        super(arg0);
+        super(message);
     }
 
-    public LogException(String arg0, Throwable t)
+    /**
+     * @param message : the message
+     * @param cause : the cause
+     * @see Exception#Exception(String, Throwable)
+     */
+    public LogException(String message, Throwable cause)
     {
-        super(arg0, t);
+        super(message, cause);
     }
 }
