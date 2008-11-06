@@ -1073,7 +1073,7 @@ public class XWoot implements XWootAPI
 
         Message message;
         try {
-            message = this.sender.getNewMessage(this.getXWootPeerId(), this.antiEntropy.getContentForAskAntiEntropy(),
+            message = this.sender.getNewMessage(this.getXWootPeerId(), this.antiEntropy.getMessageIdsForAskAntiEntropy(),
                 LpbCastAPI.ANTI_ENTROPY, 0);
         } catch (AntiEntropyException e) {
             this.logger.error(this.peerId+" : Problem to get content for antiEntropy \n",e);
