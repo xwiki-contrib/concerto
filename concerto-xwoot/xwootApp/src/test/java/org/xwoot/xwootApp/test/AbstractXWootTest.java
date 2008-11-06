@@ -48,7 +48,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.xwoot.antiEntropy.AntiEntropy;
 import org.xwoot.clockEngine.Clock;
-import org.xwoot.clockEngine.ClockFactory;
 import org.xwoot.lpbcast.sender.LpbCastAPI;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngine;
 import org.xwoot.wikiContentManager.WikiContentManager;
@@ -173,11 +172,11 @@ public abstract class AbstractXWootTest
         this.xwiki3 = WikiContentManagerFactory.getMockFactory().createWCM();
 
         this.opClock1 =
-            ClockFactory.getFactory().createClock(WORKINGDIR + File.separator + "Site1" + File.separator + "WootClock");
+            new Clock(WORKINGDIR + File.separator + "Site1" + File.separator + "WootClock");
         this.opClock2 =
-            ClockFactory.getFactory().createClock(WORKINGDIR + File.separator + "Site2" + File.separator + "WootClock");
+            new Clock(WORKINGDIR + File.separator + "Site2" + File.separator + "WootClock");
         this.opClock3 =
-            ClockFactory.getFactory().createClock(WORKINGDIR + File.separator + "Site3" + File.separator + "WootClock");
+            new Clock(WORKINGDIR + File.separator + "Site3" + File.separator + "WootClock");
 
         // 3 wootEngines
         this.wootEngine1 =

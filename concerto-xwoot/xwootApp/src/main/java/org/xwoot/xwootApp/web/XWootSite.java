@@ -49,7 +49,6 @@ import org.xwoot.antiEntropy.AntiEntropy;
 import org.xwoot.antiEntropy.AntiEntropyException;
 import org.xwoot.clockEngine.Clock;
 import org.xwoot.clockEngine.ClockException;
-import org.xwoot.clockEngine.ClockFactory;
 
 import org.xwoot.lpbcast.sender.httpservletlpbcast.HttpServletLpbCast;
 import org.xwoot.lpbcast.sender.httpservletlpbcast.HttpServletLpbCastException;
@@ -220,7 +219,7 @@ public class XWootSite
             throw new RuntimeException("Can't create tre directory: " + xwootDir);
         }
 
-        Clock wootEngineClock = ClockFactory.getFactory().createClock(wootEngineClockDir.toString());
+        Clock wootEngineClock = new Clock(wootEngineClockDir.toString());
         WikiContentManager wiki = WikiContentManagerFactory.getSwizzleFactory().createWCM(url, login, pwd);
         WootEngine wootEngine = new WootEngine(siteId, wootEngineDir.toString(), wootEngineClock);
         HttpServletLpbCast lpbCast =

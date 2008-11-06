@@ -261,6 +261,8 @@
     <module>mockiphone</module>
     <!-- Interface with Iphone -->
     <module>iwoot</module>
+    <!-- Utility module for tasks common to most of the modules -->
+    <module>xwootUtil</module>
   </modules>
   <build>
     <plugins>

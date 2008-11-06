@@ -46,7 +46,6 @@ package org.xwoot.wootEngine.test;
 
 import org.junit.Before;
 import org.xwoot.clockEngine.Clock;
-import org.xwoot.clockEngine.ClockFactory;
 
 import org.xwoot.wootEngine.WootEngine;
 
@@ -111,7 +110,7 @@ public abstract class AbstractWootEngineTest
             }
         }
 
-        Clock clock = ClockFactory.getFactory().createClock(testsDir.toString());
+        Clock clock = new Clock(testsDir.toString());
 
         WootEngine wootEngine = new WootEngine(id, testsDir.toString(), clock);
 
