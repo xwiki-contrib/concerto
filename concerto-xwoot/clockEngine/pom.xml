@@ -17,5 +17,10 @@
       <version>4.4</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+    	<groupId>org.xwoot</groupId>
+    	<artifactId>xwootUtil</artifactId>
+    	<version>1.0-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 </project>

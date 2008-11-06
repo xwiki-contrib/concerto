@@ -44,33 +44,156 @@
 
 package org.xwoot.clockEngine;
 
-import org.xwoot.clockEngine.persistent.PersistentClockException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
+import org.xwoot.xwootUtil.FileUtil;
 
 /**
- * @author $author$
- * @version $Revision$ This interface give theclock service. This is used to associate a private clock to an object.
+ * Provides the clock service. It is used to associate a private clock to an object. The clock is stored in a file.
+ * 
+ * @version $Id:$
  */
-public interface Clock
+public class Clock implements Serializable
 {
-    /**
-     * to get current clock value. User have to load clock before using this function.
-     * 
-     * @return current clock value
-     * @throws PersistentClockException
-     */
-    int getValue() throws ClockException;
+    /** The name of the file where to store the clock. */
+    public static final String CLOCK_FILE_NAME = "clock";
+
+    /** Unique ID for serialization. */
+    private static final long serialVersionUID = -9038141018304727598L;
+
+    /** The file path to store the clock. */
+    private String clockFilePath;
+
+    /** The value of the clock to increment. */
+    private int clock;
 
     /**
-     * to set current clock value.
+     * Creates a new persistent clock stored in a file in the provided directory.
      * 
-     * @param i the new clock value
-     * @throws PersistentClockException
+     * @param directoryPath where to store the clock.
+     * @throws ClockException if path access problems occur.
      */
-    void setValue(int i) throws ClockException;
+    public Clock(String directoryPath) throws ClockException
+    {
+        try {
+            FileUtil.checkDirectoryPath(directoryPath);
+        } catch (Exception e) {
+            throw new ClockException("Problems while creating a Clock instance: ", e);
+        }
 
-    void reset() throws ClockException;
+        this.clockFilePath = directoryPath + File.separator + CLOCK_FILE_NAME;
 
-    Clock load() throws ClockException;
+        this.reset();
+    }
 
-    void store() throws ClockException;
+    /**
+     * Users <b>must<b> load clock before using this function.
+     * 
+     * @return the current clock value.
+     * @throws PersistentClockException if problems occur.
+     */
+    public int getValue() throws ClockException
+    {
+        return this.clock;
+    }
+
+    /**
+     * Removes the clock file from the system.
+     */
+    public void clearWorkingDir()
+    {
+        File file = new File(this.clockFilePath);
+        if (file.exists()) {
+            file.delete();
+        }
+    }
+
+    /**
+     * Deserializes the clock from the file it is stored in.
+     * 
+     * @return the current clock value
+     * @throws ClockException if file access problems occur.
+     */
+    public synchronized Clock load() throws ClockException
+    {
+        File clockFile = new File(this.clockFilePath);
+
+        if (!clockFile.exists()) {
+            this.clock = 0;
+            this.store();
+        } else {
+
+            FileInputStream fis = null;
+            ObjectInputStream ois = null;
+
+            try {
+                fis = new FileInputStream(clockFile);
+                ois = new ObjectInputStream(fis);
+
+                this.clock = ((Integer) ois.readObject()).intValue();
+            } catch (Exception e) {
+                throw new ClockException("Problem when loading clock: ", e);
+            } finally {
+                try {
+                    ois.close();
+                    fis.close();
+                } catch (Exception e) {
+                    throw new ClockException("Problems while closing the file after loading the clock: ", e);
+                }
+            }
+        }
+        return this;
+    }
+
+    /**
+     * @param value the clock's new value.
+     * @throws ClockException if problems occur.
+     */
+    public void setValue(int value) throws ClockException
+    {
+        this.clock = value;
+    }
+
+    /**
+     * Serializes the clock to file.
+     * 
+     * @throws ClockException if file access problems occur.
+     */
+    public synchronized void store() throws ClockException
+    {
+        FileOutputStream fout = null;
+        ObjectOutputStream oos = null;
+
+        try {
+            fout = new FileOutputStream(this.clockFilePath);
+            oos = new ObjectOutputStream(fout);
+
+            oos.writeObject(Integer.valueOf(this.clock));
+            oos.flush();
+        } catch (Exception e) {
+            throw new ClockException("Problem when storing the clock: ", e);
+        } finally {
+            try {
+                oos.close();
+                fout.close();
+            } catch (Exception e) {
+                throw new ClockException("Problems closing the file after storing the clock: ", e);
+            }
+        }
+    }
+
+    /**
+     * Resets the clock's value to 0.
+     * 
+     * @throws ClockException if problems occur.
+     */
+    public void reset() throws ClockException
+    {
+        this.clock = 0;
+    }
 }
