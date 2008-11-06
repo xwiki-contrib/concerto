@@ -1,22 +1,22 @@
 package org.xwoot.mockiphone.iwootclient.rest;
 
 import java.io.IOException;
-import java.io.Serializable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Map.Entry;
+import java.io.InputStream;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.restlet.Client;
-import org.restlet.data.Form;
+import org.restlet.data.MediaType;
 import org.restlet.data.Protocol;
 import org.restlet.data.Reference;
 import org.restlet.data.Response;
 import org.restlet.data.Status;
-import org.restlet.resource.ObjectRepresentation;
+import org.restlet.resource.DomRepresentation;
 import org.restlet.resource.Representation;
-import org.restlet.resource.StreamRepresentation;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 import org.xwoot.mockiphone.iwootclient.IWootClient;
 import org.xwoot.mockiphone.iwootclient.IWootClientException;
 
@@ -46,48 +46,76 @@ public class IWootRestClient implements IWootClient
         return reference;
     }
     
-    private Serializable getResource(Response response) throws IWootRestClientException{
-        
-        //SUCCESS_OK => 200 resource found and return it in a entity-body
-        if (response.getStatus().equals(Status.SUCCESS_OK)){
-            if (!response.isEntityAvailable()){
-                throw new IWootRestClientException("Response status 200 (SUCCESS_OK) but no entity available");
-            }
-            try {
-            // get The resource object in the response entity
-                StreamRepresentation representation = new ObjectRepresentation<Serializable>(response.getEntity());
-                Serializable entity = ((ObjectRepresentation<Serializable>) representation).getObject();
-                return entity;
-            } catch (IOException e) {
-                throw new IWootRestClientException("Problem to get Object in flux",e);
-            } catch (IllegalArgumentException e) {
-                throw new IWootRestClientException("Problem to get Object in flux",e);
-            } catch (ClassNotFoundException e) {
-                throw new IWootRestClientException("Problem to get Object in flux",e);
-            }
+    private Document getDocumentfromStream(InputStream is) throws IWootRestClientException{
+
+        // création d'une fabrique de documents
+        DocumentBuilderFactory fabrique = DocumentBuilderFactory.newInstance();
+        // création d'un constructeur de documents
+        DocumentBuilder constructeur;       
+        try {
+            constructeur = fabrique.newDocumentBuilder();
+            // get the document from the stream
+            Document doc=constructeur.parse(is);
+
+            return doc;
+        } catch (ParserConfigurationException e) {
+            throw new IWootRestClientException(e);
+        } catch (SAXException e) {
+            throw new IWootRestClientException(e);
+        } catch (IOException e) {
+            throw new IWootRestClientException(e);
         }
-        //CLIENT_ERROR_NOT_FOUND => 404 page not found unknown uri
-        else if (response.getStatus().equals(Status.CLIENT_ERROR_NOT_FOUND)){
-            return null;
-        }
-        else {
-            throw new IWootRestClientException("Unexpected response status : "+response.getStatus());
-        }
+
+      
     }
+    
+    private Document getResource(Response response) throws IWootRestClientException{      
+            try {
+                 return this.getDocumentfromStream(response.getEntity().getStream());
+            } catch (IOException e) {
+                throw new IWootRestClientException(e);
+            }
+
+        
+    }
+    
+//    private Serializable getResource(Response response) throws IWootRestClientException{
+//        
+//        //SUCCESS_OK => 200 resource found and return it in a entity-body
+//        if (response.getStatus().equals(Status.SUCCESS_OK)){
+//            if (!response.isEntityAvailable()){
+//                throw new IWootRestClientException("Response status 200 (SUCCESS_OK) but no entity available");
+//            }
+//            try {
+//            // get The resource object in the response entity
+//                StreamRepresentation representation = new ObjectRepresentation<Serializable>(response.getEntity());
+//                Serializable entity = ((ObjectRepresentation<Serializable>) representation).getObject();
+//                return entity;
+//            } catch (IOException e) {
+//                throw new IWootRestClientException("Problem to get Object in flux",e);
+//            } catch (IllegalArgumentException e) {
+//                throw new IWootRestClientException("Problem to get Object in flux",e);
+//            } catch (ClassNotFoundException e) {
+//                throw new IWootRestClientException("Problem to get Object in flux",e);
+//            }
+//        }
+//        //CLIENT_ERROR_NOT_FOUND => 404 page not found unknown uri
+//        else if (response.getStatus().equals(Status.CLIENT_ERROR_NOT_FOUND)){
+//            return null;
+//        }
+//        else {
+//            throw new IWootRestClientException("Unexpected response status : "+response.getStatus());
+//        }
+//    }
   
-    public boolean putPage(String pageName,Map page) throws IWootRestClientException{
-        // Gathering new informations into a Web form.
-        Form form = new Form();
-        Set set=page.entrySet();
-        Iterator i=set.iterator();
-        while(i.hasNext()){
-            Entry e=(Entry)i.next();
-            form.add((String)e.getKey(),(String)e.getValue());
-        }
-        Representation rep = form.getWebRepresentation();
+    public boolean putPage(String pageName,Document page) throws IWootRestClientException{
+        // Gathering informations into a XML document
+       
+        Representation rep2=new DomRepresentation(MediaType.APPLICATION_XML,page);
+
         Reference reference=this.getResourceReference(pageName);
         // Launch the request to create the resource
-        Response response = this.client.put(reference, rep);
+        Response response = this.client.put(reference, rep2);
         if (response.getStatus().equals(Status.SUCCESS_CREATED) || response.getStatus().equals(Status.SUCCESS_OK)){
             return true;
         }
@@ -99,18 +127,18 @@ public class IWootRestClient implements IWootClient
         }
     }
     
-    public Map getPage(String pageName) throws IWootRestClientException{
+    public Document getPage(String pageName) throws IWootRestClientException{
         Reference r=this.getResourceReference(pageName);
         Response response=this.client.get(r);
         
-        return (Map) this.getResource(response);
+        return this.getResource(response);
     }
     
-    public List getPageList() throws IWootRestClientException{
+    public Document getPageList() throws IWootRestClientException{
         Reference r=this.getResourceReference(null);
         Response response=this.client.get(r);
         
-        return (List) this.getResource(response);
+        return this.getResource(response);
     }
 
     public String getUri() throws IWootClientException

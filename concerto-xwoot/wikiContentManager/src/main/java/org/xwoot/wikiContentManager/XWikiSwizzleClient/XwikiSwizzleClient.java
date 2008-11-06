@@ -54,10 +54,14 @@ import org.codehaus.swizzle.confluence.PageSummary;
 import org.codehaus.swizzle.confluence.Space;
 import org.codehaus.swizzle.confluence.SpaceSummary;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import org.xwiki.xmlrpc.XWikiXmlRpcClient;
 import org.xwiki.xmlrpc.model.XWikiObjectSummary;
 import org.xwiki.xmlrpc.model.XWikiPage;
 import org.xwoot.wikiContentManager.WikiContentManager;
+import org.xwoot.wikiContentManager.WikiContentManagerException;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -70,11 +74,17 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Map.Entry;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * DOCUMENT ME!
@@ -491,7 +501,7 @@ public class XwikiSwizzleClient implements WikiContentManager
         if (page != null) {
             result = page.toMap();
         }
-  
+
         this.logout(b);
         return result;
     }
@@ -611,7 +621,7 @@ public class XwikiSwizzleClient implements WikiContentManager
      * @throws XWikiSwizzleClientException
      */
     synchronized public Map<String, String> createPage(String pageId, String content)
-        throws XWikiSwizzleClientException
+    throws XWikiSwizzleClientException
     {
         if (this.existPage(pageId)) {
             return null;
@@ -819,7 +829,7 @@ public class XwikiSwizzleClient implements WikiContentManager
      * @throws XWikiSwizzleClientException
      */
     synchronized public String setPageContent(String pageId, String value, String algo, byte[] rmd)
-        throws NoSuchAlgorithmException, XWikiSwizzleClientException
+    throws NoSuchAlgorithmException, XWikiSwizzleClientException
     {
         String result = null;
         Page page = null;
@@ -861,35 +871,223 @@ public class XwikiSwizzleClient implements WikiContentManager
 
         return result;
     }
-    
 
-     public void essai() throws Exception{
-     String spaceKey="XWiki";
-     String pageName="XWiki.XWikiPreferences";
-     this.login();
-     List p = this.getClient().getAttachments(pageName);
-     this.getClient().getSpace(spaceKey);
-             
-     System.out.println(p);
-     XWikiPage p2=this.getClient().getPage("Scheduler.WatchListJob2");
-     List<XWikiObjectSummary> list=this.client.getObjects(new PageSummary(p2.toMap()));
-     
-     for(XWikiObjectSummary o : list){
-         System.out.println(o.toString());  
-         System.out.println(this.client.getObject(o));
-     }
-     
-    
-     //No such handler getBlogEntry
-     //System.out.println(this.getClient().getBlogEntry(pageName));
-          
-     this.logout();
-    
-            
-     }
-        
+
+    public void essai() throws Exception{
+        String spaceKey="XWiki";
+        String pageName="XWiki.XWikiPreferences";
+        this.login();
+        List p = this.getClient().getAttachments(pageName);
+        this.getClient().getSpace(spaceKey);
+
+        System.out.println(p);
+        XWikiPage p2=this.getClient().getPage("Scheduler.WatchListJob2");
+        List<XWikiObjectSummary> list=this.client.getObjects(new PageSummary(p2.toMap()));
+
+        for(XWikiObjectSummary o : list){
+            System.out.println(o.toString());  
+            System.out.println(this.client.getObject(o));
+        }
+
+
+        //No such handler getBlogEntry
+        //System.out.println(this.getClient().getBlogEntry(pageName));
+
+        this.logout();
+
+
+    }
+
     synchronized public XWikiXmlRpcClient getClient()
     {
         return this.client;
     }
+
+    public static Map<String, String> fromXmlStatic(Document pageXml)
+    {
+        if (pageXml==null){
+            return null;
+        }
+        if (pageXml.getDocumentElement()==null){
+            return null;
+        }
+        
+        // get entries 
+        NodeList entries = pageXml.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES);
+        if (entries ==null || entries.getLength()==0){
+            return null;
+        }
+        
+        // get list of entries
+        NodeList list=entries.item(0).getChildNodes();
+        
+        if (list==null || list.getLength()==0){
+            return null;
+        }
+       
+        Map<String,String> result=new HashMap<String, String>();
+        for (int i=0;i<list.getLength();i++){
+           
+            if (list.item(i)!=null && 
+                list.item(i).getChildNodes()!=null && 
+                list.item(i).getChildNodes().item(0)!=null && 
+                list.item(i).getChildNodes().item(1)!=null){
+                if (PAGEMDTABLE.getCollection().contains(list.item(i).getChildNodes().item(0).getTextContent()) || 
+                    CONTENT.equals(list.item(i).getChildNodes().item(0).getTextContent())){
+                    result.put(list.item(i).getChildNodes().item(0).getTextContent(),list.item(i).getChildNodes().item(1).getTextContent());
+                }
+            }      
+        }
+        return result;
+    }
+
+    public static Document toXmlStatic(String pageId,String href,Map<String, String> pageMap) throws WikiContentManagerException
+    {
+        if (pageMap==null){
+            return null;
+        }
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance (); 
+        DocumentBuilder builder;
+        try {
+            builder = factory.newDocumentBuilder ();
+        } catch (ParserConfigurationException e) {
+            throw new WikiContentManagerException(e);
+        } 
+
+        Document document=builder.newDocument();
+
+        // Propriétés du DOM
+        document.setXmlVersion("1.0");
+        document.setXmlStandalone(true);
+
+        // Création de l'arborescence du DOM
+        Element racine = document.createElement(XML_NODE_NAME_XWIKIPAGE);
+        racine.setAttribute(XML_ATTRIBUTE_NAME_XWIKIPAGEID, pageId);
+        racine.setAttribute(XML_ATTRIBUTE_NAME_HREF, href);
+        Element entries = document.createElement(XML_NODE_NAME_ENTRIES);  
+
+        Iterator i=pageMap.entrySet().iterator(); 
+        Element entry=null;
+        Element key=null;
+        Element value=null;
+
+        while(i.hasNext()){
+            Entry k=(Entry) i.next();
+
+            entry=document.createElement(XML_NODE_NAME_ENTRY);
+
+            key = document.createElement(XML_NODE_NAME_ENTRY_KEY);
+            key.appendChild(document.createTextNode((String)k.getKey()));
+            entry.appendChild(key);
+
+            value = document.createElement(XML_NODE_NAME_ENTRY_VALUE);
+            value.appendChild(document.createTextNode((String)k.getValue()));
+            entry.appendChild(value);
+
+            entries.appendChild(entry);
+        }
+        racine.appendChild(entries);
+        document.appendChild(racine);
+        document.normalizeDocument();
+        return document;
+
+    }
+
+    public Map<String, String> fromXml(Document pageXml) throws WikiContentManagerException
+    {
+        return XwikiSwizzleClient.fromXmlStatic(pageXml);
+    }
+
+    public Document toXml(String pageId, String href, Map<String, String> pageMap) throws WikiContentManagerException
+    {
+        return XwikiSwizzleClient.toXmlStatic(pageId, href, pageMap);
+       
+    }
+    
+    public static Document PageListToXmlStatic(String pagesHRef,List<String> list) throws WikiContentManagerException{
+        if (list!=null){
+
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance (); 
+            DocumentBuilder builder;
+            try {
+                builder = factory.newDocumentBuilder ();
+            } catch (ParserConfigurationException e) {
+                throw new WikiContentManagerException(e);
+            } 
+
+            Document document=builder.newDocument();
+
+            // Propriétés du DOM
+            document.setXmlVersion("1.0");
+            document.setXmlStandalone(true);
+
+            // Création de l'arborescence du DOM
+            Element racine = document.createElement(WikiContentManager.XML_NODE_NAME_XWIKIPAGELIST);
+            racine.setAttribute(WikiContentManager.XML_ATTRIBUTE_NAME_LISTSIZE, String.valueOf(list.size()));
+
+            Iterator i=list.iterator();
+            Element page=null;
+
+            while(i.hasNext()){                    
+                String k=(String) i.next();
+
+                page=document.createElement(WikiContentManager.XML_NODE_NAME_XWIKIPAGE);
+                page.setAttribute(WikiContentManager.XML_ATTRIBUTE_NAME_XWIKIPAGEID, k);
+                page.setAttribute(WikiContentManager.XML_ATTRIBUTE_NAME_HREF, pagesHRef+"/"+k);
+                racine.appendChild(page);
+            }
+            document.appendChild(racine);
+            document.normalizeDocument(); 
+            return document;
+        }
+        return null;
+    }
+    
+    public static List<String> PageListFromXmlStatic(Document doc){
+        if (doc==null){
+            return null;
+        }
+        if (doc.getFirstChild()==null){
+            return null;
+        }
+        
+        // get entries 
+        NodeList entries = doc.getFirstChild().getChildNodes();
+        if (entries ==null || entries.getLength()==0){
+            return null;
+        }
+        
+        if (doc.getFirstChild().getAttributes()==null || doc.getFirstChild().getAttributes().getNamedItem(WikiContentManager.XML_ATTRIBUTE_NAME_LISTSIZE)==null){
+            return null;
+        }
+        
+        NodeList entriesList = doc.getFirstChild().getChildNodes();
+        
+        Integer listSize=Integer.valueOf(doc.getFirstChild().getAttributes().getNamedItem(WikiContentManager.XML_ATTRIBUTE_NAME_LISTSIZE).getNodeValue());
+        
+        List<String> result=new ArrayList<String>();
+        
+        if (listSize.intValue()==0){
+            return result;
+        }
+        
+        for (int i=0;i<listSize.intValue();i++){
+            if (entriesList!=null && entriesList.item(i)!=null && 
+                entriesList.item(i).getAttributes()!=null && 
+                entriesList.item(i).getAttributes().getNamedItem(WikiContentManager.XML_ATTRIBUTE_NAME_XWIKIPAGEID)!=null){
+                result.add(entriesList.item(i).getAttributes().getNamedItem(WikiContentManager.XML_ATTRIBUTE_NAME_XWIKIPAGEID).getTextContent());
+            }
+        }
+        
+        return result;        
+    }
+    
+    public Document PageListToXml(String pagesHRef,List<String> list) throws WikiContentManagerException{
+        return PageListToXmlStatic(pagesHRef, list);
+    }
+    
+    public List<String> PageListFromXml(Document doc){
+        return PageListFromXmlStatic(doc);
+    }
+
 }

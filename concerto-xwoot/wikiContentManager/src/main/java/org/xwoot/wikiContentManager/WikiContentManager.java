@@ -46,9 +46,12 @@ package org.xwoot.wikiContentManager;
 
 import java.security.NoSuchAlgorithmException;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
+import org.w3c.dom.Document;
 
 /**
  * DOCUMENT ME!
@@ -91,11 +94,29 @@ public interface WikiContentManager
     enum COMMENTMDTABLE
     {
         content, id, pageId;
+        
+        static public Collection getCollection(){
+            ArrayList<String> result=new ArrayList();
+            PAGEMDTABLE[] tab=PAGEMDTABLE.values();
+            for(int i=0;i<tab.length;i++){
+                result.add(String.valueOf(tab[i]));
+            }
+            return result;
+        }
     }
 
     enum PAGEMDTABLE
     {
         creator, created, parentId, modifier, title, homePage, id, space;
+        
+        static public Collection getCollection(){
+            ArrayList<String> result=new ArrayList();
+            PAGEMDTABLE[] tab=PAGEMDTABLE.values();
+            for(int i=0;i<tab.length;i++){
+                result.add(String.valueOf(tab[i]));
+            }
+            return result;
+        }
     }
 
     /** To get a page */
@@ -150,11 +171,30 @@ public interface WikiContentManager
 
     /** The page id link to a comment : test.page */
     final static String PAGEID = "pageId";
+    
+    /** For XML conversion */
+    public static final String XML_NODE_NAME_XWIKIPAGELIST="XWikiPageList";
+    public static final String XML_NODE_NAME_ENTRY_VALUE="Value";
+    public static final String XML_NODE_NAME_ENTRY_KEY="Key";
+    public static final String XML_NODE_NAME_ENTRY="Entry";
+    public static final String XML_NODE_NAME_ENTRIES="Entries";
+    public static final String XML_NODE_NAME_XWIKIPAGE="XWikiPage";
+    public static final String XML_ATTRIBUTE_NAME_HREF="href";
+    public static final String XML_ATTRIBUTE_NAME_LISTSIZE="size";
+    public static final String XML_ATTRIBUTE_NAME_XWIKIPAGEID="id";
 
-    public void login() throws WikiContentManagerException;
+    void login() throws WikiContentManagerException;
 
-    public void logout() throws WikiContentManagerException;
+    void logout() throws WikiContentManagerException;
 
+    Document toXml(String pageId,String href,Map<String, String> pageMap) throws WikiContentManagerException;
+    
+    Map<String, String> fromXml(Document pageXml) throws WikiContentManagerException;
+    
+    public Document PageListToXml(String pagesHRef,List<String> list) throws WikiContentManagerException;
+    
+    public List<String> PageListFromXml(Document doc);
+    
     /**
      * DOCUMENT ME!
      * 

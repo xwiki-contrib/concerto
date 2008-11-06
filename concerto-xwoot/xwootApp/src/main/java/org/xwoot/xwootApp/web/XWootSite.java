@@ -233,9 +233,6 @@ public class XWootSite
 
         this.started = true;
         System.out.println("Site " + this.xWootEngine.getXWootPeerId() + " initialisation");
-
-        this.started = true;
-        System.out.println("Site " + this.xWootEngine.getXWootPeerId() + " initialisation");
     }
 
     /**

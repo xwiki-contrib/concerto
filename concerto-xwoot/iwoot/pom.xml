@@ -114,22 +114,43 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <!--  String utils -->
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+      <version>2.4</version>
+    </dependency>
+      <!-- Dependencies for the web interface part -->
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>2.5</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>jstl</artifactId>
+      <version>1.1.2</version>
+    </dependency>
+    <dependency>
+      <groupId>taglibs</groupId>
+      <artifactId>standard</artifactId>
+      <version>1.1.2</version>
+    </dependency>
   </dependencies>
-  
   <build>
-   <finalName>${artifactId}</finalName>
+    <finalName>${artifactId}</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins
         </groupId>
         <artifactId>maven-war-plugin</artifactId>
         <version>2.0</version>
-        <configuration>   
+        <configuration>
           <webResources>
             <resource>
               <!-- this is relative to the pom.xml directory -->
-              <directory>${basedir}/src/main/webapp
-              </directory>
+              <directory>${basedir}/src/main/webapp </directory>
               <includes>
                 <include>*.properties</include>
               </includes>
@@ -151,8 +172,7 @@
         <artifactId>maven-surefire-plugin
         </artifactId>
         <configuration>
-          <workingDirectory>${project.parent.basedir}
-          </workingDirectory>
+          <workingDirectory>${project.parent.basedir} </workingDirectory>
         </configuration>
       </plugin>
       <plugin>
@@ -168,8 +188,7 @@
         <artifactId>maven-surefire-plugin
         </artifactId>
         <configuration>
-          <workingDirectory>${project.parent.basedir}
-          </workingDirectory>
+          <workingDirectory>${project.parent.basedir} </workingDirectory>
         </configuration>
       </plugin>
     </plugins>
@@ -202,12 +221,9 @@
               <type>runtime</type>
               <properties>
                 <cargo.tomcat.manager.url>
-                  ${var.servlet.container.manager.url}
-                </cargo.tomcat.manager.url>
-                <cargo.remote.username> ${var.servlet.container.user}
-                </cargo.remote.username>
-                <cargo.remote.password> ${var.servlet.container.pwd}
-                </cargo.remote.password>
+                  ${var.servlet.container.manager.url} </cargo.tomcat.manager.url>
+                <cargo.remote.username> ${var.servlet.container.user} </cargo.remote.username>
+                <cargo.remote.password> ${var.servlet.container.pwd} </cargo.remote.password>
               </properties>
             </configuration>
             <deployer>
@@ -215,13 +231,13 @@
               <deployables>
                 <deployable>
                   <groupId>${pom.groupId}</groupId>
-                  <artifactId>${pom.artifactId}
-                  </artifactId>
+                  <artifactId>${pom.artifactId} </artifactId>
                   <type>${pom.packaging}</type>
                   <properties>
                     <context>${var.iwoot.app.context}</context>
                   </properties>
-                  <pingURL> ${var.localhost}/${var.iwoot.app.context}/default</pingURL>
+                  <pingURL>
+                    ${var.localhost}/${var.iwoot.app.context}/bootstrap.do</pingURL>
                 </deployable>
               </deployables>
             </deployer>

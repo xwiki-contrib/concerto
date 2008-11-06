@@ -55,6 +55,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.xwoot.mockiphone.MockIphoneException;
 import org.xwoot.mockiphone.iwootclient.IWootClientException;
 import org.xwoot.mockiphone.web.MockIphoneSite;
+import org.xwoot.wikiContentManager.WikiContentManagerException;
 
 /**
  * DOCUMENT ME!
@@ -129,14 +130,14 @@ public class DefaultApp extends HttpServlet
                 else {
                     System.out.print("Site " + MockIphoneSite.getInstance().getMockIphoneSiteEngine().getId() + " : no action\n");
                     nopage=true;
-                }
-                
+                }      
                 request.setAttribute("pagelist",MockIphoneSite.getInstance().getMockIphoneSiteEngine().askPageList());
             }catch(IWootClientException e){
                 throw new ServletException(e);
+            } catch (WikiContentManagerException e) {
+                throw new ServletException(e);
             }
-
-            
+         
             if (pageName!=null && !pageName.equals("") && !nopage){
                 request.setAttribute("pagename",pageName);
                 if (content==""){

@@ -42,13 +42,9 @@
  *  
  */
 
-package org.xwoot.iwoot.web;
+package org.xwoot.iwoot.web.filter;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Properties;
-
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -59,14 +55,11 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.xwoot.iwoot.IWoot;
+import org.apache.commons.lang.StringUtils;
+
 import org.xwoot.iwoot.restApplication.RestApplication;
-import org.xwoot.iwoot.xwootclient.XWootClientAPI;
-import org.xwoot.iwoot.xwootclient.XWootClientException;
-import org.xwoot.iwoot.xwootclient.XWootClientFactory;
-import org.xwoot.wikiContentManager.WikiContentManager;
-import org.xwoot.wikiContentManager.WikiContentManagerException;
-import org.xwoot.wikiContentManager.WikiContentManagerFactory;
+import org.xwoot.iwoot.web.IWootWebApp;
+
 
 /**
  * DOCUMENT ME!
@@ -88,45 +81,60 @@ public class InitFilter implements Filter
     public void doFilter(ServletRequest srequest, ServletResponse sresponse, FilterChain chain) throws IOException,
     ServletException
     {
-        // Verifying initialization
-        if (srequest.getParameter("init") != null) {
-            // Let the request be further processed.
-            chain.doFilter(srequest, sresponse);
-            return;
-
-        }
-
         HttpServletRequest request = (HttpServletRequest) srequest;
         HttpServletResponse response = (HttpServletResponse) sresponse;
 
-        System.out.println("Bootstrap IWoot !");
+        // System.out.println("#######################");
+        // System.out.println("# BaseFilter ");
+        // System.out.println("# ---------- ");
+        // System.out.println("# Request URI  : " + request.getRequestURI());
+        // System.out.println("# Context Path : " + request.getContextPath());
+        // System.out.println("# Method       : " + request.getMethod());
+        // System.out.println("# Remote Host  : " + request.getRemoteHost());
+        // System.out.println("# Remote Addr  : " + request.getRemoteAddr());
+        // System.out.println("# Remote Port  : " + request.getRemotePort());
+        // System.out.println("# Remote User  : " + request.getRemoteUser());
+        // System.out.println("# Session ID   : "
+        // + request.getRequestedSessionId());
+        // System.out.println("#######################");
 
+        System.out.println("Filter");
+        // Changing the skin.
+        if (request.getParameter("skin") != null) {
+            request.getSession().setAttribute("skin", request.getParameter("skin"));
+        }
+
+        // Always display the wizard when mockiphone is not initialized
+        if (!IWootWebApp.getInstance().isStarted()) {
+            System.out.println("Site is not started yet, starting the wizard."+request.getServletPath());
+            if (!StringUtils.equals(request.getServletPath(), "/bootstrap.do")) {  
+                response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrap.do"));
+                return;
+            }
+        }         
+        this.config.getServletContext().log("Base Filter applied");
+
+        // Restlet gestion
         RestApplication appli=(RestApplication) this.config.getServletContext().getAttribute("com.noelios.restlet.ext.servlet.ServerServlet.application");
 
-
-        if (appli!=null && appli.getIwoot()==null) {
-            try {   
-                WikiContentManager WCM = WikiContentManagerFactory.getMockFactory().createWCM();
-                String pageId="test.page0";
-                String pageContent="Content of existing page";
-                WCM.createPage(pageId, pageContent);
-
-                XWootClientAPI xwootClient=XWootClientFactory.getMockFactory().createXWootClient();
-
-                IWoot iwoot = new IWoot(xwootClient, WCM, Integer.valueOf(1));
-
-                appli.setIwoot(iwoot);
-            } catch (XWootClientException e1) {
-                throw new ServletException(e1);
-            } catch (WikiContentManagerException e) {
-                throw new ServletException(e);
-            }
-
-            request.getSession().setAttribute("init",Boolean.valueOf(true));
+   /*     if(appli==null){
+            response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrap.do"));
+            return;
+//            srequest.getRequestDispatcher("/rest").forward(srequest, sresponse);
+//            return;
         }
+*/
+        
+        if (IWootWebApp.getInstance().isStarted() && appli!=null && appli.getIwoot()==null) {
+            appli.setIwoot(IWootWebApp.getInstance().getIWootEngine());
+        }
+        
+        if (appli!=null){
+            System.out.println((IWootWebApp.getInstance().isStarted()) +" "+ " "+ (appli.getIwoot())==null);
+        }
+
         // Let the request be further processed.
-        chain.doFilter(request, response);
-        return;  
+        chain.doFilter(request, response); 
     }
 
     /**
@@ -142,18 +150,5 @@ public class InitFilter implements Filter
     public void init(FilterConfig filterConfig) throws ServletException
     {
         this.config=filterConfig;
-    }
-
-    private Properties loadProperties(String path) throws ServletException{
-        // loadproperties
-        Properties props = new Properties();
-        try {
-            props.load(new FileInputStream(path));
-        } catch (FileNotFoundException e) {
-           throw new ServletException(e);
-        } catch (IOException e) {
-            throw new ServletException(e);
-        }
-        return props;
     }
 }

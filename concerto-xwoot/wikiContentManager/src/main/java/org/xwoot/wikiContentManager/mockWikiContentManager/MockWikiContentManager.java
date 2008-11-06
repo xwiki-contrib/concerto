@@ -44,8 +44,10 @@
 
 package org.xwoot.wikiContentManager.mockWikiContentManager;
 
+import org.w3c.dom.Document;
 import org.xwoot.wikiContentManager.WikiContentManager;
 import org.xwoot.wikiContentManager.WikiContentManagerException;
+import org.xwoot.wikiContentManager.XWikiSwizzleClient.XwikiSwizzleClient;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -449,6 +451,28 @@ public class MockWikiContentManager implements WikiContentManager
 
     public boolean existPage(String pageKey) throws WikiContentManagerException
     {
+        if (this.pages==null){
+            return false;
+        }
         return this.pages.containsKey(pageKey);
+    }
+
+    public Map<String, String> fromXml(Document pageXml) throws WikiContentManagerException
+    {
+        return XwikiSwizzleClient.fromXmlStatic(pageXml);
+    }
+
+    public Document toXml(String pageId, String href, Map<String, String> pageMap) throws WikiContentManagerException
+    {
+        return XwikiSwizzleClient.toXmlStatic(pageId, href, pageMap);
+        
+    }
+    
+    public Document PageListToXml(String pagesHRef,List<String> list) throws WikiContentManagerException{
+        return XwikiSwizzleClient.PageListToXmlStatic(pagesHRef, list);
+    }
+    
+    public List<String> PageListFromXml(Document doc){
+        return XwikiSwizzleClient.PageListFromXmlStatic(doc);
     }
 }

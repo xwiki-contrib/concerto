@@ -42,7 +42,7 @@
  *  
  */
 
-package org.xwoot.iwoot.web;
+package org.xwoot.iwoot.web.servlet;
 
 import java.io.IOException;
 
@@ -71,14 +71,16 @@ public class Mainboard extends HttpServlet
      */
     @Override
     public void service(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
-    {          
+    {       
         RestApplication appli=(RestApplication) getServletContext().getAttribute("com.noelios.restlet.ext.servlet.ServerServlet.application");
+        
         if (appli!=null && appli.getIwoot()!=null){
             request.setAttribute("isconnectedtop2p",Boolean.valueOf(appli.getIwoot().getXwoot().isConnectedToP2PNetwork())) ;
-          
         } 
+
         request.getRequestDispatcher("/pages/mainboard.jsp").forward(request, response);
+
         return;
-       
+
     }
 }

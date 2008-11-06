@@ -237,8 +237,12 @@ public class Log implements Serializable
             throw new LogException("Problem while loading log file " + this.logFilePath, e);
         } finally {
             try {
-                ois.close();
-                fis.close();
+                if(ois!=null){
+                    ois.close();
+                }
+                if(fis!=null){
+                    fis.close();
+                }
             } catch (IOException e) {
                 throw new LogException("Problem closing log file after loading " + this.logFilePath, e);
             }
@@ -285,8 +289,12 @@ public class Log implements Serializable
             throw new LogException("Problem when storing log in file " + this.logFilePath, e);
         } finally {
             try {
-                oos.close();
-                fout.close();
+                if(oos!=null){
+                    oos.close();
+                }
+                if(fout!=null){
+                    fout.close();
+                }
             } catch (Exception e) {
                 throw new LogException("Problem closing log file after saving " + this.logFilePath, e);
             }

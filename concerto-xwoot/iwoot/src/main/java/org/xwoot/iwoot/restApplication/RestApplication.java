@@ -1,11 +1,9 @@
 package org.xwoot.iwoot.restApplication;
-import java.util.List;
-import java.util.Map;
 
 import org.restlet.Application;
+import org.restlet.Context;
 import org.restlet.Restlet;
 import org.restlet.Router;
-import org.restlet.data.Form;
 import org.restlet.data.MediaType;
 import org.w3c.dom.Document;
 import org.xwoot.iwoot.IWoot;
@@ -14,27 +12,36 @@ import org.xwoot.iwoot.restApplication.resources.PagesResource;
 import org.xwoot.iwoot.restApplication.resources.PageResource;
 
 public class RestApplication extends Application
-{
-   public IWoot getIwoot()
+{   
+
+    private IWoot iwoot;
+    public final static MediaType USINGMEDIATYPE=MediaType.APPLICATION_XML;
+
+
+    public RestApplication() {
+        super();
+    }
+    
+    public RestApplication(Context context)
+    {
+        super(context);
+        IWoot iw=(IWoot)context.getAttributes().get("iwoot");
+        this.iwoot=iw;
+    }
+
+    public RestApplication(IWoot iwoot) {
+        super();
+        this.iwoot=iwoot;
+
+    }
+
+    public IWoot getIwoot()
     {
         return this.iwoot;
     }
     public void setIwoot(IWoot iwoot)
     {
         this.iwoot = iwoot;
-    }
-
-private IWoot iwoot;
-   public final static MediaType USINGMEDIATYPE=MediaType.APPLICATION_XML;
-    
-    public RestApplication() {
-        super();
-    }
-    
-    public RestApplication(IWoot iwoot) {
-        super();
-        this.iwoot=iwoot;
-        
     }
 
     /**
@@ -54,7 +61,7 @@ private IWoot iwoot;
         return router;
     }
 
-   
+
     /**
      * Return the page id.
      *
@@ -64,7 +71,7 @@ private IWoot iwoot;
     public Document getPage(String id, String href) throws IWootException{
         return this.iwoot.getPage(id,href);
     }
-    
+
     /**
      * Remove the page id.
      *
@@ -74,7 +81,7 @@ private IWoot iwoot;
     public boolean removePage(String id) throws IWootException {
         return this.iwoot.removepage(id);
     }
-    
+
     /**
      * Store the page .
      *
@@ -85,18 +92,23 @@ private IWoot iwoot;
         return this.iwoot.storePage(id,document);
     }
 
-    public boolean exist(String pageId) throws IWootException
+    public boolean existPage(Document page) throws IWootException
     {
-        return this.iwoot.existPage(pageId);
+        return this.iwoot.existPage(page);
     }
 
     public boolean createPage(Document newPage) throws IWootException
     {
-       return this.iwoot.createPage(newPage);
+        return this.iwoot.createPage(newPage);
     }
     public Document getPageList(String pagesHRef) throws IWootException
     {
         return this.iwoot.getPageList(pagesHRef);
     }
-    
+
+    public String getPageId(Document document) throws IWootException
+    {
+        return this.iwoot.getPageId(document);
+    }
+
 }

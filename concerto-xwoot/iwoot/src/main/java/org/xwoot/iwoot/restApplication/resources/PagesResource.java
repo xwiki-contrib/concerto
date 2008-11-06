@@ -12,7 +12,6 @@ import org.restlet.resource.Representation;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.Variant;
 import org.w3c.dom.Document;
-import org.xwoot.iwoot.IWoot;
 import org.xwoot.iwoot.IWootException;
 import org.xwoot.iwoot.restApplication.RestApplication;
 
@@ -81,10 +80,10 @@ public class PagesResource extends BaseResource
             getResponse().setStatus(Status.CLIENT_ERROR_UNPROCESSABLE_ENTITY);
             return ;
         }
-        String pageId=document.getFirstChild().getAttributes().getNamedItem(IWoot.XML_ATTRIBUTE_NAME_XWIKIPAGEID).getTextContent();
+       // String pageId=document.getFirstChild().getAttributes().getNamedItem(WikiContentManager.XML_ATTRIBUTE_NAME_XWIKIPAGEID).getTextContent();
         try{
             // Check that the item is not already registered.
-            if (((RestApplication)getApplication()).exist(pageId)) {
+            if (((RestApplication)getApplication()).existPage(document)) {
                 getResponse().setStatus(Status.CLIENT_ERROR_CONFLICT);
             }else {
                 if (!((RestApplication)getApplication()).createPage(document)){
@@ -100,8 +99,13 @@ public class PagesResource extends BaseResource
         getResponse().setStatus(Status.SUCCESS_CREATED);
         // Indicates where is located the new resource.
        
-        rep.setIdentifier(getRequest().getResourceRef().getIdentifier()
-            + "/" + pageId);
+        try {
+            rep.setIdentifier(getRequest().getResourceRef().getIdentifier()
+                + "/" + ((RestApplication)getApplication()).getPageId(document));
+        } catch (IWootException e) {
+            e.printStackTrace();
+            getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
+        }
         getResponse().setEntity(rep);
     }
 }

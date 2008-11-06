@@ -1,15 +1,14 @@
 package org.xwoot.mockiphone.iwootclient;
 
-import java.util.List;
-import java.util.Map;
+import org.w3c.dom.Document;
 
 public interface IWootClient
 {
-    public boolean putPage(String pageName,Map page) throws IWootClientException;
+    public boolean putPage(String pageName,Document doc) throws IWootClientException;
     
-    public Map getPage(String pageName) throws IWootClientException;
+    public Document getPage(String pageName) throws IWootClientException;
     
-    public List getPageList() throws IWootClientException;
+    public Document getPageList() throws IWootClientException;
     
     public String getUri() throws IWootClientException;
 }

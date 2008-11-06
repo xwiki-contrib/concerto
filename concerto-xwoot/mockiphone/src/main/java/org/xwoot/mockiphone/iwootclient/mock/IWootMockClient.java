@@ -2,10 +2,12 @@ package org.xwoot.mockiphone.iwootclient.mock;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+import org.w3c.dom.Document;
 import org.xwoot.mockiphone.iwootclient.IWootClient;
+import org.xwoot.wikiContentManager.WikiContentManagerException;
+import org.xwoot.wikiContentManager.XWikiSwizzleClient.XwikiSwizzleClient;
 
 public class IWootMockClient implements IWootClient
 {
@@ -21,26 +23,38 @@ public class IWootMockClient implements IWootClient
         }
     }
 
-    public List getPageList(){
-        return new ArrayList<String>(this.contents.keySet());
+    public Document getPageList(){
+        try {
+            return XwikiSwizzleClient.PageListToXmlStatic("mock", new ArrayList<String>(this.contents.keySet()));
+        } catch (WikiContentManagerException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
     
-    public boolean putPage(String pageName,Map page){
+    public boolean putPage(String pageName,Document page){
+        Map pageMap;
+        pageMap = XwikiSwizzleClient.fromXmlStatic(page);
         if (this.contents.containsKey(pageName)){
-            this.contents.put(pageName, page.get("Content"));
+            this.contents.put(pageName, pageMap.get("Content"));
         }
         else{
-            this.createPage(pageName, (String)page.get("Content"));
+            this.createPage(pageName, (String)pageMap.get("Content"));
         }
         return true;
     }
     
-    public Map getPage(String pageName){
+    public Document getPage(String pageName){
         Map result = new HashMap<String, String>();
         result.put("id", pageName);
         result.put("content",this.contents.get(pageName));
         result.put("pageId",pageName);
-        return result;
+        try {
+            return XwikiSwizzleClient.toXmlStatic(pageName, "mock", result);
+        } catch (WikiContentManagerException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
     
     public void createPage(String pageName,String content){

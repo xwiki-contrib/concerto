@@ -46,6 +46,7 @@ package org.xwoot.mockiphone;
 
 //Harg ! Coupling between patch and XWoot ...
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -54,10 +55,13 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.w3c.dom.Document;
 import org.xwoot.mockiphone.core.MockIphonePage;
 import org.xwoot.mockiphone.iwootclient.IWootClient;
 import org.xwoot.mockiphone.iwootclient.IWootClientException;
 import org.xwoot.mockiphone.iwootclient.rest.IWootRestClient;
+import org.xwoot.wikiContentManager.WikiContentManagerException;
+import org.xwoot.wikiContentManager.XWikiSwizzleClient.XwikiSwizzleClient;
 
 /**
  * DOCUMENT ME!
@@ -67,13 +71,13 @@ import org.xwoot.mockiphone.iwootclient.rest.IWootRestClient;
  */
 public class MockIphone
 {
-    
+
     private Integer id;
 
     private final Log logger = LogFactory.getLog(this.getClass());
 
     private String workingDir;
-    
+
     private IWootClient iwootRestClient;
 
     public IWootClient getIwootRestClient()
@@ -91,13 +95,13 @@ public class MockIphone
      * 
      */
     public MockIphone(String workingDir, Integer id, String iwootUrl) throws MockIphoneException
-        {
+    {
         this.id=id;
         this.workingDir = workingDir;
         this.createWorkingDir();
         this.iwootRestClient=new IWootRestClient(iwootUrl);
         this.logger.info(this.id + " : MockIphone engine created. working directory : " + workingDir + "\n\n");
-        }
+    }
 
     /**
      * DOCUMENT ME!
@@ -121,7 +125,7 @@ public class MockIphone
             dir.delete();
         }
     }
-    
+
     public void clearWorkingDir() throws MockIphoneException 
     {
         File f = new File(this.workingDir);
@@ -147,13 +151,13 @@ public class MockIphone
             throw new MockIphoneException("Can't write in directory: " + working);
         }
     }
-    
+
     public void setPageContent(String pageName,String xmlContent) throws MockIphoneException{
         this.logger.info("Add page : "+pageName+" to management.");
         MockIphonePage page = new MockIphonePage(pageName);
         page.savePage(this.workingDir, xmlContent);
     } 
-    
+
     public Map getManagedPages() throws MockIphoneException{
         Map map=new HashMap<String, Boolean>();
         Collection list=MockIphonePage.getManagedPageNames(this.workingDir);
@@ -165,7 +169,7 @@ public class MockIphone
         }
         return map;
     }
-    
+
     public Integer getId()
     {
         return this.id;
@@ -178,13 +182,13 @@ public class MockIphone
         MockIphonePage page = new MockIphonePage(pageName);
         return page.toXML(this.workingDir);
     }
-    
+
     public void createPage(String pageName,String content) throws MockIphoneException{
         MockIphonePage page=new MockIphonePage(pageName);
         page.createPage(this.workingDir);
         page.savePage(this.workingDir, content);
     }
-    
+
     public String getPageForEdition(String pageName) throws MockIphoneException{
         if (pageName==null || pageName.equals("")){
             return "";
@@ -192,11 +196,14 @@ public class MockIphone
         MockIphonePage page = new MockIphonePage(pageName);
         return page.toXmlForEdition(this.workingDir);
     }
-    
+
     public void refreshPageList() throws MockIphoneException, IWootClientException
     {
-        List l=this.iwootRestClient.getPageList();
-        MockIphonePage.savePageList(this.workingDir, l);
+        Document doc=this.iwootRestClient.getPageList();
+        if (doc==null){
+            return;
+        }
+        MockIphonePage.savePageList(this.workingDir, XwikiSwizzleClient.PageListFromXmlStatic(doc));
     }
 
     public void removePage(String pageName) throws MockIphoneException
@@ -207,25 +214,30 @@ public class MockIphone
         MockIphonePage page=new MockIphonePage(pageName);
         page.deletePage(this.workingDir);
     }  
-    
+
     public String getTemplate(){
-       return MockIphonePage.getTemplate();
-        
+        return MockIphonePage.getTemplate();
+
     }
-    
-    public void sendPage(String pageName) throws MockIphoneException, IWootClientException{
+
+    public void sendPage(String pageName) throws MockIphoneException, IWootClientException, WikiContentManagerException{
         MockIphonePage page=new MockIphonePage(pageName);
         /*if (page.isRemoved(this.workingDir)){
             page.removePageFile(this.workingDir);
             this.iwootRestClient.removePage(pageName);
             return ;
         }*/
-        this.iwootRestClient.putPage(pageName, page.getMap(this.workingDir));
+        Document doc=XwikiSwizzleClient.toXmlStatic(pageName,this.iwootRestClient.getUri() + "/" + IWootRestClient.PAGESKEY+"/"+pageName , page.getMap(this.workingDir));
+        this.iwootRestClient.putPage(pageName, doc);
         page.setModified(this.workingDir,false); 
     }
-    
+
     public List askPageList() throws MockIphoneException, IWootClientException{
-        List l=this.iwootRestClient.getPageList();
+        Document doc =this.iwootRestClient.getPageList();
+        if (doc==null){
+            return new ArrayList<String>();
+        }
+        List l=XwikiSwizzleClient.PageListFromXmlStatic(doc);
         MockIphonePage.savePageList(this.workingDir,l);
         Collection list=MockIphonePage.getManagedPageNames(this.workingDir);
         if (l!=null && list!=null){
@@ -233,20 +245,24 @@ public class MockIphone
         }
         return l;
     }
-    
+
     public void askPage(String pageName) throws MockIphoneException, IWootClientException
     {
         if (pageName==null || pageName.equals("")){
             return;
         }
-       Map page =this.iwootRestClient.getPage(pageName);
-       this.logger.info("Ask page : "+pageName+" to rest server.");
-       this.logger.info("Page  : "+page);
-       MockIphonePage p=new MockIphonePage(pageName,page);
-       if (p.existPage(this.workingDir)){
-          p.removePageFile(this.workingDir);
-       }
-       p.createPage(this.workingDir);
+        Document doc=this.iwootRestClient.getPage(pageName);
+        if (doc==null){
+            return;
+        }
+        Map page = XwikiSwizzleClient.fromXmlStatic(doc);
+        this.logger.info("Ask page : "+pageName+" to rest server.");
+        this.logger.info("Page  : "+page);
+        MockIphonePage p=new MockIphonePage(pageName,page);
+        if (p.existPage(this.workingDir)){
+            p.removePageFile(this.workingDir);
+        }
+        p.createPage(this.workingDir);
     }
-    
+
 }
