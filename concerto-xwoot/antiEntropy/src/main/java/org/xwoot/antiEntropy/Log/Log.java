@@ -56,13 +56,15 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
+import org.xwoot.xwootUtil.FileUtil;
+
 /**
  * This class embeds a {@link Hashtable} used to store messages having ids as keys. The embedded hashtable is serialized
  * in a given file.
  * <p>
  * Log is used by {@link org.xwoot.antiEntropy.AntiEntropy AntiEntropy} to store generated and received messages.
  * 
- * @version $Id: $Revision$
+ * @version $Id:$
  * @see org.xwoot.antiEntropy.AntiEntropy
  */
 public class Log implements Serializable
@@ -90,21 +92,15 @@ public class Log implements Serializable
     /**
      * Creates a new Log object.
      * 
-     * @param logFilePath : the file path used to serialize the log. If it does not exist, it will be created.
+     * @param logFilePath the file path used to serialize the log. If it does not exist, it will be created.
      * @throws LogException if the specified path is not a writable directory.
      */
     public Log(String logFilePath) throws LogException
     {
-        File directory = new File(logFilePath);
-
-        if (!directory.exists()) {
-            if (!directory.mkdirs()) {
-                throw new LogException("Can't create directory: " + logFilePath);
-            }
-        } else if (!directory.isDirectory()) {
-            throw new LogException(logFilePath + " -- is not a directory");
-        } else if (!directory.canWrite()) {
-            throw new LogException(logFilePath + " -- isn't writable");
+        try {
+            FileUtil.checkDirectoryPath(logFilePath);
+        } catch (Exception e) {
+            throw new LogException("Problems with the specified log file path: ", e);
         }
 
         this.logFilePath = logFilePath + File.separator + LOG_FILE_NAME;
@@ -115,15 +111,15 @@ public class Log implements Serializable
      */
     public void clearWorkingDir()
     {
-        File f = new File(this.logFilePath);
-        if (f.exists()) {
-            f.delete();
+        File file = new File(this.logFilePath);
+        if (file.exists()) {
+            file.delete();
         }
     }
 
     /**
-     * @param id : key for new log entry.
-     * @param message : the value of the new log entry.
+     * @param id key for new log entry.
+     * @param message the value of the new log entry.
      * @throws LogException if log serialization/deserialization problems occur.
      */
     public synchronized void addMessage(Object id, Object message) throws LogException
@@ -145,7 +141,7 @@ public class Log implements Serializable
     }
 
     /**
-     * @param messageId : the searched message's id
+     * @param messageId the searched message's id
      * @return true if the message exists in the log, false otherwise.
      * @throws LogException if deserialization problems occur.
      */
@@ -170,7 +166,7 @@ public class Log implements Serializable
     /**
      * Computes the diff beetween a given table of keys and the log's keys.
      * 
-     * @param site2ids : an array of message ids.
+     * @param site2ids an array of message ids.
      * @return an array of all the message ids, excluding the ones in the given array.
      * @throws LogException if deserialization problems occur.
      */
@@ -188,7 +184,7 @@ public class Log implements Serializable
     }
 
     /**
-     * @param id : the key associate with the wanted log entry.
+     * @param id the key associate with the wanted log entry.
      * @return the wanted log entry or null if key's not present in log.
      * @throws LogException if deserialization problems occur.
      */
@@ -237,10 +233,10 @@ public class Log implements Serializable
             throw new LogException("Problem while loading log file " + this.logFilePath, e);
         } finally {
             try {
-                if(ois!=null){
+                if (ois != null) {
                     ois.close();
                 }
-                if(fis!=null){
+                if (fis != null) {
                     fis.close();
                 }
             } catch (IOException e) {
@@ -289,10 +285,10 @@ public class Log implements Serializable
             throw new LogException("Problem when storing log in file " + this.logFilePath, e);
         } finally {
             try {
-                if(oos!=null){
+                if (oos != null) {
                     oos.close();
                 }
-                if(fout!=null){
+                if (fout != null) {
                     fout.close();
                 }
             } catch (Exception e) {

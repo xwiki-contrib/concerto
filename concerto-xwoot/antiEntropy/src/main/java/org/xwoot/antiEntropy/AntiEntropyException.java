@@ -3,7 +3,7 @@ package org.xwoot.antiEntropy;
 /**
  * Exception handling for AntiEntropy.
  * 
- * @version $Id: $Revision$
+ * @version $Id:$
  */
 public class AntiEntropyException extends Exception
 {
@@ -22,7 +22,7 @@ public class AntiEntropyException extends Exception
     }
 
     /**
-     * @param cause : the cause
+     * @param cause the cause
      * @see Exception#Exception(Throwable)
      */
     public AntiEntropyException(Throwable cause)
@@ -31,7 +31,7 @@ public class AntiEntropyException extends Exception
     }
 
     /**
-     * @param message : the message
+     * @param message the message
      * @see Exception#Exception(String)
      */
     public AntiEntropyException(String message)
@@ -40,8 +40,8 @@ public class AntiEntropyException extends Exception
     }
 
     /**
-     * @param message : the message
-     * @param cause : the cause
+     * @param message the message
+     * @param cause the cause
      * @see Exception#Exception(String, Throwable)
      */
     public AntiEntropyException(String message, Throwable cause)

@@ -54,7 +54,7 @@ import java.util.List;
 /**
  * This class provides the antiEntropy service. It's used by the receiver engine to process antientropy messages.
  * 
- * @version $Id: $Revision$
+ * @version $Id:$
  */
 public class AntiEntropy
 {
@@ -71,7 +71,7 @@ public class AntiEntropy
     /**
      * Creates a new AntiEntropy object.
      * 
-     * @param logPath : the directory on drive for log persistence storage.
+     * @param logPath the directory on drive for log persistence storage.
      * @throws AntiEntropyException if the log does not initialize correctly.
      */
     public AntiEntropy(String logPath) throws AntiEntropyException
@@ -90,7 +90,7 @@ public class AntiEntropy
     /**
      * Computes the diff between content of a remote log and content of the local log by comparing keys. 
      * 
-     * @param site2ids : object representing an array of remote log keys that need to be checked.
+     * @param site2ids object representing an array of remote log keys that need to be checked.
      * @return collection of all local messages corresponding to the keys that are not in the given array.
      * @throws AntiEntropyException if problems while reading the log occur.
      */
@@ -129,8 +129,8 @@ public class AntiEntropy
     /**
      * Adds a message in the log.
      * 
-     * @param id : the id of the message
-     * @param message : the message
+     * @param id the id of the message
+     * @param message the message
      * @throws AntiEntropyException if problems occur while handling the log.
      */
     public void logMessage(Object id, Object message) throws AntiEntropyException
