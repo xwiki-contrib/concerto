@@ -49,36 +49,52 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * DOCUMENT ME!
+ * This class describes a patch that is to be applied on XWiki pages. The patch can contain changes in the content or in
+ * the page's metadata.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id$
  */
 public class Patch implements Serializable
 {
+    /** Unique ID used in the serialization process. */
     private static final long serialVersionUID = -2386840405304459581L;
 
-    private List elements;
+    /**
+     * List of {@link org.xwoot.wootEngine.op.WootOp WootOp} elements representing changes in a page's content.
+     **/
+    private List<Object> elements;
 
-    private List mDelements;
+    /**
+     * List of {@link org.xwoot.thomasRuleEngine.op.ThomasRuleOp ThomasRuleOp} elements representing changes in a page's
+     * metadata.
+     */
+    private List<Object> mDelements;
 
+    /** The name (XWiki page id) of the page that this patch applies to. */
     private String pageName;
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
+     * @return a List of {@link org.xwoot.wootEngine.op.WootOp WootOp} elements representing changes in the content of a
+     *         page.
      */
-    public Iterable getData()
+    public Iterable<Object> getData()
     {
         return this.elements;
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
+     * @param elements a List of {@link org.xwoot.wootEngine.op.WootOp WootOp} elements representing changes in the
+     *            content of a page.
+     */
+    @SuppressWarnings("unchecked")
+    public void setData(Iterable elements)
+    {
+        this.elements = (List) elements;
+    }
+
+    /**
+     * @return a List of {@link org.xwoot.thomasRuleEngine.op.ThomasRuleOp ThomasRuleOp} elements representing changes
+     *         in the metadata of a page.
      */
     public List<Object> getMDelements()
     {
@@ -86,9 +102,16 @@ public class Patch implements Serializable
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
+     * @param delements a List of {@link org.xwoot.thomasRuleEngine.op.ThomasRuleOp ThomasRuleOp} elements representing
+     *            changes in the metadata of a page.
+     */
+    public void setMDelements(List<Object> delements)
+    {
+        this.mDelements = delements;
+    }
+
+    /**
+     * @return the name (XWiki page id) of the page that this patch applies to.
      */
     public String getPageName()
     {
@@ -96,29 +119,7 @@ public class Patch implements Serializable
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param elements DOCUMENT ME!
-     */
-    public void setData(Iterable elements)
-    {
-        this.elements =  (List) elements;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param delements DOCUMENT ME!
-     */
-    public void setMDelements(List delements)
-    {
-        this.mDelements = delements;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param pageName DOCUMENT ME!
+     * @param pageName the name (XWiki page id) of the page on which to apply this patch.
      */
     public void setPageName(String pageName)
     {

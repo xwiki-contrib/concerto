@@ -52,6 +52,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
@@ -62,7 +64,9 @@ import java.nio.channels.FileChannel;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
@@ -358,7 +362,7 @@ public class FileUtil
      * @throws IOException
      * @throws Exception DOCUMENT ME!
      */
-    public static String zipDirectory(String dirPath,String resultFilePath) throws IOException
+    public static String zipDirectory(String dirPath, String resultFilePath) throws IOException
     {
         File dir = new File(dirPath);
         String[] files = dir.list();
@@ -399,6 +403,13 @@ public class FileUtil
         return file.getAbsolutePath();
     }
     
+    public static String zipDirectory(String directoryPath) throws IOException
+    {
+        File tempFile = File.createTempFile(new File(directoryPath).getName(), ".zip");
+        
+        return zipDirectory(directoryPath, tempFile.toString());
+    }
+    
     /**
      * Checks if the given directory path exists and if it's a valid and writable directory. If it doesn't exist, it is created.
      * 
@@ -418,6 +429,58 @@ public class FileUtil
             throw new InvalidParameterException(directoryPath + " -- is not a directory");
         } else if (!directory.canWrite()) {
             throw new IOException(directoryPath + " -- isn't writable");
+        }
+    }
+    
+    public static void saveObjectToFile(Object object, String filePath) throws Exception
+    {
+        FileOutputStream fout = null;
+        ObjectOutputStream oos = null;
+
+        try {
+            fout = new FileOutputStream(filePath);
+            oos = new ObjectOutputStream(fout);
+
+            oos.writeObject(object);
+            oos.flush();
+        } catch (Exception e) {
+            throw new Exception("Problems while storing an object in the file: " + filePath, e);
+        } finally {
+            try {
+                if (oos != null) {
+                    oos.close();
+                }
+                if (fout != null) {
+                    fout.close();
+                }
+            } catch (Exception e) {
+                throw new Exception("Problems closing the file " + filePath + " after storing an object to it: ", e);
+            }
+        }
+    }
+    
+    public static Object loadObjectFromFile(String filePath) throws Exception
+    {
+        FileInputStream fis = null;
+        ObjectInputStream ois = null;
+        try {
+            fis = new FileInputStream(filePath);
+            ois = new ObjectInputStream(fis);
+
+            return ois.readObject();
+        } catch (Exception e) {
+            throw new Exception("Problems while loading an object from the file: " + filePath, e);
+        } finally {
+            try {
+                if (ois != null) {
+                    ois.close();
+                }
+                if (fis != null) {
+                    fis.close();
+                }
+            } catch (IOException e) {
+                throw new Exception("Problems closing the file " + filePath + " after loading an object from it: ", e);
+            }
         }
     }
 }

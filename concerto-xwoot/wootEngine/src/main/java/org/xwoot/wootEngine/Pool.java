@@ -45,72 +45,94 @@
 package org.xwoot.wootEngine;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.xwoot.wootEngine.op.WootOp;
+import org.xwoot.xwootUtil.FileUtil;
 
 /**
- * DOCUMENT ME!
+ * Implements a pooling mechanism or a waiting queue for {@link WootOp} elements. The WootOp elements are serialized to
+ * file.
  * 
- * @author nabil
+ * @version $Id$
  */
 public class Pool implements Serializable
 {
+    /** The name of the file where to serialize the pool's data. */
+    public static final String POOL_FILE_NAME = "pool";
+
+    /** Unique ID for the serialization process. */
     private static final long serialVersionUID = -7473219928332142278L;
 
+    /** The file where to store the Pool's contents. */
     private File poolFile;
 
+    /** List of {@link WootOp} elements currently in the Pool. */
     private List<WootOp> content;
 
     /**
-     * Creates a new instance of Pool
-     * @throws WootEngineException 
+     * Creates a new instance of Pool serializing it's contents in the specified directory.
+     * <p>
+     * If the pool file and/or directory does not exist, it will be created.
+     * 
+     * @param directoryPath The location where to store the Pool file.
+     * @throws WootEngineException if the directory path is not usable.
      */
-    public Pool(String location) throws WootEngineException
+    public Pool(String directoryPath) throws WootEngineException
     {
-        this.poolFile = new File(location);
+        try {
+            FileUtil.checkDirectoryPath(directoryPath);
+        } catch (Exception e) {
+            throw new WootEngineException("Problems while creating the Pool: ", e);
+        }
+
+        this.poolFile = new File(directoryPath + File.separator + POOL_FILE_NAME);
         this.initializePool(false);
     }
 
     /**
-     * Call it frequently after doing interaction with log file (loading the content, for example) this method let free
-     * some resource by calling the garbage collecotr.
+     * This method clears the contents and suggests the start of the garbage collection system.
+     * <p>
+     * It is used when unloading the pool to free up the resources as soon as possible.
      */
     public void free()
     {
-        this.getContent().clear();
         this.setContent(new ArrayList<WootOp>());
         System.runFinalization();
         System.gc();
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param i DOCUMENT ME!
-     * @return DOCUMENT ME!
+     * @param position The position in the Pool to get.
+     * @return the WootOp at the specified position in the Pool or null if it is not found.
      */
-    public WootOp get(int i)
+    public WootOp get(int position)
     {
         if (this.content != null) {
-            return this.content.get(i);
+            return this.content.get(position);
         }
 
         return null;
     }
 
     /**
-     * Return the whole content of the log
-     * 
-     * @return A Vector, each entry in this Vector is a {@link WootOp} instance
+     * @param position The position from which to remove a {@link WootOp} element from the pool.
+     * @return The removed WootOp element.
+     */
+    public WootOp remove(int position)
+    {
+        if (this.content != null) {
+            return this.content.remove(position);
+        }
+
+        return null;
+    }
+
+    /**
+     * @return A List of {@link WootOp} instances representing the content of the Pool.
      */
     public List<WootOp> getContent()
     {
@@ -118,110 +140,7 @@ public class Pool implements Serializable
     }
 
     /**
-     * Give back the location of log
-     * 
-     * @return The abstract representation of the location for log
-     */
-    public File getPoolFile()
-    {
-        return this.poolFile;
-    }
-
-    /**
-     * Initialize the log, by creating the file that will hold the serialization of the content (see also:
-     * {@link #getContent()})
-     * 
-     * @param override Indicate if the method must override any existing log
-     * @throws WootEngineException 
-     */
-    public void initializeLog(boolean override) throws WootEngineException
-    {
-        if (this.getPoolFile().exists() && override) {
-            this.getPoolFile().delete();
-        }
-
-        if (!this.getPoolFile().exists()) {
-            try {
-                FileOutputStream fout = new FileOutputStream(this.getPoolFile());
-                ObjectOutputStream oos = new ObjectOutputStream(fout);
-                List<WootOp> elem = new ArrayList<WootOp>();
-                oos.writeObject(elem);
-                oos.flush();
-                oos.close();
-            } catch (Exception e) {
-               throw new WootEngineException("problem when initializing pool\n",e);
-            }
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param overwrite DOCUMENT ME!
-     * @throws WootEngineException 
-     */
-    private void initializePool(boolean overwrite) throws WootEngineException
-    {
-        if ((this.poolFile.exists() && overwrite) || !(this.poolFile.exists())) {
-            try {
-                FileOutputStream fout = new FileOutputStream(this.getPoolFile());
-                ObjectOutputStream oos = new ObjectOutputStream(fout);
-                List<WootOp> elem = new ArrayList<WootOp>();
-                oos.writeObject(elem);
-                oos.flush();
-                oos.close();
-            } catch (Exception e) {
-                throw new WootEngineException("problem when initializing pool\n",e);  
-            }
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     * @throws WootEngineException 
-     */
-    public synchronized void loadPool() throws WootEngineException
-    {
-        FileInputStream fin = null;
-        ObjectInputStream ois = null;
-
-        try {
-            fin = new FileInputStream(this.getPoolFile());
-            ois = new ObjectInputStream(fin);
-
-            List<WootOp> readObject = (ArrayList<WootOp>) ois.readObject();
-            this.setContent(readObject);
-        } catch (Exception e) {
-            throw new WootEngineException("problem when loading pool\n",e);  
-          
-            // make sure the file is properly close
-        } finally {
-            if (fin != null) {
-                try {
-                    fin.close();
-                } catch (IOException e) {
-                    throw new WootEngineException("problem when closing pool\n",e);  
-                }
-            }
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param i DOCUMENT ME!
-     */
-    public void remove(int i)
-    {
-        if (this.content != null) {
-            this.content.remove(i);
-        }
-    }
-
-    /**
-     * Provide the log content
-     * 
-     * @param content A Vector, each entry in this Vector represent a {@link WootOp} instance
+     * @param content A List of {@link WootOp} instances representing the Pool's content.
      */
     public void setContent(List<WootOp> content)
     {
@@ -229,9 +148,15 @@ public class Pool implements Serializable
     }
 
     /**
-     * Provide the location for log
-     * 
-     * @param poolFile The abstract representation of the location for log
+     * @return The File object referring the location on drive where the Pool's data is being serialized.
+     */
+    public File getPoolFile()
+    {
+        return this.poolFile;
+    }
+
+    /**
+     * @param poolFile The File object referring the location on drive where the Pool's data will be serialized.
      */
     public void setPoolFile(File poolFile)
     {
@@ -239,63 +164,65 @@ public class Pool implements Serializable
     }
 
     /**
-     * DOCUMENT ME!
-     * @throws WootEngineException 
+     * Initialize the Pool by creating the file that will hold the serialization of the content.
+     * 
+     * @param override Indicate if the method must override any existing log.
+     * @throws WootEngineException if IO problems occur.
+     * @see {@link #getContent()}
      */
-    public synchronized final void storePool() throws WootEngineException
+    public void initializePool(boolean override) throws WootEngineException
     {
-        FileOutputStream fout = null;
-        ObjectOutputStream oos = null;
+        if (this.getPoolFile().exists() && override) {
+            this.getPoolFile().delete();
+        }
 
-        try {
-            fout = new FileOutputStream(this.getPoolFile());
-            oos = new ObjectOutputStream(fout);
-            oos.writeObject(this.getContent());
-            oos.flush();
-        } catch (Exception e) {
-            throw new WootEngineException("problem when storing pool\n",e);  
-           
-
-            // make sure the file is properly close
-        } finally {
-            if (fout != null) {
-                try {
-                    fout.close();
-                } catch (IOException e) {
-                    throw new WootEngineException("problem when closing pool\n",e);  
-                }
+        if (!this.getPoolFile().exists()) {
+            try {
+                List<WootOp> newElements = new ArrayList<WootOp>();
+                FileUtil.saveObjectToFile(newElements, this.getPoolFile().toString());
+            } catch (Exception e) {
+                throw new WootEngineException("Problems while initializing pool: ", e);
             }
         }
     }
 
     /**
-     * DOCUMENT ME!
-     * @throws WootEngineException 
+     * Serialize the pool's content to file.
+     * 
+     * @throws WootEngineException if problems occur.
      */
-    public synchronized final void unLoadPool() throws WootEngineException
+    public final synchronized void storePool() throws WootEngineException
     {
-        FileOutputStream fout = null;
-        ObjectOutputStream oos = null;
-
         try {
-            fout = new FileOutputStream(this.getPoolFile());
-            oos = new ObjectOutputStream(fout);
-            oos.writeObject(this.getContent());
-            oos.flush();
-            // free the resource by calling setting the content to empty
-            // and calling garbage collector
-            this.free();
+            FileUtil.saveObjectToFile(this.getContent(), this.getPoolFile().toString());
         } catch (Exception e) {
-            throw new WootEngineException("problem when closing pool\n",e);  
-            // make sure the file is properly close
-        } finally {
-            if (fout != null) {
-                try {
-                    fout.close();
-                } catch (IOException e) {
-                    throw new WootEngineException("problem when closing pool\n",e);  
-                }
-            }
+            throw new WootEngineException("Problems while storing the pool: ", e);
         }
+    }
+
+    /**
+     * Deserializes the pool's content from file.
+     * 
+     * @throws WootEngineException if problems occur.
+     */
+    @SuppressWarnings("unchecked")
+    public synchronized void loadPool() throws WootEngineException
+    {
+        try {
+            this.content = (ArrayList<WootOp>) FileUtil.loadObjectFromFile(this.getPoolFile().toString());
+        } catch (Exception e) {
+            throw new WootEngineException("Problems loading the pool: ", e);
+        }
+    }
+
+    /**
+     * Serialize the pool's contents to file and unload it from memory.
+     * 
+     * @throws WootEngineException if problems occur.
+     */
+    public final synchronized void unLoadPool() throws WootEngineException
+    {
+        this.storePool();
+        this.free();
     }
 }

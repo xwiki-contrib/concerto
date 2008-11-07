@@ -42,10 +42,10 @@
  *  
  */
 
-package org.xwoot.wootEngine.test;
+package org.xwoot.xwootUtil.test;
 
 import org.junit.Test;
-import org.xwoot.wootEngine.FileUtil;
+import org.xwoot.xwootUtil.FileUtil;
 
 import java.util.Random;
 
@@ -57,12 +57,12 @@ import junit.framework.Assert;
  * @author $author$
  * @version $Revision$
  */
-public class FileUtilTests extends AbstractWootEngineTest
+public class FileUtilTest
 {
     /**
      * Creates a new FileUtilTests object.
      */
-    public FileUtilTests()
+    public FileUtilTest()
     {
         super();
     }

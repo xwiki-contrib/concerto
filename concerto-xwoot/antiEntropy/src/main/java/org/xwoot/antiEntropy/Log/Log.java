@@ -45,11 +45,6 @@
 package org.xwoot.antiEntropy.Log;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import java.util.Hashtable;
@@ -118,6 +113,18 @@ public class Log implements Serializable
     }
 
     /**
+     * @param id the key associate with the wanted log entry.
+     * @return the wanted log entry or null if key's not present in log.
+     * @throws LogException if deserialization problems occur.
+     */
+    public Object getMessage(Object id) throws LogException
+    {
+        this.loadLog();
+
+        return this.log.get(id);
+    }
+
+    /**
      * @param id key for new log entry.
      * @param message the value of the new log entry.
      * @throws LogException if log serialization/deserialization problems occur.
@@ -164,6 +171,17 @@ public class Log implements Serializable
     }
 
     /**
+     * @return a table with all message ids.
+     * @throws LogException if deserialization problems occur.
+     */
+    public Object[] getMessageIds() throws LogException
+    {
+        this.loadLog();
+
+        return this.log.keySet().toArray();
+    }
+
+    /**
      * Computes the diff beetween a given table of keys and the log's keys.
      * 
      * @param site2ids an array of message ids.
@@ -184,26 +202,27 @@ public class Log implements Serializable
     }
 
     /**
-     * @param id the key associate with the wanted log entry.
-     * @return the wanted log entry or null if key's not present in log.
-     * @throws LogException if deserialization problems occur.
+     * Method for persistent storage. Store the log on file.
+     * 
+     * @throws LogException if problems occur while accessing or writing the log to file.
      */
-    public Object getMessage(Object id) throws LogException
+    private void storeLog() throws LogException
     {
-        this.loadLog();
+        if (this.log.isEmpty()) {
+            File logFile = new File(this.logFilePath);
 
-        return this.log.get(id);
-    }
+            if (logFile.exists()) {
+                logFile.delete();
+            }
 
-    /**
-     * @return a table with all message ids.
-     * @throws LogException if deserialization problems occur.
-     */
-    public Object[] getMessageIds() throws LogException
-    {
-        this.loadLog();
+            return;
+        }
 
-        return this.log.keySet().toArray();
+        try {
+            FileUtil.saveObjectToFile(this.log, this.logFilePath);
+        } catch (Exception e) {
+            throw new LogException("Problems while storing the Log: ", e);
+        }
     }
 
     /**
@@ -222,27 +241,12 @@ public class Log implements Serializable
             return;
         }
 
-        FileInputStream fis = null;
-        ObjectInputStream ois = null;
         try {
-            fis = new FileInputStream(logFile);
-            ois = new ObjectInputStream(fis);
-
-            this.log = (Map<Object, Object>) ois.readObject();
+            this.log = (Map<Object, Object>) FileUtil.loadObjectFromFile(this.logFilePath);
         } catch (Exception e) {
-            throw new LogException("Problem while loading log file " + this.logFilePath, e);
-        } finally {
-            try {
-                if (ois != null) {
-                    ois.close();
-                }
-                if (fis != null) {
-                    fis.close();
-                }
-            } catch (IOException e) {
-                throw new LogException("Problem closing log file after loading " + this.logFilePath, e);
-            }
+            throw new LogException("Problems loading the Log: ", e);
         }
+
     }
 
     /**
@@ -256,44 +260,4 @@ public class Log implements Serializable
         return this.log.size();
     }
 
-    /**
-     * Method for persistent storage. Store the log on file.
-     * 
-     * @throws LogException if problems occur while accessing or writing the log to file.
-     */
-    private void storeLog() throws LogException
-    {
-        if (this.log.isEmpty()) {
-            File logFile = new File(this.logFilePath);
-
-            if (logFile.exists()) {
-                logFile.delete();
-            }
-
-            return;
-        }
-
-        FileOutputStream fout = null;
-        ObjectOutputStream oos = null;
-        try {
-            fout = new FileOutputStream(this.logFilePath);
-            oos = new ObjectOutputStream(fout);
-
-            oos.writeObject(this.log);
-            oos.flush();
-        } catch (Exception e) {
-            throw new LogException("Problem when storing log in file " + this.logFilePath, e);
-        } finally {
-            try {
-                if (oos != null) {
-                    oos.close();
-                }
-                if (fout != null) {
-                    fout.close();
-                }
-            } catch (Exception e) {
-                throw new LogException("Problem closing log file after saving " + this.logFilePath, e);
-            }
-        }
-    }
 }

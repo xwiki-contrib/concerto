@@ -44,7 +44,8 @@
 
 package org.xwoot.wootEngine.core;
 
-import org.xwoot.wootEngine.FileUtil;
+import org.xwoot.xwootUtil.FileUtil;
+
 import org.xwoot.wootEngine.WootEngineException;
 
 import java.io.Serializable;

@@ -59,6 +59,7 @@ import org.xwoot.wootEngine.core.WootRow;
 import org.xwoot.wootEngine.op.WootDel;
 import org.xwoot.wootEngine.op.WootIns;
 import org.xwoot.wootEngine.op.WootOp;
+import org.xwoot.xwootUtil.FileUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -110,7 +111,7 @@ public class WootEngine
         this.setWorkingDir(workingDir);
         this.createWorkingDir();
         this.setOpLocalClock(opClock);
-        this.setWaitingQueue(new Pool(workingDir + File.separator + "pool"));
+        this.setWaitingQueue(new Pool(workingDir));
         this.logger.info(this.wootEngineId + " WootEngine created.");
     }
 
@@ -187,7 +188,7 @@ public class WootEngine
             FileUtil.deleteDirectory(f);
         }
         this.createWorkingDir();
-        this.waitingQueue.initializeLog(true);
+        this.waitingQueue.initializePool(true);
     }
 
     private void createWorkingDir() throws WootEngineException
