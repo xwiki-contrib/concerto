@@ -54,7 +54,7 @@ import java.util.List;
 /**
  * This class provides the antiEntropy service. It's used by the receiver engine to process antientropy messages.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class AntiEntropy
 {

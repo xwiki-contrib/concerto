@@ -59,7 +59,7 @@ import org.xwoot.mockiphone.web.MockIphoneSite;
 /**
  * DOCUMENT ME!
  * 
- * @version $Id: Bootstrap.java 13483 2008-10-10 11:31:04Z jmaire $
+ * @version $Id$
  */
 public class Bootstrap extends HttpServlet
 {

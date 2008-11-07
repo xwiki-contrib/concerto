@@ -15,7 +15,7 @@ import org.xwoot.antiEntropy.AntiEntropyException;
 /**
  * Test unit for the AntiEntropy class.
  * 
- * @version $Id: $Revision$
+ * @version $Id$Revision$
  */
 public class AntiEntropyTest
 {

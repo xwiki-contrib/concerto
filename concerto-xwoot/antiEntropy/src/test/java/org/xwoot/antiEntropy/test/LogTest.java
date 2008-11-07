@@ -59,7 +59,7 @@ import junit.framework.Assert;
 /**
  * This junit class test all log functions.
  * 
- * @version $Id: $Revision$
+ * @version $Id$Revision$
  */
 public class LogTest
 {

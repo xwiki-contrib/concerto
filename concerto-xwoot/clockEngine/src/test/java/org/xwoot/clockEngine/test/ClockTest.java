@@ -13,7 +13,7 @@ import org.xwoot.xwootUtil.FileUtil;
 /**
  * Unit test for the Clock module.
  * 
- * @version $Id: $Revision$
+ * @version $Id$Revision$
  */
 public class ClockTest
 {

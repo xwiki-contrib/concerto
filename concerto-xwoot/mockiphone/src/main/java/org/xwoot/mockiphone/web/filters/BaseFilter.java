@@ -65,7 +65,7 @@ import org.xwoot.mockiphone.web.MockIphoneSite;
  * <li>Forwards to the startup wizard when the engine is not initialized</li>
  * <li>Registers a skin in the session when a skin is requested</li>
  * </ul> 
- * @version $Id: BaseFilter.java 13483 2008-10-10 11:31:04Z jmaire $
+ * @version $Id$
  */
 public class BaseFilter implements Filter
 {

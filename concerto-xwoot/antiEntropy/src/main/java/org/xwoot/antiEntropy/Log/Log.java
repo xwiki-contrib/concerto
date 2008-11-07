@@ -64,7 +64,7 @@ import org.xwoot.xwootUtil.FileUtil;
  * <p>
  * Log is used by {@link org.xwoot.antiEntropy.AntiEntropy AntiEntropy} to store generated and received messages.
  * 
- * @version $Id:$
+ * @version $Id$
  * @see org.xwoot.antiEntropy.AntiEntropy
  */
 public class Log implements Serializable

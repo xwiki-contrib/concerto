@@ -3,7 +3,7 @@ package org.xwoot.antiEntropy;
 /**
  * Exception handling for AntiEntropy.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class AntiEntropyException extends Exception
 {

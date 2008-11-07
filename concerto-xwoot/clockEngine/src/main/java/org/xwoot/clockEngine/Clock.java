@@ -56,7 +56,7 @@ import org.xwoot.xwootUtil.FileUtil;
 /**
  * Provides the clock service. It is used to associate a private clock to an object. The clock is stored in a file.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class Clock implements Serializable
 {

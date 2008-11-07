@@ -5,7 +5,7 @@ import org.xwoot.antiEntropy.AntiEntropyException;
 /**
  * Exception handling for Log manipulation.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class LogException extends AntiEntropyException
 {

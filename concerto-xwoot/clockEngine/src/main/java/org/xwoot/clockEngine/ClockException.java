@@ -3,7 +3,7 @@ package org.xwoot.clockEngine;
 /**
  * Exception handling for Clock engine.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class ClockException extends Exception
 {
