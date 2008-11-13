@@ -56,9 +56,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
-import org.xwoot.wikiContentManager.WikiContentManager;
-import org.xwoot.wikiContentManager.WikiContentManagerFactory;
-import org.xwoot.wikiContentManager.XWikiSwizzleClient.XWikiSwizzleClientFactory;
 import org.xwoot.xwootApp.XWoot;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.core.XWootPage;

@@ -17,6 +17,11 @@
       <version>${pom.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.xwoot</groupId>
+      <artifactId>xwootUtil</artifactId>
+      <version>${pom.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.thoughtworks.xstream</groupId>
       <artifactId>xstream</artifactId>
       <version>1.2.2</version>

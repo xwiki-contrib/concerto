@@ -206,7 +206,7 @@ public class MockIphonePageManager
         if (!this.existPage(pageName)){
             pn=this.createPage(xmlContent);
         }
-       MockIphonePage page=this.loadPage(pageName);
+       MockIphonePage page=this.loadPage(pn);
        if (page==null){
            return;
        }
