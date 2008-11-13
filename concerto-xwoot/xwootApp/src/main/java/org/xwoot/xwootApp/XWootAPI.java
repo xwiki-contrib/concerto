@@ -2,6 +2,7 @@ package org.xwoot.xwootApp;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 
 public interface XWootAPI
 {
@@ -61,6 +62,8 @@ public interface XWootAPI
     void removeNeighbor(String neighborURL) throws XWootException;
 
     void synchronizePages() throws XWootException;
+    
+    List<String> getLastPages(String id) throws XWootException;
 
     String getXWootPeerId();
 

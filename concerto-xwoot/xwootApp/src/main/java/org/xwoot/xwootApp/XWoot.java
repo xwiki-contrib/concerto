@@ -54,10 +54,12 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipFile;
 
 import jlibdiff.Diff;
@@ -117,7 +119,6 @@ import java.net.URL;
  */
 public class XWoot implements XWootAPI
 {
-
     private WikiContentManager contentManager;
 
     private WootEngine wootEngine;
@@ -151,6 +152,15 @@ public class XWoot implements XWootAPI
     private static final String PAGELISTFILEFORSTATE = "list.txt";
 
     private String workingDir;
+    
+    /**
+     * 
+     * This structure associate a key to a list of pagenames. 
+     * This pagenames list is the list of the last modified pages 
+     * since the last call to this structure with the associated id. 
+     *
+     */
+    private Map<String,List<String>> lastModifiedPageNames; 
 
     /**
      * Creates a new XWoot object.
@@ -170,6 +180,7 @@ public class XWoot implements XWootAPI
         String peerId, Integer siteId, ThomasRuleEngine tre, AntiEntropy ae) throws XWootException 
         {
 
+        this.lastModifiedPageNames=new Hashtable<String, List<String>>();
         this.workingDir = workingDir;
         this.lastVuePagesDir = workingDir + File.separator + "lastVuePages";
         this.stateDir = workingDir + File.separator + "stateDir";
@@ -333,6 +344,7 @@ public class XWoot implements XWootAPI
 
         try {
             String pageName = patch.getPageName();
+            this.addPageNameToLastPages(pageName);
             this.logger.info(this.siteId + " : for page : " + pageName);
             // apply receiving patch to woot engine
             this.getWootEngine().deliverPatch(patch);
@@ -359,6 +371,7 @@ public class XWoot implements XWootAPI
             .getRound()); 
         if (message!=null){
             try {
+                this.addPageNameToLastPages(pageName);
                 this.sender.gossip(this.getXWootPeerId(), message);
                 this.getAntiEntropy().logMessage(message.getId(), message);
             } catch (SenderException e) {
@@ -1615,4 +1628,26 @@ public class XWoot implements XWootAPI
         File file = new File(this.lastVuePagesDir + File.separator + page.getFileName());
         return file.delete();
     }
+    
+    public List<String> getLastPages(String id) throws XWootException
+    {
+        List<String> result=null;
+        if (this.lastModifiedPageNames.get(id)==null){
+            result=(List<String>) this.getListOfManagedPages();
+        }else{
+            result=new ArrayList<String>();
+            result.addAll(this.lastModifiedPageNames.get(id));
+        }
+        this.lastModifiedPageNames.put(id, new ArrayList());
+        return result;
+    }
+    
+    private void addPageNameToLastPages(String pageName){
+        Set s=this.lastModifiedPageNames.keySet();
+        Iterator i=s.iterator();
+        while(i.hasNext()){
+            this.lastModifiedPageNames.get(i.next()).add(pageName);
+        }
+    }
+    
 }

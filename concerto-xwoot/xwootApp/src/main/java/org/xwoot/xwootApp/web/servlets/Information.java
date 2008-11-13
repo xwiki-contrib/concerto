@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -55,6 +56,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.xwoot.wikiContentManager.WikiContentManager;
+import org.xwoot.wikiContentManager.WikiContentManagerFactory;
+import org.xwoot.wikiContentManager.XWikiSwizzleClient.XWikiSwizzleClientFactory;
 import org.xwoot.xwootApp.XWoot;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.core.XWootPage;
@@ -134,9 +138,19 @@ public class Information extends HttpServlet
                                 + "</peer>\n");
                         }
                         result.append("</peers>");
-                    } else {
+                    } else if (info.equals("listLastPages")){
+                        String id = request.getParameter("id");
+                        List<String>pages=xwoot.getLastPages(id);
+                        result.append("<pages>\n");
+                        for (String pageName : pages){
+                            result.append("  <page>" + pageName +"</page>\n");
+                        }
+                        result.append("</pages>\n");
+                    }
+                    else {
                         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                         result.append("<error>Unknown information</error>");
+                        System.out.println(info);
                     }
                 }
             }

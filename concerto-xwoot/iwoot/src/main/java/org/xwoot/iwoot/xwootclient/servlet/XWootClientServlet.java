@@ -22,12 +22,15 @@ public class XWootClientServlet implements XWootClientAPI
     final String cpConnectionContext = "/synchronize.do?action=cpconnection";
 
     final String informationContext = "/information?request=";
+    
+    final String pageList = "listLastPages&id=";
 
     final String isXWootInitialized=  "isXWootInitialized";
 
     final String isCPConnected="isWikiConnected";
 
     final String isP2PNetworkConnected="isP2PNetworkConnected";
+    
 
     public XWootClientServlet(String xwootURL)
     {
@@ -50,7 +53,7 @@ public class XWootClientServlet implements XWootClientAPI
 //        return true;
 //    }
 
-    private Boolean getInfos(String wantedValue) {
+    private Document getInfos(String wantedValue) {
         try {
             URL url = new URL(this.xwootUrl+this.informationContext+wantedValue);
 
@@ -66,7 +69,7 @@ public class XWootClientServlet implements XWootClientAPI
                     try
                     {
                         Document document = sxb.build(in);
-                        return Boolean.valueOf(document.getRootElement().getValue());
+                        return document;
                     } catch(JDOMException e) {
                         e.printStackTrace ();
                     }
@@ -114,7 +117,7 @@ public class XWootClientServlet implements XWootClientAPI
 
     public boolean isContentManagerConnected()
     {
-        Boolean result=getInfos(this.isCPConnected);
+        Boolean result=Boolean.valueOf(getInfos(this.isCPConnected).getRootElement().getValue());
         if (result==null){
             return false;
         }
@@ -123,11 +126,17 @@ public class XWootClientServlet implements XWootClientAPI
     
     public boolean isConnectedToP2PNetwork()
     {
-        Boolean result=getInfos(this.isP2PNetworkConnected);
+        Boolean result=Boolean.valueOf(getInfos(this.isP2PNetworkConnected).getRootElement().getValue());
         if (result==null){
             return false;
         }
         return result.booleanValue();
+        
+    }
+    
+    public Document getPageList(String id){
+        Document doc=this.getInfos(this.pageList+id);
+        return doc;
         
     }
 }

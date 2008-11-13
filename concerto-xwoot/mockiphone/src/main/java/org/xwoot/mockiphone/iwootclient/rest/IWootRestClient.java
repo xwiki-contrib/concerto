@@ -112,7 +112,6 @@ public class IWootRestClient implements IWootClient
         // Gathering informations into a XML document
        
         Representation rep2=new DomRepresentation(MediaType.APPLICATION_XML,page);
-
         Reference reference=this.getResourceReference(pageName);
         // Launch the request to create the resource
         Response response = this.client.put(reference, rep2);
@@ -120,6 +119,7 @@ public class IWootRestClient implements IWootClient
             return true;
         }
         else if (response.getStatus().equals(Status.CLIENT_ERROR_UNPROCESSABLE_ENTITY) || response.getStatus().equals(Status.SERVER_ERROR_INTERNAL)){
+            System.out.println(response.getStatus());
             return false;
         }
         else {
@@ -144,5 +144,25 @@ public class IWootRestClient implements IWootClient
     public String getUri() throws IWootClientException
     {
         return this.uri;
+    }
+
+    public boolean postPage(String pageName, Document page) throws IWootClientException
+    {
+        // Gathering informations into a XML document
+        Representation rep2=new DomRepresentation(MediaType.APPLICATION_XML,page);
+        Reference reference=this.getResourceReference(null);
+        // Launch the request to create the resource
+        Response response = this.client.post(reference, rep2);
+        if (response.getStatus().equals(Status.SUCCESS_CREATED) || response.getStatus().equals(Status.SUCCESS_OK)){
+            return true;
+        }
+        else if (response.getStatus().equals(Status.CLIENT_ERROR_UNPROCESSABLE_ENTITY) || response.getStatus().equals(Status.SERVER_ERROR_INTERNAL)){
+            System.out.println(response.getStatus());
+            return false;
+        }
+        else {
+            throw new IWootRestClientException("Unexpected response status : "+response.getStatus());
+        }
+        
     }
 }

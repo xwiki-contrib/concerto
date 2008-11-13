@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.w3c.dom.Document;
 import org.xwoot.mockiphone.iwootclient.IWootClient;
+import org.xwoot.mockiphone.iwootclient.IWootClientException;
 import org.xwoot.wikiContentManager.WikiContentManagerException;
 import org.xwoot.wikiContentManager.XWikiSwizzleClient.XwikiSwizzleClient;
 
@@ -71,5 +72,18 @@ public class IWootMockClient implements IWootClient
     public String getUri()
     {
         return this.uri;
+    }
+
+    public boolean postPage(String pageName, Document page) throws IWootClientException
+    {
+        Map pageMap;
+        pageMap = XwikiSwizzleClient.fromXmlStatic(page);
+        if (this.contents.containsKey(pageName)){
+            this.contents.put(pageName, pageMap.get("Content"));
+        }
+        else{
+            this.createPage(pageName, (String)pageMap.get("Content"));
+        }
+        return true;
     }
 }

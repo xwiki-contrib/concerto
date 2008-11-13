@@ -89,7 +89,7 @@ public class DefaultApp extends HttpServlet
             if("editpage".equals(action)){ 
                 System.out.print("Site " + MockIphoneSite.getInstance().getMockIphoneSiteEngine().getId() + " : edit page content : "+pageName+"\n");
                 request.setAttribute("editpage",Boolean.valueOf(true));
-                content=MockIphoneSite.getInstance().getMockIphoneSiteEngine().getPageForEdition(pageName);
+                content=MockIphoneSite.getInstance().getMockIphoneSiteEngine().getPage(pageName);
             }
             else if("createpage".equals(action)){
                 System.out.print("Site " + MockIphoneSite.getInstance().getMockIphoneSiteEngine().getId() + " : edit page content : "+pageName+"\n");
@@ -120,7 +120,7 @@ public class DefaultApp extends HttpServlet
                     String newContent=request.getParameter("newcontent");
                     System.out.print("Site " + MockIphoneSite.getInstance().getMockIphoneSiteEngine().getId() + " : save page modifications : "+pageName+"\n");
                     System.out.println(newContent);
-                    MockIphoneSite.getInstance().getMockIphoneSiteEngine().setPageContent("", newContent);
+                    MockIphoneSite.getInstance().getMockIphoneSiteEngine().setPageContent(pageName, newContent);
                 }
                 else if("refreshlist".equals(action)){
                     System.out.print("Site " + MockIphoneSite.getInstance().getMockIphoneSiteEngine().getId() + " : refresh page list \n");
@@ -130,7 +130,8 @@ public class DefaultApp extends HttpServlet
                 else {
                     System.out.print("Site " + MockIphoneSite.getInstance().getMockIphoneSiteEngine().getId() + " : no action\n");
                     nopage=true;
-                }      
+                }   
+                
                 request.setAttribute("pagelist",MockIphoneSite.getInstance().getMockIphoneSiteEngine().askPageList());
             }catch(IWootClientException e){
                 throw new ServletException(e);

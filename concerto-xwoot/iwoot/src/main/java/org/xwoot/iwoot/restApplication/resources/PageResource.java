@@ -49,7 +49,7 @@ public class PageResource extends BaseResource
             setModifiable(true);
         } else {
             // This resource is not available.
-            setAvailable(false);
+           // setAvailable(false);
         }
     }
 
@@ -74,7 +74,7 @@ public class PageResource extends BaseResource
             } catch (IWootException e) {
                 e.printStackTrace();
                 this.page=null;
-                getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
+                getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);  
                 return ;
             }
         }
@@ -94,6 +94,12 @@ public class PageResource extends BaseResource
 
     }
 
+    
+    @Override
+    public void acceptRepresentation(Representation entity) throws ResourceException {
+        this.storeRepresentation(entity);
+    }
+    
     /**
      * Handle PUT requests.
      * 
