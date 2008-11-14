@@ -101,7 +101,7 @@ public class TestBasic extends AbstractXWootTest
 
         // Launch the synch without connection
         this.xwoot1.synchronizePages();
-        Assert.assertEquals("", this.wootEngine1.getPage("test.1"));
+        Assert.assertEquals("", this.wootEngine1.getPageManager().getPage("test.1"));
 
         // connect XWoot
         this.xwoot1.reconnectToP2PNetwork();
@@ -110,12 +110,12 @@ public class TestBasic extends AbstractXWootTest
         // Launch the synch...
         this.xwoot1.synchronizePages();
 
-        Assert.assertEquals("toto\n", this.wootEngine1.getPage("test.1"));
+        Assert.assertEquals("toto\n", this.wootEngine1.getPageManager().getPage("test.1"));
         Assert.assertEquals("toto\n", this.xwiki1.getPageContent("test.1"));
         this.xwiki1.overwritePageContent("test.1", "t\n");
         // Launch the synch...
         this.xwoot1.synchronizePages();
-        Assert.assertEquals("t\n", this.wootEngine1.getPage("test.1"));
+        Assert.assertEquals("t\n", this.wootEngine1.getPageManager().getPage("test.1"));
         Assert.assertEquals("t\n", this.xwiki1.getPageContent("test.1"));
 
     }
@@ -132,7 +132,7 @@ public class TestBasic extends AbstractXWootTest
         // create a test page
         XWootPage page = new XWootPage("test.1", "");
 
-        Assert.assertEquals("", this.wootEngine1.getPage(page.getPageName()));
+        Assert.assertEquals("", this.wootEngine1.getPageManager().getPage(page.getPageName()));
 
         // connect XWoot
         this.xwoot1.reconnectToP2PNetwork();
@@ -165,9 +165,9 @@ public class TestBasic extends AbstractXWootTest
         this.xwoot1.synchronizePages();
 
         // xwoot1 & this.xwoot2 : verify the propagation
-        Assert.assertEquals("toto\n", this.wootEngine1.getPage(page.getPageName()));
+        Assert.assertEquals("toto\n", this.wootEngine1.getPageManager().getPage(page.getPageName()));
         Assert.assertEquals("toto\n", this.xwiki1.getPageContent(page.getPageName()));
-        Assert.assertEquals("toto\n", this.wootEngine2.getPage(page.getPageName()));
+        Assert.assertEquals("toto\n", this.wootEngine2.getPageManager().getPage(page.getPageName()));
         Assert.assertEquals("toto\n", this.xwiki2.getPageContent(page.getPageName()));
 
     }
@@ -222,8 +222,8 @@ public class TestBasic extends AbstractXWootTest
         Assert.assertEquals(true, this.xwoot2.isPageManaged(page2));
         Assert.assertEquals(true, this.xwoot2.isPageManaged(page));
         this.xwoot2.reconnectToP2PNetwork();
-        Assert.assertEquals("Content Page 1 \n", this.wootEngine2.getPage(page.getPageName()));
-        Assert.assertEquals("Yoplaboom 2 \n", this.wootEngine2.getPage(page2.getPageName()));
+        Assert.assertEquals("Content Page 1 \n", this.wootEngine2.getPageManager().getPage(page.getPageName()));
+        Assert.assertEquals("Yoplaboom 2 \n", this.wootEngine2.getPageManager().getPage(page2.getPageName()));
     }
 
     /**
@@ -267,7 +267,7 @@ public class TestBasic extends AbstractXWootTest
         patch.setPageName(page.getPageName());
 
         Assert.assertEquals("toto\n", this.xwiki1.getPageContent(page.getPageName()));
-        Assert.assertEquals("", this.wootEngine1.getPage(page.getPageName()));
+        Assert.assertEquals("", this.wootEngine1.getPageManager().getPage(page.getPageName()));
 
         Message mess = new Message();
         mess.setAction(LpbCastAPI.LOG_AND_GOSSIP_OBJECT);
@@ -277,7 +277,7 @@ public class TestBasic extends AbstractXWootTest
        
         this.xwoot1.receivePatch(mess);
 
-        Assert.assertEquals("titi\ntoto\n", this.wootEngine1.getPage(page.getPageName()));
+        Assert.assertEquals("titi\ntoto\n", this.wootEngine1.getPageManager().getPage(page.getPageName()));
         Assert.assertEquals("titi\ntoto\n", this.xwiki1.getPageContent(page.getPageName()));
 
     }
@@ -495,11 +495,11 @@ public class TestBasic extends AbstractXWootTest
         // Launch the synch...
         this.xwoot1.synchronizePages();
 
-        Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine1.getPage(page.getPageName()));
+        Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine1.getPageManager().getPage(page.getPageName()));
         Assert.assertEquals("Ligne 1 sur xwiki1\n", this.xwiki1.getPageContent(page.getPageName()));
-        Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine2.getPage(page.getPageName()));
+        Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine2.getPageManager().getPage(page.getPageName()));
         Assert.assertEquals("Ligne 1 sur xwiki1\n", this.xwiki2.getPageContent(page.getPageName()));
-        Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine3.getPage(page.getPageName()));
+        Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine3.getPageManager().getPage(page.getPageName()));
         Assert.assertEquals("Ligne 1 sur xwiki1\n", this.xwiki3.getPageContent(page.getPageName()));
 
         // simulate a change from wikiContentManager user...
@@ -517,26 +517,26 @@ public class TestBasic extends AbstractXWootTest
             .getPageContent(page.getPageName()));
         // Launch the synch...
         this.xwoot1.synchronizePages();
-        Assert.assertEquals(this.wootEngine1.getPage(page.getPageName()), this.wootEngine2.getPage(page.getPageName()));
-        Assert.assertEquals(this.wootEngine1.getPage(page.getPageName()), this.wootEngine3.getPage(page.getPageName()));
+        Assert.assertEquals(this.wootEngine1.getPageManager().getPage(page.getPageName()), this.wootEngine2.getPageManager().getPage(page.getPageName()));
+        Assert.assertEquals(this.wootEngine1.getPageManager().getPage(page.getPageName()), this.wootEngine3.getPageManager().getPage(page.getPageName()));
         Assert.assertEquals(this.xwiki1.getPageContent(page.getPageName()), this.xwiki2.getPageContent(page
             .getPageName()));
         Assert.assertEquals(this.xwiki1.getPageContent(page.getPageName()), this.xwiki3.getPageContent(page
             .getPageName()));
-        Assert.assertEquals(this.wootEngine1.getPage(page.getPageName()), this.xwiki1
+        Assert.assertEquals(this.wootEngine1.getPageManager().getPage(page.getPageName()), this.xwiki1
             .getPageContent(page.getPageName()));
 
         System.out.println("woot1 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine1.getPage(page.getPageName()));
+        System.out.println(this.wootEngine1.getPageManager().getPage(page.getPageName()));
         System.out.println("-------------------");
         System.out.println("woot2 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine2.getPage(page.getPageName()));
+        System.out.println(this.wootEngine2.getPageManager().getPage(page.getPageName()));
         System.out.println("-------------------");
         System.out.println("woot3 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine3.getPage(page.getPageName()));
+        System.out.println(this.wootEngine3.getPageManager().getPage(page.getPageName()));
         System.out.println("-------------------");
 
         System.out.println("xwiki1 : ");
@@ -613,18 +613,18 @@ public class TestBasic extends AbstractXWootTest
         Assert.assertEquals("titi\n", this.xwiki2.getPageContent(page.getPageName()));
         Assert.assertEquals("tata\n", this.xwiki3.getPageContent(page.getPageName()));
 
-        Assert.assertEquals("", this.wootEngine1.getPage(page.getPageName()));
-        Assert.assertEquals("", this.wootEngine2.getPage(page.getPageName()));
-        Assert.assertEquals("", this.wootEngine3.getPage(page.getPageName()));
+        Assert.assertEquals("", this.wootEngine1.getPageManager().getPage(page.getPageName()));
+        Assert.assertEquals("", this.wootEngine2.getPageManager().getPage(page.getPageName()));
+        Assert.assertEquals("", this.wootEngine3.getPageManager().getPage(page.getPageName()));
 
         // synchronizes
         this.xwoot3.synchronizePages();
         this.xwoot2.synchronizePages();
         this.xwoot1.synchronizePages();
 
-        Assert.assertEquals("toto\ntiti\ntata\n", this.wootEngine1.getPage(page.getPageName()));
-        Assert.assertEquals("toto\ntiti\ntata\n", this.wootEngine2.getPage(page.getPageName()));
-        Assert.assertEquals("toto\ntiti\ntata\n", this.wootEngine3.getPage(page.getPageName()));
+        Assert.assertEquals("toto\ntiti\ntata\n", this.wootEngine1.getPageManager().getPage(page.getPageName()));
+        Assert.assertEquals("toto\ntiti\ntata\n", this.wootEngine2.getPageManager().getPage(page.getPageName()));
+        Assert.assertEquals("toto\ntiti\ntata\n", this.wootEngine3.getPageManager().getPage(page.getPageName()));
 
         Assert.assertEquals("toto\ntiti\ntata\n", this.xwiki1.getPageContent(page.getPageName()));
         Assert.assertEquals("toto\ntiti\ntata\n", this.xwiki2.getPageContent(page.getPageName()));
@@ -632,15 +632,15 @@ public class TestBasic extends AbstractXWootTest
 
         System.out.println("woot1 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine1.getPage(page.getPageName()));
+        System.out.println(this.wootEngine1.getPageManager().getPage(page.getPageName()));
         System.out.println("-------------------");
         System.out.println("woot2 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine2.getPage(page.getPageName()));
+        System.out.println(this.wootEngine2.getPageManager().getPage(page.getPageName()));
         System.out.println("-------------------");
         System.out.println("woot3 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine3.getPage(page.getPageName()));
+        System.out.println(this.wootEngine3.getPageManager().getPage(page.getPageName()));
         System.out.println("-------------------");
 
         System.out.println("xwiki1 : ");
@@ -706,9 +706,9 @@ public class TestBasic extends AbstractXWootTest
         this.xwoot1.getWootEngine().deliverPatch(patch);
         this.xwoot2.getWootEngine().deliverPatch(patch);
 
-        Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine1.getPage(page.getPageName()));
+        Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine1.getPageManager().getPage(page.getPageName()));
         Assert.assertEquals("Ligne 1 sur xwiki1\n", this.xwiki1.getPageContent(page.getPageName()));
-        Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine2.getPage(page.getPageName()));
+        Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine2.getPageManager().getPage(page.getPageName()));
         Assert.assertEquals("Ligne 1 sur xwiki1\n", this.xwiki2.getPageContent(page.getPageName()));
 
         // simulate a change from wikiContentManager user...
@@ -719,19 +719,19 @@ public class TestBasic extends AbstractXWootTest
         // Launch the synch...
         this.xwoot1.synchronizePages();
 
-        Assert.assertEquals(this.wootEngine1.getPage(page.getPageName()), this.wootEngine2.getPage(page.getPageName()));
+        Assert.assertEquals(this.wootEngine1.getPageManager().getPage(page.getPageName()), this.wootEngine2.getPageManager().getPage(page.getPageName()));
         Assert.assertEquals(this.xwiki1.getPageContent(page.getPageName()), this.xwiki2.getPageContent(page
             .getPageName()));
-        Assert.assertEquals(this.wootEngine1.getPage(page.getPageName()), this.xwiki1
+        Assert.assertEquals(this.wootEngine1.getPageManager().getPage(page.getPageName()), this.xwiki1
             .getPageContent(page.getPageName()));
 
         System.out.println("woot1 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine1.getPage(page.getPageName()));
+        System.out.println(this.wootEngine1.getPageManager().getPage(page.getPageName()));
         System.out.println("-------------------");
         System.out.println("woot2 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine2.getPage(page.getPageName()));
+        System.out.println(this.wootEngine2.getPageManager().getPage(page.getPageName()));
         System.out.println("-------------------");
 
         System.out.println("xwiki1 : ");

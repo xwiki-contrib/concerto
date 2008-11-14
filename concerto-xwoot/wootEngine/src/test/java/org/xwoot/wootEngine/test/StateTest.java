@@ -89,9 +89,9 @@ public class StateTest extends AbstractWootEngineTest
         WootPage wp = null;
         for (int i = 0; i < 10; i++) {
             pagesId[i] = "page" + i;
-            wp = woot0.loadPage(pagesId[i]);
+            wp = woot0.getPageManager().loadPage(pagesId[i]);
             woot0.ins(wp, "" + i, 0);
-            woot0.unloadPage(wp);
+            woot0.getPageManager().unloadPage(wp);
         }
 
         // export state of site 0
@@ -101,8 +101,8 @@ public class StateTest extends AbstractWootEngineTest
         woot1.setState(state);
 
         // tests
-        Assert.assertEquals(woot0.listPages().length, nbPages);
-        Assert.assertEquals(woot0.listPages().length, woot1.listPages().length);
+        Assert.assertEquals(woot0.getPageManager().listPages().length, nbPages);
+        Assert.assertEquals(woot0.getPageManager().listPages().length, woot1.getPageManager().listPages().length);
     }
 
     /**
@@ -119,11 +119,11 @@ public class StateTest extends AbstractWootEngineTest
 
         // generate ops with dependencies on site 0
         Vector<WootOp> data = new Vector<WootOp>();
-        WootPage wp = site0.loadPage("index");
+        WootPage wp = site0.getPageManager().loadPage("index");
         WootOp op1 = site0.ins(wp, "lineA", 0);
         WootOp op2 = site0.ins(wp, "lineB", 1);
         WootOp op3 = site0.ins(wp, "lineC", 2);
-        site0.unloadPage(wp);
+        site0.getPageManager().unloadPage(wp);
 
         // export state of site 0
         File state =  site0.getState();
@@ -132,8 +132,8 @@ public class StateTest extends AbstractWootEngineTest
         site1.setState(state);
 
         // tests state
-        Assert.assertEquals(site0.listPages().length, site1.listPages().length);
-        Assert.assertEquals(site0.getPage("index"), site1.getPage("index"));
+        Assert.assertEquals(site0.getPageManager().listPages().length, site1.getPageManager().listPages().length);
+        Assert.assertEquals(site0.getPageManager().getPage("index"), site1.getPageManager().getPage("index"));
 
         // pool simulation
         Patch patch = new Patch();
@@ -143,12 +143,12 @@ public class StateTest extends AbstractWootEngineTest
         patch.setData(data);
 
         site1.deliverPatch(patch);
-        // assertEquals("lineA\nlineB\nlineC\n", site1.getPage("index"));
+        // assertEquals("lineA\nlineB\nlineC\n", site1.getPageManager().getPage("index"));
         data.clear();
         data.addElement(op1);
         patch.setData(data);
 
         site1.deliverPatch(patch);
-        Assert.assertEquals("lineA\nlineB\nlineC\n", site1.getPage("index"));
+        Assert.assertEquals("lineA\nlineB\nlineC\n", site1.getPageManager().getPage("index"));
     }
 }

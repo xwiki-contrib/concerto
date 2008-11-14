@@ -256,7 +256,7 @@ public class XWoot implements XWootAPI
             // overwrite content
             String wootContent=null;
             try {
-                wootContent = this.getWootEngine().getPage(pageName);
+                wootContent = this.getWootEngine().getPageManager().getPage(pageName);
             } catch (WootEngineException e) {
                 this.logger.error("Problem when loading woot page -- "+pageName+"\n",e);
             }
@@ -365,7 +365,7 @@ public class XWoot implements XWootAPI
     private Patch sendNewPatch(List<WootOp> contentData, List<ThomasRuleOp> mDContentData, String pageName) throws XWootException 
     {
         // send the new patch
-        Patch newPatch = this.getWootEngine().createPatch(contentData, mDContentData, pageName, this.siteId.intValue());
+        Patch newPatch = new Patch(contentData, mDContentData, pageName);
         Message message=null;
         message = this.sender.getNewMessage(this.getXWootPeerId(), newPatch, LpbCastAPI.LOG_AND_GOSSIP_OBJECT, this.sender
             .getRound()); 
@@ -404,7 +404,7 @@ public class XWoot implements XWootAPI
             byte[] lastVuePageDigest = md.digest();
 
             // get the woot engine page
-            String modelPage = this.getWootEngine().getPage(pageName);
+            String modelPage = this.getWootEngine().getPageManager().getPage(pageName);
 
             if (this.isContentManagerConnected()) {
 
@@ -431,7 +431,7 @@ public class XWoot implements XWootAPI
 
                     // save the last vue page with the contentManager page
                     page.setContent(newPage);
-                    this.getWootEngine().copyPage(pageName);
+                    this.getWootEngine().getPageManager().copyPage(pageName);
                     page.unloadPage(this.lastVuePagesDir);
                     // send the new patch
 
@@ -449,7 +449,7 @@ public class XWoot implements XWootAPI
                     this.logger.info(this.siteId + " : contentManager page have no change");
                     // save the last vue page with the woot engine page
                     page.setContent(modelPage);
-                    this.getWootEngine().copyPage(pageName);
+                    this.getWootEngine().getPageManager().copyPage(pageName);
                     page.unloadPage(this.lastVuePagesDir);
                 }
             }
@@ -562,7 +562,7 @@ public class XWoot implements XWootAPI
         // get the woot engine content
         String wootContent=null;
         try {
-            wootContent = this.getWootEngine().getPage(pageName);
+            wootContent = this.getWootEngine().getPageManager().getPage(pageName);
         } catch (WootEngineException e) {
             this.logger.error("Can't synchronize page : "+pageName+"\n",e);
             return;
@@ -598,7 +598,7 @@ public class XWoot implements XWootAPI
             page.setContent(contentManagerContent);
             page.unloadPage(this.lastVuePagesDir);
             try {
-                this.getWootEngine().copyPage(pageName);
+                this.getWootEngine().getPageManager().copyPage(pageName);
             } catch (WootEngineException e) {
                 this.logger.error("Can't synchronize page : "+pageName+"\n",e);
                 return;
@@ -708,9 +708,9 @@ public class XWoot implements XWootAPI
             WootPage page = null;
             try {
                 if (inCopy) {
-                    page = this.wootEngine.loadCopy(pageName);
+                    page = this.wootEngine.getPageManager().loadCopy(pageName);
                 } else {
-                    page = this.wootEngine.loadPage(pageName);
+                    page = this.wootEngine.getPageManager().loadPage(pageName);
                 }
             }
             catch (WootEngineException e) {
@@ -761,7 +761,7 @@ public class XWoot implements XWootAPI
                 this.logger.error(this.siteId+" : Problem when synchronizing content",e);
             }
             try {
-                this.wootEngine.unloadPage(page);
+                this.wootEngine.getPageManager().unloadPage(page);
             } catch (WootEngineException e) {
                 this.logger.error(this.siteId+" : Problem when synchronizing content",e);
             } 
@@ -1186,7 +1186,7 @@ public class XWoot implements XWootAPI
             throw new XWootException(this.peerId+" : Problem to get woot engine state \n",e);
         }
 
-        File copy0 = new File(this.stateDir + File.separatorChar + WootEngine.STATEFILENAME);
+        File copy0 = new File(this.stateDir + File.separatorChar + WootEngine.STATE_FILE_NAME);
         wootState.renameTo(copy0);
 
 
@@ -1247,7 +1247,7 @@ public class XWoot implements XWootAPI
 
             for (int i = 0; i < l.length; i++) {
                 int j = -1;
-                if (l[i].equals(WootEngine.STATEFILENAME)) {
+                if (l[i].equals(WootEngine.STATE_FILE_NAME)) {
                     j = 0;
                 } else if (l[i].equals(XWOOTSTATEFILENAME)) {
                     j = 1;

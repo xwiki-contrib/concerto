@@ -80,6 +80,7 @@ public class Pool implements Serializable
      * 
      * @param directoryPath The location where to store the Pool file.
      * @throws WootEngineException if the directory path is not usable.
+     * @see FileUtil#checkDirectoryPath(String)
      */
     public Pool(String directoryPath) throws WootEngineException
     {
@@ -97,6 +98,9 @@ public class Pool implements Serializable
      * This method clears the contents and suggests the start of the garbage collection system.
      * <p>
      * It is used when unloading the pool to free up the resources as soon as possible.
+     * 
+     * @see System#runFinalization()
+     * @see System#gc()
      */
     public void free()
     {
@@ -168,7 +172,7 @@ public class Pool implements Serializable
      * 
      * @param override Indicate if the method must override any existing log.
      * @throws WootEngineException if IO problems occur.
-     * @see {@link #getContent()}
+     * @see #getContent()
      */
     public void initializePool(boolean override) throws WootEngineException
     {
@@ -190,6 +194,7 @@ public class Pool implements Serializable
      * Serialize the pool's content to file.
      * 
      * @throws WootEngineException if problems occur.
+     * @see FileUtil#saveObjectToFile(Object, String)
      */
     public final synchronized void storePool() throws WootEngineException
     {
@@ -204,6 +209,7 @@ public class Pool implements Serializable
      * Deserializes the pool's content from file.
      * 
      * @throws WootEngineException if problems occur.
+     * @see FileUtil#loadObjectFromFile(String)
      */
     @SuppressWarnings("unchecked")
     public synchronized void loadPool() throws WootEngineException
@@ -216,9 +222,11 @@ public class Pool implements Serializable
     }
 
     /**
-     * Serialize the pool's contents to file and unload it from memory.
+     * Serializes the pool's contents to file and unloads it from memory.
      * 
      * @throws WootEngineException if problems occur.
+     * @see #storePool()
+     * @see #free()
      */
     public final synchronized void unLoadPool() throws WootEngineException
     {

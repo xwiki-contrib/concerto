@@ -44,10 +44,6 @@
 
 package org.xwoot.wootEngine;
 
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.xml.DomDriver;
-
-import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.xwoot.clockEngine.Clock;
@@ -62,174 +58,88 @@ import org.xwoot.wootEngine.op.WootOp;
 import org.xwoot.xwootUtil.FileUtil;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-
-import java.nio.charset.Charset;
-
-import java.util.List;
-import java.util.zip.ZipException;
-import java.util.zip.ZipFile;
 
 /**
- * DOCUMENT ME!
+ * Manages the internal Woot state, applies patches and Woot operations.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
-public class WootEngine
+public class WootEngine extends LoggedWootExceptionThrower
 {
-    private int wootEngineId;
+    /** The name of the output file containing the zipped state. */
+    public static final String STATE_FILE_NAME = "woot.zip";
 
-    private String workingDir;
+    /** The directory where the WootEngine stores it's data. */
+    private String workingDirPath;
 
+    /** An internal {@link Clock} engine required by the Woot algorithm. */
     private Clock opLocalClock;
 
+    /**
+     * A waiting queue for WootOp elements originating from patches and that were destined for another page than the
+     * page of the patch.
+     */
     private Pool waitingQueue;
 
-    private final Log logger = LogFactory.getLog(this.getClass());
-
-    public final static String STATEFILENAME = "woot.zip";
+    /** Handles WootPages for the internal WootEngine model. */
+    private PageManager pageManager;
 
     /**
      * Creates a new WootEngine object.
      * 
-     * @param siteId Unique identifier of the wanted component
-     * @param WORKINGDIR Directory with read/write access to serialize content
-     * @param opClock Clock engine component instance
-     * @throws WootEngineException 
-     * 
+     * @param siteId Unique identifier of the wanted component.
+     * @param workingDir Directory with read/write access to serialize content.
+     * @param opClock {@link Clock} engine component instance.
+     * @throws WootEngineException if problems related to directory access occur.
      */
     public WootEngine(int siteId, String workingDir, Clock opClock) throws WootEngineException
     {
         this.wootEngineId = siteId;
+        this.logger = LogFactory.getLog(this.getClass());
+
         this.setWorkingDir(workingDir);
         this.createWorkingDir();
+
         this.setOpLocalClock(opClock);
         this.setWaitingQueue(new Pool(workingDir));
-        this.logger.info(this.wootEngineId + " WootEngine created.");
-    }
+        this.setPageManager(new PageManager(siteId, workingDir));
 
-    synchronized public void loadClock() throws ClockException
-    {
-        this.opLocalClock = this.opLocalClock.load();
-    }
-
-    synchronized public void unloadClock() throws ClockException
-    {
-        this.opLocalClock.store();
+        this.logger.info(this.wootEngineId + " - WootEngine created.");
     }
 
     /**
-     * DOCUMENT ME!
+     * Create the working directories and init the pagesDir field.
      * 
-     * @param pageName DOCUMENT ME!
-     * 
-     * @throws WootEngineException 
+     * @throws WootEngineException if file access problems occur.
+     * @see FileUtil#checkDirectoryPath(String)
      */
-    public void copyPage(String pageName) throws WootEngineException
-    {
-        if (this.pageExist(pageName)) {
-            WootPage currentPage = this.loadPage(pageName);
-            currentPage.setSavedPage(true);
-            this.unloadPage(currentPage);
-        }
-    }
-
-    /**
-     * To create a new page in model.
-     * 
-     * @param pageName the new page to create
-     * @return the page name of the created page
-     * @throws WootEngineException 
-     * 
-     */
-    public WootPage createPage(String pageName) throws WootEngineException 
-    {
-        if ((pageName == null) || pageName.equals("")) {
-            this.logger.error(this.getWootEngineId() + " Please enter a non-empty page name !");
-            throw new WootEngineException(this.getWootEngineId() + " Please enter a non-empty page name !");
-        }
-
-        if (this.pageExist(pageName)) {
-            this.logger.error(this.getWootEngineId() + " This page already exist !");
-            throw new WootEngineException(this.getWootEngineId() + " This page already exist !");
-        }
-
-        WootPage wootPage = new WootPage(true);
-        wootPage.setPageName(pageName);
-
-        XStream xstream = new XStream();
-        this.logger.debug(this.getWootEngineId() + " Create woot page : " + wootPage.getFileName());
-
-        PrintWriter pw;
-        try {
-            pw = new PrintWriter(new FileOutputStream(this.getWorkingDir() + File.separator + "pages" + File.separator
-                + wootPage.getFileName()));
-            pw.print(xstream.toXML(wootPage));
-            pw.flush();
-            pw.close();
-        } catch (FileNotFoundException e) {
-            this.logger.error(this.wootEngineId +"Problem to create file for page : "+pageName+"\n",e);
-            throw new WootEngineException(this.wootEngineId +"Problem to create file for page : "+pageName+"\n",e);
-        }
-        return wootPage;
-    }
-
-    public void clearWorkingDir() throws WootEngineException
-    {
-        File f = new File(this.workingDir);
-        if (f.exists()) {
-            FileUtil.deleteDirectory(f);
-        }
-        this.createWorkingDir();
-        this.waitingQueue.initializePool(true);
-    }
-
     private void createWorkingDir() throws WootEngineException
     {
-        File working = new File(this.workingDir);
-
-        if (!working.exists()) {
-            if (!working.mkdir()) {
-                this.logger.error(this.wootEngineId +" : Can't create main directory: " + working);
-                throw new WootEngineException(this.wootEngineId +" : Can't create main directory: " + working);
-            }
-        }
-
-        File dirPages = new File(this.getWorkingDir() + File.separator + "pages");
-
-        if (!dirPages.exists()) {
-            if (!dirPages.mkdir()) {
-                this.logger.error(this.wootEngineId +" : Can't create pages directory: " + dirPages);
-                throw new WootEngineException(this.wootEngineId +" : Can't create pages directory: " + dirPages);
-            }
+        try {
+            FileUtil.checkDirectoryPath(workingDirPath);
+        } catch (Exception e) {
+            this.throwLoggedException("Problems creating workingDir.", e);
         }
     }
 
     /**
-     * DOCUMENT ME!
+     * Deletes and reinitializes the contents of the working dir.
      * 
-     * @param data DOCUMENT ME!
-     * @param mdData DOCUMENT ME!
-     * @param wootEnginePageId DOCUMENT ME!
-     * @param siteId DOCUMENT ME!
-     * @param clockValue DOCUMENT ME!
-     * @return DOCUMENT ME!
+     * @throws WootEngineException if problems occur while recreating the working directory's structure.
+     * @see #createWorkingDir()
      */
-    public Patch createPatch(List data, List mdData, String wootEnginePageId, int siteId)
+    public void clearWorkingDir() throws WootEngineException
     {
-        Patch result = new Patch();
-        result.setData(data);
-        result.setPageName(wootEnginePageId);
-        result.setMDelements(mdData);
+        File dir = new File(this.workingDirPath);
+        if (dir.exists()) {
+            FileUtil.deleteDirectory(dir);
+        }
 
-        return result;
+        this.createWorkingDir();
+
+        this.getPageManager().clearWorkingDir();
+        this.getWaitingQueue().initializePool(true);
     }
 
     // /**
@@ -290,175 +200,163 @@ public class WootEngine
     // }
 
     /**
-     * To delete an atomic value at a given position to a given page The method return the Woot operation
+     * Delete from the WootPage an atomic value at a given position.
      * 
-     * @param page : apply the deletion to this page (WootPage format)
-     * @param pos : apply the deletion at this position (first position is 0)
-     * @return : the corresponding Woot operation
-     * @throws WootEngineException 
+     * @param page the page from which to delete.
+     * @param position the position (WootRow) to delete. (starting from 0)
+     * @return the corresponding Woot operation that has been applied.
+     * @throws WootEngineException if the given position is invalid or if problems occurred with the operations Clock.
      */
-    public WootDel del(WootPage page, int pos) throws WootEngineException
+    public WootDel del(WootPage page, int position) throws WootEngineException
     {
-        if ((pos >= 0) && (pos < page.size())) {
-            int idxV = page.indexOfVisible(pos + 1);
-            WootRow wr = page.elementAt(idxV);
+        if ((position >= 0) && (position < page.size())) {
+            // FIXME: position + 1 ?
+            int deleteIndex = page.indexOfVisible(position + 1);
+            WootRow deleteRow = page.elementAt(deleteIndex);
 
-            if (!wr.equals(WootRow.RE)) {
-                WootDel del = new WootDel(wr.getWootId());
-                int temp;
+            if (!deleteRow.equals(WootRow.RE)) {
+                WootDel deleteOperation = new WootDel(deleteRow.getWootId());
+
+                int currentClockValue;
                 try {
-                    temp = this.getOpLocalClock().getValue();
-                    del.setOpid(new WootId(this.wootEngineId, temp));
-                    this.getOpLocalClock().setValue(temp + 1);
+                    currentClockValue = this.getOpLocalClock().getValue();
+                    deleteOperation.setOpid(new WootId(this.wootEngineId, currentClockValue));
+
+                    this.getOpLocalClock().tick();
                 } catch (ClockException e) {
-                    this.logger.error(this.wootEngineId +"Clock problem \n",e);
-                    throw new WootEngineException(this.wootEngineId +"Clock problem \n",e);
+                    this.throwLoggedException("Problem with the clock.", e);
                 }
-                del.setPageName(page.getPageName());
-                del.setIndexRow(idxV);
-                del.execute(page);
-                this.logger.debug(this.wootEngineId + " Operation executed : deletion -- " + del);
 
-                return del;
+                deleteOperation.setPageName(page.getPageName());
+                deleteOperation.setIndexRow(deleteIndex);
+                deleteOperation.execute(page);
+
+                this.logger.debug(this.wootEngineId + " Operation executed : " + deleteOperation.toString());
+
+                return deleteOperation;
             }
-
-            this.logger.error(this.getWootEngineId() + " - page : " + page.getPageName()
-                + ":impossible deletion position " + pos);
-            throw new WootEngineException(this.getWootEngineId() + " - page : " + page.getPageName()
-                + ":impossible deletion position " + pos);
         }
 
-        this.logger.error(this.getWootEngineId() + " - page : " + page.getPageName() + ":impossible deletion position "
-            + pos);
-        throw new WootEngineException(this.getWootEngineId() + " - page : " + page.getPageName()
-            + ":impossible deletion position " + pos);
+        this.throwLoggedException("Invalid delete position " + position + " for the page " + page.getPageName());
+
+        // never reachable
+        return null;
     }
 
     /**
-     * To ins a given String value at a given position to a given page The method return the Woot operation
+     * Inserts in the WootPage a String value at a given position.
      * 
-     * @param page : apply the op to this page (WootPage format)
-     * @param alpha : the String value to insert
-     * @param pos : apply the operation at this position (first position is 0)
-     * @return : the corresponding Woot operation
-     * @throws WootEngineException 
+     * @param page the page in which to insert.
+     * @param value the value to insert.
+     * @param position the position (WootRow) where to insert. (starting from 0)
+     * @return the corresponding Woot operation that has been applied.
+     * @throws WootEngineException if the given position is invalid or if problems occurred with the operations Clock.
      */
-    public WootIns ins(WootPage page, String alpha, int pos) throws WootEngineException 
+    public WootIns ins(WootPage page, String value, int position) throws WootEngineException
     {
-        this.logger.debug(this.wootEngineId + " Direct insertion in " + page.getPageName() + ", value : " + alpha
-            + ", position : " + pos);
-        if ((pos <= page.size()) && (pos >= 0)) {
-            int indexP = page.indexOfVisible(pos);
-            WootRow rp = (indexP != -1) ? page.elementAt(indexP) : page.elementAt(0);
+        this.logger.debug(this.wootEngineId + " - Direct insertion in " + page.getPageName() + ", value : " + value
+            + ", position : " + position);
 
-            if (!rp.equals(WootRow.RE)) {
-                int indexN = page.indexOfVisibleNext(indexP);
-                WootRow rn = (indexN != -1) ? page.elementAt(indexN) : page.elementAt(page.size() + 1);
-                int deg_c = 1;
-                deg_c += ((rp.getDegree() >= rn.getDegree()) ? rp.getDegree() : rn.getDegree());
-                int temp;
+        if ((position >= 0) && (position <= page.size())) {
+            int insertIndex = page.indexOfVisible(position);
+            /*
+             * FIXME: If position > page rows => insertion should be done at the last row, not the first. (Insertion at
+             * the end of the page.) TODO: Check this.
+             */
+            WootRow rowBeforeInsert = (insertIndex != -1) ? page.elementAt(insertIndex) : page.elementAt(0);
+
+            if (!rowBeforeInsert.equals(WootRow.RE)) {
+                int indexAfterInsert = page.indexOfVisibleNext(insertIndex);
+                // FIXME: Check if it's better to use page.size() instead of page.size() + 1.
+                WootRow rowAfterInsert =
+                    (indexAfterInsert != -1) ? page.elementAt(indexAfterInsert) : page.elementAt(page.size() + 1);
+
+                int degreeC = 1;
+                degreeC +=
+                    ((rowBeforeInsert.getDegree() >= rowAfterInsert.getDegree()) ? rowBeforeInsert.getDegree()
+                        : rowAfterInsert.getDegree());
+
                 try {
-                    temp = this.getOpLocalClock().getValue();
-                    WootRow r = new WootRow(new WootId(this.wootEngineId, temp), alpha, deg_c);
-                    WootOp ins = new WootIns(r, rp.getWootId(), rn.getWootId());
-                    ins.setOpid(new WootId(this.wootEngineId, temp));
-                    ins.setPageName(page.getPageName());
-                    this.getOpLocalClock().setValue(temp + 1);
-                    ins.execute(page);
-                    this.logger.debug(this.wootEngineId + " Operation executed : insertion -- " + ins);
-                    return (WootIns) ins;
+                    int currentClockValue = this.getOpLocalClock().getValue();
+                    WootRow newRowToInsert =
+                        new WootRow(new WootId(this.wootEngineId, currentClockValue), value, degreeC);
+
+                    WootIns insertOperation =
+                        new WootIns(newRowToInsert, rowBeforeInsert.getWootId(), rowAfterInsert.getWootId());
+                    // FIXME: Reuse the wootId from the row for the operation?
+                    insertOperation.setOpid(new WootId(this.wootEngineId, currentClockValue));
+                    insertOperation.setPageName(page.getPageName());
+
+                    this.getOpLocalClock().tick();
+
+                    insertOperation.execute(page);
+                    this.logger.debug(this.wootEngineId + " - Operation executed :  " + insertOperation.toString());
+
+                    return insertOperation;
                 } catch (ClockException e) {
-                    this.logger.error(this.wootEngineId +"Clock problem \n"+e );
-                    throw new WootEngineException(this.wootEngineId + "Clock problem \n",e);
+                    this.throwLoggedException("Problems with the clock.", e);
                 }
             }
-
-            this.logger.error(this.getWootEngineId() + " - page : " + page.getPageName()
-                + ":impossible insertion position " + pos);
-            throw new WootEngineException(this.getWootEngineId() + " - page : " + page.getPageName()
-                + ":impossible insertion position " + pos);
         }
 
-        this.logger.error(this.getWootEngineId() + " - page : " + page.getPageName()
-            + ":impossible insertion position " + pos);
-        throw new WootEngineException("Site " + this.getWootEngineId() + " - page : " + page.getPageName()
-            + ": Il est inmpossible d'ins\u00E9rer \u00E0 la position " + pos);
+        this.throwLoggedException("Invalid insert position " + position + " for page " + page.getPageName());
+
+        // never reachable.
+        return null;
     }
 
     /**
-     * DOCUMENT ME!
+     * Applies a given Woot Operation on a page.
      * 
-     * @param object DOCUMENT ME!
-     * @throws WootEngineException 
+     * @param operation the operation to apply.
+     * @param page the page on which to apply the operation.
+     * @return true if the operation has been applied, false otherwise or if the operation was not indented for the
+     *         specified page.
      */
-    synchronized public void deliverPatch(Patch p) throws WootEngineException 
+    private boolean executeOp(WootOp operation, WootPage page)
     {
-        this.logger.info(this.wootEngineId + " Reception of a new patch for page : " + p.getPageName());
-        this.logger.debug(this.wootEngineId + " patch : " + p.toString());
-
-        String pageName = p.getPageName();
-
-        if (!this.pageExist(pageName)) {
-            this.createPage(pageName);
-        }
-
-        WootPage page = this.loadPage(pageName);
-        this.logger.debug("Execution of patch operations...");
-        this.getWaitingQueue().loadPool();
-        for (Object obj : p.getData()) {
-            WootOp op = (WootOp) obj;
-
-            if (!this.executeOp(op, page)) {
-                this.logger.debug(this.wootEngineId + "appenning to waiting queue : " + op.toString());
-                this.getWaitingQueue().getContent().add(op);
-            }
-        }
-        this.waitingQueueExec(page);
-        this.getWaitingQueue().unLoadPool();
-        this.unloadPage(page);
-    }
-
-    /**
-     * Call this method to apply a given Woot Operation to a page
-     * 
-     * @param op : the operation to apply
-     * @param page : apply the op to this page
-     * @return true if op has been applied
-     */
-    private boolean executeOp(WootOp op, WootPage page)
-    {
-        if (!op.getPageName().equals(page.getPageName())) {
+        // FIXME: Rewrite this section after refactoring wootEndigne.op package.
+        if (!operation.getPageName().equals(page.getPageName())) {
             return false;
         }
+
         synchronized (page) {
-            if (op instanceof WootIns) {
-                WootIns ins = (WootIns) op;
+            if (operation instanceof WootIns) {
+
+                WootIns ins = (WootIns) operation;
                 int[] indexs = new int[2];
                 indexs = ins.precond_v2(page);
 
-                // in case of an op reception after a setState containing
-                // this op
+                // In case of an op reception after a setState containing this op
                 if (page.indexOfId(ins.getNewRow().getWootId()) >= 0) {
+
                     this.logger.debug(this.wootEngineId
-                        + " Operation not executed (this op was executed during a state transfert)"+" -- "+ins.getNewRow().getWootId());
+                        + " - Operation not executed because it was already executed during a state transfert. -- "
+                        + ins.getNewRow().getWootId());
+
                     return true;
-                }
-                // execution of the op
-                else if (indexs != null) {
-                    this.logger.debug(this.wootEngineId + " Operation executed (" + op.getPageName() + " - "
-                        + page.getPageName() + " ) : insertion -- " + op.toString());
+                } else if (indexs != null) {
+                    // execute the operation
                     ins.execute(indexs[0], indexs[1], page);
+
+                    this.logger.debug(this.wootEngineId + " - Operation executed  (" + operation.getPageName()
+                        + "  -  " + page.getPageName() + ")  : " + operation.toString());
+
                     return true;
                 }
-            } else if (op instanceof WootDel) { // del
+            } else if (operation instanceof WootDel) {
 
-                WootDel del = (WootDel) op;
-                int idx = del.precond_v2(page);
+                WootDel deleteOperation = (WootDel) operation;
+                int deleteRowIndex = deleteOperation.precond_v2(page);
 
-                if (idx >= 0) {
-                    this.logger.debug(this.wootEngineId + " Operation executed : deletion -- " + op.toString());
-                    del.setIndexRow(idx);
-                    del.execute(page);
+                if (deleteRowIndex >= 0) {
+
+                    deleteOperation.setIndexRow(deleteRowIndex);
+                    deleteOperation.execute(page);
+
+                    this.logger.debug(this.wootEngineId + " - Operation executed (" + operation.getPageName() + " - "
+                        + page.getPageName() + ") : " + operation.toString());
+
                     return true;
                 }
             }
@@ -466,94 +364,96 @@ public class WootEngine
         return false;
     }
 
-    private Clock getOpLocalClock()
-    {
-        return this.opLocalClock;
-    }
-
     /**
-     * DOCUMENT ME!
+     * Applies a received patch.
+     * <p>
+     * If the page this patch for does not exist in the model, it will be created and added.
+     * <p>
+     * If operations in this patch can not be applied, they will be added to a waiting queue.
      * 
-     * @param pageName DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws WootEngineException 
-     * 
+     * @param patch the patch to apply.
+     * @throws WootEngineException if problems accessing or creating the page or working with the waiting queue occur.
      */
-    public String getPage(String pageName) throws WootEngineException
+    public synchronized void deliverPatch(Patch patch) throws WootEngineException
     {
-        if (!this.pageExist(pageName)) {
-            return "";
+        this.logger.info(this.wootEngineId + " - Reception of a new patch for page : " + patch.getPageName());
+        this.logger.debug(this.wootEngineId + " - Patch contents : " + patch.toString());
+
+        String pageName = patch.getPageName();
+
+        WootPage page = null;
+
+        if (!this.getPageManager().pageExists(pageName)) {
+            page = this.getPageManager().createPage(pageName);
+        } else {
+            page = this.getPageManager().loadPage(pageName);
         }
 
-        return this.loadPage(pageName).toHumanString();
-    }
+        this.logger.debug(this.wootEngineId + " - Execution of patch operations...");
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param pageName DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws WootEngineException 
-     * 
-     */
-    public String getPageContentModifications(String pageName) throws WootEngineException
-    {
-        WootPage page = this.loadPage(pageName);
+        this.getWaitingQueue().loadPool();
+        for (Object obj : patch.getData()) {
+            WootOp op = (WootOp) obj;
 
-        if (page == null) {
-            return "";
-        }
-
-        StringBuffer sb = new StringBuffer("");
-
-        for (int i = 1; i < (page.getRows().size() - 1); i++) {
-            WootRow row = page.getRows().get(i);
-
-            if (row.isVisible()) {
-                sb.append("<p class=\"visibleLine\">" + row.getValue() + "</p>\n");
-            } else {
-                sb.append("<p class=\"invisibleLine\">" + row.getValue() + "</p>\n");
+            if (!this.executeOp(op, page)) {
+                this.logger.debug(this.wootEngineId + " - apending to waiting queue : " + op.toString());
+                this.getWaitingQueue().getContent().add(op);
             }
         }
-
-        return sb.toString();
+        this.waitingQueueExec(page);
+        this.getWaitingQueue().unLoadPool();
+        this.getPageManager().unloadPage(page);
     }
 
     /**
-     * DOCUMENT ME!
+     * This method is called to check if waiting operations can be applied.
+     * <p>
+     * The operations that do get executed will get removed from the waiting queue.
      * 
-     * @param pageName DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws WootEngineException 
-     * 
+     * @param page the page name on which the operations have to be applied.
+     * @throws WootEngineException if problems saving the pool's state occur.
      */
-    public String getPageToStringInternal(String pageName) throws WootEngineException
+    private void waitingQueueExec(WootPage page) throws WootEngineException
     {
-        if (!this.pageExist(pageName)) {
-            return null;
-        }
+        this.logger.debug(this.wootEngineId + " - Waiting queue execution.");
 
-        return this.loadPage(pageName).toStringInternal();
+        int i = 0;
+
+        while (i < this.getWaitingQueue().getContent().size()) {
+            WootOp operation = this.getWaitingQueue().get(i);
+
+            if (this.executeOp(operation, page)) {
+                this.getWaitingQueue().remove(i);
+                // rewind
+                i = 0;
+                this.getWaitingQueue().storePool();
+
+                this.logger.debug(this.wootEngineId + " - Operation executed : " + operation.toString());
+            } else {
+                i++;
+
+                this.logger.debug(this.wootEngineId + " - Operation not executed :" + operation.toString());
+            }
+        }
     }
 
-    // receiver interface
     /**
-     * DOCUMENT ME!
+     * Computes the current state of the WootEngine as a zip archieve containing WootPages.
      * 
-     * @return DOCUMENT ME!
-     * @throws WootEngineException 
-     * 
+     * @return the location of the zip file generated. Note: The file is temporary and it is stored in the temporary
+     *         directory.
+     * @throws WootEngineException if problems occur in the zipping process.
+     * @see FileUtil#zipDirectory(String)
      */
     public synchronized File getState() throws WootEngineException
     {
-        // delete all existing pages
-        File pagesDir = new File(this.workingDir + File.separator + "pages");
-        String stateFilePath;
+        File pagesDir = new File(this.getPageManager().getPagesDirPath());
+
+        String stateFilePath = null;
         try {
             stateFilePath = FileUtil.zipDirectory(pagesDir.getAbsolutePath());
         } catch (IOException e) {
-            this.logger.error(this.wootEngineId+" Problem to zip state\n",e);
-            throw new WootEngineException(this.wootEngineId+" Problem to zip state\n",e);
+            this.throwLoggedException("Problems zipping the current state.", e);
         }
 
         if (stateFilePath == null) {
@@ -563,279 +463,128 @@ public class WootEngine
         return new File(stateFilePath);
     }
 
+    /**
+     * Replaces the current state with the one provided.
+     * 
+     * @param zippedStateFile the location of a zipped state that will replace the current one.
+     * @return true if the process was successfully executed, false otherwise.
+     * @throws WootEngineException if unzipping or I/O problems occur.
+     * @see #getState()
+     */
+    public synchronized boolean setState(File zippedStateFile) throws WootEngineException
+    {
+        // FIXME: Implement fail-safe method, transaction style. If setState fails for the new state, setState should be
+        // called for a backup state, previously saved.
+        if (zippedStateFile != null) {
+
+            try {
+                // delete all existing pages
+                File pagesDir = new File(this.getPageManager().getPagesDirPath());
+                /*
+                 * FIXME: actually remove current content and remake directory structure.
+                 * FileUtil.deleteDirectory(pagesDir); createWorkingDir();
+                 */
+
+                FileUtil.unzipInDirectory(zippedStateFile.toString(), pagesDir.getAbsolutePath());
+
+                this.logger.info(this.getWootEngineId() + " - Received WootEngine state.");
+
+                return true;
+            } catch (Exception e) {
+                this.throwLoggedException("Problems unziping the state file " + zippedStateFile.toString(), e);
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return a waiting queue for WootOp elements originating from patches and that were destined for another page than
+     *         the page of the patch.
+     */
     private Pool getWaitingQueue()
     {
         return this.waitingQueue;
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
+     * @param waitingQueue the Pool object to set.
      */
-    public int getWootEngineId()
-    {
-        return this.wootEngineId;
-    }
-
-    private String getWorkingDir()
-    {
-        return this.workingDir;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     * @throws WootEngineException 
-     * 
-     */
-    public String[] listPages() throws WootEngineException 
-    {
-        File dir = new File(this.workingDir + File.separator + "pages" + File.separator);
-        String[] res = dir.list();
-
-        if (res != null) {
-            try {
-                for (int i = 0; i < res.length; i++) {
-
-                    res[i] = FileUtil.getDecodedFileName(res[i]);
-                }
-            } catch (UnsupportedEncodingException e) {
-               this.logger.error(this.wootEngineId+" Problem with filename encoding\n",e);
-               throw new WootEngineException(this.wootEngineId+"Problem with filename encoding\n",e);
-            }
-        }
-
-        return res;
-    }
-
-    /**
-     * To get the WootPage object corresponding to a serialized page
-     * 
-     * @param pageId : the id of the wanted page
-     * @return the wanted WootPage
-     * @throws WootEngineException 
-     */
-    public synchronized WootPage loadPage(String pageId) throws WootEngineException
-    {
-        if (!this.pageExist(pageId)) {
-            if (!this.pageExist(pageId)) {
-                return this.createPage(pageId);
-            }
-
-        }
-
-        String filename;
-        try {
-            filename = FileUtil.getEncodedFileName(pageId);
-        } catch (UnsupportedEncodingException e) {
-            this.logger.error(this.wootEngineId+"Problem with filename encoding of page : "+pageId+"\n",e);
-            throw new WootEngineException(this.wootEngineId+"Problem with filename encoding of page : "+pageId+"\n",e);
-        }
-
-        XStream xstream = new XStream(new DomDriver());
-
-        try {
-            return (WootPage) xstream.fromXML(new FileInputStream(this.getWorkingDir() + File.separator + "pages"
-                + File.separator + filename));
-        } catch (FileNotFoundException e) {
-            this.logger.error(this.wootEngineId+"Can't find file : "+this.getWorkingDir() + File.separator + "pages"
-                + File.separator + filename+"\n",e);
-            throw new WootEngineException(this.wootEngineId+"Can't find file : "+this.getWorkingDir() + File.separator + "pages"
-                + File.separator + filename+"\n",e);
-        }
-    }
-
-    /**
-     * To get the WootPage object corresponding to a serialized page
-     * 
-     * @param pageId : the id of the wanted page
-     * @return the wanted WootPage
-     * @throws WootEngineException 
-     * 
-     */
-    public synchronized WootPage loadCopy(String pageId) throws WootEngineException 
-    {
-        WootPage result = null;
-        String savePageName = pageId + WootPage.SAVEDFILEEXTENSION;
-
-        if (!this.pageExist(savePageName)) {
-            if (!this.pageExist(savePageName)) {
-                result=this.createPage(savePageName);
-                result.setPageName(pageId);
-                result.setSavedPage(true);
-                return result;
-
-            }
-
-        }
-
-        String filename;
-        try {
-            filename = FileUtil.getEncodedFileName(savePageName);
-        } catch (UnsupportedEncodingException e) {
-            this.logger.error(this.wootEngineId +"Problem with filename encoding\n",e);
-           throw new WootEngineException(this.wootEngineId +"Problem with filename encoding\n",e);
-        }
-
-        XStream xstream = new XStream(new DomDriver());
-
-        try {
-            result =
-                (WootPage) xstream.fromXML(new FileInputStream(this.getWorkingDir() + File.separator + "pages"
-                    + File.separator + filename));
-            result.setSavedPage(true);
-            result.setPageName(pageId);
-            return result;
-        } catch (FileNotFoundException e) {
-            this.logger.error(this.wootEngineId +"File not found \n",e);
-            throw new WootEngineException(this.wootEngineId +"File not found \n",e);
-        }
-       
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param pageName DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws WootEngineException 
-     */
-    public boolean pageExist(String pageName) throws WootEngineException 
-    {
-        String filename;
-        try {
-            filename = FileUtil.getEncodedFileName(pageName);
-        } catch (UnsupportedEncodingException e) {
-            this.logger.error(this.wootEngineId +"Problem with filename encoding for page "+pageName+"\n",e);
-            throw new WootEngineException(this.wootEngineId +"Problem with filename encoding for page "+pageName+"\n",e);
-        }
-        File f = new File(this.workingDir + File.separator + "pages" + File.separator + filename);
-
-        return f.exists();
-    }
-
-    private void setOpLocalClock(Clock opLocalClock)
-    {
-        this.opLocalClock = opLocalClock;
-    }
-
-    // state
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param object DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws WootEngineException 
-     * 
-     */
-    public synchronized boolean setState(File object) throws WootEngineException
-    {
-        if ((object != null) ) {
-            ZipFile state;
-            try {
-                state = new ZipFile(object);
-
-                // delete all existing pages
-                File pagesDir = new File(this.workingDir + File.separator + "pages");
-                /*
-                 * FileUtil.deleteDirectory(pagesDir); pagesDir.mkdirs();
-                 */
-                FileUtil.unzipInDirectory(state, pagesDir.getAbsolutePath());
-                this.logger.info(this.getWootEngineId() + " Receive WootEngine state");
-
-                return true;
-            } catch (ZipException e) {
-                
-                this.logger.error(this.wootEngineId+"Problem to unzip the state file\n ",e);
-               throw new WootEngineException(this.wootEngineId+"Problem to unzip the state file\n ",e);
-            } catch (IOException e) {
-                this.logger.error(this.wootEngineId+"Problem to unzip the state file\n ",e);
-                throw new WootEngineException(this.wootEngineId+"Problem to unzip the state file\n ",e);
-            }
-
-        }
-        return false;
-    }
-
     private void setWaitingQueue(Pool waitingQueue)
     {
         this.waitingQueue = waitingQueue;
     }
 
+    /**
+     * @return the directory where the WootEngine stores it's data.
+     */
+    public String getWorkingDir()
+    {
+        return this.workingDirPath;
+    }
+
+    /**
+     * @param workDirectory the workDirectory to set.
+     */
     private void setWorkingDir(String workDirectory)
     {
-        this.workingDir = workDirectory;
+        this.workingDirPath = workDirectory;
     }
 
     /**
-     * To serialize a WootPage object
-     * 
-     * @param wootPage : the object to serialize
-     * @throws WootEngineException 
-     * 
+     * @return the associated {@link Clock} object.
      */
-    private void storePage(WootPage wootPage) throws WootEngineException 
+    private Clock getOpLocalClock()
     {
-        XStream xstream = new XStream(new DomDriver());
-
-        OutputStreamWriter osw;
-        try {
-            osw = new OutputStreamWriter(new FileOutputStream(this.getWorkingDir() + File.separator + "pages"
-                + File.separator + wootPage.getFileName()), Charset.forName(System.getProperty("file.encoding")));
-            PrintWriter output = new PrintWriter(osw);
-            output.print(xstream.toXML(wootPage));
-            output.flush();
-            output.close();
-        } catch (FileNotFoundException e) {
-            this.logger.error(this.wootEngineId+"Problem to store page "+wootPage.getPageName()+"\n",e);
-            throw new WootEngineException(this.wootEngineId+"Problem to store page "+wootPage.getPageName()+"\n",e);
-        }
-
-
-
+        return this.opLocalClock;
     }
 
     /**
-     * To serialize a WootPage object and run finalization
-     * 
-     * @param wootPage : the object to serialize
-     * @throws WootEngineException 
-     * 
+     * @param opLocalClock the {@link Clock} object that will become associated to this instance and will be used with
+     *            the {@link WootOp} operations.
      */
-    public synchronized void unloadPage(WootPage wootPage) throws WootEngineException
+    private void setOpLocalClock(Clock opLocalClock)
     {
-        this.storePage(wootPage);
-        System.runFinalization();
-        System.gc();
+        this.opLocalClock = opLocalClock;
     }
 
     /**
-     * This method is called to check if waiting operations can be applied
+     * Loads the clock from file.
      * 
-     * @param page : the page name on which the operations have to be applied
-     * @throws WootEngineException 
+     * @throws ClockException if problems occur.
+     * @see Clock#load()
      */
-    private void waitingQueueExec(WootPage page) throws WootEngineException
+    public synchronized void loadClock() throws ClockException
     {
-        this.logger.debug(this.wootEngineId + " waiting queue execution.");
-
-
-        int i = 0;
-
-        while (i < this.getWaitingQueue().getContent().size()) {
-            WootOp op = this.getWaitingQueue().get(i);
-
-            if (this.executeOp(op, page)) {
-                this.getWaitingQueue().remove(i);
-                i = 0; // rewind
-                this.getWaitingQueue().storePool();
-                this.logger.debug(this.wootEngineId + " Operation executed : " + op.toString());
-            } else {
-                this.logger.debug(this.wootEngineId + " Operation not executed :" + op.toString());
-                i++;
-            }
-        }
+        this.opLocalClock = this.opLocalClock.load();
     }
+
+    /**
+     * Serializes the clock to file.
+     * 
+     * @throws ClockException if problems occur.
+     * @see Clock#store()
+     */
+    public synchronized void unloadClock() throws ClockException
+    {
+        this.opLocalClock.store();
+    }
+
+    /**
+     * @return the PageManager instance responsible for WootPages handling.
+     * @see WootPage
+     */
+    public PageManager getPageManager()
+    {
+        return pageManager;
+    }
+
+    /**
+     * @param pageManager the pageManager to set
+     */
+    public void setPageManager(PageManager pageManager)
+    {
+        this.pageManager = pageManager;
+    }
+
 }

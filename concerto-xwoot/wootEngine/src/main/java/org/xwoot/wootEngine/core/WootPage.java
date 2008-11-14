@@ -51,6 +51,7 @@ import org.xwoot.wootEngine.WootEngineException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -67,7 +68,7 @@ public class WootPage implements Serializable
     private static final long serialVersionUID = -7726342430092268721L;
 
     /** DOCUMENT ME! */
-    public final static String SAVEDFILEEXTENSION = ".sav";
+    public final static String SAVED_FILE_EXTENSION = ".sav";
 
     private List<WootRow> rows = new ArrayList<WootRow>();
 
@@ -81,12 +82,18 @@ public class WootPage implements Serializable
      * 
      * @param b DOCUMENT ME!
      */
-    public WootPage(boolean b)
+    public WootPage(boolean addStartEndMakers)
     {
-        if (b) {
+        if (addStartEndMakers) {
             this.getRows().add(WootRow.RB);
             this.getRows().add(WootRow.RE);
         }
+    }
+    
+    public WootPage(String pageName) throws IllegalArgumentException
+    {
+        this(true);
+        setPageName(pageName);
     }
 
     /**
@@ -148,7 +155,7 @@ public class WootPage implements Serializable
         
         try {
             if (this.isSavedPage) {
-                filename = FileUtil.getEncodedFileName(this.getPageName() + WootPage.SAVEDFILEEXTENSION);
+                filename = FileUtil.getEncodedFileName(this.getPageName() + WootPage.SAVED_FILE_EXTENSION);
             }
              else {
                 filename = FileUtil.getEncodedFileName(this.getPageName());
@@ -321,12 +328,14 @@ public class WootPage implements Serializable
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param pageName DOCUMENT ME!
+     * @param pageName the pageName to set.
+     * @throws IllegalArgumentException if pageName is a null or empty String.
      */
-    public void setPageName(String pageName)
+    public void setPageName(String pageName) throws IllegalArgumentException
     {
+        if (pageName == null || pageName.isEmpty())
+            throw new IllegalArgumentException("Empty page names not allowed.");
+        
         this.pageName = pageName;
     }
 

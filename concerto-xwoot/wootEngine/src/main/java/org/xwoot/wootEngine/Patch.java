@@ -74,6 +74,30 @@ public class Patch implements Serializable
     private String pageName;
 
     /**
+     * Creates a new Patch instance.
+     * 
+     * @param data List of {@link org.xwoot.wootEngine.op.WootOp WootOp} elements representing changes in a page's
+     *            content.
+     * @param metaData List of {@link org.xwoot.thomasRuleEngine.op.ThomasRuleOp ThomasRuleOp} elements representing
+     *            changes in a page's metadata.
+     * @param pageId the name (XWiki page id) of the page that this patch applies to.
+     */
+    @SuppressWarnings("unchecked")
+    public Patch(List data, List metaData, String pageId)
+    {
+        this.elements = data;
+        this.mDelements = metaData;
+        this.pageName = pageId;
+    }
+
+    /**
+     * Default constructor.
+     */
+    public Patch()
+    {
+    }
+
+    /**
      * @return a List of {@link org.xwoot.wootEngine.op.WootOp WootOp} elements representing changes in the content of a
      *         page.
      */

@@ -200,9 +200,9 @@ public class XWootTest extends AbstractXWootTest
         this.xwoot1.addAllPageManagement();
         this.xwoot1.synchronizePages();
         assertTrue(this.xwoot1.getListOfManagedPages().size() >= 3);
-        assertEquals("toto\n", this.wootEngine1.getPage("test.1"));
-        assertEquals("titi\n", this.wootEngine1.getPage("test.2"));
-        assertEquals("tata\n", this.wootEngine1.getPage("test.3"));
+        assertEquals("toto\n", this.wootEngine1.getPageManager().getPage("test.1"));
+        assertEquals("titi\n", this.wootEngine1.getPageManager().getPage("test.2"));
+        assertEquals("tata\n", this.wootEngine1.getPageManager().getPage("test.3"));
         assertEquals("toto\n", this.xwiki1.getPageContent("test.1"));
         assertEquals("titi\n", this.xwiki1.getPageContent("test.2"));
         assertEquals("tata\n", this.xwiki1.getPageContent("test.3"));

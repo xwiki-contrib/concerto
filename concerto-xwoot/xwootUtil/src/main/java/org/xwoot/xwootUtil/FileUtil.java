@@ -48,7 +48,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,12 +63,11 @@ import java.nio.channels.FileChannel;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
@@ -124,6 +122,15 @@ public class FileUtil
         }
     }
 
+    /**
+     * Copies data from the InputStream to the OutputStream using {@link #BUFFER} bytes at a time.
+     * <p>
+     * NOTE: Both streams are <b>not</b> automatically closed, so the user will have to take care of that.
+     *  
+     * @param in the source Stream.
+     * @param out the destination Stream.
+     * @throws IOException if transfer problems occur.
+     */
     private static void copyInputStream(InputStream in, OutputStream out) throws IOException
     {
         byte[] buffer = new byte[BUFFER];
@@ -132,9 +139,6 @@ public class FileUtil
         while ((len = in.read(buffer)) >= 0) {
             out.write(buffer, 0, len);
         }
-
-        in.close();
-        out.close();
     }
 
     /**
@@ -331,26 +335,56 @@ public class FileUtil
      * zos.close(); bos.close(); fos.close(); return file.getAbsolutePath(); }
      */
     /**
-     * DOCUMENT ME!
+     * Extracts a a zip file file to a directory.
      * 
-     * @param zipFile DOCUMENT ME!
-     * @param dirPath DOCUMENT ME!
-     * @throws IOException
-     * @throws FileNotFoundException
-     * @throws Exception DOCUMENT ME!
+     * @param zippedFilePath the location of the zip file.
+     * @param dirPath the directory where to extract the zip file.
+     * @throws IOException if I/O problems occur.
+     * @throws ZipException if zip format errors occur.
+     * 
+     * @see ZipFile
      */
-    public static List unzipInDirectory(ZipFile zipFile, String dirPath) throws IOException
+    public static List<String> unzipInDirectory(String zippedFilePath, String dirPath) throws IOException, ZipException
     {
-        Enumeration entries = zipFile.entries();
-        ArrayList result = new ArrayList<String>();
-        while (entries.hasMoreElements()) {
-            ZipEntry entry = (ZipEntry) entries.nextElement();
-            FileUtil.copyInputStream(zipFile.getInputStream(entry), new BufferedOutputStream(new FileOutputStream(
-                dirPath + File.separator + entry.getName())));
-            result.add(entry.getName());
+        List<String> result = new ArrayList<String>();
+        ZipFile zippedFile = null;
+        
+        try{
+            zippedFile = new ZipFile(zippedFilePath);
+            
+            Enumeration< ? extends ZipEntry> entries = zippedFile.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = (ZipEntry) entries.nextElement();
+                String currentDestinationFilePath = dirPath + File.separator + entry.getName();
+                
+                InputStream currentZipEntryInputStream = zippedFile.getInputStream(entry);
+                BufferedOutputStream bosToFile = new BufferedOutputStream(new FileOutputStream(currentDestinationFilePath));
+                
+                try {
+                    FileUtil.copyInputStream(currentZipEntryInputStream, bosToFile);
+                } catch (IOException ioe) {
+                    throw new IOException("Error unzipping entry " + entry.getName() + ". Check disk space or write access.");
+                } finally {
+                    try{
+                        currentZipEntryInputStream.close();
+                        bosToFile.close();
+                    } catch (Exception e) {
+                        throw new IOException("Unable to close file " + currentDestinationFilePath);
+                    }
+                }
+                
+                result.add(entry.getName());
+            }
+        } finally {
+            try {
+                if (zippedFile != null ) {
+                    zippedFile.close();
+                }
+            } catch (Exception e) {
+                throw new IOException("Unable to close zip file " + zippedFile.toString());
+            }
         }
-
-        zipFile.close();
+        
         return result;
     }
 
@@ -403,6 +437,13 @@ public class FileUtil
         return file.getAbsolutePath();
     }
     
+    /**
+     * Zips a directory and saves the resulting file in the temporary directory. The file will be named "&lt;directory_name&gt;.zip".
+     *  
+     * @param directoryPath the directory to zip.
+     * @return the actual location of the resulting temporary zip file.
+     * @throws IOException if problems occur.
+     */
     public static String zipDirectory(String directoryPath) throws IOException
     {
         File tempFile = File.createTempFile(new File(directoryPath).getName(), ".zip");
