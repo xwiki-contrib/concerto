@@ -51,54 +51,51 @@ import org.xwoot.wootEngine.core.WootRow;
 import java.io.Serializable;
 
 /**
- * DOCUMENT ME!
+ * Provides the Woot operation "Insert". It is able to insert a WootRow in a page between two other rows.
  * 
- * @author molli
+ * @version $Id:$
  */
-public class WootIns extends WootOp implements Serializable
+public class WootIns extends AbstractWootOp implements Serializable
 {
+    /** Unique ID used for serialization. */
     private static final long serialVersionUID = -4385801023236126147L;
 
-    private WootRow r;
+    /** The new row that will be inserted in the page. */
+    private WootRow rowToInsert;
 
-    // private WootRow rp = null;
-    // private WootRow rn = null;
-    private WootId idRp = null;
+    /** The id of the row located before the position where the new row will be inserted. */
+    private WootId idOfPreviousRow;
 
-    private WootId idRn = null;
+    /** The id of the row locate after the position where the new row will be inserted. */
+    private WootId idOfNextRow;
 
-    // private int degree;
     /**
      * Creates a new WootIns object.
      * 
-     * @param r DOCUMENT ME!
-     * @param idP DOCUMENT ME!
-     * @param idN DOCUMENT ME!
+     * @param rowToInsert the new row that will be inserted in the page.
+     * @param idOfPreviousRow the id of the row positioned before the newly inserted row.
+     * @param idOfNextRow the id of the row positioned after the newly inserted row.
      */
-    public WootIns(WootRow r, WootId idP, WootId idN)
+    public WootIns(WootRow rowToInsert, WootId idOfPreviousRow, WootId idOfNextRow)
     {
-        this.idRp = idP;
-        this.idRn = idN;
-        this.r = r;
+        this.idOfPreviousRow = idOfPreviousRow;
+        this.idOfNextRow = idOfNextRow;
+        this.rowToInsert = rowToInsert;
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param ip DOCUMENT ME!
-     * @param in DOCUMENT ME!
-     * @param page DOCUMENT ME!
-     */
-    public void execute(int ip, int in, WootPage page)
+    /** {@inheritDoc} */
+    @Override
+    public void execute(WootPage page)
     {
-        int iprev = ip;
-        int inext = in;
-        WootId id = this.r.getWootId();
+        int indexOfPreviousRow = page.indexOfId(this.idOfPreviousRow);
+        int indexOfNextRow = page.indexOfIdAfter(indexOfPreviousRow, this.idOfNextRow);
 
-        while (iprev < (inext - 1)) {
-            int degree = page.elementAt(iprev + 1).getDegree();
+        WootId idOfRowToInsert = this.rowToInsert.getWootId();
 
-            for (int i = iprev + 2; i < inext; ++i) {
+        while (indexOfPreviousRow < (indexOfNextRow - 1)) {
+            int degree = page.elementAt(indexOfPreviousRow + 1).getDegree();
+
+            for (int i = indexOfPreviousRow + 2; i < indexOfNextRow; ++i) {
                 int d = page.elementAt(i).getDegree();
 
                 if (d < degree) {
@@ -106,169 +103,114 @@ public class WootIns extends WootOp implements Serializable
                 }
             }
 
-            for (int i = iprev + 1; i < inext; ++i) {
+            for (int i = indexOfPreviousRow + 1; i < indexOfNextRow; ++i) {
                 if (page.elementAt(i).getDegree() == degree) {
-                    int c = page.elementAt(i).getWootId().compareTo(id);
+                    int comparisonResult = page.elementAt(i).getWootId().compareTo(idOfRowToInsert);
 
-                    if (c < 0) {
-                        iprev = i;
+                    if (comparisonResult < 0) {
+                        indexOfPreviousRow = i;
                     } else {
-                        inext = i;
+                        indexOfNextRow = i;
                     }
                 }
             }
         }
 
-        page.insert(this.r, iprev);
+        page.insert(this.rowToInsert, indexOfPreviousRow);
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param page DOCUMENT ME!
+     * @return the new row that will be inserted in the page.
      */
+    public WootRow getRowToInsert()
+    {
+        return this.rowToInsert;
+    }
+
+    /**
+     * @param rowToInsert the rowToInsert to set.
+     * @see #getRowToInsert()
+     */
+    public void setRowToInsert(WootRow rowToInsert)
+    {
+        this.rowToInsert = rowToInsert;
+    }
+
+    /** {@inheritDoc} */
     @Override
-    public void execute(WootPage page)
+    public boolean canExecute(WootPage page)
     {
-        // execute(page.indexOfId(this.getIdRp()),
-        // page.indexOfId(this.getIdRn()), page);
-        int iprev = page.indexOfId(this.idRp);
-        this.execute(iprev, page.indexOfIdFrom(iprev, this.idRn), page);
+        return (page.containsById(this.idOfPreviousRow) && page.containsById(this.idOfNextRow) && !(page
+            .containsById(this.rowToInsert.getWootId())));
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
+     * @param page the page affected by this operation.
+     * @return an array containing on the first position the index of the previous row and on the second position the
+     *         index of the next row, relative to the position of the newly inserted row.
+     * @see WootOp#getAffectedRowIndexes(WootPage)
      */
-    public WootId getIdRn()
+    public int[] getAffectedRowIndexes(WootPage page)
     {
-        return this.idRn;
-    }
+        int indexOfPreviousRow = page.indexOfId(this.getIdOfPreviousRow());
 
-    /*
-     * public WootRow getPreviousRow() { return rp; } public void setPreviousRow(WootRow rp) { this.rp = rp; } public
-     * WootRow getNextRow() { return rn; } public void setNextRow(WootRow rn) { this.rn = rn; }
-     */
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public WootId getIdRp()
-    {
-        return this.idRp;
-    }
-
-    /*
-     * public int getDegree() { return degree; } public void setDegree(int degree) { this.degree = degree; }
-     */
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public WootRow getNewRow()
-    {
-        return this.r;
-    }
-
-    // List sub = getWootPage().subSeq(getPreviousRow(), getNextRow());
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param page DOCUMENT ME!
-     * @return DOCUMENT ME!
-     */
-    @Override
-    public boolean precond(WootPage page)
-    {
-        // boolean b = (page.containsById(getNextRow().getWootId()) &&
-        // page.containsById(getPreviousRow().getWootId()) &&
-        // !(page.containsById(getNewRow().getWootId())));
-        return (page.containsById(this.idRp) && page.containsById(this.idRn) && !(page.containsById(this.r.getWootId())));
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param page DOCUMENT ME!
-     * @return DOCUMENT ME!
-     */
-    public int[] precond_v2(WootPage page)
-    {
-        // boolean b = (page.containsById(getNextRow().getWootId()) &&
-        // page.containsById(getPreviousRow().getWootId()) &&
-        // !(page.containsById(getNewRow().getWootId())));
-        int p;
-
-        // boolean b = (page.containsById(getNextRow().getWootId()) &&
-        // page.containsById(getPreviousRow().getWootId()) &&
-        // !(page.containsById(getNewRow().getWootId())));
-        int n;
-        p = page.indexOfId(this.getIdRp());
-
-        if (p < 0) {
+        if (indexOfPreviousRow < 0) {
             return null;
         }
 
-        n = page.indexOfIdFrom(p, this.getIdRn());
+        int indexOfNextRow = page.indexOfIdAfter(indexOfPreviousRow, this.getIdOfNextRow());
 
-        if (n < 0) {
+        if (indexOfNextRow < 0) {
             return null;
         }
 
-        // row already exist
-        // if (page.indexOfId(getNewRow().getWootId()) >= 0) {
-        // return null;
-        // } else {
         int[] indexs = new int[2];
-        indexs[0] = p;
-        indexs[1] = n;
+        indexs[0] = indexOfPreviousRow;
+        indexs[1] = indexOfNextRow;
 
         return indexs;
-
-        // }
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param idRn DOCUMENT ME!
+     * @return the id of the row locate after the position where the new row will be inserted.
      */
-    public void setIdRn(WootId idRn)
+    public WootId getIdOfNextRow()
     {
-        this.idRn = idRn;
+        return this.idOfNextRow;
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param idRp DOCUMENT ME!
+     * @param idOfNextRow the idOfNextRow to set.
+     * @see #getIdOfNextRow()
      */
-    public void setIdRp(WootId idRp)
+    public void setIdOfNextRow(WootId idOfNextRow)
     {
-        this.idRp = idRp;
+        this.idOfNextRow = idOfNextRow;
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param r DOCUMENT ME!
+     * @return the id of the row located before the position where the new row will be inserted.
      */
-    public void setNewRow(WootRow r)
+    public WootId getIdOfPreviousRow()
     {
-        this.r = r;
+        return this.idOfPreviousRow;
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
+     * @param idOfPreviousRow the idOfPreviousRow to set.
+     * @see #getIdOfPreviousRow()
      */
+    public void setIdOfPreviousRow(WootId idOfPreviousRow)
+    {
+        this.idOfPreviousRow = idOfPreviousRow;
+    }
+
+    /** {@inheritDoc} */
     @Override
     public String toString()
     {
-        return super.toString() + "ins(" + this.getNewRow() + "," + this.getIdRp() + "," + this.getIdRn() + ")";
+        String separator = ", ";
+        return super.toString() + " insert(" + this.getRowToInsert() + separator + this.getIdOfPreviousRow()
+            + separator + this.getIdOfNextRow() + ")";
     }
 }

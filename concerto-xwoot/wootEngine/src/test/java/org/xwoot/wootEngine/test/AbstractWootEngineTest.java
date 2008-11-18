@@ -59,7 +59,7 @@ import java.io.File;
  */
 public abstract class AbstractWootEngineTest
 {
-    protected String workingDir = "/tmp/testsWoot";
+    protected String workingDir = "/tmp/xwootTests/wootEngine/";
 
     /**
      * Creates a new AbstractWootEngineTest object. DOCUMENT ME!

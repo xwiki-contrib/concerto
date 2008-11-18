@@ -89,13 +89,13 @@ public class PerformanceTests extends AbstractWootEngineTest
 
         WootIns op0 = new WootIns(new WootRow(new WootId(0, 0), line), new WootId(-1, -1), new WootId(-2, -2));
         op0.setPageName("0");
-        op0.setOpid(new WootId(0, 0));
+        op0.setOpId(new WootId(0, 0));
         data.add(op0);
 
         for (int i = 0; i < 1000; i++) {
             WootIns op = new WootIns(new WootRow(new WootId(0, i + 1), line), new WootId(-1, -1), new WootId(0, i));
             op.setPageName("0");
-            op.setOpid(new WootId(0, i + 1));
+            op.setOpId(new WootId(0, i + 1));
             // woot.ins("index", line, 0).toString();
             data.add(op);
         }

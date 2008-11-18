@@ -39,7 +39,7 @@ import com.thoughtworks.xstream.io.xml.DomDriver;
 /**
  * Handles WootPages for the internal WootEngine model.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class PageManager extends LoggedWootExceptionThrower
 {
@@ -294,7 +294,7 @@ public class PageManager extends LoggedWootExceptionThrower
             return null;
         }
 
-        return this.loadPage(pageName).toStringInternal();
+        return this.loadPage(pageName).toString();
     }
 
     /**
@@ -379,9 +379,9 @@ public class PageManager extends LoggedWootExceptionThrower
         String paragraphEnd = "</p>\n";
         for (WootRow row : page.getRows()) {
             if (row.isVisible()) {
-                sb.append("<p class=\"visibleLine\">" + row.getValue() + paragraphEnd);
+                sb.append("<p class=\"visibleLine\">" + row.getContent() + paragraphEnd);
             } else {
-                sb.append("<p class=\"invisibleLine\">" + row.getValue() + paragraphEnd);
+                sb.append("<p class=\"invisibleLine\">" + row.getContent() + paragraphEnd);
             }
         }
 

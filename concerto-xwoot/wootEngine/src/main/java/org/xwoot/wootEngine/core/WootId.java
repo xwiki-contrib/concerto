@@ -47,33 +47,33 @@ package org.xwoot.wootEngine.core;
 import java.io.Serializable;
 
 /**
- * DOCUMENT ME!
+ * Unique identifier in all P2P networks composed of siteId + internal clock value.
  * 
- * @author molli
+ * @version $Id:$
  */
+@SuppressWarnings("unchecked")
 public class WootId implements Comparable, Serializable
 {
+    /** Id of beginning of content. */
+    public static final WootId FIRST_WOOT_ID = new WootId(-1, -1);
 
+    /** Id of end char. */
+    public static final WootId LAST_WOOT_ID = new WootId(-2, -2);
+
+    /** Unique ID used for serialization. */
     private static final long serialVersionUID = -471886787872933727L;
 
-    // id of beginning
-    /** DOCUMENT ME! */
-    public static final WootId bwid = new WootId(-1, -1);
-
-    // id of end char
-    /** DOCUMENT ME! */
-    public static final WootId ewid = new WootId(-2, -2);
-
+    /** ID of the P2P Node on which it was created. (of the WootEngine) */
     private int siteId;
 
+    /** Stores the value of the clock when it was created. */
     private int localClock;
 
-    // constructor
     /**
      * Creates a new WootId object.
      * 
-     * @param siteId DOCUMENT ME!
-     * @param localClock DOCUMENT ME!
+     * @param siteId the id of the WootEngine that created it.
+     * @param localClock the value of the clock when it was created.
      */
     public WootId(int siteId, int localClock)
     {
@@ -81,31 +81,17 @@ public class WootId implements Comparable, Serializable
         this.localClock = localClock;
     }
 
-    // methods
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param o DOCUMENT ME!
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     public int compareTo(Object o)
     {
         WootId id = (WootId) o;
 
-        if (this == WootId.bwid) {
+        if (this == WootId.FIRST_WOOT_ID || id == WootId.LAST_WOOT_ID) {
             return -1;
         }
 
-        if (this == WootId.ewid) {
+        if (this == WootId.LAST_WOOT_ID || id == WootId.FIRST_WOOT_ID) {
             return 1;
-        }
-
-        if (id == WootId.bwid) {
-            return 1;
-        }
-
-        if (id == WootId.ewid) {
-            return -1;
         }
 
         if (this.siteId == id.siteId) {
@@ -115,30 +101,25 @@ public class WootId implements Comparable, Serializable
         return this.siteId - id.siteId;
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param o DOCUMENT ME!
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
-    public boolean equals(Object o)
+    public boolean equals(Object obj)
     {
-        // assert o instanceof WootId;
-        if (!(o instanceof WootId)) {
+        if (this == obj) {
+            return true;
+        }
+
+        if ((obj == null) || (obj.getClass() != this.getClass())) {
             return false;
         }
 
-        WootId wid = (WootId) o;
+        WootId other = (WootId) obj;
 
-        return (this.siteId == wid.siteId) && (this.localClock == wid.localClock);
+        return (this.siteId == other.siteId) && (this.localClock == other.localClock);
     }
 
-    // getters
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
+     * @return the value of the clock when it was created
      */
     public int getLocalClock()
     {
@@ -146,51 +127,46 @@ public class WootId implements Comparable, Serializable
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
+     * @param localClock the localClock to set.
+     * @see #getLocalClock()
+     */
+    public void setLocalClock(int localClock)
+    {
+        this.localClock = localClock;
+    }
+
+    /**
+     * @return the ID of the P2P Node on which it was created. (of the WootEngine)
      */
     public int getSiteid()
     {
         return this.siteId;
     }
 
-    // setters
     /**
-     * DOCUMENT ME!
-     * 
-     * @param i DOCUMENT ME!
+     * @param siteId the siteId to set.
+     * @see #getSiteid()
      */
-    public void setLocalClock(int i)
+    public void setSiteId(int siteId)
     {
-        this.localClock = i;
+        this.siteId = siteId;
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param id DOCUMENT ME!
-     */
-    public void setSiteId(int id)
-    {
-        this.siteId = id;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
     public String toString()
     {
         return "(wid " + this.siteId + "," + this.localClock + ")";
     }
 
+    /** {@inheritDoc} */
     @Override
     public int hashCode()
     {
-        return super.hashCode();
+        int hash = 7;
+        hash = 31 * hash + this.siteId;
+        hash = 31 * hash + this.localClock;
+        return hash;
     }
 
 }

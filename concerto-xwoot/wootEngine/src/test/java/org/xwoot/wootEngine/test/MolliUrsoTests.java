@@ -81,9 +81,9 @@ public class MolliUrsoTests extends AbstractWootEngineTest
     {
         WootEngine woot = this.createEngine(0);
         WootPage wp = woot.getPageManager().loadPage("page_s0");
-        woot.ins(wp, "lineA", 0);
-        woot.ins(wp, "lineB", 1);
-        woot.ins(wp, "lineC", 2);
+        woot.insert(wp, "lineA", 0);
+        woot.insert(wp, "lineB", 1);
+        woot.insert(wp, "lineC", 2);
         woot.getPageManager().unloadPage(wp);
         Assert.assertEquals("lineA\nlineB\nlineC\n", woot.getPageManager().getPage("page_s0"));
     }
@@ -101,8 +101,8 @@ public class MolliUrsoTests extends AbstractWootEngineTest
 
         WootPage wp1 = site0.getPageManager().loadPage("page");
         WootPage wp2 = site1.getPageManager().loadPage("page");
-        WootOp op1 = site0.ins(wp1, "Hello,", 0);
-        WootOp op2 = site1.ins(wp2, " World", 0);
+        WootOp op1 = site0.insert(wp1, "Hello,", 0);
+        WootOp op2 = site1.insert(wp2, " World", 0);
         site0.getPageManager().unloadPage(wp1);
         site1.getPageManager().unloadPage(wp2);
 
@@ -139,10 +139,10 @@ public class MolliUrsoTests extends AbstractWootEngineTest
     {
         WootEngine woot = this.createEngine(0);
         WootPage wp = woot.getPageManager().loadPage("page");
-        woot.ins(wp, "lineA", 0);
-        woot.ins(wp, "lineB", 1);
-        woot.ins(wp, "lineC", 2);
-        woot.ins(wp, "---", 0);
+        woot.insert(wp, "lineA", 0);
+        woot.insert(wp, "lineB", 1);
+        woot.insert(wp, "lineC", 2);
+        woot.insert(wp, "---", 0);
         woot.getPageManager().unloadPage(wp);
         Assert.assertEquals("---\nlineA\nlineB\nlineC\n", woot.getPageManager().getPage("page"));
     }
@@ -157,11 +157,11 @@ public class MolliUrsoTests extends AbstractWootEngineTest
     {
         WootEngine site0 = this.createEngine(0);
         WootPage wp1 = site0.getPageManager().loadPage("page");
-        site0.ins(wp1, "Erase me ! :)", 0);
+        site0.insert(wp1, "Erase me ! :)", 0);
         site0.getPageManager().unloadPage(wp1);
         Assert.assertEquals("Erase me ! :)\n", site0.getPageManager().getPage("page"));
         wp1 = site0.getPageManager().loadPage("page");
-        site0.del(wp1, 0);
+        site0.delete(wp1, 0);
         site0.getPageManager().unloadPage(wp1);
         // TODO faire un meilleur getPage pour tester les tombstones
         // assertEquals("Erase me ! :)]", page.toString());
@@ -180,9 +180,9 @@ public class MolliUrsoTests extends AbstractWootEngineTest
         WootEngine site1 = this.createEngine(1);
         WootEngine site2 = this.createEngine(2);
         WootPage wp = site0.getPageManager().loadPage("index");
-        WootOp op0 = site0.ins(wp, "a", 0);
-        WootOp op1 = site0.ins(wp, "b", 1);
-        WootOp op2 = site0.ins(wp, "c", 2);
+        WootOp op0 = site0.insert(wp, "a", 0);
+        WootOp op1 = site0.insert(wp, "b", 1);
+        WootOp op2 = site0.insert(wp, "c", 2);
         site0.getPageManager().unloadPage(wp);
         Assert.assertEquals("a\nb\nc\n", site0.getPageManager().getPage("index"));
 
@@ -203,9 +203,9 @@ public class MolliUrsoTests extends AbstractWootEngineTest
         wp = site0.getPageManager().loadPage("index");
         WootPage wp2 = site1.getPageManager().loadPage("index");
         WootPage wp3 = site2.getPageManager().loadPage("index");
-        WootOp op3 = site0.ins(wp, "y", 2);
-        WootOp op4 = site1.del(wp2, 2);
-        WootOp op5 = site2.ins(wp3, "x", 3);
+        WootOp op3 = site0.insert(wp, "y", 2);
+        WootOp op4 = site1.delete(wp2, 2);
+        WootOp op5 = site2.insert(wp3, "x", 3);
         site0.getPageManager().unloadPage(wp);
         site1.getPageManager().unloadPage(wp2);
         site2.getPageManager().unloadPage(wp3);
@@ -259,8 +259,8 @@ public class MolliUrsoTests extends AbstractWootEngineTest
         WootEngine site2 = this.createEngine(2);
 
         WootPage wp = site0.getPageManager().loadPage("index");
-        WootOp op0 = site0.ins(wp, "b", 0);
-        WootOp op1 = site0.ins(wp, "e", 1);
+        WootOp op0 = site0.insert(wp, "b", 0);
+        WootOp op1 = site0.insert(wp, "e", 1);
         site0.getPageManager().unloadPage(wp);
 
         Patch patch = new Patch();
@@ -276,8 +276,8 @@ public class MolliUrsoTests extends AbstractWootEngineTest
 
         wp = site0.getPageManager().loadPage("index");
         WootPage wp2 = site1.getPageManager().loadPage("index");
-        WootOp op2 = site0.ins(wp, "0", 1);
-        WootOp op3 = site1.ins(wp2, "1", 1);
+        WootOp op2 = site0.insert(wp, "0", 1);
+        WootOp op3 = site1.insert(wp2, "1", 1);
         site0.getPageManager().unloadPage(wp);
         site1.getPageManager().unloadPage(wp2);
 
@@ -287,7 +287,7 @@ public class MolliUrsoTests extends AbstractWootEngineTest
 
         site2.deliverPatch(patch);
         wp2 = site2.getPageManager().loadPage("index");
-        WootOp op4 = site2.ins(wp2, "2", 1);
+        WootOp op4 = site2.insert(wp2, "2", 1);
         site2.getPageManager().unloadPage(wp2);
 
         data.clear();
@@ -325,7 +325,7 @@ public class MolliUrsoTests extends AbstractWootEngineTest
         Patch patch = new Patch();
         patch.setPageName("index");
         WootPage wp = site0.getPageManager().loadPage("index");
-        WootOp op0 = site0.ins(wp, "toto titi", 0);
+        WootOp op0 = site0.insert(wp, "toto titi", 0);
         site0.getPageManager().unloadPage(wp);
 
         Assert.assertEquals("toto titi\n", site0.getPageManager().getPage("index"));
@@ -338,15 +338,15 @@ public class MolliUrsoTests extends AbstractWootEngineTest
 
         // update on site0
         wp = site0.getPageManager().loadPage("index");
-        WootOp op00 = site0.del(wp, 0);
-        WootOp op01 = site0.ins(wp, "toto titi tata", 0);
+        WootOp op00 = site0.delete(wp, 0);
+        WootOp op01 = site0.insert(wp, "toto titi tata", 0);
         site0.getPageManager().unloadPage(wp);
         Assert.assertEquals("toto titi tata\n", site0.getPageManager().getPage("index"));
 
         // update on site1
         WootPage wp2 = site1.getPageManager().loadPage("index");
-        WootOp op10 = site1.del(wp2, 0);
-        WootOp op11 = site1.ins(wp2, "toto", 0);
+        WootOp op10 = site1.delete(wp2, 0);
+        WootOp op11 = site1.insert(wp2, "toto", 0);
         site1.getPageManager().unloadPage(wp2);
 
         Assert.assertEquals("toto\n", site1.getPageManager().getPage("index"));
@@ -382,9 +382,9 @@ public class MolliUrsoTests extends AbstractWootEngineTest
 
         Vector<WootOp> data = new Vector<WootOp>();
         WootPage wp = site0.getPageManager().loadPage("index");
-        WootOp op1 = site0.ins(wp, "lineA", 0);
-        WootOp op2 = site0.ins(wp, "lineB", 1);
-        WootOp op3 = site0.ins(wp, "lineC", 2);
+        WootOp op1 = site0.insert(wp, "lineA", 0);
+        WootOp op2 = site0.insert(wp, "lineB", 1);
+        WootOp op3 = site0.insert(wp, "lineC", 2);
         site0.getPageManager().unloadPage(wp);
 
         Assert.assertEquals("lineA\nlineB\nlineC\n", site0.getPageManager().getPage("index"));
@@ -424,9 +424,9 @@ public class MolliUrsoTests extends AbstractWootEngineTest
 
         Vector<WootOp> data = new Vector<WootOp>();
         WootPage wp = site0.getPageManager().loadPage("index");
-        WootOp op1 = site0.ins(wp, "lineA", 0);
-        WootOp op2 = site0.ins(wp, "lineB", 1);
-        WootOp op3 = site0.ins(wp, "lineC", 2);
+        WootOp op1 = site0.insert(wp, "lineA", 0);
+        WootOp op2 = site0.insert(wp, "lineB", 1);
+        WootOp op3 = site0.insert(wp, "lineC", 2);
         site0.getPageManager().unloadPage(wp);
 
         Assert.assertEquals("lineA\nlineB\nlineC\n", site0.getPageManager().getPage("index"));

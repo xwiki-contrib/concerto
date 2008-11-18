@@ -50,76 +50,99 @@ import org.xwoot.wootEngine.core.WootPage;
 import java.io.Serializable;
 
 /**
- * Provides the Woot operation "Delete". It is able to delete a {@link WootRow} from a {@link WootPage} by setting the
- * {@link WootRow#visible} field to false.
+ * Abstract Woot Operation.
  * 
  * @version $Id:$
  */
-public class WootDel extends AbstractWootOp implements Serializable
+public abstract class AbstractWootOp implements WootOp, Serializable
 {
     /** Unique ID used for serialization. */
-    private static final long serialVersionUID = -780930699257733045L;
+    private static final long serialVersionUID = -4534820701699896979L;
 
-    /** The id of the {@link WootRow} to delete. */
-    private WootId idOfRowToDelete;
+    /** The associated WootId of this operation. */
+    private WootId opId;
 
-    /**
-     * Creates a new WootDel object.
-     * 
-     * @param idOfRowToDelete the id of the row that will be deleted.
-     */
-    public WootDel(WootId idOfRowToDelete)
-    {
-        this.idOfRowToDelete = idOfRowToDelete;
-    }
+    /** The name of the page on which this operation will be applied. */
+    private String pageName;
 
-    /*
-     * public void execute(WootPage page) { //assert getWootPage().contains(r); //int index = getWootPage().indexOf(r);
-     * //getWootPage().elementAt(index + 1).setVisible(false); int index = page.indexOf(r); page.elementAt(index +
-     * 1).setVisible(false); }
-     */
     /** {@inheritDoc} */
-    @Override
-    public void execute(WootPage page)
+    public abstract void execute(WootPage page);
+
+    /** {@inheritDoc} */
+    public abstract boolean canExecute(WootPage page);
+
+    /** {@inheritDoc} */
+    public abstract Object getAffectedRowIndexes(WootPage page);
+
+    /** {@inheritDoc} */
+    public WootId getOpId()
     {
-        int indexOfRowToDelete = page.indexOfId(idOfRowToDelete);
-        page.elementAt(indexOfRowToDelete).setVisible(false);
+        return this.opId;
     }
 
     /** {@inheritDoc} */
-    @Override
-    public boolean canExecute(WootPage page)
+    public void setOpId(WootId opId)
     {
-        return page.containsById(idOfRowToDelete);
+        this.opId = opId;
     }
 
     /** {@inheritDoc} */
-    public Integer getAffectedRowIndexes(WootPage page)
+    public String getPageName()
     {
-        return new Integer(page.indexOfId(idOfRowToDelete));
+        return this.pageName;
     }
 
-    /**
-     * @return The id of the {@link WootRow} to delete.
-     */
-    public WootId getIdOfRowToDelete()
+    /** {@inheritDoc} */
+    public void setPageName(String pageName)
     {
-        return this.idOfRowToDelete;
+        this.pageName = pageName;
     }
 
     /**
-     * @param idOfRowToDelete the idOfRowToDelete to set.
-     * @see #getIdOfRowToDelete()
+     * {@inheritDoc}
      */
-    public void setIdOfRowToDelete(WootId idOfRowToDelete)
-    {
-        this.idOfRowToDelete = idOfRowToDelete;
-    }
-
-    /** {@inheritDoc} */
     @Override
     public String toString()
     {
-        return super.toString() + " delete(" + this.idOfRowToDelete + ")";
+        return "siteId: " + (this.opId != null ? this.opId.getSiteid() : "null") + " opid: " + this.opId
+            + " pageName: " + this.pageName;
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj) {
+            return true;
+        }
+
+        if ((obj == null) || (obj.getClass() != this.getClass())) {
+            return false;
+        }
+
+        WootOp other = (WootOp) obj;
+
+        return (this.opId.equals(other.getOpId()) && this.pageName.equals(this.getPageName()));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode()
+    {
+        int hash = 7;
+        hash = 31 * hash + (this.opId == null ? 0 : this.opId.hashCode());
+        hash = 31 * hash + (this.pageName == null ? 0 : this.pageName.hashCode());
+        return hash;
+    }
+
+    /*
+     * public int compareTo(Object o){ return opid.compareTo(((WootOp)o).getOpid()); }
+     */
+
+    /*
+     * public WootPage getWootPage() { return wootPage; } public void setWootPage(WootPage wootPage) { this.wootPage =
+     * wootPage; }
+     */
 }

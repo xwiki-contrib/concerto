@@ -63,7 +63,7 @@ import java.io.IOException;
 /**
  * Manages the internal Woot state, applies patches and Woot operations.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class WootEngine extends LoggedWootExceptionThrower
 {
@@ -200,35 +200,29 @@ public class WootEngine extends LoggedWootExceptionThrower
     // }
 
     /**
-     * Delete from the WootPage an atomic value at a given position.
+     * Delete from the WootPage an atomic value ({@link WootRow}) at a given visible position.
      * 
      * @param page the page from which to delete.
-     * @param position the position (WootRow) to delete. (starting from 0)
+     * @param position the position (of the WootRow) to delete relative to the visible WootRows. (starting from 0)
      * @return the corresponding Woot operation that has been applied.
      * @throws WootEngineException if the given position is invalid or if problems occurred with the operations Clock.
      */
-    public WootDel del(WootPage page, int position) throws WootEngineException
+    public WootDel delete(WootPage page, int position) throws WootEngineException
     {
-        if ((position >= 0) && (position < page.size())) {
+        if ((position >= 0) && (position < page.sizeOfVisible())) {
             // FIXME: position + 1 ?
-            int deleteIndex = page.indexOfVisible(position + 1);
-            WootRow deleteRow = page.elementAt(deleteIndex);
+            WootRow deleteRow = page.visibleElementAt(position + 1);
 
-            if (!deleteRow.equals(WootRow.RE)) {
+            if (!deleteRow.equals(WootRow.LAST_WOOT_ROW)) {
                 WootDel deleteOperation = new WootDel(deleteRow.getWootId());
 
-                int currentClockValue;
                 try {
-                    currentClockValue = this.getOpLocalClock().getValue();
-                    deleteOperation.setOpid(new WootId(this.wootEngineId, currentClockValue));
-
-                    this.getOpLocalClock().tick();
+                    deleteOperation.setOpId(new WootId(this.wootEngineId, this.getOpLocalClock().tick()));
                 } catch (ClockException e) {
                     this.throwLoggedException("Problem with the clock.", e);
                 }
 
                 deleteOperation.setPageName(page.getPageName());
-                deleteOperation.setIndexRow(deleteIndex);
                 deleteOperation.execute(page);
 
                 this.logger.debug(this.wootEngineId + " Operation executed : " + deleteOperation.toString());
@@ -252,7 +246,7 @@ public class WootEngine extends LoggedWootExceptionThrower
      * @return the corresponding Woot operation that has been applied.
      * @throws WootEngineException if the given position is invalid or if problems occurred with the operations Clock.
      */
-    public WootIns ins(WootPage page, String value, int position) throws WootEngineException
+    public WootIns insert(WootPage page, String value, int position) throws WootEngineException
     {
         this.logger.debug(this.wootEngineId + " - Direct insertion in " + page.getPageName() + ", value : " + value
             + ", position : " + position);
@@ -265,7 +259,7 @@ public class WootEngine extends LoggedWootExceptionThrower
              */
             WootRow rowBeforeInsert = (insertIndex != -1) ? page.elementAt(insertIndex) : page.elementAt(0);
 
-            if (!rowBeforeInsert.equals(WootRow.RE)) {
+            if (!rowBeforeInsert.equals(WootRow.LAST_WOOT_ROW)) {
                 int indexAfterInsert = page.indexOfVisibleNext(insertIndex);
                 // FIXME: Check if it's better to use page.size() instead of page.size() + 1.
                 WootRow rowAfterInsert =
@@ -277,17 +271,14 @@ public class WootEngine extends LoggedWootExceptionThrower
                         : rowAfterInsert.getDegree());
 
                 try {
-                    int currentClockValue = this.getOpLocalClock().getValue();
-                    WootRow newRowToInsert =
-                        new WootRow(new WootId(this.wootEngineId, currentClockValue), value, degreeC);
+                    WootId insertionId = new WootId(this.wootEngineId, this.getOpLocalClock().tick());
+                    
+                    WootRow newRowToInsert = new WootRow(insertionId, value, degreeC);
 
                     WootIns insertOperation =
                         new WootIns(newRowToInsert, rowBeforeInsert.getWootId(), rowAfterInsert.getWootId());
-                    // FIXME: Reuse the wootId from the row for the operation?
-                    insertOperation.setOpid(new WootId(this.wootEngineId, currentClockValue));
+                    insertOperation.setOpId(insertionId);
                     insertOperation.setPageName(page.getPageName());
-
-                    this.getOpLocalClock().tick();
 
                     insertOperation.execute(page);
                     this.logger.debug(this.wootEngineId + " - Operation executed :  " + insertOperation.toString());
@@ -323,21 +314,43 @@ public class WootEngine extends LoggedWootExceptionThrower
         synchronized (page) {
             if (operation instanceof WootIns) {
 
-                WootIns ins = (WootIns) operation;
-                int[] indexs = new int[2];
-                indexs = ins.precond_v2(page);
+                WootIns insertOperation = (WootIns) operation;
 
                 // In case of an op reception after a setState containing this op
-                if (page.indexOfId(ins.getNewRow().getWootId()) >= 0) {
+                if (page.indexOfId(insertOperation.getRowToInsert().getWootId()) >= 0) {
 
                     this.logger.debug(this.wootEngineId
                         + " - Operation not executed because it was already executed during a state transfert. -- "
-                        + ins.getNewRow().getWootId());
+                        + insertOperation.getRowToInsert().getWootId());
+
+                    return true;
+                }
+            }
+
+            operation.execute(page);
+
+            this.logger.debug(this.wootEngineId + " - Operation executed : " + operation.toString());
+
+        }
+        /*
+        synchronized (page) {
+            if (operation instanceof WootIns) {
+
+                WootIns insertOperation = (WootIns) operation;
+                int[] indexs = new int[2];
+                indexs = insertOperation.getAffectedRowIndexes(page);
+
+                // In case of an op reception after a setState containing this op
+                if (page.indexOfId(insertOperation.getNewRow().getWootId()) >= 0) {
+
+                    this.logger.debug(this.wootEngineId
+                        + " - Operation not executed because it was already executed during a state transfert. -- "
+                        + insertOperation.getNewRow().getWootId());
 
                     return true;
                 } else if (indexs != null) {
                     // execute the operation
-                    ins.execute(indexs[0], indexs[1], page);
+                    insertOperation.execute(indexs[0], indexs[1], page);
 
                     this.logger.debug(this.wootEngineId + " - Operation executed  (" + operation.getPageName()
                         + "  -  " + page.getPageName() + ")  : " + operation.toString());
@@ -347,11 +360,10 @@ public class WootEngine extends LoggedWootExceptionThrower
             } else if (operation instanceof WootDel) {
 
                 WootDel deleteOperation = (WootDel) operation;
-                int deleteRowIndex = deleteOperation.precond_v2(page);
+                int deleteRowIndex = deleteOperation.getAffectedRowIndexes(page);
 
                 if (deleteRowIndex >= 0) {
-
-                    deleteOperation.setIndexRow(deleteRowIndex);
+                    
                     deleteOperation.execute(page);
 
                     this.logger.debug(this.wootEngineId + " - Operation executed (" + operation.getPageName() + " - "
@@ -362,6 +374,8 @@ public class WootEngine extends LoggedWootExceptionThrower
             }
         }
         return false;
+        */
+        return true;
     }
 
     /**

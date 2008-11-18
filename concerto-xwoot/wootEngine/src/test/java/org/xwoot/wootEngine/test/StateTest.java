@@ -90,7 +90,7 @@ public class StateTest extends AbstractWootEngineTest
         for (int i = 0; i < 10; i++) {
             pagesId[i] = "page" + i;
             wp = woot0.getPageManager().loadPage(pagesId[i]);
-            woot0.ins(wp, "" + i, 0);
+            woot0.insert(wp, "" + i, 0);
             woot0.getPageManager().unloadPage(wp);
         }
 
@@ -120,9 +120,9 @@ public class StateTest extends AbstractWootEngineTest
         // generate ops with dependencies on site 0
         Vector<WootOp> data = new Vector<WootOp>();
         WootPage wp = site0.getPageManager().loadPage("index");
-        WootOp op1 = site0.ins(wp, "lineA", 0);
-        WootOp op2 = site0.ins(wp, "lineB", 1);
-        WootOp op3 = site0.ins(wp, "lineC", 2);
+        WootOp op1 = site0.insert(wp, "lineA", 0);
+        WootOp op2 = site0.insert(wp, "lineB", 1);
+        WootOp op3 = site0.insert(wp, "lineC", 2);
         site0.getPageManager().unloadPage(wp);
 
         // export state of site 0

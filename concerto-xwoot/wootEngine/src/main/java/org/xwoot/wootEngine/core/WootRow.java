@@ -47,134 +47,73 @@ package org.xwoot.wootEngine.core;
 import java.io.Serializable;
 
 /**
- * DOCUMENT ME!
+ * Handles the content of a row of text.
  * 
- * @author nabil
+ * @version $Id:$
  */
+@SuppressWarnings("unchecked")
 public class WootRow implements Comparable, Serializable
 {
+    /** The first row in a page's content. */
+    public static final WootRow FIRST_WOOT_ROW = new WootRow(WootId.FIRST_WOOT_ID, "[", 0);
+
+    /** The last row in a page's content. */
+    public static final WootRow LAST_WOOT_ROW = new WootRow(WootId.LAST_WOOT_ID, "]", 0);
+    
+    /** Unique ID used for serialization. */
     private static final long serialVersionUID = 4769231469557831085L;
 
-    // begin wootRow
-    /** DOCUMENT ME! */
-    public final static WootRow RB = new WootRow(WootId.bwid, "[", 0);
-
-    // end wootRow
-    /** DOCUMENT ME! */
-    public final static WootRow RE = new WootRow(WootId.ewid, "]", 0);
-
+    /** The ID of this row. */
     private WootId wootId;
 
-    private boolean visible = true;
+    /** If this row is visible or not. */
+    private boolean visible;
 
-    private String value;
+    /** The text content of this row. */
+    private String content;
 
+    /** The degree of this row. */
     private int degree;
 
     /**
-     * Creates a new WootRow object.
+     * Equivalent to {@link WootRow#WootRow(WootId, String, int) WootRow(wootId, null, 0)}.
      * 
-     * @param wid DOCUMENT ME!
+     * @param wootId the ID of this row.
      */
-    public WootRow(WootId wid)
+    public WootRow(WootId wootId)
     {
-        this.wootId = wid;
+        this(wootId, null, 0);
+    }
+
+    /**
+     * Equivalent to {@link WootRow#WootRow(WootId, String, int) WootRow(wootId, value, 0)}.
+     * 
+     * @param wootId the ID of this row.
+     * @param value the content of this row.
+     */
+    public WootRow(WootId wootId, String value)
+    {
+        this(wootId, value, 0);
     }
 
     /**
      * Creates a new WootRow object.
      * 
-     * @param id DOCUMENT ME!
-     * @param value DOCUMENT ME!
-     */
-    public WootRow(WootId id, String value)
-    {
-        this(id);
-        this.value = value;
-    }
-
-    /**
-     * Creates a new WootRow object.
-     * 
-     * @param wootId DOCUMENT ME!
-     * @param value DOCUMENT ME!
-     * @param degree DOCUMENT ME!
+     * @param wootId the ID of this row.
+     * @param value the content of this row.
+     * @param degree the degree of this row.
      */
     public WootRow(WootId wootId, String value, int degree)
     {
-        this(wootId);
-        this.value = value;
+        this.wootId = wootId;
+        this.content = value;
         this.degree = degree;
+        
+        this.visible = true;
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param o DOCUMENT ME!
-     * @return DOCUMENT ME!
-     */
-    public int compareTo(Object o)
-    {
-        WootRow r = (WootRow) o;
-
-        return this.getWootId().compareTo(r.getWootId());
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param o DOCUMENT ME!
-     * @return DOCUMENT ME!
-     */
-    @Override
-    public boolean equals(Object o)
-    {
-        // assert o instanceof WootRow;
-        if (!(o instanceof WootRow)) {
-            return false;
-        }
-
-        WootRow wr = (WootRow) o;
-
-        return this.wootId.equals(wr.getWootId());
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public int getDegree()
-    {
-        return this.degree;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public String getValue()
-    {
-        return this.value;
-    }
-
-    // getters
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public WootId getWootId()
-    {
-        return this.wootId;
-    }
-
-    // methods
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
+     * @return true if the current WootRow is visible, false otherwise.
      */
     public boolean isVisible()
     {
@@ -182,9 +121,25 @@ public class WootRow implements Comparable, Serializable
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param degree DOCUMENT ME!
+     * @param visible the visible boolean value to set.
+     * @see #isVisible()
+     */
+    public void setVisible(boolean visible)
+    {
+        this.visible = visible;
+    }
+
+    /**
+     * @return the degree of this row.
+     */
+    public int getDegree()
+    {
+        return this.degree;
+    }
+
+    /**
+     * @param degree the degree to set.
+     * @see #getDegree()
      */
     public void setDegree(int degree)
     {
@@ -192,52 +147,76 @@ public class WootRow implements Comparable, Serializable
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param value DOCUMENT ME!
+     * @return the text content of this row.
      */
-    public void setValue(String value)
+    public String getContent()
     {
-        this.value = value;
+        return this.content;
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param visible DOCUMENT ME!
+     * @param content the value to set.
      */
-    public void setVisible(boolean visible)
+    public void setContent(String content)
     {
-        this.visible = visible;
+        this.content = content;
     }
 
-    // setters
     /**
-     * DOCUMENT ME!
-     * 
-     * @param wootId DOCUMENT ME!
+     * @return the ID of this row.
+     */
+    public WootId getWootId()
+    {
+        return this.wootId;
+    }
+
+    /**
+     * @param wootId to set.
+     * @see #getWootId()
      */
     public void setWid(WootId wootId)
     {
         this.wootId = wootId;
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
     public String toString()
     {
-        return "(wRow " + this.wootId + "." + this.visible + "." + this.value + ")";
+        String separator = ", ";
+        return "(wRow " + this.wootId + separator + this.visible + separator + this.content + ")";
     }
 
+    /** {@inheritDoc} */
+    public int compareTo(Object o)
+    {
+        WootRow other = (WootRow) o;
+
+        return this.getWootId().compareTo(other.getWootId());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) {
+            return true;
+        }
+
+        if ((o == null) || (o.getClass() != this.getClass())) {
+            return false;
+        }
+
+        WootRow other = (WootRow) o;
+
+        return this.wootId.equals(other.getWootId());
+    }
+
+    /** {@inheritDoc} */
     @Override
     public int hashCode()
     {
-        // TODO Auto-generated method stub
-        return super.hashCode();
+        return this.wootId.hashCode();
     }
 
 }

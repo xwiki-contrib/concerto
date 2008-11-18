@@ -1,45 +1,21 @@
-/**
- * 
- *        -- class header / Copyright (C) 2008  100 % INRIA / LGPL v2.1 --
- * 
- *  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- *  Copyright (C) 2008  100 % INRIA
- *  Authors :
- *                       
- *                       Gerome Canals
- *                     Nabil Hachicha
- *                     Gerald Hoster
- *                     Florent Jouille
- *                     Julien Maire
- *                     Pascal Molli
- * 
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- * 
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- * 
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- * 
- *  INRIA disclaims all copyright interest in the application XWoot written
- *  by :    
- *          
- *          Gerome Canals
- *         Nabil Hachicha
- *         Gerald Hoster
- *         Florent Jouille
- *         Julien Maire
- *         Pascal Molli
- * 
- *  contact : maire@loria.fr
- *  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- *  
+/*
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
 package org.xwoot.wootEngine.op;
@@ -47,121 +23,56 @@ package org.xwoot.wootEngine.op;
 import org.xwoot.wootEngine.core.WootId;
 import org.xwoot.wootEngine.core.WootPage;
 
-import java.io.Serializable;
-
 /**
- * DOCUMENT ME!
+ * Describes the structure of a Woot operation that each class implementing this interface will have to provide.
  * 
- * @author molli
+ * @version $Id:$
  */
-public abstract class WootOp implements Serializable
+public interface WootOp
 {
     /**
+     * Applies this operation on a WootPage.
+     * <p>
+     * Users have to implement the behavior of the operation trough this method.
      * 
+     * @param page the page where to execute this operation.
+     * @return true if the operation was executed successfully, false otherwise.
      */
-    private static final long serialVersionUID = -4534820701699896979L;
-
-    private WootId opid;
-
-    private String pageName;
-
-    /*
-     * public int compareTo(Object o){ return opid.compareTo(((WootOp)o).getOpid()); }
-     */
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param o DOCUMENT ME!
-     * @return DOCUMENT ME!
-     */
-    @Override
-    public boolean equals(Object o)
-    {
-        // assert o instanceof WootOp;
-        if (!(o instanceof WootOp)) {
-            return false;
-        }
-
-        return this.getOpid().equals(((WootOp) o).getOpid());
-    }
+    void execute(WootPage page);
 
     /**
-     * DOCUMENT ME!
+     * Checks whether this operation can be applied on a page or not.
      * 
-     * @param page DOCUMENT ME!
+     * @param page the page the check.
+     * @return true if it can be applied, false otherwise.
      */
-    abstract public void execute(WootPage page);
+    boolean canExecute(WootPage page);
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
+     * @param page the page this operation affects.
+     * @return the indexes of the {@link WootRow}s affected by this operation.
      */
-    public WootId getOpid()
-    {
-        return this.opid;
-    }
+    Object getAffectedRowIndexes(WootPage page);
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
+     * @return the associated WootId of this operation.
      */
-    public String getPageName()
-    {
-        return this.pageName;
-    }
+    WootId getOpId();
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param page DOCUMENT ME!
-     * @return DOCUMENT ME!
+     * @param opId the opId to set.
+     * @see #getOpId()
      */
-    abstract public boolean precond(WootPage page);
+    void setOpId(WootId opId);
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param opid DOCUMENT ME!
+     * @return the name of the page on which this operation will be applied.
      */
-    public void setOpid(WootId opid)
-    {
-        this.opid = opid;
-    }
+    String getPageName();
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param pageName DOCUMENT ME!
+     * @param pageName the pageName to set.
+     * @see #getPageName()
      */
-    public void setPageName(String pageName)
-    {
-        this.pageName = pageName;
-    }
-
-    /*
-     * public WootPage getWootPage() { return wootPage; } public void setWootPage(WootPage wootPage) { this.wootPage =
-     * wootPage; }
-     */
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    @Override
-    public String toString()
-    {
-        String s = " siteId: " + this.opid.getSiteid() + " opid: " + this.opid;
-
-        return s;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        // TODO Auto-generated method stub
-        return super.hashCode();
-    }
-
+    void setPageName(String pageName);
 }

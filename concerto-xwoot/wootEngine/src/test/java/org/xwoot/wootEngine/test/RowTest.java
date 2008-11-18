@@ -71,7 +71,7 @@ public class RowTest extends AbstractWootEngineTest
     @Test
     public void testCBCE()
     {
-        Assert.assertTrue(WootRow.RB.compareTo(WootRow.RE) < 0);
+        Assert.assertTrue(WootRow.FIRST_WOOT_ROW.compareTo(WootRow.LAST_WOOT_ROW) < 0);
     }
 
     /**
