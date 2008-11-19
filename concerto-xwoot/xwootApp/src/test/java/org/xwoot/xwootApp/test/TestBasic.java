@@ -261,7 +261,7 @@ public class TestBasic extends AbstractXWootTest
         Vector<WootOp> vector = new Vector<WootOp>();
         WootIns op0 = new WootIns(new WootRow(new WootId(0, 0), "titi"), new WootId(-1, -1), new WootId(-2, -2));
         op0.setPageName(page.getPageName());
-        op0.setOpid(new WootId(0, 0));
+        op0.setOpId(new WootId(0, 0));
         vector.add(op0);
         patch.setData(vector);
         patch.setPageName(page.getPageName());
@@ -698,7 +698,7 @@ public class TestBasic extends AbstractXWootTest
         WootIns op0 =
             new WootIns(new WootRow(new WootId(0, 0), "Ligne 1 sur xwiki1"), new WootId(-1, -1), new WootId(-2, -2));
         op0.setPageName(page.getPageName());
-        op0.setOpid(new WootId(0, 0));
+        op0.setOpId(new WootId(0, 0));
         vector.add(op0);
         patch.setData(vector);
         patch.setPageName("test.1");

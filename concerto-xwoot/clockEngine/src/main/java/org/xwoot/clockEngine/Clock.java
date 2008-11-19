@@ -106,30 +106,35 @@ public class Clock implements Serializable
     {
         this.clock = value;
     }
-    
+
     /**
      * Increments the clock's value.
      * 
      * @param units the number of units by which to increment the clock's value.
+     * @return the clock's value right before ticking.
      * @throws ClockException if problems occur.
      */
-    public void tick(int units) throws ClockException
+    public int tick(int units) throws ClockException
     {
-        this.setValue(this.getValue() + units);
+        int oldValue = this.getValue();
+
+        this.setValue(oldValue + units);
+
+        return oldValue;
     }
-    
+
     /**
      * Increments the clock's value by exactly 1 unit.
      * <p>
      * Equivalent to tick(1).
      * 
+     * @return the clock's value right before ticking.
      * @throws ClockException if problems occur.
-     * 
      * @see #tick(int)
      */
-    public void tick() throws ClockException
+    public int tick() throws ClockException
     {
-        this.tick(1);
+        return this.tick(1);
     }
 
     /**

@@ -730,7 +730,7 @@ public class XWoot implements XWootAPI
                         String line = (String) it.next();
                         WootOp ins = null;
                         try {
-                            ins = this.getWootEngine().ins(page, line, (pos + i));
+                            ins = this.getWootEngine().insert(page, line, (pos + i));
                         } catch (WootEngineException e) {
                             throw new XWootException(this.siteId+" : Problem when synchronizing content",e);
                         }
@@ -745,7 +745,7 @@ public class XWoot implements XWootAPI
                     for (int i = 0; i < nbOfLine; i++) {
                         WootOp del = null;
                         try {
-                            del = this.getWootEngine().del(page, pos);
+                            del = this.getWootEngine().delete(page, pos);
                         } catch (WootEngineException e) {
                             throw new XWootException(this.siteId+" : Problem when synchronizing content",e); 
                         }
