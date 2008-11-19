@@ -61,12 +61,12 @@ import junit.framework.Assert;
  * @author $author$
  * @version $Revision$
  */
-public class MolliUrsoTests extends AbstractWootEngineTest
+public class MolliUrsoTest extends AbstractWootEngineTest
 {
     /**
      * Creates a new MolliUrsoTests object.
      */
-    public MolliUrsoTests()
+    public MolliUrsoTest()
     {
         super();
     }

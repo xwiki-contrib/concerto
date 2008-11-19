@@ -302,16 +302,20 @@ public class WootEngine extends LoggedWootExceptionThrower
      * @param operation the operation to apply.
      * @param page the page on which to apply the operation.
      * @return true if the operation has been applied, false otherwise or if the operation was not indented for the
-     *         specified page.
+     *         specified page or this operation is not yet applicable for this page.
      */
     private boolean executeOp(WootOp operation, WootPage page)
     {
-        // FIXME: Rewrite this section after refactoring wootEndigne.op package.
         if (!operation.getPageName().equals(page.getPageName())) {
             return false;
         }
 
         synchronized (page) {
+            // If the operation can not yet be applied because the targeted content does not exist.
+            if (operation.getAffectedRowIndexes(page) == null) {
+                return false;
+            }
+            
             if (operation instanceof WootIns) {
 
                 WootIns insertOperation = (WootIns) operation;

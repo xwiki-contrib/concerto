@@ -60,12 +60,12 @@ import java.util.Vector;
  * @author $author$
  * @version $Revision$
  */
-public class PerformanceTests extends AbstractWootEngineTest
+public class PerformanceTest extends AbstractWootEngineTest
 {
     /**
      * Creates a new PerformanceTests object. DOCUMENT ME!
      */
-    public PerformanceTests()
+    public PerformanceTest()
     {
         super();
     }

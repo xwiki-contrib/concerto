@@ -53,7 +53,7 @@ import java.io.Serializable;
  * Provides the Woot operation "Delete". It is able to delete a {@link WootRow} from a {@link WootPage} by setting the
  * {@link WootRow#visible} field to false.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class WootDel extends AbstractWootOp implements Serializable
 {
@@ -96,7 +96,8 @@ public class WootDel extends AbstractWootOp implements Serializable
     /** {@inheritDoc} */
     public Integer getAffectedRowIndexes(WootPage page)
     {
-        return new Integer(page.indexOfId(idOfRowToDelete));
+        int affectedRowIndex = page.indexOfId(idOfRowToDelete); 
+        return (affectedRowIndex < 0 ? null : new Integer(affectedRowIndex));
     }
 
     /**
