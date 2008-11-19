@@ -64,14 +64,6 @@ import junit.framework.Assert;
 public class MolliUrsoTest extends AbstractWootEngineTest
 {
     /**
-     * Creates a new MolliUrsoTests object.
-     */
-    public MolliUrsoTest()
-    {
-        super();
-    }
-
-    /**
      * DOCUMENT ME!
      * 
      * @throws Exception DOCUMENT ME!

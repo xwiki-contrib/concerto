@@ -65,14 +65,6 @@ import junit.framework.Assert;
 public class StateTest extends AbstractWootEngineTest
 {
     /**
-     * Creates a new StateTest object.
-     */
-    public StateTest()
-    {
-        super();
-    }
-
-    /**
      * DOCUMENT ME!
      * 
      * @throws Exception DOCUMENT ME!

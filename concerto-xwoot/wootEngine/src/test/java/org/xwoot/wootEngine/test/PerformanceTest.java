@@ -63,14 +63,6 @@ import java.util.Vector;
 public class PerformanceTest extends AbstractWootEngineTest
 {
     /**
-     * Creates a new PerformanceTests object. DOCUMENT ME!
-     */
-    public PerformanceTest()
-    {
-        super();
-    }
-
-    /**
      * DOCUMENT ME!
      * 
      * @throws Exception DOCUMENT ME!

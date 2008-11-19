@@ -82,6 +82,8 @@ public class FileUtil
 {
     /** DOCUMENT ME! */
     public static final int BUFFER = 2048;
+    
+    public static final String TESTS_DIRECTORY_NAME = "xwootTests";
 
     private FileUtil()
     {
@@ -148,6 +150,10 @@ public class FileUtil
      */
     public static void deleteDirectory(File dir)
     {
+        if (dir == null) {
+            throw new NullPointerException("A null value was provided instead of a File object.");
+        }
+        
         if (dir.exists()) {
             String[] children = dir.list();
 
@@ -162,6 +168,15 @@ public class FileUtil
 
             dir.delete();
         }
+    }
+    
+    public static void deleteDirectory(String directoryPath)
+    {
+        if (directoryPath == null || directoryPath.isEmpty()) {
+            throw new InvalidParameterException("An empty or null value was provided for directory path.");
+        }
+        
+        deleteDirectory(new File(directoryPath));
     }
 
     /**
@@ -472,7 +487,16 @@ public class FileUtil
             throw new IOException(directoryPath + " -- isn't writable");
         }
     }
-    
+
+    /**
+     * Serializes an object to file using the {@link ObjectOutputStream#writeObject(Object)} method. 
+     * 
+     * @param object the object to save.
+     * @param filePath the path of the file where to save the object.
+     * @throws Exception if problems occur saving the object.
+     * 
+     * @see {@link #loadObjectFromFile(String)}
+     */
     public static void saveObjectToFile(Object object, String filePath) throws Exception
     {
         FileOutputStream fout = null;
@@ -500,6 +524,14 @@ public class FileUtil
         }
     }
     
+    /**
+     * Loads an object from file. The object must have been previously serialized using the {@link ObjectOutputStream#writeObject(Object)} method.
+     *  
+     * @param filePath the file to load from.
+     * @return the read object.
+     * @throws Exception if the file was not found or problems reading the object occured.
+     * @see #saveObjectToFile(Object, String)
+     */
     public static Object loadObjectFromFile(String filePath) throws Exception
     {
         FileInputStream fis = null;
@@ -523,5 +555,34 @@ public class FileUtil
                 throw new Exception("Problems closing the file " + filePath + " after loading an object from it: ", e);
             }
         }
+    }
+    
+    /**
+     * @return the operating-system-independent temporary directory.
+     */
+    public static String getSystemTemporaryDirectory()
+    {
+        return System.getProperty("java.io.tmpdir");
+    }
+    
+    /**
+     * @return the working directory for tests.
+     */
+    public static String getTestsWorkingDirectoryPath()
+    {
+        return getSystemTemporaryDirectory() + File.separator + TESTS_DIRECTORY_NAME;
+    }
+    
+    /**
+     * @param moduleName the name of the module.
+     * @return the working directory for tests for the specified module.
+     */
+    public static String getTestsWorkingDirectoryPathForModule(String moduleName)
+    {
+        if (moduleName == null || moduleName.isEmpty()) {
+            throw new InvalidParameterException("Module name must not be null or empty.");
+        }
+        
+        return getTestsWorkingDirectoryPath() + File.separator + moduleName;
     }
 }

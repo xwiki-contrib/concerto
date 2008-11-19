@@ -48,78 +48,63 @@ import org.junit.Before;
 import org.xwoot.clockEngine.Clock;
 
 import org.xwoot.wootEngine.WootEngine;
+import org.xwoot.xwootUtil.FileUtil;
 
 import java.io.File;
+import java.io.IOException;
+import java.security.InvalidParameterException;
 
 /**
- * DOCUMENT ME!
+ * Abstract Test body for wootEngine tests.
+ * <p>
+ * Just add tests.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
 public abstract class AbstractWootEngineTest
 {
-    protected String workingDir = "/tmp/xwootTests/wootEngine/";
+    protected String workingDir = FileUtil.getTestsWorkingDirectoryPathForModule("wootEngine");
 
     /**
-     * Creates a new AbstractWootEngineTest object. DOCUMENT ME!
+     * Creates a new AbstractWootEngineTest object.
+     * 
+     * @throws IOException if the workingDirectory is not usable.
+     * @throws InvalidParameterException if the workingDirectory is a null or empty string.
      */
     public AbstractWootEngineTest()
     {
-        if (!new File(this.workingDir).exists()) {
-            new File(this.workingDir).mkdirs();
+        try {
+            FileUtil.checkDirectoryPath(this.workingDir);
+        } catch (Exception e) {
+            throw new RuntimeException("The working directory " + this.workingDir + " for this test is not usable.", e);
         }
     }
 
-    protected void cleanTests(String directory) throws Exception
-    {
-        File rootDir = new File(directory);
-
-        if (rootDir.exists()) {
-            String[] children = rootDir.list();
-
-            for (String s : children) {
-                File toErase = new File(directory, s);
-
-                if (toErase.isDirectory()) {
-                    this.cleanTests(toErase.toString());
-                } else {
-                    toErase.delete();
-                }
-            }
-
-            rootDir.delete();
-        }
-    }
-
+    /**
+     * Creates a wootEngine and stores it in a sub-directory of the test's working directory having the same name as the
+     * ID of the newly created WootEngine instance.
+     * 
+     * @param id the id of the new WootEngine instance.
+     * @return the newly created WootEngine instance.
+     * @throws Exception if problems occur initializing the wootEngine or it's components.
+     */
     protected WootEngine createEngine(int id) throws Exception
     {
-        File working = new File(this.workingDir);
+        String engineWorkingDirectoryPath = this.workingDir + File.separator + id;
+        FileUtil.checkDirectoryPath(engineWorkingDirectoryPath);
 
-        if (!working.exists()) {
-            if (!working.mkdir()) {
-                throw new RuntimeException("Can't create clocks directory: " + this.workingDir);
-            }
-        }
-
-        File testsDir = new File(this.workingDir + File.separator + id);
-
-        if (!testsDir.exists()) {
-            if (!testsDir.mkdir()) {
-                throw new RuntimeException("Can't create clocks directory: " + this.workingDir);
-            }
-        }
-
-        Clock clock = new Clock(testsDir.toString());
-
-        WootEngine wootEngine = new WootEngine(id, testsDir.toString(), clock);
+        Clock clock = new Clock(engineWorkingDirectoryPath);
+        WootEngine wootEngine = new WootEngine(id, engineWorkingDirectoryPath, clock);
 
         return wootEngine;
     }
 
+    /**
+     * Clears the test's working directory if it exists.
+     */
     @Before
-    public void setUp() throws Exception
+    public void setUp()
     {
-        this.cleanTests(this.workingDir + File.separator);
+        FileUtil.deleteDirectory(this.workingDir);
     }
 }

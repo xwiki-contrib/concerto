@@ -58,14 +58,6 @@ import junit.framework.Assert;
 public class RowTest extends AbstractWootEngineTest
 {
     /**
-     * Creates a new RowTest object. DOCUMENT ME!
-     */
-    public RowTest()
-    {
-        super();
-    }
-
-    /**
      * DOCUMENT ME!
      */
     @Test
