@@ -288,13 +288,29 @@ public class PageManager extends LoggedWootExceptionThrower
      * @see WootPage#toHumanString()
      * @see #loadPage(String)
      */
-    public String getPageToStringInternal(String pageName) throws WootEngineException
+    public String getPageInternal(String pageName) throws WootEngineException
     {
         if (!this.pageExists(pageName)) {
             return null;
         }
 
         return this.loadPage(pageName).toString();
+    }
+    
+    /**
+     * @param pageName the name of the page.
+     * @return only the visible content of the page, as stored internally or null if the page does not exist.
+     * @throws WootEngineException if problems occur while accessing the page.
+     * @see #loadPage(String)
+     * @see WootPage#toVisibleString()
+     */
+    public String getPageInternalVisible(String pageName) throws WootEngineException
+    {
+        if (!this.pageExists(pageName)) {
+            return null;
+        }
+
+        return this.loadPage(pageName).toVisibleString();
     }
 
     /**

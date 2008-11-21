@@ -142,63 +142,6 @@ public class WootEngine extends LoggedWootExceptionThrower
         this.getWaitingQueue().initializePool(true);
     }
 
-    // /**
-    // * DOCUMENT ME!
-    // *
-    // * @param pageName DOCUMENT ME!
-    // * @param line DOCUMENT ME!
-    // * @param pos DOCUMENT ME!
-    // *
-    // * @return DOCUMENT ME!
-    // *
-    // * @throws Exception DOCUMENT ME!
-    // */
-    // public synchronized WootIns ins(String pageName, String line, int pos)
-    // throws Exception {
-    // if (!this.pageExist(pageName)) {
-    // this.createPage(pageName);
-    // }
-    //
-    // WootPage page = this.loadPage(pageName);
-    // this.logger.debug(this.wootEngineId + " Direct insertion in " + pageName
-    // + ", value : " + line + ", position : " + pos);
-    //
-    // WootIns result = this.ins(page, line, pos);
-    // this.storePage(page);
-    // this.unloadPage(page);
-    //
-    // return result;
-    // }
-    //
-    // /**
-    // * DOCUMENT ME!
-    // *
-    // * @param pageName DOCUMENT ME!
-    // * @param pos DOCUMENT ME!
-    // *
-    // * @return DOCUMENT ME!
-    // *
-    // * @throws Exception DOCUMENT ME!
-    // */
-    // public synchronized WootDel del(String pageName, int pos) throws
-    // Exception {
-    // if (!this.pageExist(pageName)) {
-    // this.createPage(pageName);
-    // }
-    //
-    // WootPage page = this.loadPage(pageName);
-    //
-    // this.logger.debug(this.wootEngineId + "Direct suppression in pageName : "
-    // + pageName + ", value : " + page.getRows().get(pos + 1).getValue() +
-    // ", position : " + pos);
-    //
-    // WootDel result = this.del(page, pos);
-    // this.storePage(page);
-    // this.unloadPage(page);
-    //
-    // return result;
-    // }
-
     /**
      * Delete from the WootPage an atomic value ({@link WootRow}) at a given visible position.
      * 
@@ -210,7 +153,7 @@ public class WootEngine extends LoggedWootExceptionThrower
     public WootDel delete(WootPage page, int position) throws WootEngineException
     {
         if ((position >= 0) && (position < page.sizeOfVisible())) {
-            // FIXME: position + 1 ?
+            // skip the default first row.
             WootRow deleteRow = page.visibleElementAt(position + 1);
 
             if (!deleteRow.equals(WootRow.LAST_WOOT_ROW)) {
@@ -253,15 +196,11 @@ public class WootEngine extends LoggedWootExceptionThrower
 
         if ((position >= 0) && (position <= page.size())) {
             int insertIndex = page.indexOfVisible(position);
-            /*
-             * FIXME: If position > page rows => insertion should be done at the last row, not the first. (Insertion at
-             * the end of the page.) TODO: Check this.
-             */
             WootRow rowBeforeInsert = (insertIndex != -1) ? page.elementAt(insertIndex) : page.elementAt(0);
 
             if (!rowBeforeInsert.equals(WootRow.LAST_WOOT_ROW)) {
                 int indexAfterInsert = page.indexOfVisibleNext(insertIndex);
-                // FIXME: Check if it's better to use page.size() instead of page.size() + 1.
+                
                 WootRow rowAfterInsert =
                     (indexAfterInsert != -1) ? page.elementAt(indexAfterInsert) : page.elementAt(page.size() + 1);
 
@@ -281,7 +220,7 @@ public class WootEngine extends LoggedWootExceptionThrower
                     insertOperation.setPageName(page.getPageName());
 
                     insertOperation.execute(page);
-                    this.logger.debug(this.wootEngineId + " - Operation executed :  " + insertOperation.toString());
+                    this.logger.debug(this.wootEngineId + " - Operation executed :   " + insertOperation.toString());
 
                     return insertOperation;
                 } catch (ClockException e) {
@@ -333,7 +272,7 @@ public class WootEngine extends LoggedWootExceptionThrower
 
             operation.execute(page);
 
-            this.logger.debug(this.wootEngineId + " - Operation executed : " + operation.toString());
+            this.logger.debug(this.wootEngineId + " - Operation executed :  " + operation.toString());
 
         }
         /*

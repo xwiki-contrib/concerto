@@ -46,101 +46,110 @@ package org.xwoot.wootEngine.test;
 
 import org.junit.Test;
 import org.xwoot.wootEngine.Patch;
-import org.xwoot.wootEngine.WootEngine;
 import org.xwoot.wootEngine.core.WootPage;
 import org.xwoot.wootEngine.op.WootOp;
 
 import java.io.File;
 
+import java.util.List;
+import java.util.Random;
 import java.util.Vector;
 
 import junit.framework.Assert;
 
 /**
- * DOCUMENT ME!
+ * Test the state transfer.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
 public class StateTest extends AbstractWootEngineTest
 {
     /**
-     * DOCUMENT ME!
+     * Create a couple of pages on an engine and, from another engine, request and set that state.
+     * <p>
+     * Result: Both engines will contain the same pages.
      * 
-     * @throws Exception DOCUMENT ME!
+     * @throws Exception if loading/unloading pages or state exchange problems occur.
      */
     @Test
     public void testCreateAndImportState() throws Exception
     {
-        WootEngine woot0 = this.createEngine(0);
-        WootEngine woot1 = this.createEngine(1);
-
         // create 10 pages on site 0
-        int nbPages = 10;
-        String[] pagesId = new String[nbPages];
+        int numberOfPages = 10;
+        String[] pagesId = new String[numberOfPages];
         WootPage wp = null;
         for (int i = 0; i < 10; i++) {
-            pagesId[i] = "page" + i;
-            wp = woot0.getPageManager().loadPage(pagesId[i]);
-            woot0.insert(wp, "" + i, 0);
-            woot0.getPageManager().unloadPage(wp);
+            pagesId[i] = pageName + i;
+            wp = site0.getPageManager().loadPage(pagesId[i]);
+            site0.insert(wp, line1 + i, 0);
+            site0.getPageManager().unloadPage(wp);
         }
 
         // export state of site 0
-        File state = woot0.getState();
+        File state = site0.getState();
 
         // import state in site 1
-        woot1.setState(state);
+        site1.setState(state);
 
         // tests
-        Assert.assertEquals(woot0.getPageManager().listPages().length, nbPages);
-        Assert.assertEquals(woot0.getPageManager().listPages().length, woot1.getPageManager().listPages().length);
+        Assert.assertEquals(site0.getPageManager().listPages().length, numberOfPages);
+        Assert.assertEquals(site0.getPageManager().listPages().length, site1.getPageManager().listPages().length);
+
+        // Pick a random page from the previously generated.
+        int randomPageNumber = new Random().nextInt() % numberOfPages;
+        String randomPageName = pageName + randomPageNumber;
+
+        // test if the contents of the pages match on both sites.
+        Assert.assertEquals(site0.getPageManager().getPageInternal(randomPageName), site1.getPageManager()
+            .getPageInternal(randomPageName));
     }
 
     /**
-     * DOCUMENT ME!
+     * Make a state exchange and then re-send changes that are already included in the exchanged state.
+     * <p>
+     * As a result: The duplicate changes will get detected and discarded, both engines having the same content in the
+     * end.
      * 
-     * @throws Exception DOCUMENT ME!
+     * @throws Exception if loading/unloading pages or state exchange problems occur.
      */
     @Test
     public void testStateAndPool() throws Exception
     {
-        // create 2 sites
-        WootEngine site0 = this.createEngine(0);
-        WootEngine site1 = this.createEngine(1);
-
         // generate ops with dependencies on site 0
-        Vector<WootOp> data = new Vector<WootOp>();
-        WootPage wp = site0.getPageManager().loadPage("index");
-        WootOp op1 = site0.insert(wp, "lineA", 0);
-        WootOp op2 = site0.insert(wp, "lineB", 1);
-        WootOp op3 = site0.insert(wp, "lineC", 2);
+        WootPage wp = site0.getPageManager().loadPage(pageName);
+        WootOp op1 = site0.insert(wp, line1, 0);
+        WootOp op2 = site0.insert(wp, line2, 1);
+        WootOp op3 = site0.insert(wp, line3, 2);
         site0.getPageManager().unloadPage(wp);
 
         // export state of site 0
-        File state =  site0.getState();
+        File state = site0.getState();
 
         // import state in site 1
         site1.setState(state);
 
         // tests state
         Assert.assertEquals(site0.getPageManager().listPages().length, site1.getPageManager().listPages().length);
-        Assert.assertEquals(site0.getPageManager().getPage("index"), site1.getPageManager().getPage("index"));
+        Assert.assertEquals(site0.getPageManager().getPage(pageName), site1.getPageManager().getPage(pageName));
 
         // pool simulation
-        Patch patch = new Patch();
-        patch.setPageName("index");
-        data.addElement(op3);
-        data.addElement(op2);
-        patch.setData(data);
+        List<WootOp> data = new Vector<WootOp>();
+        data.add(op3);
+        data.add(op2);
+        Patch patch = new Patch(data, null, pageName);
 
         site1.deliverPatch(patch);
-        // assertEquals("lineA\nlineB\nlineC\n", site1.getPageManager().getPage("index"));
+
+        Assert.assertEquals(site0.getPageManager().getPageInternal(pageName), site1.getPageManager().getPageInternal(
+            pageName));
+
         data.clear();
-        data.addElement(op1);
+        data.add(op1);
         patch.setData(data);
 
         site1.deliverPatch(patch);
-        Assert.assertEquals("lineA\nlineB\nlineC\n", site1.getPageManager().getPage("index"));
+
+        Assert.assertEquals(site0.getPageManager().getPageInternal(pageName), site1.getPageManager().getPageInternal(
+            pageName));
     }
 }

@@ -44,65 +44,72 @@
 
 package org.xwoot.wootEngine.test;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 import org.xwoot.wootEngine.Patch;
-import org.xwoot.wootEngine.WootEngine;
 import org.xwoot.wootEngine.core.WootId;
 import org.xwoot.wootEngine.core.WootRow;
 import org.xwoot.wootEngine.op.WootIns;
 import org.xwoot.wootEngine.op.WootOp;
 
+import java.util.List;
 import java.util.Vector;
 
 /**
- * DOCUMENT ME!
+ * Stress and performance tests.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
 public class PerformanceTest extends AbstractWootEngineTest
 {
     /**
-     * DOCUMENT ME!
+     * Do 1000 insert operations between the default first row and the previous row inserted by the previous operation.
+     * Basically, you will always be inserting on the first position.
+     * <p>
+     * Normally this takes about 2.4-2.5 seconds but 4 seconds should be enough on other machines too.
      * 
-     * @throws Exception DOCUMENT ME!
+     * @throws Exception if problems loading/unloading pages occur.
      */
-    @Test
+    @Test(timeout = 4000)
     public void testFlood() throws Exception
     {
-        WootEngine woot = this.createEngine(0);
-
         String line =
             "---------------FLOOD---------------|" + "---------------FLOOD---------------|---------------"
                 + "FLOOD---------------|---------------FLOOD---------------";
 
-        // Get current time
-        Vector<WootOp> data = new Vector<WootOp>();
+        // Add a first line between the default first and last woot row.
+        WootId firstRowId = new WootId(site0.getWootEngineId(), 0);
+        WootIns op0 = new WootIns(new WootRow(firstRowId, line), WootId.FIRST_WOOT_ID, WootId.LAST_WOOT_ID);
+        op0.setPageName(pageName);
+        op0.setOpId(firstRowId);
 
-        WootIns op0 = new WootIns(new WootRow(new WootId(0, 0), line), new WootId(-1, -1), new WootId(-2, -2));
-        op0.setPageName("0");
-        op0.setOpId(new WootId(0, 0));
+        List<WootOp> data = new Vector<WootOp>();
         data.add(op0);
 
+        // do 1000 insert operations on the first position, relative to the previous inserted row.
         for (int i = 0; i < 1000; i++) {
-            WootIns op = new WootIns(new WootRow(new WootId(0, i + 1), line), new WootId(-1, -1), new WootId(0, i));
-            op.setPageName("0");
-            op.setOpId(new WootId(0, i + 1));
+            WootId previouslyAddedRowId = new WootId(site0.getWootEngineId(), i);
+            WootId newRowId = new WootId(site0.getWootEngineId(), i + 1);
+            WootIns op = new WootIns(new WootRow(newRowId, line), WootId.FIRST_WOOT_ID, previouslyAddedRowId);
+            op.setPageName(pageName);
+            op.setOpId(newRowId);
             // woot.ins("index", line, 0).toString();
             data.add(op);
         }
 
-        Patch p = new Patch();
+        Patch patch = new Patch(data, null, pageName);
 
-        p.setData(data);
-        p.setPageName("0");
+        Log log = LogFactory.getLog(this.getClass());
+        log.debug("Started time-consuming operation...");
 
         long start = System.currentTimeMillis();
-        woot.deliverPatch(p);
+        site0.deliverPatch(patch);
 
         // Get elapsed time in milliseconds
         long elapsedTimeMillis = System.currentTimeMillis() - start;
         float elapsedTimeSec = elapsedTimeMillis / 1000F;
-        System.out.println("Finished at: " + elapsedTimeSec + "Millis");
+
+        log.debug("Finished in: " + elapsedTimeSec + " seconds.");
     }
 }

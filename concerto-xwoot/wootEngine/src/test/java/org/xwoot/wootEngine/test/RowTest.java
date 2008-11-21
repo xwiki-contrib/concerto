@@ -51,41 +51,47 @@ import org.xwoot.wootEngine.core.WootRow;
 import junit.framework.Assert;
 
 /**
- * DOCUMENT ME!
+ * Tests the WootRow class, mainly the compareTo behavior.
  * 
- * @author molli+maire
+ * @version $Id:$
  */
 public class RowTest extends AbstractWootEngineTest
 {
     /**
-     * DOCUMENT ME!
+     * Tests if rows are compared correctly by comparing the default first row with the default last row.
+     * <p>
+     * Result: the default first row is always "smaller" than the last one.
      */
     @Test
-    public void testCBCE()
+    public void testCompareFirstRowWithLastRow()
     {
         Assert.assertTrue(WootRow.FIRST_WOOT_ROW.compareTo(WootRow.LAST_WOOT_ROW) < 0);
     }
 
     /**
-     * DOCUMENT ME!
+     * Two rows having the same siteId and content but being created one after another (different clock values).
+     * <p>
+     * Result: The latest row (having a greater clock value) is the "biggest".
      */
     @Test
-    public void testLocalClock()
+    public void testCompareByLocalClock()
     {
-        WootRow r1 = new WootRow(new WootId(1, 0), "x");
-        WootRow r2 = new WootRow(new WootId(1, 1), "x");
+        WootRow r1 = new WootRow(new WootId(site0.getWootEngineId(), 0), line1);
+        WootRow r2 = new WootRow(new WootId(site0.getWootEngineId(), 1), line1);
 
         Assert.assertTrue(r1.compareTo(r2) < 0);
     }
 
     /**
-     * DOCUMENT ME!
+     * Two rows having the same clock value and content but coming from two different engines.
+     * <p>
+     * Result: The row having the greater siteId is the "biggest".
      */
     @Test
-    public void testSiteId()
+    public void testCompareBySiteId()
     {
-        WootRow r1 = new WootRow(new WootId(1, 0), "x");
-        WootRow r2 = new WootRow(new WootId(2, 0), "x");
+        WootRow r1 = new WootRow(new WootId(site0.getWootEngineId(), 0), line1);
+        WootRow r2 = new WootRow(new WootId(site1.getWootEngineId(), 0), line1);
 
         Assert.assertTrue(r1.compareTo(r2) < 0);
     }

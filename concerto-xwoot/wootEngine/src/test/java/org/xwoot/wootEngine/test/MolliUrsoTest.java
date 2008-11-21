@@ -50,363 +50,371 @@ import org.xwoot.wootEngine.WootEngine;
 import org.xwoot.wootEngine.core.WootPage;
 import org.xwoot.wootEngine.op.WootOp;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Vector;
 
 import junit.framework.Assert;
 
 /**
- * TODO: Make a PageManagerTest class for page methods.
- * DOCUMENT ME!
+ * Tests for the WootEngine class.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
 public class MolliUrsoTest extends AbstractWootEngineTest
 {
     /**
-     * DOCUMENT ME!
+     * Test inserting three lines in a page.
      * 
-     * @throws Exception DOCUMENT ME!
+     * @throws Exception if loading/unloading problems occur.
      */
     @Test
     public void testBasic() throws Exception
     {
-        WootEngine woot = this.createEngine(0);
-        WootPage wp = woot.getPageManager().loadPage("page_s0");
-        woot.insert(wp, "lineA", 0);
-        woot.insert(wp, "lineB", 1);
-        woot.insert(wp, "lineC", 2);
-        woot.getPageManager().unloadPage(wp);
-        Assert.assertEquals("lineA\nlineB\nlineC\n", woot.getPageManager().getPage("page_s0"));
+        WootPage wootPage = site0.getPageManager().loadPage(pageName);
+
+        site0.insert(wootPage, line1, 0);
+        site0.insert(wootPage, line2, 1);
+        site0.insert(wootPage, line3, 2);
+
+        site0.getPageManager().unloadPage(wootPage);
+
+        Assert.assertEquals(wrapStartEndMarkers(line1 + line2 + line3), site0.getPageManager()
+            .getPageInternal(pageName));
     }
 
     /**
-     * DOCUMENT ME!
+     * If 2 WootEngines modify the same line in the same page.
+     * <p>
+     * After applying the patches with insert operations, on each engine the page contains both the lines, in the same
+     * order.
      * 
-     * @throws Exception DOCUMENT ME!
+     * @throws Exception if problems loading/unloading the pages occur.
      */
     @Test
     public void testCross() throws Exception
     {
-        WootEngine site0 = this.createEngine(0);
-        WootEngine site1 = this.createEngine(1);
+        WootPage wp1 = site0.getPageManager().loadPage(pageName);
+        WootPage wp2 = site1.getPageManager().loadPage(pageName);
 
-        WootPage wp1 = site0.getPageManager().loadPage("page");
-        WootPage wp2 = site1.getPageManager().loadPage("page");
-        WootOp op1 = site0.insert(wp1, "Hello,", 0);
-        WootOp op2 = site1.insert(wp2, " World", 0);
+        WootOp op1 = site0.insert(wp1, line1, 0);
+        WootOp op2 = site1.insert(wp2, line2, 0);
         site0.getPageManager().unloadPage(wp1);
         site1.getPageManager().unloadPage(wp2);
 
-        Assert.assertEquals("Hello,\n", site0.getPageManager().getPage("page"));
-        Assert.assertEquals(" World\n", site1.getPageManager().getPage("page"));
+        Assert.assertEquals(addEndLine(line1), site0.getPageManager().getPage(pageName));
+        Assert.assertEquals(addEndLine(line2), site1.getPageManager().getPage(pageName));
 
-        Patch patch0 = new Patch();
-        patch0.setPageName("page");
+        // operation 2
+        List<WootOp> data0 = new Vector<WootOp>();
+        data0.add(op2);
+        Patch patch0 = new Patch(data0, null, pageName);
 
-        Vector<WootOp> data0 = new Vector<WootOp>();
-        data0.addElement(op2);
-        patch0.setData(data0);
+        // operation 1
+        List<WootOp> data1 = new Vector<WootOp>();
+        data1.add(op1);
+        Patch patch1 = new Patch(data1, null, pageName);
+
         site0.deliverPatch(patch0);
-
-        Patch patch1 = new Patch();
-        patch1.setPageName("page");
-
-        Vector<WootOp> data1 = new Vector<WootOp>();
-        data1.addElement(op1);
-        patch1.setData(data1);
         site1.deliverPatch(patch1);
 
-        Assert.assertEquals("Hello,\n World\n", site0.getPageManager().getPage("page"));
-        Assert.assertEquals(site0.getPageManager().getPage("page"), site1.getPageManager().getPage("page"));
+        Assert.assertEquals(wrapStartEndMarkers(line1 + line2), site0.getPageManager().getPageInternal(pageName));
+        Assert.assertEquals(site0.getPageManager().getPageInternal(pageName), site1.getPageManager().getPageInternal(
+            pageName));
     }
 
     /**
-     * DOCUMENT ME!
+     * A page containing 3 lines gets an insert operation at position 0.
+     * <p>
+     * The result will have on position 0 the newly inserted line and all the other lines will be shifted below by one
+     * position.
      * 
-     * @throws Exception DOCUMENT ME!
+     * @throws Exception if problems loading/unloading the page occur.
      */
     @Test
     public void testInsertBeginning() throws Exception
     {
-        WootEngine woot = this.createEngine(0);
-        WootPage wp = woot.getPageManager().loadPage("page");
-        woot.insert(wp, "lineA", 0);
-        woot.insert(wp, "lineB", 1);
-        woot.insert(wp, "lineC", 2);
-        woot.insert(wp, "---", 0);
-        woot.getPageManager().unloadPage(wp);
-        Assert.assertEquals("---\nlineA\nlineB\nlineC\n", woot.getPageManager().getPage("page"));
+        WootPage wp = site0.getPageManager().loadPage(pageName);
+        site0.insert(wp, line1, 0);
+        site0.insert(wp, line2, 1);
+        site0.insert(wp, line3, 2);
+        site0.insert(wp, line4, 0);
+        site0.getPageManager().unloadPage(wp);
+
+        Assert.assertEquals(wrapStartEndMarkers(line4 + line1 + line2 + line3), site0.getPageManager().getPageInternal(
+            pageName));
     }
 
     /**
-     * DOCUMENT ME!
+     * Delete the only line in a page.
+     * <p>
+     * As a result, the page should contain only the start and end row.
      * 
-     * @throws Exception DOCUMENT ME!
+     * @throws Exception if problems loading/unloading the page occur.
      */
     @Test
     public void testSimpleDel() throws Exception
     {
-        WootEngine site0 = this.createEngine(0);
-        WootPage wp1 = site0.getPageManager().loadPage("page");
-        site0.insert(wp1, "Erase me ! :)", 0);
+        WootPage wp1 = site0.getPageManager().loadPage(pageName);
+        site0.insert(wp1, line1, 0);
         site0.getPageManager().unloadPage(wp1);
-        Assert.assertEquals("Erase me ! :)\n", site0.getPageManager().getPage("page"));
-        wp1 = site0.getPageManager().loadPage("page");
+        Assert.assertEquals(wrapStartEndMarkers(line1), site0.getPageManager().getPageInternal(pageName));
+
+        wp1 = site0.getPageManager().loadPage(pageName);
         site0.delete(wp1, 0);
         site0.getPageManager().unloadPage(wp1);
-        // TODO faire un meilleur getPage pour tester les tombstones
-        // assertEquals("Erase me ! :)]", page.toString());
-        Assert.assertEquals("", site0.getPageManager().getPage("page"));
+        Assert.assertEquals(emptyPageContent, site0.getPageManager().getPageInternalVisible(pageName));
     }
 
     /**
-     * DOCUMENT ME!
+     * Make concurrent changes on 3 engines.
+     * <p>
+     * In the end, all 3 engines have the same content.
      * 
-     * @throws Exception DOCUMENT ME!
+     * @throws Exception if problems loading/unloading the page occur.
      */
     @Test
     public void testTP2() throws Exception
     {
-        WootEngine site0 = this.createEngine(0);
-        WootEngine site1 = this.createEngine(1);
-        WootEngine site2 = this.createEngine(2);
-        WootPage wp = site0.getPageManager().loadPage("index");
-        WootOp op0 = site0.insert(wp, "a", 0);
-        WootOp op1 = site0.insert(wp, "b", 1);
-        WootOp op2 = site0.insert(wp, "c", 2);
+        WootPage wp = site0.getPageManager().loadPage(pageName);
+        WootOp op0 = site0.insert(wp, line1, 0);
+        WootOp op1 = site0.insert(wp, line2, 1);
+        WootOp op2 = site0.insert(wp, line3, 2);
         site0.getPageManager().unloadPage(wp);
-        Assert.assertEquals("a\nb\nc\n", site0.getPageManager().getPage("index"));
 
-        Patch patch = new Patch();
-        Vector<WootOp> data = new Vector<WootOp>();
-        patch.setPageName("index");
-        data.addElement(op0);
-        data.addElement(op1);
-        data.addElement(op2);
-        patch.setData(data);
+        /* site0: line1 line2 line3 */
+
+        // List<WootOp> data = Arrays.asList(new WootOp[] {op0, op1, op2});
+        Patch patch = new Patch(Arrays.asList(new WootOp[] {op0, op1, op2}), null, pageName);
 
         site1.deliverPatch(patch);
         site2.deliverPatch(patch);
 
-        Assert.assertEquals(site0.getPageManager().getPage("index"), site1.getPageManager().getPage("index"));
-        Assert.assertEquals(site1.getPageManager().getPage("index"), site2.getPageManager().getPage("index"));
+        /*
+         * site0: line1 line2 line3 site1: line1 line2 line3 site2: line1 line2 line3
+         */
+        Assert.assertEquals(site0.getPageManager().getPage(pageName), site1.getPageManager().getPage(pageName));
+        Assert.assertEquals(site1.getPageManager().getPage(pageName), site2.getPageManager().getPage(pageName));
 
-        wp = site0.getPageManager().loadPage("index");
-        WootPage wp2 = site1.getPageManager().loadPage("index");
-        WootPage wp3 = site2.getPageManager().loadPage("index");
-        WootOp op3 = site0.insert(wp, "y", 2);
+        wp = site0.getPageManager().loadPage(pageName);
+        WootPage wp2 = site1.getPageManager().loadPage(pageName);
+        WootPage wp3 = site2.getPageManager().loadPage(pageName);
+        WootOp op3 = site0.insert(wp, line4, 2);
         WootOp op4 = site1.delete(wp2, 2);
-        WootOp op5 = site2.insert(wp3, "x", 3);
+        WootOp op5 = site2.insert(wp3, line5, 3);
         site0.getPageManager().unloadPage(wp);
         site1.getPageManager().unloadPage(wp2);
         site2.getPageManager().unloadPage(wp3);
 
         // crux
-        data.clear();
-        data.addElement(op5);
-        patch.setData(data);
-        site1.deliverPatch(patch);
+        // data = Arrays.asList(new WootOp[] {op5});
+        site1.deliverPatch(new Patch(Arrays.asList(new WootOp[] {op5}), null, pageName));
 
-        data.clear();
-        data.addElement(op4);
-        patch.setData(data);
-        site2.deliverPatch(patch);
+        // data = Arrays.asList(new WootOp[] {op4});
+        site2.deliverPatch(new Patch(Arrays.asList(new WootOp[] {op4}), null, pageName));
 
-        Assert.assertEquals(site1.getPageManager().getPage("index"), site2.getPageManager().getPage("index"));
+        /*
+         * site1: line1 line2 {deleted line3} line5 site2: line1 line2 {deleted line3} line5
+         */
+        Assert.assertEquals(site1.getPageManager().getPage(pageName), site2.getPageManager().getPage(pageName));
 
         // op3 descent
-        data.clear();
-        data.addElement(op3);
-        patch.setData(data);
-        site1.deliverPatch(patch);
+        // data = Arrays.asList(new WootOp[] {op3});
+        patch.setData(Arrays.asList(new WootOp[] {op3}));
 
+        site1.deliverPatch(patch);
         site2.deliverPatch(patch);
 
-        Assert.assertEquals(site1.getPageManager().getPage("index"), site2.getPageManager().getPage("index"));
+        /*
+         * site1: line1 line2 {deleted line3} line4 line5 site2: line1 line2 {deleted line3} line4 line5
+         */
+        Assert.assertEquals(site1.getPageManager().getPage(pageName), site2.getPageManager().getPage(pageName));
 
-        data.clear();
-        data.addElement(op4);
-        patch.setData(data);
-        site0.deliverPatch(patch);
+        // data = Arrays.asList(new WootOp[] {op4});
+        site0.deliverPatch(new Patch(Arrays.asList(new WootOp[] {op4}), null, pageName));
 
-        data.clear();
-        data.addElement(op5);
-        patch.setData(data);
-        site0.deliverPatch(patch);
+        // data = Arrays.asList(new WootOp[] {op5});
+        site0.deliverPatch(new Patch(Arrays.asList(new WootOp[] {op5}), null, pageName));
 
-        Assert.assertEquals(site0.getPageManager().getPage("index"), site1.getPageManager().getPage("index"));
+        /*
+         * site0: line1 line2 {deleted line3} line4 line5 site1: line1 line2 {deleted line3} line4 line5
+         */
+        Assert.assertEquals(site0.getPageManager().getPage(pageName), site1.getPageManager().getPage(pageName));
     }
 
     /**
-     * DOCUMENT ME!
+     * Test inserting more times on the same position.
      * 
-     * @throws Exception DOCUMENT ME!
+     * @throws Exception if problems loading/unloading the page occur.
      */
     @Test
     public void testTPUrso() throws Exception
     {
-        WootEngine site0 = this.createEngine(0);
-        WootEngine site1 = this.createEngine(1);
-        WootEngine site2 = this.createEngine(2);
-
-        WootPage wp = site0.getPageManager().loadPage("index");
-        WootOp op0 = site0.insert(wp, "b", 0);
-        WootOp op1 = site0.insert(wp, "e", 1);
+        WootPage wp = site0.getPageManager().loadPage(pageName);
+        WootOp op0 = site0.insert(wp, line1, 0);
+        WootOp op1 = site0.insert(wp, line2, 1);
         site0.getPageManager().unloadPage(wp);
 
-        Patch patch = new Patch();
-        patch.setPageName("index");
-
-        Vector<WootOp> data = new Vector<WootOp>();
-        data.addElement(op1);
-        data.addElement(op0);
-        patch.setData(data);
+        List<WootOp> data = Arrays.asList(new WootOp[] {op0, op1});
+        Patch patch = new Patch(data, null, pageName);
 
         site1.deliverPatch(patch);
         site2.deliverPatch(patch);
+        /*
+         * SITE0: [line1line2] SITE1: [line1line2] SITE2: [line1line2]
+         */
 
-        wp = site0.getPageManager().loadPage("index");
-        WootPage wp2 = site1.getPageManager().loadPage("index");
-        WootOp op2 = site0.insert(wp, "0", 1);
-        WootOp op3 = site1.insert(wp2, "1", 1);
+        wp = site0.getPageManager().loadPage(pageName);
+        WootPage wp2 = site1.getPageManager().loadPage(pageName);
+        WootOp op2 = site0.insert(wp, line3, 1);
+        WootOp op3 = site1.insert(wp2, line4, 1);
         site0.getPageManager().unloadPage(wp);
         site1.getPageManager().unloadPage(wp2);
 
-        data.clear();
-        data.addElement(op2);
+        data = Arrays.asList(new WootOp[] {op2});
         patch.setData(data);
 
         site2.deliverPatch(patch);
-        wp2 = site2.getPageManager().loadPage("index");
-        WootOp op4 = site2.insert(wp2, "2", 1);
+        /*
+         * SITE0: [line1line3line2] SITE1: [line1line4line2] SITE2: [line1line3line2]
+         */
+
+        wp2 = site2.getPageManager().loadPage(pageName);
+        WootOp op4 = site2.insert(wp2, line5, 1);
         site2.getPageManager().unloadPage(wp2);
 
-        data.clear();
-        data.addElement(op3);
+        data = Arrays.asList(new WootOp[] {op3});
         patch.setData(data);
 
-        // s[2].receive(wbc.ElementAt(3));
         site2.deliverPatch(patch);
-
-        // s[0].receive(wbc.ElementAt(3));
         site0.deliverPatch(patch);
+        /*
+         * SITE0: [line1line3line4line2] SITE1: [line1line4line2] SITE2: [line1line5line3line4line2]
+         */
 
-        // s[0].receive(wbc.ElementAt(4));
-        data.clear();
-        data.addElement(op4);
+        data = Arrays.asList(new WootOp[] {op4});
         patch.setData(data);
-        site0.deliverPatch(patch);
 
-        // assertEquals(s[0].getWootString(), s[2].getWootString());
-        Assert.assertEquals(site0.getPageManager().getPage("index"), site2.getPageManager().getPage("index"));
+        site0.deliverPatch(patch);
+        /*
+         * SITE0: [line1line5line3line4line2] SITE1: [line1line4line2] SITE2: [line1line5line3line4line2]
+         */
+
+        Assert.assertEquals(site0.getPageManager().getPage(pageName), site2.getPageManager().getPage(pageName));
     }
 
     /**
-     * DOCUMENT ME!
+     * Replace the same line in each engine with different content.
+     * <p>
+     * As a result, the in both engines will have both new lines, one after another.
      * 
-     * @throws Exception DOCUMENT ME!
+     * @throws Exception if problems loading/unloading the page occur.
      */
     @Test
     public void testUpdateSameLine() throws Exception
     {
-        WootEngine site0 = this.createEngine(0);
-        WootEngine site1 = this.createEngine(1);
-
-        Vector<WootOp> data = new Vector<WootOp>();
-        Patch patch = new Patch();
-        patch.setPageName("index");
-        WootPage wp = site0.getPageManager().loadPage("index");
-        WootOp op0 = site0.insert(wp, "toto titi", 0);
+        WootPage wp = site0.getPageManager().loadPage(pageName);
+        WootOp op0 = site0.insert(wp, line1, 0);
         site0.getPageManager().unloadPage(wp);
 
-        Assert.assertEquals("toto titi\n", site0.getPageManager().getPage("index"));
+        Assert.assertEquals(addEndLine(line1), site0.getPageManager().getPage(pageName));
 
         // send op00
-        data.addElement(op0);
-        patch.setData(data);
+        List<WootOp> data = new Vector<WootOp>();
+        data.add(op0);
+        Patch patch = new Patch(data, null, pageName);
         site1.deliverPatch(patch);
-        Assert.assertEquals("toto titi\n", site1.getPageManager().getPage("index"));
+        Assert.assertEquals(addEndLine(line1), site1.getPageManager().getPage(pageName));
 
         // update on site0
-        wp = site0.getPageManager().loadPage("index");
+        wp = site0.getPageManager().loadPage(pageName);
         WootOp op00 = site0.delete(wp, 0);
-        WootOp op01 = site0.insert(wp, "toto titi tata", 0);
+        WootOp op01 = site0.insert(wp, line2, 0);
         site0.getPageManager().unloadPage(wp);
-        Assert.assertEquals("toto titi tata\n", site0.getPageManager().getPage("index"));
+
+        Assert.assertEquals(addEndLine(line2), site0.getPageManager().getPage(pageName));
 
         // update on site1
-        WootPage wp2 = site1.getPageManager().loadPage("index");
+        WootPage wp2 = site1.getPageManager().loadPage(pageName);
         WootOp op10 = site1.delete(wp2, 0);
-        WootOp op11 = site1.insert(wp2, "toto", 0);
+        WootOp op11 = site1.insert(wp2, line3, 0);
         site1.getPageManager().unloadPage(wp2);
 
-        Assert.assertEquals("toto\n", site1.getPageManager().getPage("index"));
+        Assert.assertEquals(addEndLine(line3), site1.getPageManager().getPage(pageName));
 
         // send op00 + op01
         data.clear();
-        data.addElement(op00);
-        data.addElement(op01);
+        data.add(op00);
+        data.add(op01);
         patch.setData(data);
         site1.deliverPatch(patch);
+        /*
+         * Site0: [line2] Site1: [line2line3]
+         */
 
         // send op10 + op11
         data.clear();
-        data.addElement(op10);
-        data.addElement(op11);
+        data.add(op10);
+        data.add(op11);
         patch.setData(data);
         site0.deliverPatch(patch);
+        /*
+         * Site0: [line2line3] Site1: [line2line3]
+         */
 
-        // TODO faire un meilleur getPage
-        Assert.assertEquals(site0.getPageManager().getPageToStringInternal("index"), site1.getPageManager().getPageToStringInternal("index"));
+        Assert.assertEquals(site0.getPageManager().getPageInternal(pageName), site1.getPageManager().getPageInternal(
+            pageName));
     }
 
     /**
-     * DOCUMENT ME!
+     * 3 insert operations are sent/received in the wrong order. First op 3 and op 2, then the last one.
+     * <p>
+     * The result must contain all 3 of them in the right order.
      * 
-     * @throws Exception DOCUMENT ME!
+     * @throws Exception if problems loading/unloading the page occur.
      */
     @Test
     public void testWaitingQueue() throws Exception
     {
-        // used site0 for creating op
-        WootEngine site0 = this.createEngine(0);
-
-        Vector<WootOp> data = new Vector<WootOp>();
-        WootPage wp = site0.getPageManager().loadPage("index");
-        WootOp op1 = site0.insert(wp, "lineA", 0);
-        WootOp op2 = site0.insert(wp, "lineB", 1);
-        WootOp op3 = site0.insert(wp, "lineC", 2);
+        WootPage wp = site0.getPageManager().loadPage(pageName);
+        WootOp op1 = site0.insert(wp, line1, 0);
+        WootOp op2 = site0.insert(wp, line2, 1);
+        WootOp op3 = site0.insert(wp, line3, 2);
         site0.getPageManager().unloadPage(wp);
 
-        Assert.assertEquals("lineA\nlineB\nlineC\n", site0.getPageManager().getPage("index"));
+        Assert.assertEquals(wrapStartEndMarkers(line1 + line2 + line3), site0.getPageManager()
+            .getPageInternal(pageName));
 
         // real test : send 2 last op without the first
         // => wootEngine must put this two last op in wating queue
         // after send the first op => woot engine can integrate
         // the 3 op in the good order
         WootEngine site1 = this.createEngine(1);
-        Patch patch = new Patch();
-        patch.setPageName("index");
-        data.addElement(op3);
-        data.addElement(op2);
-        patch.setData(data);
+
+        List<WootOp> data = new Vector<WootOp>();
+        data.add(op3);
+        data.add(op2);
+        Patch patch = new Patch(data, null, pageName);
 
         site1.deliverPatch(patch);
-        Assert.assertEquals("", site1.getPageManager().getPage("index"));
+        Assert.assertEquals(emptyPageContent, site1.getPageManager().getPageInternal(pageName));
 
         data.clear();
-        data.addElement(op1);
+        data.add(op1);
         patch.setData(data);
 
         site1.deliverPatch(patch);
-        Assert.assertEquals("lineA\nlineB\nlineC\n", site1.getPageManager().getPage("index"));
+        Assert.assertEquals(wrapStartEndMarkers(line1 + line2 + line3), site1.getPageManager()
+            .getPageInternal(pageName));
     }
 
     /**
-     * DOCUMENT ME!
+     * Same as {@link #testWaitingQueue()} but this time operation 2 is repeated in the first patch and after all the
+     * operations are applied it is sent one more time.
+     * <p>
+     * The result must be the same and the duplicated operation must be applied only once.
      * 
-     * @throws Exception DOCUMENT ME!
+     * @throws Exception if problems loading/unloading the page occur.
      */
     @Test
     public void testWaitingQueue2() throws Exception
@@ -414,38 +422,43 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         // used site0 for creating op
         WootEngine site0 = this.createEngine(0);
 
-        Vector<WootOp> data = new Vector<WootOp>();
-        WootPage wp = site0.getPageManager().loadPage("index");
-        WootOp op1 = site0.insert(wp, "lineA", 0);
-        WootOp op2 = site0.insert(wp, "lineB", 1);
-        WootOp op3 = site0.insert(wp, "lineC", 2);
+        WootPage wp = site0.getPageManager().loadPage(pageName);
+        WootOp op1 = site0.insert(wp, line1, 0);
+        WootOp op2 = site0.insert(wp, line2, 1);
+        WootOp op3 = site0.insert(wp, line3, 2);
         site0.getPageManager().unloadPage(wp);
 
-        Assert.assertEquals("lineA\nlineB\nlineC\n", site0.getPageManager().getPage("index"));
+        Assert.assertEquals(wrapStartEndMarkers(line1 + line2 + line3), site0.getPageManager()
+            .getPageInternal(pageName));
 
         // real test : send 2 last op without the first
         // => wootEngine must put this two last op in wating queue
         // after send the first op => woot engine can integrate
         // the 3 op in the good order
         WootEngine site1 = this.createEngine(1);
-        Patch patch = new Patch();
-        patch.setPageName("index");
-        data.addElement(op3);
-        data.addElement(op2);
-        data.addElement(op2);
-        patch.setData(data);
+
+        List<WootOp> data = new Vector<WootOp>();
+        data.add(op3);
+        data.add(op2);
+        data.add(op2);
+        Patch patch = new Patch(data, null, pageName);
         site1.deliverPatch(patch);
-        Assert.assertEquals("", site1.getPageManager().getPage("index"));
+
+        Assert.assertEquals(emptyPageContent, site1.getPageManager().getPageInternal(pageName));
 
         data.clear();
-        data.addElement(op1);
+        data.add(op1);
         patch.setData(data);
 
         site1.deliverPatch(patch);
-        Assert.assertEquals("lineA\nlineB\nlineC\n", site1.getPageManager().getPage("index"));
+        Assert.assertEquals(wrapStartEndMarkers(line1 + line2 + line3), site1.getPageManager()
+            .getPageInternal(pageName));
+
         data.add(op2);
         patch.setData(data);
         site1.deliverPatch(patch);
-        Assert.assertEquals("lineA\nlineB\nlineC\n", site1.getPageManager().getPage("index"));
+
+        Assert.assertEquals(wrapStartEndMarkers(line1 + line2 + line3), site1.getPageManager()
+            .getPageInternal(pageName));
     }
 }

@@ -44,32 +44,61 @@
 
 package org.xwoot.wootEngine.test;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.xwoot.clockEngine.Clock;
 
 import org.xwoot.wootEngine.WootEngine;
+import org.xwoot.wootEngine.core.WootRow;
 import org.xwoot.xwootUtil.FileUtil;
 
 import java.io.File;
-import java.io.IOException;
-import java.security.InvalidParameterException;
 
 /**
  * Abstract Test body for wootEngine tests.
  * <p>
  * Just add tests.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public abstract class AbstractWootEngineTest
 {
+    /** Working directory for testing this module. */
     protected String workingDir = FileUtil.getTestsWorkingDirectoryPathForModule("wootEngine");
+
+    /** The internal content of an empty page. */
+    protected String emptyPageContent = this.wrapStartEndMarkers("");
+
+    /** Test line of text. */
+    protected String line1 = "line1";
+
+    /** Test line of text. */
+    protected String line2 = "line2";
+
+    /** Test line of text. */
+    protected String line3 = "line3";
+
+    /** Test line of text. */
+    protected String line4 = "line4";
+
+    /** Test line of text. */
+    protected String line5 = "line5";
+
+    /** Name of page used for testing. */
+    protected String pageName = "testPage";
+    
+    /** Test WootEngine. */
+    protected WootEngine site0;
+    
+    /** Test WootEngine. */
+    protected WootEngine site1;
+    
+    /** Test WootEngine. */
+    protected WootEngine site2;
 
     /**
      * Creates a new AbstractWootEngineTest object.
-     * 
-     * @throws IOException if the workingDirectory is not usable.
-     * @throws InvalidParameterException if the workingDirectory is a null or empty string.
      */
     public AbstractWootEngineTest()
     {
@@ -100,11 +129,33 @@ public abstract class AbstractWootEngineTest
     }
 
     /**
-     * Clears the test's working directory if it exists.
+     * Clears the test's working directory if it exists. This is executed before each test.
      */
     @Before
-    public void setUp()
+    public void setUp() throws Exception
     {
         FileUtil.deleteDirectory(this.workingDir);
+        
+        this.site0 = this.createEngine(0);
+        this.site1 = this.createEngine(1);
+        this.site2 = this.createEngine(2);
+    }
+
+    /**
+     * @param content the content to be wrapped.
+     * @return the content string wrapped by the start and end rows. Example: "[content]".
+     */
+    public String wrapStartEndMarkers(String content)
+    {
+        return WootRow.FIRST_WOOT_ROW.getContent() + content + WootRow.LAST_WOOT_ROW.getContent();
+    }
+
+    /**
+     * @param line the content of a line without a terminating "\n" character.
+     * @return the line appended with a "\n" character.
+     */
+    public String addEndLine(String line)
+    {
+        return line + "\n";
     }
 }

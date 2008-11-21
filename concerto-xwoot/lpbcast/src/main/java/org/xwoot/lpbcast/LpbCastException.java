@@ -1,31 +1,48 @@
 package org.xwoot.lpbcast;
 
+/**
+ * Exception handling for LPBcast module.
+ * 
+ * @version $Id:$
+ */
 public class LpbCastException extends Exception
 {
-
-    /**
-     * 
-     */
+    /** Unique ID used for serialization. */
     private static final long serialVersionUID = -2568698052987298242L;
 
+    /**
+     * @see Exception#Exception()
+     */
     public LpbCastException()
     {
         super();
     }
 
-    public LpbCastException(Throwable arg0)
+    /**
+     * @param cause the cause.
+     * @see Exception#Exception(Throwable)
+     */
+    public LpbCastException(Throwable cause)
     {
-        super(arg0);
-        // TODO Auto-generated constructor stub
+        super(cause);
     }
 
-    public LpbCastException(String arg0)
+    /**
+     * @param message the message.
+     * @see Exception#Exception(String)
+     */
+    public LpbCastException(String message)
     {
-        super(arg0);
+        super(message);
     }
 
-    public LpbCastException(String arg0, Throwable t)
+    /**
+     * @param message the message.
+     * @param cause the cause.
+     * @see Exception#Exception(String, Throwable)
+     */
+    public LpbCastException(String message, Throwable cause)
     {
-        super(arg0, t);
+        super(message, cause);
     }
 }

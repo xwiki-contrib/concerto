@@ -51,11 +51,11 @@ import org.xwoot.lpbcast.util.Guid;
 /**
  * DOCUMENT ME!
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
 public class Message implements Serializable
 {
+    /** Unique ID used for serialization. */
     private static final long serialVersionUID = -8107239172395652489L;
 
     private Object id;

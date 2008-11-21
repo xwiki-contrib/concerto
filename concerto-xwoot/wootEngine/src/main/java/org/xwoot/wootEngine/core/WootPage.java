@@ -58,7 +58,7 @@ import java.util.List;
 /**
  * Handles a list of WootRow elements describing a page.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class WootPage implements Serializable
 {
@@ -381,6 +381,22 @@ public class WootPage implements Serializable
         }
 
         return sb.toString();
+    }
+    
+    /**
+     * @return the content of all the visible rows in this page, including the default rows.
+     */
+    public String toVisibleString()
+    {
+        StringBuffer sb = new StringBuffer();
+
+        for(WootRow row : this.getRows()) {
+            if (row.isVisible()) {
+                sb.append(row.getContent());
+            }
+        }
+
+        return sb.toString();        
     }
 
     /** {@inheritDoc} */

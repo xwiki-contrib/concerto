@@ -73,17 +73,14 @@ public class WootDel extends AbstractWootOp implements Serializable
         this.idOfRowToDelete = idOfRowToDelete;
     }
 
-    /*
-     * public void execute(WootPage page) { //assert getWootPage().contains(r); //int index = getWootPage().indexOf(r);
-     * //getWootPage().elementAt(index + 1).setVisible(false); int index = page.indexOf(r); page.elementAt(index +
-     * 1).setVisible(false); }
-     */
     /** {@inheritDoc} */
     @Override
     public void execute(WootPage page)
     {
         int indexOfRowToDelete = page.indexOfId(idOfRowToDelete);
-        page.elementAt(indexOfRowToDelete).setVisible(false);
+        if (indexOfRowToDelete >= 1) {
+            page.elementAt(indexOfRowToDelete).setVisible(false);
+        }
     }
 
     /** {@inheritDoc} */
@@ -96,7 +93,7 @@ public class WootDel extends AbstractWootOp implements Serializable
     /** {@inheritDoc} */
     public Integer getAffectedRowIndexes(WootPage page)
     {
-        int affectedRowIndex = page.indexOfId(idOfRowToDelete); 
+        int affectedRowIndex = page.indexOfId(idOfRowToDelete);
         return (affectedRowIndex < 0 ? null : new Integer(affectedRowIndex));
     }
 

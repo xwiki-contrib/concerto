@@ -2,32 +2,49 @@ package org.xwoot.lpbcast.neighbors;
 
 import org.xwoot.lpbcast.LpbCastException;
 
+/**
+ * Exception handling for Neighbors.
+ * 
+ * @version $Id:$
+ */
 public class NeighborsException extends LpbCastException
 {
-
-    /**
-     * 
-     */
+    /** Unique ID used for serialization. */
     private static final long serialVersionUID = -2568698052987298242L;
 
+    /**
+     * @see Exception#Exception()
+     */
     public NeighborsException()
     {
         super();
     }
 
-    public NeighborsException(Throwable arg0)
+    /**
+     * @param cause the cause.
+     * @see Exception#Exception(Throwable)
+     */
+    public NeighborsException(Throwable cause)
     {
-        super(arg0);
-        // TODO Auto-generated constructor stub
+        super(cause);
     }
 
-    public NeighborsException(String arg0)
+    /**
+     * @param message the message.
+     * @see Exception#Exception(String)
+     */
+    public NeighborsException(String message)
     {
-        super(arg0);
+        super(message);
     }
 
-    public NeighborsException(String arg0, Throwable t)
+    /**
+     * @param message the message.
+     * @param cause the cause.
+     * @see Exception#Exception(String, Throwable)
+     */
+    public NeighborsException(String message, Throwable cause)
     {
-        super(arg0, t);
+        super(message, cause);
     }
 }
