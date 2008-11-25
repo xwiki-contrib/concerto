@@ -1,120 +1,41 @@
 package org.xwoot.lpbcast.neighbors.httpservletneighbors;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.Iterator;
-
-
-import org.xwoot.lpbcast.LpbCastException;
-import org.xwoot.lpbcast.neighbors.Neighbors;
+import org.xwoot.lpbcast.neighbors.AbstractNeighbors;
 import org.xwoot.lpbcast.neighbors.NeighborsException;
-import org.xwoot.lpbcast.util.NetUtil;
 
-public class HttpServletNeighbors extends Neighbors
+/**
+ * Handles neighbors accessible trough Servlets.
+ * 
+ * @version $Id:$
+ */
+public class HttpServletNeighbors extends AbstractNeighbors
 {
-
-    // thread for parallelism
-    protected class NotifyNeighbors extends Thread
-    {
-        private Object message;
-
-        private String neighbor = null;
-
-        public void setNeighbor(String neighbor)
-        {
-            this.neighbor = neighbor;
-        }
-
-        protected void call(Object n) throws ServletNeighborsException 
-        {
-            System.out.println("Send message to : " + n);
-            URL to;
-            try {
-                to = new URL(n + "/receiveMessage.do");
-                NetUtil.sendObjectViaHTTPRequest(to, this.message);
-            } catch (IOException e) {
-               throw new ServletNeighborsException(this.neighbor+" : Problem to call neighbor "+n+"/receiveMessage.do"+"\n",e);
-            }
-            
-        }
-
-        /**
-         * DOCUMENT ME!
-         * 
-         * @return DOCUMENT ME!
-         */
-        public Object getMessage()
-        {
-            return this.message;
-        }
-
-        /**
-         * DOCUMENT ME!
-         */
-        @Override
-        public void run()
-        {
-            try{
-                if (this.neighbor != null) {
-                    this.call(this.neighbor);
-                } else {
-                    for (Iterator i = HttpServletNeighbors.this.neighborsList().iterator(); i.hasNext();) {   
-                        // TODO externalize the communication
-                        Object n = i.next();
-                        this.call(n);
-                    }
-                }
-            }catch(LpbCastException e){
-                e.printStackTrace();
-            }
-          
-        }
-
-        /**
-         * DOCUMENT ME!
-         * 
-         * @param message DOCUMENT ME!
-         * @throws Exception DOCUMENT ME!
-         */
-        public void setMessage(Object message)
-        {
-            this.message = message;
-        }
-    }
-
-    public HttpServletNeighbors(String neighborsFilePath, int maxNumber, Integer id) throws NeighborsException 
-    {
-        super(neighborsFilePath, maxNumber, id);
-    }
-
-    // send message to one neighbor
     /**
-     * DOCUMENT ME!
+     * Creates a new instance.
      * 
-     * @param neighbor DOCUMENT ME!
-     * @param message DOCUMENT ME!
-     * 
+     * @param workingDir the directory where to store the neighbors.
+     * @param maxNumber the maximum number of neighbors to remember.
+     * @param siteId the id of the woot node this object is assigned to.
+     * @throws NeighborsException if the provided directory is not usable.
      */
+    public HttpServletNeighbors(String workingDir, int maxNumber, Integer siteId) throws NeighborsException
+    {
+        super(workingDir, maxNumber, siteId);
+    }
+
+    /** {@inheritDoc} */
     @Override
     public void notifyNeighbor(Object neighbor, Object message)
     {
-        NotifyNeighbors notify = new NotifyNeighbors();
-        notify.setMessage(message);
-        notify.setNeighbor((String) neighbor);
+        NotifyNeighborsThread notify = new NotifyNeighborsThread((String) neighbor, message);
         notify.start();
     }
 
-    // send message to neighbors
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param message DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
     public void notifyNeighbors(Object message)
     {
-        NotifyNeighbors notify = new NotifyNeighbors();
-        notify.setMessage(message);
+        NotifyNeighborsThread notify = new NotifyNeighborsThread(this, message);
         notify.start();
     }
 }

@@ -2,32 +2,49 @@ package org.xwoot.lpbcast.sender;
 
 import org.xwoot.lpbcast.LpbCastException;
 
+/**
+ * Exception handling for Sender.
+ * 
+ * @version $Id:$
+ */
 public class SenderException extends LpbCastException
 {
-
-    /**
-     * 
-     */
+    /** Unique ID used for serialization. */
     private static final long serialVersionUID = -2568698052987298242L;
 
+    /**
+     * @see Exception#Exception()
+     */
     public SenderException()
     {
         super();
     }
 
-    public SenderException(Throwable arg0)
+    /**
+     * @param cause the cause.
+     * @see Exception#Exception(Throwable)
+     */
+    public SenderException(Throwable cause)
     {
-        super(arg0);
-        // TODO Auto-generated constructor stub
+        super(cause);
     }
 
-    public SenderException(String arg0)
+    /**
+     * @param message the message.
+     * @see Exception#Exception(String)
+     */
+    public SenderException(String message)
     {
-        super(arg0);
+        super(message);
     }
 
-    public SenderException(String arg0, Throwable t)
+    /**
+     * @param message the message.
+     * @param cause the cause.
+     * @see Exception#Exception(String, Throwable)
+     */
+    public SenderException(String message, Throwable cause)
     {
-        super(arg0, t);
+        super(message, cause);
     }
 }

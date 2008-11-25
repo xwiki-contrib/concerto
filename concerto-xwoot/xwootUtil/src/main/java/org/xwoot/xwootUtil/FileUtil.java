@@ -62,6 +62,7 @@ import java.nio.channels.FileChannel;
 
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
@@ -522,6 +523,25 @@ public class FileUtil
                 throw new Exception("Problems closing the file " + filePath + " after storing an object to it: ", e);
             }
         }
+    }
+    
+    public static void saveCollectionToFile(Collection collection, String filePath) throws Exception
+    {
+        if (collection == null) {
+            throw new NullPointerException("A null value was provided instead of a valid collection.");
+        }
+        
+        if (collection.isEmpty()) {
+            File file = new File(filePath);
+
+            if (file.exists()) {
+                file.delete();
+            }
+
+            return;
+        }
+        
+        saveObjectToFile(collection, filePath);
     }
     
     /**

@@ -56,19 +56,18 @@ import org.xwoot.lpbcast.neighbors.Neighbors;
 /**
  * DOCUMENT ME!
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
 public interface LpbCastAPI
 {
     /** DOCUMENT ME! */
-    int LOG_OBJECT = 0;
+    static int LOG_OBJECT = 0;
 
     /** DOCUMENT ME! */
-    int LOG_AND_GOSSIP_OBJECT = 1;
+    static int LOG_AND_GOSSIP_OBJECT = 1;
 
     /** DOCUMENT ME! */
-    int ANTI_ENTROPY = 2;
+    static int ANTI_ENTROPY = 2;
 
     /**
      * DOCUMENT ME!

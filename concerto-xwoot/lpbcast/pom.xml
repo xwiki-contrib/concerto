@@ -11,6 +11,11 @@
   <artifactId>lpbcast</artifactId>
   <name>lpbcast</name>
   <dependencies>
+  	<dependency>
+      <groupId>org.xwoot</groupId>
+      <artifactId>xwootUtil</artifactId>
+      <version>${pom.version}</version>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

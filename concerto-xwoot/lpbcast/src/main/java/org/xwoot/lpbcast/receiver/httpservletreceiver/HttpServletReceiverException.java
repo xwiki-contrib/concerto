@@ -2,32 +2,49 @@ package org.xwoot.lpbcast.receiver.httpservletreceiver;
 
 import org.xwoot.lpbcast.receiver.ReceiverException;
 
+/**
+ * Exception handling for HttpServletReceiver.
+ * 
+ * @version $Id:$
+ */
 public class HttpServletReceiverException extends ReceiverException
 {
-
-    /**
-     * 
-     */
+    /** Unique ID used for serialization. */
     private static final long serialVersionUID = -2568698052987298242L;
 
+    /**
+     * @see Exception#Exception()
+     */
     public HttpServletReceiverException()
     {
         super();
     }
 
-    public HttpServletReceiverException(Throwable arg0)
+    /**
+     * @param cause the cause.
+     * @see Exception#Exception(String, Throwable)
+     */
+    public HttpServletReceiverException(Throwable cause)
     {
-        super(arg0);
-        // TODO Auto-generated constructor stub
+        super(cause);
     }
 
-    public HttpServletReceiverException(String arg0)
+    /**
+     * @param message the message.
+     * @see Exception#Exception(String)
+     */
+    public HttpServletReceiverException(String message)
     {
-        super(arg0);
+        super(message);
     }
 
-    public HttpServletReceiverException(String arg0, Throwable t)
+    /**
+     * @param message the message.
+     * @param cause the cause.
+     * @see Exception#Exception(String, Throwable)
+     */
+    public HttpServletReceiverException(String message, Throwable cause)
     {
-        super(arg0, t);
+        super(message, cause);
     }
 }

@@ -44,78 +44,80 @@
 
 package org.xwoot.lpbcast.receiver.httpservletreceiver;
 
-import java.io.IOException;
 import java.io.ObjectInputStream;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.xwoot.lpbcast.message.Message;
 import org.xwoot.lpbcast.receiver.ReceiverApi;
 import org.xwoot.lpbcast.receiver.ReceiverException;
 
 /**
- * DOCUMENT ME!
+ * Abstract implementation that provides the {@link #processReceiveMessage(HttpServletRequest, HttpServletResponse)}
+ * method.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
-public abstract class HttpServletReceiverAPI extends HttpServlet implements ReceiverApi
+public abstract class AbstractHttpServletReceiver extends HttpServlet implements ReceiverApi
 {
+    /** Servlet request parameter for neighbor test. */
+    public static final String NEIGHBOR_TEST_REQUEST_PARAMETER = "test";
 
+    /** Unique ID used for serialization. */
     private static final long serialVersionUID = -3497389707414403588L;
 
-    public static final String RECEIVERSERVLETCONTEXT = "/receiveMessage";
+    /** Used for logging. */
+    public Log log;
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
+     * Creates a new instance.
      */
-    public abstract Object getPeerId();
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param request DOCUMENT ME!
-     * @param response DOCUMENT ME!
-     * @throws HttpServletReceiverException 
-     */
-    public void processReceiveMessage(HttpServletRequest request, HttpServletResponse response) throws
-       ReceiverException
+    public AbstractHttpServletReceiver()
     {
-        if (this.isReceiverConnected()) {
-            System.out.println("Site " + this.getPeerId() + " : Receive message -");
-            if (request.getParameter("test") != null) {
-                System.out.println("It's a neighbor test... ");
-            } else {
-                ObjectInputStream ois;
-                try {
-                    ois = new ObjectInputStream(request.getInputStream());
-                    Message message = null;
-
-                    
-                    message = (Message) ois.readObject();
-                    ois.close();
-                    this.receive(message);
-                } catch (IOException e1) {
-                   throw new HttpServletReceiverException(this.getPeerId()+" : Problem to read message from http connexion",e1);         
-                } catch (ClassNotFoundException e) { 
-                    throw new HttpServletReceiverException(this.getPeerId()+" : Problem when reading message from http connexion with class cast ",e);
-                }
-            }
-        }
+        log = LogFactory.getLog(this.getClass());
     }
 
     /**
-     * DOCUMENT ME!
+     * Reads a message from the {@link HttpServletRequest} and forwards it to the {@link #receive(Message)} method.
      * 
-     * @param content DOCUMENT ME!
-     * @throws HttpServletReceiverException 
-     * @throws ReceiverException 
-     * 
+     * @param request the HTTP request.
+     * @param response the HTTP response.
+     * @throws ReceiverException if problems occur processing the message.
      */
-    public abstract void receive(Message message) throws ReceiverException;
+    public void processReceiveMessage(HttpServletRequest request, HttpServletResponse response)
+        throws ReceiverException
+    {
+        if (this.isReceiverConnected()) {
+            log.info("Site " + this.getPeerId() + " : Receive message -");
+
+            if (request.getParameter(NEIGHBOR_TEST_REQUEST_PARAMETER) != null) {
+                log.info("It's a neighbor test... ");
+            } else {
+                Message message = null;
+                ObjectInputStream ois = null;
+
+                try {
+                    ois = new ObjectInputStream(request.getInputStream());
+                    message = (Message) ois.readObject();
+                } catch (Exception e) {
+                    throw new HttpServletReceiverException(this.getPeerId()
+                        + " : Problem reading message from http connexion.\n", e);
+                } finally {
+                    try {
+                        if (ois != null) {
+                            ois.close();
+                        }
+                    } catch (Exception e) {
+                        log.error("Failed to close the request input stream.");
+                    }
+                }
+
+                this.receive(message);
+            }
+        }
+    }
 }

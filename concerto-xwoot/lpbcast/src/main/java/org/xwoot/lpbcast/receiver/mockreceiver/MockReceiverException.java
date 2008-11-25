@@ -2,32 +2,49 @@ package org.xwoot.lpbcast.receiver.mockreceiver;
 
 import org.xwoot.lpbcast.receiver.ReceiverException;
 
+/**
+ * Exception handling for MockReceiver.
+ * 
+ * @version $Id:$
+ */
 public class MockReceiverException extends ReceiverException
 {
-
-    /**
-     * 
-     */
+    /** Unique ID used for serialization. */
     private static final long serialVersionUID = -2568698052987298242L;
 
+    /**
+     * @see Exception#Exception()
+     */
     public MockReceiverException()
     {
         super();
     }
 
-    public MockReceiverException(Throwable arg0)
+    /**
+     * @param cause the cause.
+     * @see Exception#Exception(Throwable)
+     */
+    public MockReceiverException(Throwable cause)
     {
-        super(arg0);
-        // TODO Auto-generated constructor stub
+        super(cause);
     }
 
-    public MockReceiverException(String arg0)
+    /**
+     * @param message the message.
+     * @see Exception#Exception(String)
+     */
+    public MockReceiverException(String message)
     {
-        super(arg0);
+        super(message);
     }
 
-    public MockReceiverException(String arg0, Throwable t)
+    /**
+     * @param message the message.
+     * @param cause the cause.
+     * @see Exception#Exception(String, Throwable)
+     */
+    public MockReceiverException(String message, Throwable cause)
     {
-        super(arg0, t);
+        super(message, cause);
     }
 }

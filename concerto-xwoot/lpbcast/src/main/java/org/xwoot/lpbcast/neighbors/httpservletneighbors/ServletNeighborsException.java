@@ -5,11 +5,10 @@ import org.xwoot.lpbcast.neighbors.NeighborsException;
 /**
  * Exception handling for ServletNeighbors.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class ServletNeighborsException extends NeighborsException
 {
-
     /** Unique ID used for serialization. */
     private static final long serialVersionUID = -2568698052987298242L;
 

@@ -1,330 +1,98 @@
-/**
- * 
- *        -- class header / Copyright (C) 2008  100 % INRIA / LGPL v2.1 --
- * 
- *  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- *  Copyright (C) 2008  100 % INRIA
- *  Authors :
- *                       
- *                       Gerome Canals
- *                     Nabil Hachicha
- *                     Gerald Hoster
- *                     Florent Jouille
- *                     Julien Maire
- *                     Pascal Molli
- * 
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- * 
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- * 
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- * 
- *  INRIA disclaims all copyright interest in the application XWoot written
- *  by :    
- *          
- *          Gerome Canals
- *         Nabil Hachicha
- *         Gerald Hoster
- *         Florent Jouille
- *         Julien Maire
- *         Pascal Molli
- * 
- *  contact : maire@loria.fr
- *  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- *  
+/*
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
 package org.xwoot.lpbcast.neighbors;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Random;
 
 /**
- * DOCUMENT ME!
+ * Handles the neighbors in the P2P Network.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
-public abstract class Neighbors
+public interface Neighbors
 {
-    private HashSet<Object> neighbors;
-
-    private String neighborsFilePath;
-
-    private int maxNumber;
-
-    private Integer id;
-
-    // constructor
     /**
-     * Creates a new Neighbors object.
-     * 
-     * @param neighborsFilePath DOCUMENT ME!
-     * @param maxNumber DOCUMENT ME!
-     * 
+     * Deletes the file where the stored neighbors are kept.
      */
-    public Neighbors(String directoryPath, int maxNumber, Integer id) throws NeighborsException
-    {
-        File f = new File(directoryPath);
-        if (!f.exists()) {
-            if (!f.mkdir()) {
-                throw new NeighborsException(this.id+" : Can't create directory: " + directoryPath);
-            }
-        } else if (!f.isDirectory()) {
-            throw new NeighborsException(this.id+" : given path : " + directoryPath + " -- is not a directory");
-        } else if (!f.canWrite()) {
-            throw new NeighborsException(this.id+" : given path : " + directoryPath + " -- isn't writable");
-        }
-
-        this.neighborsFilePath = directoryPath + File.separator + "neighbors";
-        this.maxNumber = maxNumber;
-        this.id = id;
-        this.neighbors = new HashSet<Object>();
-        // this.loadNeighbors();
-    }
-
-    public void clearWorkingDir()
-    {
-        File f = new File(this.neighborsFilePath);
-        if (f.exists()) {
-            f.delete();
-        }
-    }
-
-    // add neighbor
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param neighbor DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws NeighborsException 
-     * 
-     */
-    public int addNeighbor(Object neighbor) throws NeighborsException
-    {
-        int result = 0;
-
-        if (neighbor == null) {
-            return -1;
-        }
-
-        this.loadNeighbors();
-
-        if (this.neighbors.size() == this.maxNumber) {
-            this.removeNeighborRandomly();
-        }
-
-        if (!this.neighbors.contains(neighbor)) {
-            if (this.neighbors.size() == this.maxNumber) {
-                this.removeNeighborRandomly();
-            } else {
-                result = 1;
-            }
-
-            this.neighbors.add(neighbor);
-        } else {
-            result = -1;
-        }
-
-        this.storeNeighbors();
-
-        return result;
-    }
-
-    // remove all neighbors
-    /**
-     * DOCUMENT ME!
-     * @throws NeighborsException 
-     * 
-     */
-    public void clearNeighbors() throws NeighborsException
-    {
-        this.neighbors = new HashSet<Object>();
-        this.storeNeighbors();
-    }
+    void clearWorkingDir();
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
+     * @param neighbor the new neighbor to add.
+     * @return true if the neighbor was successfully added or false if it already existed or the provided value was
+     *         null.
+     * @throws NeighborsException if problems occur loading/unloading the neighbors or while removing a random neighbor.
      */
-    public Integer getId()
-    {
-        return this.id;
-    }
+    boolean addNeighbor(Object neighbor) throws NeighborsException;
 
-    // return one neighbor randomly in the neighbors table
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     * @throws NeighborsException 
+     * @param neighbor the neighbor to remove.
+     * @throws NeighborsException if problems loading or storing the neighbors occur.
      */
-    public Object getNeighborRandomly() throws NeighborsException
-    {
-        this.loadNeighbors();
+    void removeNeighbor(Object neighbor) throws NeighborsException;
 
-        if (this.neighbors.size() == 0) {
-            return null;
-        }
-
-        Random generator = new Random();
-        int randomIndex = generator.nextInt(this.neighbors.size());
-        Object result = this.neighbors.toArray()[randomIndex];
-        this.storeNeighbors();
-
-        return result;
-    }
-
-    // is connected to one neighbor ?
     /**
-     * DOCUMENT ME!
+     * Removes all neighbors.
      * 
-     * @return DOCUMENT ME!
-     * @throws NeighborsException 
-     * 
+     * @throws NeighborsException if problems occur while storing.
      */
-    public boolean isConnected() throws NeighborsException
-    {
-        this.loadNeighbors();
+    void clearNeighbors() throws NeighborsException;
 
-        return this.neighbors.size() > 0;
-    }
+    /**
+     * @return a random neighbor from the known neighbors.
+     * @throws NeighborsException if problems loading the neighbors occur.
+     */
+    Object getNeighborRandomly() throws NeighborsException;
 
-    // methods for persistent storage
+    /**
+     * @return true if there are any known neighbors, false otherwise.
+     * @throws NeighborsException if problems loading the neighbors occur.
+     */
+    boolean isConnected() throws NeighborsException;
+
+    /**
+     * @return a collection of known neighbors.
+     * @throws NeighborsException if problems loading the neighbors occur.
+     */
     @SuppressWarnings("unchecked")
-    private void loadNeighbors() throws NeighborsException 
-    {
-        File neighborsFile = new File(this.neighborsFilePath);
+    Collection neighborsList() throws NeighborsException;
 
-        if (!neighborsFile.exists()) {
-            this.neighbors = new HashSet<Object>();
-
-            return;
-        }
-
-        ObjectInputStream ois = null;
-        try {
-            ois = new ObjectInputStream(new FileInputStream(neighborsFile));
-            HashSet<Object> readObject = (HashSet<Object>) ois.readObject();
-            this.neighbors = readObject;
-            ois.close();
-        } catch (IOException e) {
-            throw new NeighborsException("Problem to load neighbors file "+this.neighborsFilePath+"\n",e);
-        } catch (ClassNotFoundException e) {
-            throw new NeighborsException("Problem when loading neighbors file with class cast "+this.neighborsFilePath+"\n",e);
-        }
-
-      
-    }
-
-    // get neighbors list
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     * @throws NeighborsException 
-     * 
+     * @return the number of known neighbors.
+     * @throws NeighborsException if problems loading the neighbors occur.
      */
-    public Collection neighborsList() throws NeighborsException
-    {
-        this.loadNeighbors();
+    int neighborsListSize() throws NeighborsException;
 
-        Collection result = (Collection) this.neighbors.clone();
-        this.storeNeighbors();
-
-        return result;
-    }
-
-    // neighbors list size
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     * @throws NeighborsException 
-     * 
+     * @return the siteId of the wootEngine managing the neighbors.
      */
-    public int neighborsListSize() throws NeighborsException 
-    {
-        this.loadNeighbors();
+    Integer getSiteId();
 
-        int result = this.neighbors.size();
-        this.storeNeighbors();
-
-        return result;
-    }
-
-    public abstract void notifyNeighbor(Object neighbor, Object message);
-
-    public abstract void notifyNeighbors(Object message);
-
-    // remove neighbor
     /**
-     * DOCUMENT ME!
-     * 
-     * @param neighbor DOCUMENT ME!
-     * @throws NeighborsException 
-     * 
+     * @param neighbor the neighbor to notify.
+     * @param message the message with which to notify the neighbor.
      */
-    public void removeNeighbor(Object neighbor) throws NeighborsException
-    {
-        this.loadNeighbors();
-        this.neighbors.remove(neighbor);
-        this.storeNeighbors();
-    }
+    void notifyNeighbor(Object neighbor, Object message);
 
-    // private
-    // remove one neighbor ramdomly
-    private void removeNeighborRandomly() throws NeighborsException
-    {
-        this.loadNeighbors();
-
-        Random generator = new Random();
-        int randomIndex = generator.nextInt(this.neighbors.size());
-        this.neighbors.remove(this.neighbors.toArray()[randomIndex]);
-        this.storeNeighbors();
-    }
-
-    private void storeNeighbors() throws NeighborsException
-    {
-        if (this.neighbors.isEmpty()) {
-            File neighborsFile = new File(this.neighborsFilePath);
-
-            if (neighborsFile.exists()) {
-                neighborsFile.delete();
-            }
-
-            return;
-        }
-
-        FileOutputStream fout = null;
-        ObjectOutputStream oos = null;
-        try {
-            fout = new FileOutputStream(this.neighborsFilePath);
-            oos = new ObjectOutputStream(fout);
-            oos.writeObject(this.neighbors);
-            oos.flush();
-            oos.close();
-            fout.close();
-        } catch (IOException e) {
-            throw new NeighborsException(this.id+" : Problem to store neighbors file "+this.neighborsFilePath+"\n",e);
-        }
-       
-    }
+    /**
+     * @param message the message with which to notify all the known neighbors.
+     */
+    void notifyNeighbors(Object message);
 }

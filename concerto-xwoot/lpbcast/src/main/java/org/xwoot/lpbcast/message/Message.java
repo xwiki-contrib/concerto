@@ -49,39 +49,41 @@ import java.io.Serializable;
 import org.xwoot.lpbcast.util.Guid;
 
 /**
- * DOCUMENT ME!
+ * Describes a message sent trough the P2P network.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class Message implements Serializable
 {
     /** Unique ID used for serialization. */
     private static final long serialVersionUID = -8107239172395652489L;
 
+    /** The Globally Unique ID of this message. This is also the key by which it is stored in the antiEntropy's log. */
     private Object id;
 
+    /** Value used for message gossip. It will be decremented each time the message is passed on. */
     private int round;
 
+    /** The content of this message. This can vary, depending on the value of the action field. */
     private Object content;
 
+    /** The XWootId of the peer that created this message. */
     private Object originalPeerId;
 
+    /** The action to be applied on this message. */
     private int action;
 
+    /** A random neighbor used to propagate all the members of the P2P Network to each node probabilistically. */
     private Object randNeighbor;
 
-    /**
-     * Creates a new Message object.
-     */
+    /** Creates a new Message object. */
     public Message()
     {
         this.id = Guid.generateGUID(this);
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
+     * @return the action to be applied on this message. The available actions are defined in {@link LpbCastAPI}.
      */
     public int getAction()
     {
@@ -89,59 +91,8 @@ public class Message implements Serializable
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public Object getContent()
-    {
-        return this.content;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public Object getId()
-    {
-        return this.id;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public Object getOriginalPeerId()
-    {
-        return this.originalPeerId;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public Object getRandNeighbor()
-    {
-        return this.randNeighbor;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public int getRound()
-    {
-        return this.round;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param action DOCUMENT ME!
+     * @param action the action to set.
+     * @see #getAction()
      */
     public void setAction(int action)
     {
@@ -149,9 +100,17 @@ public class Message implements Serializable
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param content DOCUMENT ME!
+     * @return the content of this message. This can vary, depending on the value of the action field.
+     * @see #getAction()
+     */
+    public Object getContent()
+    {
+        return this.content;
+    }
+
+    /**
+     * @param content the content to set.
+     * @see #getContent()
      */
     public void setContent(Object content)
     {
@@ -159,9 +118,25 @@ public class Message implements Serializable
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param originalPeerId DOCUMENT ME!
+     * @return the Globally Unique ID of this message. This is also the key by which it is stored in antiEntropy's log.
+     * @see Guid
+     */
+    public Object getId()
+    {
+        return this.id;
+    }
+
+    /**
+     * @return the XWootId of the peer that created this message.
+     */
+    public Object getOriginalPeerId()
+    {
+        return this.originalPeerId;
+    }
+
+    /**
+     * @param originalPeerId the originalPeerId to set
+     * @see #getOriginalPeerId()
      */
     public void setOriginalPeerId(Object originalPeerId)
     {
@@ -169,9 +144,16 @@ public class Message implements Serializable
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param randNeighbor DOCUMENT ME!
+     * @return a random neighbor used to propagate all the members of the P2P Network to each node probabilistically.
+     */
+    public Object getRandNeighbor()
+    {
+        return this.randNeighbor;
+    }
+
+    /**
+     * @param randNeighbor the randNeighbor to set.
+     * @see #getRandNeighbor()
      */
     public void setRandNeighbor(Object randNeighbor)
     {
@@ -179,23 +161,19 @@ public class Message implements Serializable
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param round DOCUMENT ME!
+     * @return a value used for message gossip. It will be decremented each time the message is passed on.
+     */
+    public int getRound()
+    {
+        return this.round;
+    }
+
+    /**
+     * @param round the round to set.
+     * @see #getRound()
      */
     public void setRound(int round)
     {
         this.round = round;
     }
-
-    // // sender
-    // private Object originalPeer;
-    //
-    // public Object getOriginalPeer() {
-    // return this.originalPeer;
-    // }
-    //
-    // public void setOriginalPeer(Object originalPeer) {
-    // this.originalPeer = originalPeer;
-    // }
 }

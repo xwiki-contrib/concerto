@@ -208,16 +208,6 @@ public class Log implements Serializable
      */
     private void storeLog() throws LogException
     {
-        if (this.log.isEmpty()) {
-            File logFile = new File(this.logFilePath);
-
-            if (logFile.exists()) {
-                logFile.delete();
-            }
-
-            return;
-        }
-
         try {
             FileUtil.saveObjectToFile(this.log, this.logFilePath);
         } catch (Exception e) {
