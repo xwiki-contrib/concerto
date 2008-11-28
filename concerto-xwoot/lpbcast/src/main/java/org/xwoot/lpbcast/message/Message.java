@@ -46,6 +46,7 @@ package org.xwoot.lpbcast.message;
 
 import java.io.Serializable;
 
+import org.xwoot.lpbcast.sender.LpbCastAPI;
 import org.xwoot.lpbcast.util.Guid;
 
 /**

@@ -25,10 +25,10 @@ import java.util.Collection;
 /**
  * Handles the neighbors in the P2P Network.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public interface Neighbors
-{
+{    
     /**
      * Deletes the file where the stored neighbors are kept.
      */
@@ -72,13 +72,13 @@ public interface Neighbors
      * @throws NeighborsException if problems loading the neighbors occur.
      */
     @SuppressWarnings("unchecked")
-    Collection neighborsList() throws NeighborsException;
+    Collection getNeighborsList() throws NeighborsException;
 
     /**
      * @return the number of known neighbors.
      * @throws NeighborsException if problems loading the neighbors occur.
      */
-    int neighborsListSize() throws NeighborsException;
+    int getNeighborsListSize() throws NeighborsException;
 
     /**
      * @return the siteId of the wootEngine managing the neighbors.

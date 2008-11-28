@@ -32,13 +32,10 @@ import org.xwoot.lpbcast.util.NetUtil;
 /**
  * Thread used for asynchronously notifying neighbor(s).
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class NotifyNeighborsThread extends Thread
 {
-    /** The location of the servlet to notify, relative to the neighbor's address. */
-    public static final String NOTIFY_SERVLET_PATH = "/receiveMessage.do";
-
     /** The message to notify the neighbor(s) with. */
     private Object message;
 
@@ -97,7 +94,7 @@ public class NotifyNeighborsThread extends Thread
     {
         this.log.debug("Send message to : " + neighbor);
 
-        String neighborAddress = neighbor + NOTIFY_SERVLET_PATH;
+        String neighborAddress = neighbor + HttpServletNeighbors.NOTIFY_SERVLET_PATH;
         URL neighborUrl = null;
         try {
             neighborUrl = new URL(neighborAddress);
@@ -126,7 +123,7 @@ public class NotifyNeighborsThread extends Thread
                 this.call(this.neighbor);
             } else {
                 if (this.neighbors != null) {
-                    for (Iterator i = this.neighbors.neighborsList().iterator(); i.hasNext();) {
+                    for (Iterator i = this.neighbors.getNeighborsList().iterator(); i.hasNext();) {
                         // TODO externalize the communication?
                         Object aNeighbor = i.next();
                         this.call(aNeighbor);

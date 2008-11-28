@@ -51,115 +51,177 @@ import org.xwoot.lpbcast.message.Message;
 import org.xwoot.lpbcast.neighbors.Neighbors;
 import org.xwoot.lpbcast.neighbors.NeighborsException;
 import org.xwoot.lpbcast.neighbors.httpservletneighbors.HttpServletNeighbors;
+import org.xwoot.lpbcast.receiver.httpservletreceiver.AbstractHttpServletReceiver;
 import org.xwoot.lpbcast.sender.LpbCastAPI;
 import org.xwoot.lpbcast.sender.SenderException;
 
 import java.io.File;
 import java.util.Collection;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * DOCUMENT ME!
+ * Implements a Sender using servlets for communication trough the HTTP protocol.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
 public class HttpServletLpbCast implements LpbCastAPI
 {
-    private int round;
+    /** The servlet used for state transfer. */
+    public static final String SEND_STATE_SERVLET = "/sendState.do";
 
-    private Neighbors neighbors;
+    /** The servet used for anti-enropy. */
+    public static final String SEND_AE_DIFF_SERVLET = "/sendAEDiff.do";
 
-    private Integer id;
+    /** The servlet path used for neighbor test. The url of the neighbor requesting this test must also be provided. */
+    public static final String SEND_NEIGHBOR_TEST_PATH =
+        "/synchronize.do?" + AbstractHttpServletReceiver.NEIGHBOR_TEST_REQUEST_PARAMETER + "=true&url=";
 
-    public Integer getId()
-    {
-        return this.id;
-    }
+    /** Connected state. */
+    public final LpbCastAPI connectedState = new HttpServletLpbCastStateConnected(this);
 
+    /** Disconnected state. */
+    public final LpbCastAPI disconnectedState = new HttpServletLpbCastStateDisconnected(this);
+
+    /** Used for logging. */
     protected final Log logger = LogFactory.getLog(this.getClass());
 
-    public final static String SENDSTATECONTEXT = "/sendState.do";
-    
-    public final static String SENDAEDIFFCONTEXT = "/sendAEDiff.do";
+    /**
+     * @see #getRound()
+     **/
+    private int round;
 
-    private HttpServletLpbCastState state;
+    /**
+     * @see #getNeighbors()
+     */
+    private Neighbors neighbors;
 
-    // list of all possible states
-    public final HttpServletLpbCastStateConnected CONNECTED = new HttpServletLpbCastStateConnected(this);
+    /**
+     * @see #getSiteId()
+     */
+    private Integer siteId;
 
-    public final HttpServletLpbCastStateDisconnected DISCONNECTED = new HttpServletLpbCastStateDisconnected(this);
+    /** The state of the P2P node. This determines the behavior. */
+    private LpbCastAPI state;
 
     /**
      * Creates a new LpbCast object.
      * 
-     * @param workingDirPath DOCUMENT ME!
-     * @param messagesRound DOCUMENT ME!
-     * @param maxNeighbors DOCUMENT ME!
-     * @param peerId DOCUMENT ME!
-     * @throws HttpServletLpbCastException 
+     * @param workingDirPath the working directory where to store neighbors.
+     * @param messagesRound the initial message round.
+     * @param maxNeighbors the maximum number of neighbors to remember.
+     * @param siteId the siteId of this node.
+     * @throws HttpServletLpbCastException if problems occur initializing the neighbors manager.
      */
-    public HttpServletLpbCast(String workingDirPath, int messagesRound, int maxNeighbors, Integer id) throws HttpServletLpbCastException 
+    public HttpServletLpbCast(String workingDirPath, int messagesRound, int maxNeighbors, Integer siteId)
+        throws HttpServletLpbCastException
     {
         this.round = messagesRound;
-        this.id = id;
+        this.siteId = siteId;
         try {
-            this.neighbors = new HttpServletNeighbors(workingDirPath, maxNeighbors, this.id);
+            this.neighbors = new HttpServletNeighbors(workingDirPath, maxNeighbors, this.siteId);
         } catch (NeighborsException e) {
-           throw new HttpServletLpbCastException(this.id+" : Problem when creating neighbors \n",e);
+            throw new HttpServletLpbCastException(this.siteId + " - Problem creating neighbor\n", e);
         }
-        this.logger.info(this.id + " LPBCast created.");
-        this.state = this.DISCONNECTED;
+
+        this.logger.info(this.siteId + " - LPBCast created.");
+        this.state = this.disconnectedState;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.xwoot.lpbcast.LpbCastAPI#addNeighbor(java.lang.Object)
-     */
+    /** {@inheritDoc} */
     public boolean addNeighbor(Object from, Object neighbor)
     {
         return this.state.addNeighbor(from, neighbor);
     }
 
-    public void clearWorkingDir() 
+    /** {@inheritDoc} */
+    public void removeNeighbor(Object neighbor) throws HttpServletLpbCastException
     {
-        this.neighbors.clearWorkingDir();
+        try {
+            this.neighbors.removeNeighbor(neighbor);
+        } catch (NeighborsException e) {
+            throw new HttpServletLpbCastException(this.siteId + " - Problem removing neighbor.\n", e);
+        }
+
     }
 
-    public void connectSender()
-    {
-        this.state.connectSender();
-    }
-
-    public void disconnectSender()
-    {
-        this.state.disconnectSender();
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see org.xwoot.lpbcast.LpbCastAPI#getNeighbors()
-     */
+    /** {@inheritDoc} */
     public Neighbors getNeighbors()
     {
         return this.neighbors;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.xwoot.lpbcast.LpbCastAPI#getNewMessage(java.lang.Object, int, int)
-     */
-    public Message getNewMessage(Object creatorPeerId, Object content, int action, int r) 
+    /** {@inheritDoc} */
+    @SuppressWarnings("unchecked")
+    public Collection getNeighborsList() throws HttpServletLpbCastException
     {
-        this.logger.debug(this.getId() + " Creating new message to send.");
+        try {
+            return this.neighbors.getNeighborsList();
+        } catch (NeighborsException e) {
+            throw new HttpServletLpbCastException(this.siteId + " - Problem getting neighbors list.\n", e);
+        }
+    }
+
+    /** {@inheritDoc} */
+    public void clearWorkingDir()
+    {
+        this.neighbors.clearWorkingDir();
+    }
+
+    /** {@inheritDoc} */
+    public void connectSender()
+    {
+        this.state.connectSender();
+    }
+
+    /** {@inheritDoc} */
+    public void disconnectSender()
+    {
+        this.state.disconnectSender();
+    }
+
+    /** {@inheritDoc} */
+    public boolean isSenderConnected()
+    {
+        return this.state.isSenderConnected();
+    }
+
+    /** {@inheritDoc} */
+    public void sendTo(Object neighbor, Object toSend) throws SenderException
+    {
+        this.state.sendTo(neighbor, toSend);
+    }
+
+    /** {@inheritDoc} */
+    public void gossip(Message message) throws SenderException
+    {
+        this.state.gossip(message);
+
+    }
+
+    /** {@inheritDoc} */
+    public void processSendState(HttpServletResponse response, File stateFile) throws SenderException
+    {
+        this.state.processSendState(response, stateFile);
+    }
+
+    /** {@inheritDoc} */
+    @SuppressWarnings("unchecked")
+    public void processSendAE(HttpServletResponse response, Collection diff) throws SenderException
+    {
+        this.state.processSendAE(response, diff);
+    }
+
+    /** {@inheritDoc} */
+    public Message getNewMessage(Object originalPeerId, Object content, int action, int r)
+    {
+        this.logger.debug(this.getSiteId() + " - Creating a new message to send.");
 
         Message result = new Message();
         result.setAction(action);
         result.setContent(content);
         result.setRound(r);
-        result.setOriginalPeerId(creatorPeerId);
+        result.setOriginalPeerId(originalPeerId);
         try {
             result.setRandNeighbor(this.getNeighbors().getNeighborRandomly());
         } catch (NeighborsException e) {
@@ -169,73 +231,25 @@ public class HttpServletLpbCast implements LpbCastAPI
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.xwoot.lpbcast.LpbCastAPI#getRound()
-     */
+    /** {@inheritDoc} */
     public int getRound()
     {
         return this.round;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.xwoot.lpbcast.LpbCastAPI#gossip(java.lang.Object)
+    /**
+     * @return the siteId of this P2P node.
      */
-    public void gossip(Object from, Object message) throws SenderException
+    public Integer getSiteId()
     {
-        this.state.gossip(from, message);
-
+        return this.siteId;
     }
 
-    public boolean isSenderConnected()
-    {
-        return this.state.isSenderConnected();
-    }
-
-    public void processSendState(HttpServletRequest request, HttpServletResponse response, File stateFile) throws SenderException
-        
-    {
-        this.state.processSendState(request, response, stateFile);
-    }
-    
-    public void processSendAE(HttpServletRequest request, HttpServletResponse response, Collection ae) throws SenderException
-    
-    {
-        this.state.processSendAE(request, response, ae);
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see org.xwoot.lpbcast.LpbCastAPI#sendTo(java.lang.Object, java.lang.Object)
+    /**
+     * @param state the new state of this connection.
      */
-    public void sendTo(Object neighbor, Object toSend) throws SenderException
-    {
-        this.state.sendTo(neighbor, toSend);
-    }
-
-    // called by a state class to set new state to this connection
-    protected void setState(HttpServletLpbCastState state)
+    protected void setState(LpbCastAPI state)
     {
         this.state = state;
-    }
-
-    public Collection getNeighborsList() throws HttpServletLpbCastException
-    {
-        try {
-            return this.neighbors.neighborsList();
-        } catch (NeighborsException e) {
-            throw new HttpServletLpbCastException(this.id+" : Problem to get neighbors list\n",e);
-        }
-    }
-
-    public void removeNeighbor(Object neighbor) throws HttpServletLpbCastException
-    {
-        try {
-            this.neighbors.removeNeighbor(neighbor);
-        } catch (NeighborsException e) {
-            throw new HttpServletLpbCastException(this.id+" : Problem to remove neighbor\n",e);
-        }
-
     }
 }

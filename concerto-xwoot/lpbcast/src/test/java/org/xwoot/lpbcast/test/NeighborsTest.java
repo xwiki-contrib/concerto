@@ -93,7 +93,7 @@ public class NeighborsTest
     public void tearDown() throws Exception
     {
         this.neighbors.clearNeighbors();
-        Assert.assertEquals(this.neighbors.neighborsListSize(), 0);
+        Assert.assertEquals(this.neighbors.getNeighborsListSize(), 0);
     }
 
     /**
@@ -116,7 +116,7 @@ public class NeighborsTest
     public void testAdd() throws Exception
     {
         this.neighbors.addNeighbor("neighbor 0");
-        Assert.assertEquals(this.neighbors.neighborsListSize(), 1);
+        Assert.assertEquals(this.neighbors.getNeighborsListSize(), 1);
     }
 
     /**
@@ -127,7 +127,7 @@ public class NeighborsTest
     @Test
     public void testInit() throws Exception
     {
-        Assert.assertEquals(this.neighbors.neighborsListSize(), 0);
+        Assert.assertEquals(this.neighbors.getNeighborsListSize(), 0);
     }
 
     /**
@@ -156,7 +156,7 @@ public class NeighborsTest
             this.neighbors.addNeighbor("neighbor " + i);
         }
 
-        Assert.assertEquals(this.neighbors.neighborsList().size(), 10);
+        Assert.assertEquals(this.neighbors.getNeighborsList().size(), 10);
 
         this.neighbors.clearNeighbors();
 
@@ -164,7 +164,7 @@ public class NeighborsTest
             this.neighbors.addNeighbor("neighbor " + i);
         }
 
-        Assert.assertEquals(this.neighbors.neighborsList().size(), 5);
+        Assert.assertEquals(this.neighbors.getNeighborsList().size(), 5);
     }
 
     /**
@@ -179,7 +179,7 @@ public class NeighborsTest
             this.neighbors.addNeighbor("neighbor " + i);
         }
 
-        Assert.assertEquals(this.neighbors.neighborsListSize(), 10);
+        Assert.assertEquals(this.neighbors.getNeighborsListSize(), 10);
     }
 
     /**
@@ -191,10 +191,10 @@ public class NeighborsTest
     public void testRemove() throws Exception
     {
         this.neighbors.addNeighbor("neighbor 0");
-        Assert.assertEquals(this.neighbors.neighborsListSize(), 1);
+        Assert.assertEquals(this.neighbors.getNeighborsListSize(), 1);
 
         this.neighbors.removeNeighbor("neighbor 0");
-        Assert.assertEquals(this.neighbors.neighborsListSize(), 0);
+        Assert.assertEquals(this.neighbors.getNeighborsListSize(), 0);
     }
 
     /**
@@ -207,6 +207,6 @@ public class NeighborsTest
     {
         this.neighbors.addNeighbor("neighbor 0");
         this.neighbors.addNeighbor("neighbor 0");
-        Assert.assertEquals(this.neighbors.neighborsListSize(), 1);
+        Assert.assertEquals(this.neighbors.getNeighborsListSize(), 1);
     }
 }

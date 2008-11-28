@@ -60,10 +60,25 @@ import org.xwoot.lpbcast.receiver.ReceiverException;
  * Abstract implementation that provides the {@link #processReceiveMessage(HttpServletRequest, HttpServletResponse)}
  * method.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public abstract class AbstractHttpServletReceiver extends HttpServlet implements ReceiverApi
 {
+    /** The HTTP header field set by the Neighbor test. */
+    public static final String HTTP_CONNECTED_HEADER_FIELD = "Connected";
+    
+    /** The HTTP header field value set by the Neighbor test on success. */
+    public static final String HTTP_CONNECTED_HEADER_OK_VALUE = "true";
+    
+    /** The HTTP header field for content-type. */
+    public static final String HTTP_CONTENT_TYPE_HEADER = "Content-type";
+    
+    /** The HTTP header value for content-type when an anti-entropy message is sent. */
+    public static final String HTTP_CONTENT_TYPE_VALUE_FOR_ANTI_ENTROPY = "text/plain";
+    
+    /** The HTTP header value for content-type when a state transfer message is sent. */
+    public static final String HTTP_CONTENT_TYPE_VALUE_FOR_STATE = "application/zip";
+
     /** Servlet request parameter for neighbor test. */
     public static final String NEIGHBOR_TEST_REQUEST_PARAMETER = "test";
 

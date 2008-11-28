@@ -58,7 +58,7 @@ import org.xwoot.xwootUtil.FileUtil;
  * <p>
  * Users are left to implement the {@link #notifyNeighbor(Object, Object)} and {@link #notifyNeighbors(Object)} methods.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public abstract class AbstractNeighbors implements Neighbors
 {
@@ -254,7 +254,7 @@ public abstract class AbstractNeighbors implements Neighbors
      * @throws NeighborsException if problems loading the neighbors occur.
      */
     @SuppressWarnings("unchecked")
-    public Collection neighborsList() throws NeighborsException
+    public Collection getNeighborsList() throws NeighborsException
     {
         this.loadNeighbors();
 
@@ -265,7 +265,7 @@ public abstract class AbstractNeighbors implements Neighbors
      * @return the number of known neighbors.
      * @throws NeighborsException if problems loading the neighbors occur.
      */
-    public int neighborsListSize() throws NeighborsException
+    public int getNeighborsListSize() throws NeighborsException
     {
         this.loadNeighbors();
 

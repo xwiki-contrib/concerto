@@ -372,7 +372,7 @@ public class XWoot implements XWootAPI
         if (message!=null){
             try {
                 this.addPageNameToLastPages(pageName);
-                this.sender.gossip(this.getXWootPeerId(), message);
+                this.sender.gossip(message);
                 this.getAntiEntropy().logMessage(message.getId(), message);
             } catch (SenderException e) {
                 throw new XWootException("Can't send new Message ",e);  
@@ -853,15 +853,15 @@ public class XWoot implements XWootAPI
                     }
                 } catch (AntiEntropyException e) {
                     throw new XWootException(this.siteId+" : Problem to log message",e);
-                } 
-
+                }
+                
                 message.setRound(message.getRound() - 1);
                 message.setOriginalPeerId(this.getXWootPeerId());
 
                 if (message.getRound() > 0) {
                     this.logger.info(this.siteId + " : Received message : round >0 ; gossip message.");
                     try {
-                        this.sender.gossip(this.getXWootPeerId(), message);
+                        this.sender.gossip(message);
                     } catch (SenderException e) {
                         throw new XWootException(this.siteId+" : Problem to gossip message",e);
                     } 
@@ -947,7 +947,7 @@ public class XWoot implements XWootAPI
         try {
             System.out.println(this.getXWootPeerId() + " Ask state to " + NetUtil.normalize(to));
             URL getNeighborState =
-                new URL(NetUtil.normalize(to) + HttpServletLpbCast.SENDSTATECONTEXT + "?neighbor=" + from
+                new URL(NetUtil.normalize(to) + HttpServletLpbCast.SEND_STATE_SERVLET + "?neighbor=" + from
                     + "&file=stateFile");
             getNeighborState.openConnection().addRequestProperty("file", "stateFile");
 
@@ -969,7 +969,7 @@ public class XWoot implements XWootAPI
         try {
             System.out.println(this.getXWootPeerId() + " Ask antiEntropy to " + NetUtil.normalize(to));
             URL getNeighborAE =
-                new URL(NetUtil.normalize(to) + HttpServletLpbCast.SENDAEDIFFCONTEXT + "?neighbor=" + from
+                new URL(NetUtil.normalize(to) + HttpServletLpbCast.SEND_AE_DIFF_SERVLET + "?neighbor=" + from
                     + "&file=stateFile");
             getNeighborAE.openConnection().addRequestProperty("file", "stateFile");
             //Message[] log=(Message[]) this.getAntiEntropy().getContentForAskAntiEntropy();
@@ -995,12 +995,12 @@ public class XWoot implements XWootAPI
         }
         this.tre.clearWorkingDir();
         this.antiEntropy.clearWorkingDir();
-        try {
+        //try {
             this.sender.clearWorkingDir();
-        } catch (SenderException e) {
-            this.logger.error(this.peerId+" : Problem when clearing sender dir\n",e);
-            throw new XWootException(this.peerId+" : Problem when clearing  sender dir\n",e);
-        }
+        //} catch (SenderException e) {
+        //    this.logger.error(this.peerId+" : Problem when clearing sender dir\n",e);
+        //    throw new XWootException(this.peerId+" : Problem when clearing  sender dir\n",e);
+        //}
         this.clearWorkingDir();
         this.logger.info(this.siteId + " : all datas clears");
         if (!this.isContentManagerConnected()) {

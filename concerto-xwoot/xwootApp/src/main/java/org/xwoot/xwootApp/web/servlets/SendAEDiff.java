@@ -90,7 +90,7 @@ public class SendAEDiff extends HttpServlet
         }
         if (diff!=null) {
             try {
-                ((XWoot) XWootSite.getInstance().getXWootEngine()).getSender().processSendAE(request, response, diff);
+                ((XWoot) XWootSite.getInstance().getXWootEngine()).getSender().processSendAE(response, diff);
             } catch (SenderException e) {
                 throw new ServletException(e);
             }

@@ -6,10 +6,13 @@ import org.xwoot.lpbcast.neighbors.NeighborsException;
 /**
  * Handles neighbors accessible trough Servlets.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class HttpServletNeighbors extends AbstractNeighbors
 {
+    /** The location of the servlet to use when notifying a neighbor, relative to the neighbor's address. */
+    public static final String NOTIFY_SERVLET_PATH = "/receiveMessage.do";
+    
     /**
      * Creates a new instance.
      * 

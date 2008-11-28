@@ -77,7 +77,7 @@ public class SendState extends HttpServlet
         File state;
         try {
             state = XWootSite.getInstance().getXWootEngine().exportWootStorage();
-            ((XWoot) XWootSite.getInstance().getXWootEngine()).getSender().processSendState(request, response, state);
+            ((XWoot) XWootSite.getInstance().getXWootEngine()).getSender().processSendState(response, state);
         } catch (Exception e) {
             throw new ServletException(e);
         }

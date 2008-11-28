@@ -59,72 +59,107 @@ import java.net.URL;
 import java.net.URLConnection;
 
 /**
- * DOCUMENT ME!
+ * Utility class for network operations.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
-public class NetUtil
+public final class NetUtil
 {
-    /** DOCUMENT ME! */
+    /** Timeout for network operations in ms. */
     public static final int READ_TIME_OUT = 60000;
 
+    /** The buffer size for network operations. */
+    public static final int READ_BUFFER_SIZE = 1024;
+
+    /** The name prefix of the temporary file where to store the downloaded content. */
+    public static final String DOWNLOADED_STATE_FILE_NAME = "downloadedState";
+
+    /** The extension of the temporary file where to store the downloaded content. */
+    public static final String DOWNLOADED_STATE_EXTENSION = ".zip";
+
+    /** The HTTP header field for Content-type. */
+    public static final String HTTP_CONTENT_TYPE_HEADER = "Content-type";
+
+    /**
+     * Disable instantiation of utility class.
+     */
     private NetUtil()
     {
-        // void;
     }
 
     /**
-     * DOCUMENT ME!
+     * Download a file through HTTP.
      * 
-     * @param url DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws IOException
-     * @throws Exception DOCUMENT ME!
+     * @param url the location of the file.
+     * @return the location on drive where the file was downloaded or null if the Content-type is "null".
+     * @throws IOException if problems occur while transferring or connecting.
      */
     public static synchronized File getFileViaHTTPRequest(URL url) throws IOException
     {
-        URLConnection con = url.openConnection();
+        File file = null;
+        URLConnection connection = null;
+        InputStream connectionInputStream = null;
+        BufferedOutputStream bos = null;
 
-        if ((con == null) || con.getHeaderField("Content-type").equals("null")) {
-            return null;
-        }
+        try {
+            connection = url.openConnection();
 
-        File file = File.createTempFile("state", ".zip");
-        BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file.getAbsolutePath()));
+            if ((connection == null) || connection.getHeaderField(HTTP_CONTENT_TYPE_HEADER).equals("null")) {
+                return null;
+            }
 
-        InputStream in = con.getInputStream();
-        byte[] buffer = new byte[1024];
-        int numRead;
+            file = File.createTempFile(DOWNLOADED_STATE_FILE_NAME, DOWNLOADED_STATE_FILE_NAME);
+            bos = new BufferedOutputStream(new FileOutputStream(file.getAbsolutePath()));
 
-        while ((numRead = in.read(buffer)) != -1) {
-            bos.write(buffer, 0, numRead);
-            bos.flush();
+            connectionInputStream = connection.getInputStream();
+            byte[] buffer = new byte[READ_BUFFER_SIZE];
+            int numRead;
+
+            while ((numRead = connectionInputStream.read(buffer)) != -1) {
+                bos.write(buffer, 0, numRead);
+                bos.flush();
+            }
+        } catch (Exception e) {
+            throw new IOException("Problems while getting file from Url: " + url + "\n ", e);
+        } finally {
+            try {
+                if (connectionInputStream != null) {
+                    connectionInputStream.close();
+                }
+                if (bos != null) {
+                    bos.close();
+                }
+            } catch (Exception e) {
+                throw new IOException("Problems closing the output file.\n", e);
+            }
         }
 
         return file;
     }
 
     /**
-     * DOCUMENT ME!
+     * Normalizes a given URL by applying {@link URI#normalize()}, removing trailing "/" and making sure the path part
+     * starts with "/".
      * 
-     * @param url DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws URISyntaxException
-     * @throws Exception DOCUMENT ME!
+     * @param url the url in string format to normalize.
+     * @return the normalized url as specified in the description.
+     * @throws URISyntaxException if problems parsing the url occur.
+     * @throws NullPointerException if the given url is null.
      */
-    public static String normalize(String url) throws URISyntaxException
+    public static String normalize(String url) throws URISyntaxException, NullPointerException
     {
+        String pathSeparator = "/";
+
         URI uri = new URI(url);
         uri = uri.normalize();
 
         String path = uri.getPath();
 
-        if (!path.startsWith("/")) {
-            path = "/" + path;
+        if (!path.startsWith(pathSeparator)) {
+            path = pathSeparator + path;
         }
 
-        if (path.endsWith("/")) {
+        if (path.endsWith(pathSeparator)) {
             path = path.substring(0, path.length() - 1);
         }
 
@@ -141,44 +176,54 @@ public class NetUtil
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param url DOCUMENT ME!
-     * @param object DOCUMENT ME!
-     * @throws IOException
-     * @throws Exception DOCUMENT ME!
+     * @param url the url where to send the object to.
+     * @param object the object to send
+     * @throws IOException if problems occur while sending.
      */
     public static synchronized void sendObjectViaHTTPRequest(URL url, Object object) throws IOException
     {
-        HttpURLConnection init = (HttpURLConnection) url.openConnection();
-        init.setConnectTimeout(NetUtil.READ_TIME_OUT);
-        init.setReadTimeout(NetUtil.READ_TIME_OUT);
-        init.setUseCaches(false);
-        init.setDoOutput(true);
-        init.setRequestProperty("Content-type", "application/octet-stream");
+        HttpURLConnection init = null;
+        ObjectOutputStream out = null;
 
-        ObjectOutputStream out = new ObjectOutputStream(init.getOutputStream());
-        out.writeObject(object);
-        out.flush();
         try {
+            init = (HttpURLConnection) url.openConnection();
+            init.setConnectTimeout(NetUtil.READ_TIME_OUT);
+            init.setReadTimeout(NetUtil.READ_TIME_OUT);
+            init.setUseCaches(false);
+            init.setDoOutput(true);
+            init.setRequestProperty(HTTP_CONTENT_TYPE_HEADER, "application/octet-stream");
+
+            out = new ObjectOutputStream(init.getOutputStream());
+            out.writeObject(object);
+            out.flush();
+
             init.getResponseCode();
         } catch (SocketTimeoutException s) {
-            System.out.println("Read timed out - try another time...");
+            // Read timed out - try another time...
             init.getResponseCode();
+        } catch (Exception e) {
+            throw new IOException("Problems while sending the object " + object + " via HTTP at url " + url + "\n", e);
+        } finally {
+            try {
+                if (out != null) {
+                    out.close();
+                }
+                if (init != null) {
+                    init.disconnect();
+                }
+            } catch (Exception e) {
+                throw new IOException("Problems closing the connection.\n", e);
+            }
         }
-
-        out.close();
-        init.disconnect();
     }
 
     /**
-     * DOCUMENT ME!
+     * Tests whether a field exists in the HTTP header of a url.
      * 
-     * @param url DOCUMENT ME!
-     * @param header DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws IOException
-     * @throws Exception DOCUMENT ME!
+     * @param url the url to test.
+     * @param header the header field to test.
+     * @return true if the header exists, false otherwise.
+     * @throws IOException if problems occur connecting to the url.
      */
     public static synchronized boolean testHTTPRequestHeader(URL url, String header) throws IOException
     {

@@ -58,7 +58,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -264,15 +263,12 @@ public class MockLpbCast implements LpbCastAPI, Serializable {
 
     /**
      * DOCUMENT ME!
-     * 
      * @param message
      *            DOCUMENT ME!
-     * 
      * @throws Exception
      *             DOCUMENT ME!
      */
-    public void gossip(Object from,Object message) {
-        this.addNeighbor(from, ((Message)message).getOriginalPeerId());
+    public void gossip(Message message) {
         this.notifyNeighbors(message);
     }
 
@@ -326,8 +322,8 @@ public class MockLpbCast implements LpbCastAPI, Serializable {
         }
     }
 
-    public void processSendState(HttpServletRequest request,
-            HttpServletResponse response, File state) {
+    public void processSendState(HttpServletResponse response,
+            File state) {
         // TODO Auto-generated method stub
 
     }
@@ -388,7 +384,7 @@ public class MockLpbCast implements LpbCastAPI, Serializable {
         
     }
 
-    public void processSendAE(HttpServletRequest request, HttpServletResponse response, Collection ae){
+    public void processSendAE(HttpServletResponse response, Collection ae){
         // TODO Auto-generated method stub
         
     }
