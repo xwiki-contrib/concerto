@@ -53,7 +53,7 @@ import junit.framework.Assert;
 /**
  * Tests the WootRow class, mainly the compareTo behavior.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class RowTest extends AbstractWootEngineTest
 {
@@ -76,8 +76,8 @@ public class RowTest extends AbstractWootEngineTest
     @Test
     public void testCompareByLocalClock()
     {
-        WootRow r1 = new WootRow(new WootId(site0.getWootEngineId(), 0), line1);
-        WootRow r2 = new WootRow(new WootId(site0.getWootEngineId(), 1), line1);
+        WootRow r1 = new WootRow(new WootId(this.site0.getWootEngineId(), 0), this.line1);
+        WootRow r2 = new WootRow(new WootId(this.site0.getWootEngineId(), 1), this.line1);
 
         Assert.assertTrue(r1.compareTo(r2) < 0);
     }
@@ -90,8 +90,8 @@ public class RowTest extends AbstractWootEngineTest
     @Test
     public void testCompareBySiteId()
     {
-        WootRow r1 = new WootRow(new WootId(site0.getWootEngineId(), 0), line1);
-        WootRow r2 = new WootRow(new WootId(site1.getWootEngineId(), 0), line1);
+        WootRow r1 = new WootRow(new WootId(this.site0.getWootEngineId(), 0), this.line1);
+        WootRow r2 = new WootRow(new WootId(this.site1.getWootEngineId(), 0), this.line1);
 
         Assert.assertTrue(r1.compareTo(r2) < 0);
     }

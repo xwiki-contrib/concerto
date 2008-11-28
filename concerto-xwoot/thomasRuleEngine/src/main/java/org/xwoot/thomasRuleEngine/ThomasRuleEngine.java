@@ -59,7 +59,9 @@ import org.xwoot.thomasRuleEngine.op.ThomasRuleOpSet;
 
 import java.io.File;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 /**
  * DOCUMENT ME!
@@ -252,5 +254,15 @@ public class ThomasRuleEngine
     synchronized public String toString()
     {
         return "Id - " + this.thomasRuleEngineId + " : " + this.entriesList.toString();
+    }
+    
+    synchronized public List<Identifier> getEntriesIds(String pageId) throws ThomasRuleEngineException{
+        List result= new ArrayList<Identifier>();
+        
+        List<Entry> entries=this.entriesList.getEntries(pageId);
+        for(Entry e:entries){
+            result.add(e.getId());
+        }
+        return result;
     }
 }

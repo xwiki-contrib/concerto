@@ -61,7 +61,7 @@ public class PageResourceTest
         WCM = WikiContentManagerFactory.getMockFactory().createWCM();
 
         // Create a new IWoot module (interface between IPhone and XWoot)
-        IWoot iwoot = new IWoot(XWootClientFactory.getMockFactory().createXWootClient(), WCM, Integer.valueOf(1));
+        IWoot iwoot = new IWoot(XWootClientFactory.getMockFactory().createXWootClient(WCM), WCM, Integer.valueOf(1));
 
         // Create a new REST api which use IWoot to access to resources
         RESTAPI = new RestApplication(iwoot);
@@ -144,33 +144,41 @@ public class PageResourceTest
         Assert.assertEquals(reference.toString(),doc.getDocumentElement().getAttribute(WikiContentManager.XML_ATTRIBUTE_NAME_HREF));
         Assert.assertEquals(WikiContentManager.XML_NODE_NAME_ENTRIES,doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getNodeName());
 
-        //      <entry><key>content</key><value>Content of existing page</value></entry>
+        //      <entry><key>renderContent</key><value>Content of existing page</value></entry>
         Assert.assertEquals(WikiContentManager.XML_NODE_NAME_ENTRY,    doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(0).getNodeName());
         Assert.assertEquals(WikiContentManager.XML_NODE_NAME_ENTRY_KEY,      doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(0).getChildNodes().item(0).getNodeName());
-        Assert.assertEquals(WikiContentManager.CONTENT,         doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(0).getChildNodes().item(0).getTextContent());
+        Assert.assertEquals(WikiContentManager.RENDERCONTENT,         doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(0).getChildNodes().item(0).getTextContent());
         Assert.assertEquals(WikiContentManager.XML_NODE_NAME_ENTRY_VALUE,    doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(0).getChildNodes().item(1).getNodeName());
         Assert.assertEquals(pageContent,                        doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(0).getChildNodes().item(1).getTextContent());
 
-        //      <entry><key>space</key><value>SpaceTest</value></entry>
+        //      <entry><key>content</key><value>Content of existing page</value></entry>
         Assert.assertEquals(WikiContentManager.XML_NODE_NAME_ENTRY,    doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(1).getNodeName());
         Assert.assertEquals(WikiContentManager.XML_NODE_NAME_ENTRY_KEY,      doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(1).getChildNodes().item(0).getNodeName());
-        Assert.assertEquals(WikiContentManager.SPACE,           doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(1).getChildNodes().item(0).getTextContent());
+        Assert.assertEquals(WikiContentManager.CONTENT,         doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(1).getChildNodes().item(0).getTextContent());
         Assert.assertEquals(WikiContentManager.XML_NODE_NAME_ENTRY_VALUE,    doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(1).getChildNodes().item(1).getNodeName());
-        Assert.assertEquals(TESTSPACENAME,                      doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(1).getChildNodes().item(1).getTextContent());
+        Assert.assertEquals(pageContent,                        doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(1).getChildNodes().item(1).getTextContent());
 
-        //      <entry><key>title</key><value>page0</value></entry>
+
+        //      <entry><key>space</key><value>SpaceTest</value></entry>
         Assert.assertEquals(WikiContentManager.XML_NODE_NAME_ENTRY,    doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(2).getNodeName());
         Assert.assertEquals(WikiContentManager.XML_NODE_NAME_ENTRY_KEY,      doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(2).getChildNodes().item(0).getNodeName());
-        Assert.assertEquals(WikiContentManager.TITLE,           doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(2).getChildNodes().item(0).getTextContent());
+        Assert.assertEquals(WikiContentManager.SPACE,           doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(2).getChildNodes().item(0).getTextContent());
         Assert.assertEquals(WikiContentManager.XML_NODE_NAME_ENTRY_VALUE,    doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(2).getChildNodes().item(1).getNodeName());
-        Assert.assertEquals("page0",                            doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(2).getChildNodes().item(1).getTextContent());
+        Assert.assertEquals(TESTSPACENAME,                      doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(2).getChildNodes().item(1).getTextContent());
 
-        //      <entry><key>id</key><value>SpaceTest.page0</value></entry>
+        //      <entry><key>title</key><value>page0</value></entry>
         Assert.assertEquals(WikiContentManager.XML_NODE_NAME_ENTRY,    doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(3).getNodeName());
         Assert.assertEquals(WikiContentManager.XML_NODE_NAME_ENTRY_KEY,      doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(3).getChildNodes().item(0).getNodeName());
-        Assert.assertEquals(WikiContentManager.ID,              doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(3).getChildNodes().item(0).getTextContent());
+        Assert.assertEquals(WikiContentManager.TITLE,           doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(3).getChildNodes().item(0).getTextContent());
         Assert.assertEquals(WikiContentManager.XML_NODE_NAME_ENTRY_VALUE,    doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(3).getChildNodes().item(1).getNodeName());
-        Assert.assertEquals(TESTSPACENAME+".page0",             doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(3).getChildNodes().item(1).getTextContent());
+        Assert.assertEquals("page0",                            doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(3).getChildNodes().item(1).getTextContent());
+
+        //      <entry><key>id</key><value>SpaceTest.page0</value></entry>
+        Assert.assertEquals(WikiContentManager.XML_NODE_NAME_ENTRY,    doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(4).getNodeName());
+        Assert.assertEquals(WikiContentManager.XML_NODE_NAME_ENTRY_KEY,      doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(4).getChildNodes().item(0).getNodeName());
+        Assert.assertEquals(WikiContentManager.ID,              doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(4).getChildNodes().item(0).getTextContent());
+        Assert.assertEquals(WikiContentManager.XML_NODE_NAME_ENTRY_VALUE,    doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(4).getChildNodes().item(1).getNodeName());
+        Assert.assertEquals(TESTSPACENAME+".page0",             doc.getDocumentElement().getElementsByTagName(WikiContentManager.XML_NODE_NAME_ENTRIES).item(0).getChildNodes().item(4).getChildNodes().item(1).getTextContent());
     }
 
     /**
@@ -330,7 +338,7 @@ public class PageResourceTest
         pageMap.put(WikiContentManager.CONTENT,pageContent1);
 
         doc=WCM.toXml(pageId1,APPLICATION_URI + "/" + PagesResource.KEY+"/"+pageId1 , pageMap);
-        
+
         Representation rep = new DomRepresentation(MediaType.APPLICATION_XML,doc);
 
         // Launch the request to create the resource
@@ -384,9 +392,9 @@ public class PageResourceTest
         pageMap2.put(WikiContentManager.CONTENT,pageContent2);
 
         doc=WCM.toXml(pageId2,APPLICATION_URI + "/" + PagesResource.KEY+"/"+pageId2 , pageMap2);
-        
+
         Representation rep2 = new DomRepresentation(MediaType.APPLICATION_XML,doc);
-      
+
         // Launch the request to create the resource
         response = CLIENT.post(APPLICATION_URI + "/" + PagesResource.KEY, rep2);
 
@@ -434,7 +442,7 @@ public class PageResourceTest
     //        System.out.println(xstream.toXML(page));     
     //    }
     //    
-    
+
     private Document getDocumentfromStream(InputStream is) throws ParserConfigurationException, SAXException, IOException{
 
         // création d'une fabrique de documents

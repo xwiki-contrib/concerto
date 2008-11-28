@@ -44,8 +44,6 @@
 
 package org.xwoot.wootEngine.test;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.xwoot.clockEngine.Clock;
 

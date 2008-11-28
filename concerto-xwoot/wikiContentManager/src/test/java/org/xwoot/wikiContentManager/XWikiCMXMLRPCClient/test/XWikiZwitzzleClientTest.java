@@ -46,6 +46,7 @@ package org.xwoot.wikiContentManager.XWikiCMXMLRPCClient.test;
 
 import org.junit.Test;
 import org.xwoot.wikiContentManager.WikiContentManager;
+import org.xwoot.wikiContentManager.XWikiSwizzleClient.XWikiSwizzleClientException;
 import org.xwoot.wikiContentManager.XWikiSwizzleClient.XwikiSwizzleClient;
 
 import java.util.List;
@@ -67,7 +68,7 @@ public class XWikiZwitzzleClientTest
     private XwikiSwizzleClient client;
 
     private final static String PROPERTIESFILE =
-        "./wikiContentManager/src/test/resources/xwiki.properties";
+        "./wikiContentManager/target/test-classes/xwiki.properties";
 
     /**
      * Creates a new XWikiZwitzzleClientTest object.
@@ -78,28 +79,28 @@ public class XWikiZwitzzleClientTest
     public XWikiZwitzzleClientTest() throws Exception
     {
         System.out.println(new File(".").getAbsolutePath());
-        this.client = new XwikiSwizzleClient(PROPERTIESFILE);      
+        this.client = new XwikiSwizzleClient(PROPERTIESFILE);    
         this.client.connect();
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @throws Exception DOCUMENT ME!
-     */
-    @Test
-    public void testComments() throws Exception
-    {      
-        this.client.createPage("test.testComments", "");
-        Map comment =
-            this.client.createComment("New comment for test", null, "", "test.newComment", "test.testComments", "", "");
-        System.out.println(comment);
-        comment = this.client.setComment("test.testComments", comment);
-        System.out.println(comment);
-        comment.put(WikiContentManager.CONTENT, "Yogourt");
-        this.client.setComment("test.testComments", comment);
-        System.out.println(this.client.getComments("test.testComments"));
-    }
+//    /**
+//     * DOCUMENT ME!
+//     * 
+//     * @throws Exception DOCUMENT ME!
+//     */
+//    @Test
+//    public void testComments() throws Exception
+//    {      
+//        this.client.createPage("test.testComments", "");
+//        Map comment =
+//            this.client.createComment("New comment for test", null, "", "test.newComment", "test.testComments", "", "");
+//        System.out.println(comment);
+//        comment = this.client.setComment("test.testComments", comment);
+//        System.out.println(comment);
+//        comment.put(WikiContentManager.CONTENT, "Yogourt");
+//        this.client.setComment("test.testComments", comment);
+//        System.out.println(this.client.getComments("test.testComments"));
+//    }
 
     /**
      * DOCUMENT ME!
@@ -232,9 +233,158 @@ public class XWikiZwitzzleClientTest
     }
 
     @Test
-    public void essai() throws Exception{
-        this.client.essai();
+    public void testGetRenderContent() throws Exception{
+        
+        this.client.removePage("test.1");
+        this.client.createPage("test.1", "1 Welcome to your wiki \n test");
+        Assert.assertNotNull(this.client.getFields("test.1"));
+        System.out.println("Render >>>>");
+        System.out.println(this.client.renderContent("test.1"));
+        System.out.println("<<<<<");
+        
     }
+    
+    @Test
+    public void testSetPageFields() throws XWikiSwizzleClientException{
+        String space="Main";
+        String page="WebHome";
+        String pageId=space+"."+page;
+        Map fields=this.client.getFields(pageId);
+        System.out.println(fields);
+        fields.put("minorVersion", "5");
+        fields.put(WikiContentManager.SPACE, "Main2");
+        fields.put(WikiContentManager.URL,"http://concerto.loria.fr:8080/xwiki-enterprise-web-1.5.2/bin/view/Main8");
+        fields.put(WikiContentManager.VERSION,"3");
+        fields.put(WikiContentManager.CREATOR,"TermiNator");
+        fields.put(WikiContentManager.MODIFIED,"Wed Nov 10 14:10:41 CET 2008");
+        fields.put(WikiContentManager.ID,"Main2.WebHomeTropDeLaBalle");
+        fields.put(WikiContentManager.MODIFIER,"TermiNator");
+        fields.put(WikiContentManager.PARENTID,"test.1");
+        fields.put(WikiContentManager.TITLE,"WebHomeTropDeLaBalle");
+        fields.put(WikiContentManager.CREATED,"Wed Nov 10 14:10:41 CET 2008");
+        fields.put("translations","tagada ?");
+        fields.put("current","true");
+        fields.put("langage","fr");
+        fields.put(WikiContentManager.HOMEPAGE,"false");
+        this.client.setFields(pageId, fields);
+        fields=this.client.getFields(pageId);
+        System.out.println(fields);  
+    }
+    
+//    minorVersion NO => OK
+//    * space YES => OK
+//    url NO => OK
+//    version NO => OK
+//    creator NO => OK
+//    modified NO => OK
+//    id NO => PROBLEM ?
+//    * content YES => OK
+//    modifier NO => OK
+//    parentId NO => PROBLEM ?
+//    title NO => PROBLEM ?
+//    created NO => OK
+//    translations NO => ? 
+//    current NO => ?
+//    language NO => ?
+//    homePage NO => ? 
+//
+//    @Test
+//    public void testSetCommentaryFields() throws XWikiSwizzleClientException{
+//        String space="Main";
+//        String page="WebHome";
+//        String pageId=space+"."+page;
+//        List<Map> coms=this.client.getComments(pageId);
+//        System.out.println(coms);
+//        Date date=DateFormat.getDateInstance().getCalendar().getTime();
+//        System.out.println(date);
+////        Map com=this.client.createComment("New comment",date , "TermiNator", "Comment1", pageId, "Add a comment to test with XML-RPC", "http://concerto.loria.fr:8080/xwiki-enterprise-web-1.5.2/bin/view/Main8/comment1");
+////        System.out.println(com);
+////        this.client.setComment(pageId, com);
+////        coms=this.client.getComments(pageId);  
+////        System.out.println(coms);
+////        coms.get(0).put(WikiContentManager.CONTENT,"Modify comment");
+////        System.out.println(coms.get(0));
+////        this.client.setComment(pageId, coms.get(0));
+//        coms=this.client.getComments(pageId);  
+//        System.out.println(coms);
+//        this.client.removeComment((String)coms.get(0).get("id"));
+//        
+//        coms=this.client.getComments(pageId);  
+//        System.out.println(coms);
+//    }
+    
+//    @Test
+//    public void testObjects() {
+//        String space="Main";
+//        String page="WebHome";
+//      //  String pageId=space+"."+page;
+//    }
+//    
+//    //id NO
+//    //content YES
+//    //title NO
+//    //created NO
+//    //pageId YES
+//    //url NO
+//    //creator NO
+//    @Test
+//    public void testTags() throws XWikiSwizzleClientException {
+//        String space="Main";
+//        String page="testTags";
+//        String pageId=space+"."+page;
+//        
+//        this.client.removePage(pageId);
+//        
+//        this.client.createPage(pageId, "Page To test tags");
+//
+//        Map<Integer,List<String>> tags = this.client.getTags(pageId);
+//        
+//        Assert.assertTrue(tags.isEmpty());
+//        
+//        this.client.addTag(pageId, Integer.valueOf(-1), "tag1");
+//        
+//        tags = this.client.getTags(pageId);
+//        
+//        Assert.assertTrue(!tags.isEmpty());
+//        Assert.assertEquals(Integer.valueOf(0), tags.keySet().toArray()[0]);
+//        
+//        Assert.assertEquals("tag1", ((List)tags.values().toArray()[0]).get(0));
+//        
+//        this.client.addTag(pageId, (Integer)tags.keySet().toArray()[0], "tag2");
+//        
+//        tags = this.client.getTags(pageId);
+//        
+//        Assert.assertTrue(!tags.isEmpty());
+//        Assert.assertEquals(Integer.valueOf(0), tags.keySet().toArray()[0]);
+//        Assert.assertEquals("tag1", ((List)tags.values().toArray()[0]).get(0));
+//        Assert.assertEquals("tag2", ((List)tags.values().toArray()[0]).get(1));
+//        
+//        List<String> l=new ArrayList<String>();
+//        
+//        l.add("over1");
+//        l.add("over2");
+//        l.add("over3");
+//        
+//        this.client.overwriteTags(pageId, (Integer)tags.keySet().toArray()[0], l);
+//        
+//        tags = this.client.getTags(pageId);
+//        
+//        Assert.assertTrue(!tags.isEmpty());
+//        Assert.assertEquals(Integer.valueOf(0), tags.keySet().toArray()[0]);
+//        Assert.assertEquals("over1", ((List)tags.values().toArray()[0]).get(0));
+//        Assert.assertEquals("over2", ((List)tags.values().toArray()[0]).get(1));
+//        Assert.assertEquals("over3", ((List)tags.values().toArray()[0]).get(2));     
+//    }
+    
+//    @Test
+//    public void essai() throws Exception{
+//        /*this.client.essai();*/
+//        List<String> l=new ArrayList();
+//        l.add("tagada");
+//        l.add("pouet pouet");
+//        this.client.overwriteTags("Main.WebHome", Integer.valueOf(2),l);
+//        
+//    }
 //    @Test
 //    public void getAllPagesInTextFile() throws Exception
 //    {
@@ -277,9 +427,9 @@ public class XWikiZwitzzleClientTest
 //
 //    }
 
-    // @Test
-    // public void essai() throws Exception {
-    // this.client.essai();
-    //        
-    // }
+     @Test
+     public void essai() throws Exception {
+     this.client.essai();
+            
+     }
 }

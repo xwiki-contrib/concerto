@@ -115,9 +115,9 @@ public class ThomasRuleEngineTest
         ThomasRuleEngine tre1 = new ThomasRuleEngine(1, WORKINGDIR);
         ThomasRuleEngine tre2 = new ThomasRuleEngine(2, WORKINGDIR);
 
-        Identifier id1 = new MockIdentifier("id1");
-        Identifier id2 = new MockIdentifier("id2");
-        Identifier id3 = new MockIdentifier("id3");
+        Identifier id1 = new MockIdentifier("page1","id1");
+        Identifier id2 = new MockIdentifier("page1","id2");
+        Identifier id3 = new MockIdentifier("page1","id3");
 
         Value val1 = new MockValue("val1");
         Value val2 = new MockValue("val2");
@@ -262,8 +262,8 @@ public class ThomasRuleEngineTest
     {
         ThomasRuleEngine tre1 = new ThomasRuleEngine(1, WORKINGDIR);
 
-        Identifier id1 = new MockIdentifier("id1");
-        Identifier id2 = new MockIdentifier("id2");
+        Identifier id1 = new MockIdentifier("page1","id1");
+        Identifier id2 = new MockIdentifier("page1","id2");
 
         Value val1 = new MockValue("val1");
         Value val2 = new MockValue("val2");

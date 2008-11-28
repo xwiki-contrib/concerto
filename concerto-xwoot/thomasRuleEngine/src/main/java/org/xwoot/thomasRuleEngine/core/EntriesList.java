@@ -52,8 +52,10 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -264,6 +266,25 @@ public class EntriesList
             result = result + "<" + temp.toString() + ">";
         }
 
+        return result;
+    }
+
+    public List<Entry> getEntries(String pageId) throws ThomasRuleEngineException
+    { 
+        if (pageId == null || pageId.equals("")) {
+        throw new NullPointerException("Parameters must not be null");
+        }
+
+        this.load();
+
+        List<Entry> result=new ArrayList<Entry>();
+  
+        for(Identifier t:this.entriesList.keySet()){
+            if (t.getPageName().equals(pageId)){
+                result.add(this.entriesList.get(t));
+            }
+        }
+        
         return result;
     }
 }

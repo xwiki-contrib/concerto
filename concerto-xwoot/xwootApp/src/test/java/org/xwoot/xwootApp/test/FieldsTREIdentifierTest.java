@@ -4,7 +4,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 import org.xwoot.xwootApp.core.tre.MDIdentifier;
-import org.xwoot.xwootApp.core.tre.MDValue;
+import org.xwoot.xwootApp.core.tre.PageFieldValue;
 
 public class FieldsTREIdentifierTest
 {
@@ -42,7 +42,7 @@ public class FieldsTREIdentifierTest
         MDIdentifier f3 = new MDIdentifier("test.1", "content");
         MDIdentifier f4 = f3;
 
-        MDValue v = new MDValue("tagada");
+        PageFieldValue v = new PageFieldValue("tagada");
 
         // reflexive : x==x
         assertTrue(f1.equals(f1));

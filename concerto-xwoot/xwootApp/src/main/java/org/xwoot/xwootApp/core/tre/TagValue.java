@@ -46,25 +46,27 @@ package org.xwoot.xwootApp.core.tre;
 
 import org.xwoot.thomasRuleEngine.core.Value;
 
+import java.util.List;
+
 /**
  * DOCUMENT ME!
  * 
  * @author $author$
  * @version $Revision$
  */
-public class MDValue extends Value
+public class TagValue extends Value
 {
     /**  */
     private static final long serialVersionUID = 3460912988689095045L;
 
-    String value;
+    private List<String> value;
 
     /**
-     * Creates a new MDValue object.
+     * Creates a new TagValue object.
      * 
      * @param value DOCUMENT ME!
      */
-    public MDValue(String value)
+    public TagValue(List<String> value)
     {
         this.value = value;
     }
@@ -90,13 +92,13 @@ public class MDValue extends Value
             return false;
         }
 
-        final MDValue other = (MDValue) obj;
+        final TagValue other = (TagValue) obj;
 
         if (this.value == null) {
             if (other.value != null) {
                 return false;
             }
-        } else if ((other.value != null) && !(this.value.compareTo(other.value) == 0)) {
+        } else if (!(this.value.equals(other.value))) {
             return false;
         }
 
@@ -137,6 +139,6 @@ public class MDValue extends Value
     @Override
     public String toString()
     {
-        return this.value;
+        return this.value.toString();
     }
 }

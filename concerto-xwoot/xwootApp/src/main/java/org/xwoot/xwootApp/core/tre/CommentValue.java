@@ -47,7 +47,6 @@ package org.xwoot.xwootApp.core.tre;
 import org.xwoot.thomasRuleEngine.core.Value;
 
 import java.util.Map;
-import java.util.List;
 
 /**
  * DOCUMENT ME!
@@ -55,19 +54,19 @@ import java.util.List;
  * @author $author$
  * @version $Revision$
  */
-public class CommentsValue extends Value
+public class CommentValue extends Value
 {
     /**  */
     private static final long serialVersionUID = 3460912988689095045L;
 
-    private List<Map> value;
+    private Map value;
 
     /**
      * Creates a new CommentsValue object.
      * 
      * @param value DOCUMENT ME!
      */
-    public CommentsValue(List<Map> value)
+    public CommentValue(Map value)
     {
         this.value = value;
     }
@@ -93,7 +92,7 @@ public class CommentsValue extends Value
             return false;
         }
 
-        final CommentsValue other = (CommentsValue) obj;
+        final CommentValue other = (CommentValue) obj;
 
         if (this.value == null) {
             if (other.value != null) {

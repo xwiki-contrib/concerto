@@ -1,7 +1,5 @@
 package org.xwoot.iwoot.xwootclient.servlet;
 
-//import static org.junit.Assert.*;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -13,7 +11,7 @@ public class XWootClientServletTest
     @BeforeClass
     public static void setUpBeforeClass() throws Exception
     {
-   //     xwoot= XWootClientFactory.getServletFactory().createXWootClient("http://concerto.loria.fr:8080/xwoot1");
+      //  xwoot= XWootClientFactory.getServletFactory().createXWootClient("http://concerto.loria.fr:8080/xwoot1");
     }
 
     @AfterClass
@@ -23,9 +21,9 @@ public class XWootClientServletTest
     }
     
     @Test
-    public void testgetInfos()
+    public void testgetInfos() //throws XWootClientException
     {  
-       // assertTrue(xwoot.isContentManagerConnected());
+      //TODO
     }
 
 }

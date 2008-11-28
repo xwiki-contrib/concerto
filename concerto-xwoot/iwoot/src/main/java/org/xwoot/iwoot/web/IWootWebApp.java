@@ -91,7 +91,7 @@ public class IWootWebApp
             if (xwoot_type.equals(IWOOT_REAL_TYPE_PROPERTY_VALUE)){
                 xwoot=XWootClientFactory.getServletFactory().createXWootClient(xwootURL);
             }else if(xwoot_type.equals(IWOOT_MOCK_TYPE_PROPERTY_VALUE)){
-                xwoot=XWootClientFactory.getMockFactory().createXWootClient();
+                xwoot=XWootClientFactory.getMockFactory().createXWootClient(wcm);
             }else{
                 throw new IWootWebAppException("Bad XWoot client type type : "+wcm_type);
             }

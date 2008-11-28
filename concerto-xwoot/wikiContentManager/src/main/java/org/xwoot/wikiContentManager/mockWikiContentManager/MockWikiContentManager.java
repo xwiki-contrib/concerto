@@ -53,7 +53,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -104,24 +103,24 @@ public class MockWikiContentManager implements WikiContentManager
         this.pages.put(pageId, p);
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param content DOCUMENT ME!
-     * @param created DOCUMENT ME!
-     * @param creator DOCUMENT ME!
-     * @param id DOCUMENT ME!
-     * @param pageId DOCUMENT ME!
-     * @param title DOCUMENT ME!
-     * @param url DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
-     */
-    public Map createComment(String content, Date created, String creator, String id, String pageId, String title,
-        String url)
-    {
-        return null;
-    }
+//    /**
+//     * DOCUMENT ME!
+//     * 
+//     * @param content DOCUMENT ME!
+//     * @param created DOCUMENT ME!
+//     * @param creator DOCUMENT ME!
+//     * @param id DOCUMENT ME!
+//     * @param pageId DOCUMENT ME!
+//     * @param title DOCUMENT ME!
+//     * @param url DOCUMENT ME!
+//     * @return DOCUMENT ME!
+//     * @throws Exception DOCUMENT ME!
+//     */
+//    public Map createComment(String content, Date created, String creator, String id, String pageId, String title,
+//        String url)
+//    {
+//        return null;
+//    }
 
     /**
      * DOCUMENT ME!
@@ -159,33 +158,33 @@ public class MockWikiContentManager implements WikiContentManager
 
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param pageId DOCUMENT ME!
-     * @param commentId DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws SwizzleException
-     * @throws Exception DOCUMENT ME!
-     */
-    public Map getComment(String pageId, String commentId)
-    {
-        return null;
+//    /**
+//     * DOCUMENT ME!
+//     * 
+//     * @param pageId DOCUMENT ME!
+//     * @param commentId DOCUMENT ME!
+//     * @return DOCUMENT ME!
+//     * @throws SwizzleException
+//     * @throws Exception DOCUMENT ME!
+//     */
+//    public Map getComment(String pageId, String commentId)
+//    {
+//        return null;
+//
+//    }
 
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param pageId DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws SwizzleException
-     * @throws Exception DOCUMENT ME!
-     */
-    public List<Map> getComments(String pageId)
-    {
-        return null;
-    }
+//    /**
+//     * DOCUMENT ME!
+//     * 
+//     * @param pageId DOCUMENT ME!
+//     * @return DOCUMENT ME!
+//     * @throws SwizzleException
+//     * @throws Exception DOCUMENT ME!
+//     */
+//    public List<Map> getComments(String pageId)
+//    {
+//        return null;
+//    }
 
     private byte[] getDigest(String p, String algo) throws NoSuchAlgorithmException
     {
@@ -311,18 +310,18 @@ public class MockWikiContentManager implements WikiContentManager
         return null;
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param pageId DOCUMENT ME!
-     * @param comments DOCUMENT ME!
-     * @throws SwizzleException
-     * @throws Exception DOCUMENT ME!
-     */
-    public void overWriteComments(String pageId, List<Map> comments)
-    {
-        return;
-    }
+//    /**
+//     * DOCUMENT ME!
+//     * 
+//     * @param pageId DOCUMENT ME!
+//     * @param comments DOCUMENT ME!
+//     * @throws SwizzleException
+//     * @throws Exception DOCUMENT ME!
+//     */
+//    public void overWriteComments(String pageId, List<Map> comments)
+//    {
+//        return;
+//    }
 
     /**
      * DOCUMENT ME!
@@ -362,22 +361,22 @@ public class MockWikiContentManager implements WikiContentManager
         }
     }
 
-    // little hack :
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param pageId DOCUMENT ME!
-     * @param comment DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws SwizzleException
-     * @throws Exception DOCUMENT ME!
-     */
-    public Map setComment(String pageId, Map comment)
-    {
-
-        return null;
-
-    }
+//    // little hack :
+//    /**
+//     * DOCUMENT ME!
+//     * 
+//     * @param pageId DOCUMENT ME!
+//     * @param comment DOCUMENT ME!
+//     * @return DOCUMENT ME!
+//     * @throws SwizzleException
+//     * @throws Exception DOCUMENT ME!
+//     */
+//    public Map setComment(String pageId, Map comment)
+//    {
+//
+//        return null;
+//
+//    }
 
     /**
      * DOCUMENT ME!
@@ -475,4 +474,30 @@ public class MockWikiContentManager implements WikiContentManager
     public List<String> PageListFromXml(Document doc){
         return XwikiSwizzleClient.PageListFromXmlStatic(doc);
     }
+
+  
+    public String renderContent(String pageId) throws WikiContentManagerException
+    {
+        return this.getPageContent(pageId);
+    }
+//
+//    public boolean removeComment() 
+//    {
+//        return true;
+//    }
+//
+//    public boolean addTag() 
+//    {
+//        return false;
+//    }
+//
+//    public boolean overwriteTags()
+//    {
+//        return false;
+//    }
+//
+//    public Map<Integer, List<String>> getTags()
+//    {
+//        return null;
+//    }
 }

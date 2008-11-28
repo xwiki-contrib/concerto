@@ -117,7 +117,7 @@ public class WootEngine extends LoggedWootExceptionThrower
     private void createWorkingDir() throws WootEngineException
     {
         try {
-            FileUtil.checkDirectoryPath(workingDirPath);
+            FileUtil.checkDirectoryPath(this.workingDirPath);
         } catch (Exception e) {
             this.throwLoggedException("Problems creating workingDir.", e);
         }
@@ -533,7 +533,7 @@ public class WootEngine extends LoggedWootExceptionThrower
      */
     public PageManager getPageManager()
     {
-        return pageManager;
+        return this.pageManager;
     }
 
     /**

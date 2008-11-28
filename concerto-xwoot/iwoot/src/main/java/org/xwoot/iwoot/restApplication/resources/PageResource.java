@@ -49,7 +49,7 @@ public class PageResource extends BaseResource
             setModifiable(true);
         } else {
             // This resource is not available.
-           // setAvailable(false);
+           setAvailable(false);
         }
     }
 

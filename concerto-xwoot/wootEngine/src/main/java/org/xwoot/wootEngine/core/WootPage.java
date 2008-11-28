@@ -376,7 +376,7 @@ public class WootPage implements Serializable
         Iterator<WootRow> i = this.getRows().iterator();
 
         while (i.hasNext()) {
-            WootRow r = (WootRow) i.next();
+            WootRow r = i.next();
             sb.append(r.getContent());
         }
 

@@ -42,9 +42,9 @@
  *  
  */
 
-package org.xwoot.thomasRuleEngine.mock;
+package org.xwoot.xwootApp.core.tre;
 
-import org.xwoot.thomasRuleEngine.core.Identifier;
+import org.xwoot.thomasRuleEngine.core.Value;
 
 /**
  * DOCUMENT ME!
@@ -52,44 +52,55 @@ import org.xwoot.thomasRuleEngine.core.Identifier;
  * @author $author$
  * @version $Revision$
  */
-public class MockIdentifier extends Identifier
+public class PageFieldValue extends Value
 {
     /**  */
-    private static final long serialVersionUID = 4717183124930677075L;
+    private static final long serialVersionUID = 3460912988689095045L;
 
-    private String pageName;
-
-    private String metaDataId;
-
-    private String id;
+    String value;
 
     /**
-     * Creates a new MDIdentifier object.
+     * Creates a new MDValue object.
      * 
-     * @param pageName DOCUMENT ME!
-     * @param metaDataId DOCUMENT ME!
+     * @param value DOCUMENT ME!
      */
-    public MockIdentifier(String pageName, String metaDataId)
+    public PageFieldValue(String value)
     {
-        this.pageName = pageName;
-        this.metaDataId = metaDataId;
-        this.setId();
+        this.value = value;
     }
 
     /**
      * DOCUMENT ME!
      * 
-     * @param with DOCUMENT ME!
+     * @param obj DOCUMENT ME!
      * @return DOCUMENT ME!
      */
     @Override
-    public boolean equals(Object with)
+    public boolean equals(Object obj)
     {
-        if (!(with instanceof Identifier)) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (obj == null) {
             return false;
         }
 
-        return this.id.equals(((MockIdentifier) with).getId());
+        if (this.getClass() != obj.getClass()) {
+            return false;
+        }
+
+        final PageFieldValue other = (PageFieldValue) obj;
+
+        if (this.value == null) {
+            if (other.value != null) {
+                return false;
+            }
+        } else if ((other.value != null) && !(this.value.compareTo(other.value) == 0)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -97,29 +108,10 @@ public class MockIdentifier extends Identifier
      * 
      * @return DOCUMENT ME!
      */
-    public String getId()
+    @Override
+    public Object get()
     {
-        return this.id;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public String getMetaDataId()
-    {
-        return this.metaDataId;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public String getPageName()
-    {
-        return this.pageName;
+        return this.value;
     }
 
     /**
@@ -130,34 +122,11 @@ public class MockIdentifier extends Identifier
     @Override
     public int hashCode()
     {
-        return this.id.hashCode();
-    }
+        final int prime = 31;
+        int result = 1;
+        result = (prime * result) + ((this.value == null) ? 0 : this.value.hashCode());
 
-    private void setId()
-    {
-        this.id = this.pageName + "." + this.metaDataId;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param metaDataId DOCUMENT ME!
-     */
-    public void setMetaDataId(String metaDataId)
-    {
-        this.metaDataId = metaDataId;
-        this.setId();
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param pageName DOCUMENT ME!
-     */
-    public void setPageName(String pageName)
-    {
-        this.pageName = pageName;
-        this.setId();
+        return result;
     }
 
     /**
@@ -168,6 +137,6 @@ public class MockIdentifier extends Identifier
     @Override
     public String toString()
     {
-        return this.id;
+        return this.value;
     }
 }

@@ -83,4 +83,6 @@ public abstract class Identifier implements Serializable
      */
     @Override
     public abstract String toString();
+    
+    public abstract String getPageName();
 }

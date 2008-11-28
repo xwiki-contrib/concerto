@@ -113,13 +113,13 @@
     </dependency>
   </dependencies>
   <build>
-    <resources>
-      <resource>
+    <testResources>
+      <testResource>
         <directory>${basedir}/src/test/resources
         </directory>
         <filtering>true</filtering>
-      </resource>
-    </resources>
+      </testResource>
+    </testResources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins
@@ -128,8 +128,7 @@
         </artifactId>
         <configuration>
           <testFailureIgnore>true</testFailureIgnore>
-          <workingDirectory>${project.parent.basedir}
-          </workingDirectory>
+          <workingDirectory>${project.parent.basedir} </workingDirectory>
         </configuration>
       </plugin>
     </plugins>

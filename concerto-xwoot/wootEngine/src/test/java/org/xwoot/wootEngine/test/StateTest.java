@@ -60,7 +60,7 @@ import junit.framework.Assert;
 /**
  * Test the state transfer.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class StateTest extends AbstractWootEngineTest
 {
@@ -79,28 +79,28 @@ public class StateTest extends AbstractWootEngineTest
         String[] pagesId = new String[numberOfPages];
         WootPage wp = null;
         for (int i = 0; i < 10; i++) {
-            pagesId[i] = pageName + i;
-            wp = site0.getPageManager().loadPage(pagesId[i]);
-            site0.insert(wp, line1 + i, 0);
-            site0.getPageManager().unloadPage(wp);
+            pagesId[i] = this.pageName + i;
+            wp = this.site0.getPageManager().loadPage(pagesId[i]);
+            this.site0.insert(wp, this.line1 + i, 0);
+            this.site0.getPageManager().unloadPage(wp);
         }
 
         // export state of site 0
-        File state = site0.getState();
+        File state = this.site0.getState();
 
         // import state in site 1
-        site1.setState(state);
+        this.site1.setState(state);
 
         // tests
-        Assert.assertEquals(site0.getPageManager().listPages().length, numberOfPages);
-        Assert.assertEquals(site0.getPageManager().listPages().length, site1.getPageManager().listPages().length);
+        Assert.assertEquals(this.site0.getPageManager().listPages().length, numberOfPages);
+        Assert.assertEquals(this.site0.getPageManager().listPages().length, this.site1.getPageManager().listPages().length);
 
         // Pick a random page from the previously generated.
         int randomPageNumber = new Random().nextInt() % numberOfPages;
-        String randomPageName = pageName + randomPageNumber;
+        String randomPageName = this.pageName + randomPageNumber;
 
         // test if the contents of the pages match on both sites.
-        Assert.assertEquals(site0.getPageManager().getPageInternal(randomPageName), site1.getPageManager()
+        Assert.assertEquals(this.site0.getPageManager().getPageInternal(randomPageName), this.site1.getPageManager()
             .getPageInternal(randomPageName));
     }
 
@@ -116,40 +116,40 @@ public class StateTest extends AbstractWootEngineTest
     public void testStateAndPool() throws Exception
     {
         // generate ops with dependencies on site 0
-        WootPage wp = site0.getPageManager().loadPage(pageName);
-        WootOp op1 = site0.insert(wp, line1, 0);
-        WootOp op2 = site0.insert(wp, line2, 1);
-        WootOp op3 = site0.insert(wp, line3, 2);
-        site0.getPageManager().unloadPage(wp);
+        WootPage wp = this.site0.getPageManager().loadPage(this.pageName);
+        WootOp op1 = this.site0.insert(wp, this.line1, 0);
+        WootOp op2 = this.site0.insert(wp, this.line2, 1);
+        WootOp op3 = this.site0.insert(wp, this.line3, 2);
+        this.site0.getPageManager().unloadPage(wp);
 
         // export state of site 0
-        File state = site0.getState();
+        File state = this.site0.getState();
 
         // import state in site 1
-        site1.setState(state);
+        this.site1.setState(state);
 
         // tests state
-        Assert.assertEquals(site0.getPageManager().listPages().length, site1.getPageManager().listPages().length);
-        Assert.assertEquals(site0.getPageManager().getPage(pageName), site1.getPageManager().getPage(pageName));
+        Assert.assertEquals(this.site0.getPageManager().listPages().length, this.site1.getPageManager().listPages().length);
+        Assert.assertEquals(this.site0.getPageManager().getPage(this.pageName), this.site1.getPageManager().getPage(this.pageName));
 
         // pool simulation
         List<WootOp> data = new Vector<WootOp>();
         data.add(op3);
         data.add(op2);
-        Patch patch = new Patch(data, null, pageName);
+        Patch patch = new Patch(data, null, this.pageName);
 
-        site1.deliverPatch(patch);
+        this.site1.deliverPatch(patch);
 
-        Assert.assertEquals(site0.getPageManager().getPageInternal(pageName), site1.getPageManager().getPageInternal(
-            pageName));
+        Assert.assertEquals(this.site0.getPageManager().getPageInternal(this.pageName), this.site1.getPageManager().getPageInternal(
+            this.pageName));
 
         data.clear();
         data.add(op1);
         patch.setData(data);
 
-        site1.deliverPatch(patch);
+        this.site1.deliverPatch(patch);
 
-        Assert.assertEquals(site0.getPageManager().getPageInternal(pageName), site1.getPageManager().getPageInternal(
-            pageName));
+        Assert.assertEquals(this.site0.getPageManager().getPageInternal(this.pageName), this.site1.getPageManager().getPageInternal(
+            this.pageName));
     }
 }

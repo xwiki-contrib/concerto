@@ -95,6 +95,7 @@ public class Patch implements Serializable
      */
     public Patch()
     {
+        //void
     }
 
     /**

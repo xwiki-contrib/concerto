@@ -132,10 +132,10 @@ public class LogTest
     @Test
     public void testAdd() throws Exception
     {
-        this.log.addMessage(testId1, testMessage1);
+        this.log.addMessage(this.testId1, this.testMessage1);
         Assert.assertEquals(this.log.logSize(), 1);
 
-        Assert.assertEquals(testMessage1, log.getMessage(testId1));
+        Assert.assertEquals(this.testMessage1, this.log.getMessage(this.testId1));
     }
 
     /**
@@ -147,17 +147,17 @@ public class LogTest
     @Test
     public void testDiff() throws Exception
     {
-        this.log.addMessage(testId1, testMessage1);
-        this.log.addMessage(testId2, testMessage2);
-        this.log.addMessage(testId3, testMessage3);
-        this.log.addMessage(testId4, testMessage4);
+        this.log.addMessage(this.testId1, this.testMessage1);
+        this.log.addMessage(this.testId2, this.testMessage2);
+        this.log.addMessage(this.testId3, this.testMessage3);
+        this.log.addMessage(this.testId4, this.testMessage4);
 
-        Serializable[] list = new Serializable[] {testId1, testId2};
+        Serializable[] list = new Serializable[] {this.testId1, this.testId2};
         Object[] diff = this.log.getDiffKey(list);
         Assert.assertEquals(diff.length, 2);
 
         List<Object> diffAsList = Arrays.asList(diff);
-        Assert.assertTrue(diffAsList.contains(testId3) && diffAsList.contains(testId4));
+        Assert.assertTrue(diffAsList.contains(this.testId3) && diffAsList.contains(this.testId4));
     }
 
     /**
@@ -168,8 +168,8 @@ public class LogTest
     @Test
     public void testExist() throws Exception
     {
-        this.log.addMessage(testId1, testMessage1);
-        Assert.assertTrue(this.log.existInLog(testId1));
+        this.log.addMessage(this.testId1, this.testMessage1);
+        Assert.assertTrue(this.log.existInLog(this.testId1));
     }
 
     /**
@@ -181,10 +181,10 @@ public class LogTest
     @Test
     public void testGetMessage() throws Exception
     {
-        this.log.addMessage(testId1, testMessage1);
+        this.log.addMessage(this.testId1, this.testMessage1);
 
-        String message = (String) this.log.getMessage(testId1);
-        Assert.assertEquals(message, testMessage1);
+        String message = (String) this.log.getMessage(this.testId1);
+        Assert.assertEquals(message, this.testMessage1);
     }
 
     /**
@@ -233,8 +233,8 @@ public class LogTest
     private void add100Messages() throws Exception
     {
         for (int i = 0; i < 100; i++) {
-            String message = testMessage1 + i;
-            this.log.addMessage(testId1 + i, message);
+            String message = this.testMessage1 + i;
+            this.log.addMessage(this.testId1 + i, message);
         }
     }
 
@@ -246,8 +246,8 @@ public class LogTest
     @Test
     public void testUnicity() throws Exception
     {
-        this.log.addMessage(testId1, testMessage1);
-        this.log.addMessage(testId1, testMessage1);
+        this.log.addMessage(this.testId1, this.testMessage1);
+        this.log.addMessage(this.testId1, this.testMessage1);
         Assert.assertEquals(this.log.logSize(), 1);
     }
 }

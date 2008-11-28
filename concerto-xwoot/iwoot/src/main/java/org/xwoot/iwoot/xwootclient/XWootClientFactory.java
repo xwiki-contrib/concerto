@@ -1,5 +1,7 @@
 package org.xwoot.iwoot.xwootclient;
 
+import org.xwoot.wikiContentManager.WikiContentManager;
+
 public abstract class XWootClientFactory
 {
     private final static String SERVLET = "org.xwoot.iwoot.xwootclient.servlet.XWootClientServletFactory";
@@ -30,10 +32,9 @@ public abstract class XWootClientFactory
             throw new XWootClientException("Problem with wiki content manager factory", e);
         }
     }
-
-    public abstract XWootClientAPI createXWootClient() throws XWootClientException;
     
     public abstract XWootClientAPI createXWootClient(String url) throws XWootClientException;
-    
+
+    public abstract XWootClientAPI createXWootClient(WikiContentManager wcm) throws XWootClientException;    
 
 }

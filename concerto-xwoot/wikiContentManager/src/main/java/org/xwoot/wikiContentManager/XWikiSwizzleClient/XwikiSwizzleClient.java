@@ -45,46 +45,44 @@
 package org.xwoot.wikiContentManager.XWikiSwizzleClient;
 
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.xmlrpc.XmlRpcException;
-import org.codehaus.swizzle.confluence.Comment;
-import org.codehaus.swizzle.confluence.Page;
-import org.codehaus.swizzle.confluence.PageSummary;
-import org.codehaus.swizzle.confluence.Space;
-import org.codehaus.swizzle.confluence.SpaceSummary;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xwiki.xmlrpc.XWikiXmlRpcClient;
-import org.xwiki.xmlrpc.model.XWikiObjectSummary;
-import org.xwiki.xmlrpc.model.XWikiPage;
-import org.xwoot.wikiContentManager.WikiContentManager;
-import org.xwoot.wikiContentManager.WikiContentManagerException;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.xmlrpc.XmlRpcException;
+import org.codehaus.swizzle.confluence.Attachment;
+import org.codehaus.swizzle.confluence.Page;
+import org.codehaus.swizzle.confluence.PageSummary;
+import org.codehaus.swizzle.confluence.Space;
+import org.codehaus.swizzle.confluence.SpaceSummary;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xwiki.xmlrpc.XWikiXmlRpcClient;
+import org.xwiki.xmlrpc.model.XWikiClassSummary;
+import org.xwiki.xmlrpc.model.XWikiObject;
+import org.xwiki.xmlrpc.model.XWikiObjectSummary;
+import org.xwoot.wikiContentManager.WikiContentManager;
+import org.xwoot.wikiContentManager.WikiContentManagerException;
 
 /**
  * DOCUMENT ME!
@@ -100,8 +98,12 @@ public class XwikiSwizzleClient implements WikiContentManager
 
     private static final String SEPARATECHAR = ".";
 
-    private static final String XWIKI_ENDPOINT = "xwiki.endpoint";
-
+    private static final String XWIKI_ENDPOINT = "xwiki_endpoint";
+    
+    private static final String XWIKI_USERNAME="xwiki_username";
+    
+    private static final String XWIKI_PASSWORD="xwiki_password";
+    
     private static final int VOID_CHARACTER = 67;
 
     private boolean isPermanentlyConnected;
@@ -132,6 +134,7 @@ public class XwikiSwizzleClient implements WikiContentManager
             try {
                 File file = new File(path);
                 this.properties.load(new FileInputStream(file)); 
+                System.out.println(this.properties);
             } catch (IOException e) {
                 this.logger.error(e);
                 throw new XWikiSwizzleClientException(e);
@@ -147,9 +150,9 @@ public class XwikiSwizzleClient implements WikiContentManager
         if (this.properties == null) {
             this.properties = new Properties();
         }
-        this.properties.put("xwiki.endpoint", server);
-        this.properties.put("xwiki.username", login);
-        this.properties.put("xwiki.password", pwd);
+        this.properties.put(XWIKI_ENDPOINT, server);
+        this.properties.put(XWIKI_USERNAME, login);
+        this.properties.put(XWIKI_PASSWORD, pwd);
 
     }
 
@@ -158,7 +161,7 @@ public class XwikiSwizzleClient implements WikiContentManager
         if (this.getClient() != null) {
             return true;
         }
-        this.relogin(this.properties.getProperty("xwiki.username"), this.properties.getProperty("xwiki.password"));
+        this.relogin(this.properties.getProperty(XWIKI_USERNAME), this.properties.getProperty(XWIKI_PASSWORD));
         return false;
     }
 
@@ -172,7 +175,7 @@ public class XwikiSwizzleClient implements WikiContentManager
             this.client = new XWikiXmlRpcClient(this.properties.getProperty(XWIKI_ENDPOINT));   
         } catch (MalformedURLException e) {
             this.logger.warn("XWOOT : WARNING ! Malformed URL : " + this.properties.getProperty(XWIKI_ENDPOINT));
-            throw new XWikiSwizzleClientException(e); 
+            throw new XWikiSwizzleClientException(e+this.properties.getProperty(XWIKI_ENDPOINT)+" ; "+XWIKI_ENDPOINT+" ; "+this.properties); 
         }
         try {
             this.getClient().login(username, password);
@@ -344,38 +347,38 @@ public class XwikiSwizzleClient implements WikiContentManager
         this.relogin();
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param content DOCUMENT ME!
-     * @param created DOCUMENT ME!
-     * @param creator DOCUMENT ME!
-     * @param id DOCUMENT ME!
-     * @param pageId DOCUMENT ME!
-     * @param title DOCUMENT ME!
-     * @param url DOCUMENT ME!
-     * @return DOCUMENT ME!
-     */
-    public Map createComment(String content, Date created, String creator, String id, String pageId, String title,
-        String url)
-    {
-        Comment com = new Comment(new Hashtable());
-        com.setContent(content);
-
-        if (created != null) {
-            com.setCreated(created);
-        }
-
-        com.setCreator(creator);
-        com.setId(id);
-        com.setPageId(pageId);
-        com.setTitle(title);
-        com.setUrl(url);
-
-        Map result = com.toMap();
-
-        return result;
-    }
+//    /**
+//     * DOCUMENT ME!
+//     * 
+//     * @param content DOCUMENT ME!
+//     * @param created DOCUMENT ME!
+//     * @param creator DOCUMENT ME!
+//     * @param id DOCUMENT ME!
+//     * @param pageId DOCUMENT ME!
+//     * @param title DOCUMENT ME!
+//     * @param url DOCUMENT ME!
+//     * @return DOCUMENT ME!
+//     */
+//    public Map createComment(String content, Date created, String creator, String id, String pageId, String title,
+//        String url)
+//    {
+//        Comment com = new Comment(new Hashtable());
+//        com.setContent(content);
+//
+//        if (created != null) {
+//            com.setCreated(created);
+//        }
+//
+//        com.setCreator(creator);
+//        com.setId(id);
+//        com.setPageId(pageId);
+//        com.setTitle(title);
+//        com.setUrl(url);
+//
+//        Map result = com.toMap();
+//
+//        return result;
+//    }
 
     /**
      * DOCUMENT ME!
@@ -446,41 +449,41 @@ public class XwikiSwizzleClient implements WikiContentManager
     //
     // }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param pageId DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws XWikiSwizzleClientException
-     */
-    public List<Map> getComments(String pageId) throws XWikiSwizzleClientException
-    {
-        if (!this.existPage(pageId)) {
-            return null;
-        }
-        boolean b = this.relogin();
-
-        List<Map> result = new ArrayList<Map>();
-
-        try {
-            List l = this.getClient().getComments(pageId);
-            if (l != null) {
-                Iterator i = l.iterator();
-                while (i.hasNext()) {
-                    Comment com = (Comment) i.next();
-                    if (com != null) {
-                        result.add(com.toMap());
-                    }
-                }
-            }
-        } catch (XmlRpcException e) {
-            this.logger.error(e);
-            throw new XWikiSwizzleClientException(e);
-        } 
-
-        this.logout(b);
-        return result;
-    }
+//    /**
+//     * DOCUMENT ME!
+//     * 
+//     * @param pageId DOCUMENT ME!
+//     * @return DOCUMENT ME!
+//     * @throws XWikiSwizzleClientException
+//     */
+//    public List<Map> getComments(String pageId) throws XWikiSwizzleClientException
+//    {
+//        if (!this.existPage(pageId)) {
+//            return null;
+//        }
+//        boolean b = this.relogin();
+//
+//        List<Map> result = new ArrayList<Map>();
+//
+//        try {
+//            List l = this.getClient().getComments(pageId);
+//            if (l != null) {
+//                Iterator i = l.iterator();
+//                while (i.hasNext()) {
+//                    Comment com = (Comment) i.next();
+//                    if (com != null) {
+//                        result.add(com.toMap());
+//                    }
+//                }
+//            }
+//        } catch (XmlRpcException e) {
+//            this.logger.error(e);
+//            throw new XWikiSwizzleClientException(e);
+//        } 
+//
+//        this.logout(b);
+//        return result;
+//    }
 
     /**
      * DOCUMENT ME!
@@ -503,6 +506,22 @@ public class XwikiSwizzleClient implements WikiContentManager
         }
 
         this.logout(b);
+        return result;
+    }
+    
+    synchronized public String renderContent(String pageId) throws XWikiSwizzleClientException{
+        String result=null;
+        Map<String, String> page = this.getFields(pageId);
+        if (page!=null){
+            boolean b = this.relogin();
+            try {
+                result=this.client.renderContent(page.get(WikiContentManager.SPACE),page.get(WikiContentManager.ID),page.get(WikiContentManager.CONTENT));
+            } catch (XmlRpcException e) {
+                this.logger.error(e);
+                throw new XWikiSwizzleClientException(e);
+            }   
+            this.logout(b);
+        }
         return result;
     }
 
@@ -600,7 +619,7 @@ public class XwikiSwizzleClient implements WikiContentManager
 
     public String getWikiURL()
     {
-        return this.properties.getProperty("xwiki.endpoint").replaceAll("/xmlrpc", "");
+        return this.properties.getProperty(XWIKI_ENDPOINT).replaceAll("/xmlrpc", "");
     }
 
     /**
@@ -676,41 +695,41 @@ public class XwikiSwizzleClient implements WikiContentManager
 
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param pageId DOCUMENT ME!
-     * @param comments DOCUMENT ME!
-     * @throws XWikiSwizzleClientException
-     */
-    public void overWriteComments(String pageId, List<Map> comments) throws XWikiSwizzleClientException
-    {
-        if (!this.existPage(pageId)) {
-            this.createPage(pageId, "");
-        }
-        boolean b = this.relogin();
-        try {
-            List c = this.getClient().getComments(pageId);
-            if ((c != null) && !c.isEmpty()) {
-                Iterator i = c.iterator();
-
-                while (i.hasNext()) {
-                    Comment com = (Comment) i.next();
-                    if (com != null) {
-                        this.getClient().removeComment(com.getId());
-                    }
-                }
-            }
-            for (int j = 0; j < comments.size(); j++) {
-                this.getClient().addComment(new Comment(comments.get(j)));
-            }
-        } catch (XmlRpcException e) {
-            this.logger.error(e);
-            throw new XWikiSwizzleClientException(e);
-        } 
-        this.logout(b);
-
-    }
+//    /**
+//     * DOCUMENT ME!
+//     * 
+//     * @param pageId DOCUMENT ME!
+//     * @param comments DOCUMENT ME!
+//     * @throws XWikiSwizzleClientException
+//     */
+//    public void overWriteComments(String pageId, List<Map> comments) throws XWikiSwizzleClientException
+//    {
+//        if (!this.existPage(pageId)) {
+//            this.createPage(pageId, "");
+//        }
+//        boolean b = this.relogin();
+//        try {
+//            List c = this.getClient().getComments(pageId);
+//            if ((c != null) && !c.isEmpty()) {
+//                Iterator i = c.iterator();
+//
+//                while (i.hasNext()) {
+//                    Comment com = (Comment) i.next();
+//                    if (com != null) {
+//                        this.getClient().removeComment(com.getId());
+//                    }
+//                }
+//            }
+//            for (int j = 0; j < comments.size(); j++) {
+//                this.getClient().addComment(new Comment(comments.get(j)));
+//            }
+//        } catch (XmlRpcException e) {
+//            this.logger.error(e);
+//            throw new XWikiSwizzleClientException(e);
+//        } 
+//        this.logout(b);
+//
+//    }
 
     /**
      * DOCUMENT ME!
@@ -764,37 +783,63 @@ public class XwikiSwizzleClient implements WikiContentManager
         this.logout(b);
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param pageId DOCUMENT ME!
-     * @param comment DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws XWikiSwizzleClientException
-     */
-    public Map setComment(String pageId, Map comment) throws XWikiSwizzleClientException
-    {
-        if (!this.existPage(pageId)) {
-            return null;
-        }
-        boolean b = this.relogin();
-
-        Map result = null;
-        try {
-            Comment c = this.getClient().addComment(new Comment(comment));
-            if (c != null) {
-                result = c.toMap();
-            }
-        } catch (XmlRpcException e) {
-            this.logger.error(e);
-            throw new XWikiSwizzleClientException(e);
-        }
-
-        this.logout(b);
-
-        return result;
-
-    }
+//    /**
+//     * DOCUMENT ME!
+//     * 
+//     * @param pageId DOCUMENT ME!
+//     * @param comment DOCUMENT ME!
+//     * @return DOCUMENT ME!
+//     * @throws XWikiSwizzleClientException
+//     */
+//    public Map setComment(String pageId, Map comment) throws XWikiSwizzleClientException
+//    {
+//        if (!this.existPage(pageId)) {
+//            return null;
+//        }
+//        boolean b = this.relogin();
+//
+//        Map result = null;
+//        try {
+//            Comment c = this.getClient().addComment(new Comment(comment));
+//            if (c != null) {
+//                result = c.toMap();
+//            }
+//        } catch (XmlRpcException e) {
+//            this.logger.error(e);
+//            throw new XWikiSwizzleClientException(e);
+//        }
+//
+//        this.logout(b);
+//
+//        return result;
+//
+//    }
+//    
+//    /**
+//     * DOCUMENT ME!
+//     * 
+//     * @param pageId DOCUMENT ME!
+//     * @param comment DOCUMENT ME!
+//     * @return DOCUMENT ME!
+//     * @throws XWikiSwizzleClientException
+//     */
+//    public boolean removeComment(String commentId) throws XWikiSwizzleClientException
+//    {
+//        boolean b = this.relogin();
+//        boolean result=false;
+//
+//        try {
+//            result = this.getClient().removeComment(commentId).booleanValue(); 
+//        } catch (XmlRpcException e) {
+//            this.logger.error(e);
+//            throw new XWikiSwizzleClientException(e);
+//        }
+//
+//        this.logout(b);
+//
+//        return result;
+//
+//    }
 
     /**
      * DOCUMENT ME!
@@ -872,30 +917,167 @@ public class XwikiSwizzleClient implements WikiContentManager
         return result;
     }
 
-
+//    public Map<Integer,List<String>> getTags(String pageId) throws XWikiSwizzleClientException{
+//        if (!this.existPage(pageId)) {
+//            return null;
+//        }
+//        boolean b = this.relogin();
+//        
+//        Map<Integer,List<String>> result=new Hashtable<Integer, List<String>>();
+//        try {
+//            List<XWikiObjectSummary> list=this.client.getObjects(pageId);
+//            for(XWikiObjectSummary o : list){
+//                if (!o.getClassName().equals(WikiContentManager.TAGCLASSID)){
+//                    list.remove(o);
+//                }
+//            }
+//
+//            XWikiObject temp=null;
+//            for(XWikiObjectSummary o : list){
+//                temp=this.client.getObject(o);
+//                result.put(Integer.valueOf(temp.getId()),(List<String>)temp.getProperty(WikiContentManager.TAGSPROPERTYID));
+//            }
+//        } catch (XmlRpcException e) {
+//            this.logger.error(e);
+//            throw new XWikiSwizzleClientException(e);
+//        }
+//        this.logout(b);
+//        return result;
+//    }
+//    
+//    public boolean overwriteTags(String pageId, Integer id,List tags) throws XWikiSwizzleClientException {
+//        if (!this.existPage(pageId) || id==null || id.intValue() < 0) {
+//            return false;
+//        } 
+//        boolean b = this.relogin();
+//        
+//        XWikiObject tagsObj;
+//        try {
+//            tagsObj = this.client.getObject(pageId,WikiContentManager.TAGCLASSID,id);
+//            tagsObj.setProperty(WikiContentManager.TAGSPROPERTYID, tags);
+//            this.client.storeObject(tagsObj);
+//        } catch (XmlRpcException e) {
+//            this.logger.error(e);
+//            throw new XWikiSwizzleClientException(e);
+//        } 
+//        this.logout(b);
+//        return true;
+//    }
+//    
+//    public boolean addTag(String pageId, Integer id,String tag) throws XWikiSwizzleClientException {
+//        if (!this.existPage(pageId)) {
+//            return false;
+//        } 
+//        boolean b = this.relogin();
+//        XWikiObject tagsObj=null;
+//        int idObj=-1;
+//        if (id==null){
+//            idObj=-1;
+//        }
+//        else{
+//            idObj=id.intValue();
+//        }
+//        
+//        try{
+//            // if unknown id 
+//            if (idObj==-1){
+//                // search an existing tags object
+//                List<XWikiObjectSummary> objs=this.client.getObjects(pageId);
+//                for(XWikiObjectSummary o:objs){
+//                    if (!o.getClassName().equals(WikiContentManager.TAGCLASSID)){
+//                        objs.remove(o);
+//                    }
+//                }
+//                // get the id of the first existing tags object
+//                if (objs.size()>0){
+//                 idObj=objs.get(0).getId();
+//                 tagsObj= this.client.getObject(pageId, WikiContentManager.TAGCLASSID,Integer.valueOf(idObj));
+//                }
+//                // no tags object found : create one
+//                else{
+//                    this.logger.warn("No tag object in page : "+pageId);
+//                    Map map=new Hashtable<String, String>();
+//                    map.put("className", WikiContentManager.TAGCLASSID);
+//                    map.put(WikiContentManager.PAGEID, pageId);
+//                    tagsObj=new XWikiObject(map);
+//                    List l=new ArrayList();
+//                    tagsObj.setProperty(WikiContentManager.TAGSPROPERTYID,l);
+//                }
+//            }else{
+//                tagsObj= this.client.getObject(pageId, WikiContentManager.TAGCLASSID,Integer.valueOf(idObj));
+//            }
+//            
+//        } catch (Exception e) {
+//            this.logger.error(e);
+//            throw new XWikiSwizzleClientException(e);
+//        }
+//       
+//        List l=(List) tagsObj.getProperty(WikiContentManager.TAGSPROPERTYID);
+//        if (l==null){
+//            l=new ArrayList<String>();
+//        }
+//        l.add(tag);
+//        tagsObj.setProperty(WikiContentManager.TAGSPROPERTYID, l);
+//        
+//        try {
+//            this.client.storeObject(tagsObj);
+//        } catch (XmlRpcException e) {
+//            this.logger.error(e);
+//            throw new XWikiSwizzleClientException(e);
+//        }
+//        this.logout(b);
+//        return true;    
+//    }
+    
     public void essai() throws Exception{
-        String spaceKey="XWiki";
-        String pageName="XWiki.XWikiPreferences";
+        String spaceKey="Main";
+        String pageName=spaceKey+".WebHome";
         this.login();
-        List p = this.getClient().getAttachments(pageName);
-        this.getClient().getSpace(spaceKey);
-
-        System.out.println(p);
-        XWikiPage p2=this.getClient().getPage("Scheduler.WatchListJob2");
-        List<XWikiObjectSummary> list=this.client.getObjects(new PageSummary(p2.toMap()));
-
+        List<XWikiObjectSummary> list=this.client.getObjects(pageName);
+        //this.client.getClass()
+       //this.client.getObjects(ps);
         for(XWikiObjectSummary o : list){
-            System.out.println(o.toString());  
-            System.out.println(this.client.getObject(o));
+            System.out.println("==== Object ====");
+            System.out.println(" => Summary ToString : "+o.toString());  
+            XWikiObject ob=this.client.getObject(o);
+            System.out.println(" => Object ToString : "+ob);
+            System.out.println(" => ToMap : "+ob.toMap());
+            Map map=ob.toMap();
+            System.out.println("propertyToValueMap : "+map.get("propertyToValueMap"));
+            if (map.get("propertyToValueMap") instanceof List){
+                System.out.println("true");
+            }
+            System.out.println(" => Properties ToString : "+ob.getProperties());
+            System.out.println(" => Properties : ");
+            Set<String> temp=ob.getProperties();
+            
+           
+            Iterator i=temp.iterator();
+            while(i.hasNext()){
+                String val=(String)i.next();
+                System.out.println(val+" : "+ob.getProperty(val)+ob.getProperty(val).getClass());
+                }
+        }
+        
+       
+      /*  XWikiObject essai=this.client.getObject(list.get(0));
+        List l=(List) essai.getProperty("tags");
+        l.add("XMLRPC");
+        essai.setProperty("tags", l);
+        this.client.storeObject(essai);*/
+        List<XWikiClassSummary> l2=this.getClient().getClasses();
+        for (XWikiClassSummary cs:l2){
+            System.out.println(this.getClient().getClass(cs));
+        }
+        
+        System.out.println(this.client.getClass("XWiki.TagClass"));
+        
+        List<Attachment> list2=this.client.getAttachments(pageName);
+        for(Attachment o : list2){
+            System.out.println(o.toString());   
         }
 
-
-        //No such handler getBlogEntry
-        //System.out.println(this.getClient().getBlogEntry(pageName));
-
         this.logout();
-
-
     }
 
     synchronized public XWikiXmlRpcClient getClient()
@@ -1006,7 +1188,7 @@ public class XwikiSwizzleClient implements WikiContentManager
     
     public static Document PageListToXmlStatic(String pagesHRef,List<String> list) throws WikiContentManagerException{
         if (list!=null){
-
+            
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance (); 
             DocumentBuilder builder;
             try {

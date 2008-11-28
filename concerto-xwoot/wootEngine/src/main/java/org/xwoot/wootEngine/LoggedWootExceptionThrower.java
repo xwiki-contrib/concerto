@@ -25,7 +25,7 @@ import org.apache.commons.logging.Log;
 /**
  * Contains methods to log an error event and throw a {@link WootEngineException} at the same time.
  *
- * @version $Id:$
+ * @version $Id$
  */
 public class LoggedWootExceptionThrower
 {
@@ -65,7 +65,7 @@ public class LoggedWootExceptionThrower
      */
     public int getWootEngineId()
     {
-        return wootEngineId;
+        return this.wootEngineId;
     }
 
     /**

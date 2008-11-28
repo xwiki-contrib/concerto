@@ -91,19 +91,19 @@ public interface WikiContentManager
      * status=Normal, jobClass=com.xpn.xwiki.plugin.watchlist.WatchListJob, jobName=WatchList daily notifications}, id=0, pageId=Scheduler.WatchListJob2}
      */
 
-    enum COMMENTMDTABLE
-    {
-        content, id, pageId;
-        
-        static public Collection getCollection(){
-            ArrayList<String> result=new ArrayList();
-            PAGEMDTABLE[] tab=PAGEMDTABLE.values();
-            for(int i=0;i<tab.length;i++){
-                result.add(String.valueOf(tab[i]));
-            }
-            return result;
-        }
-    }
+//    enum COMMENTMDTABLE
+//    {
+//        content, id, pageId;
+//        
+//        static public Collection getCollection(){
+//            ArrayList<String> result=new ArrayList();
+//            PAGEMDTABLE[] tab=PAGEMDTABLE.values();
+//            for(int i=0;i<tab.length;i++){
+//                result.add(String.valueOf(tab[i]));
+//            }
+//            return result;
+//        }
+//    }
 
     enum PAGEMDTABLE
     {
@@ -119,58 +119,67 @@ public interface WikiContentManager
         }
     }
 
-    /** To get a page */
+    /** "page" : To get a page */
     final static String PAGE = "page";
 
-    /** To get a comment */
+    /** "comment" : To get a comment */
     final static String COMMENT = "comment";
 
-    /** Some String : Hasta la vista, baby ! */
+    /** "content" : Some String : Hasta la vista, baby ! */
     final static String CONTENT = "content";
+    
+    /** "renderContent" : Render content */
+    final static String RENDERCONTENT = "renderContent";
 
-    /** Date Format : Fri Jul 25 11:00:15 CEST 2008 */
+    /** "created" : Date Format : Fri Jul 25 11:00:15 CEST 2008 */
     final static String CREATED = "created";
 
-    /** Some String : Terminator's dad */
+    /** "parentId" : Some String : Terminator's dad */
     final static String PARENTID = "parentId";
 
-    /** Some user : XWiki.Admin */
+    /** "modifier" : Some user : XWiki.Admin */
     final static String MODIFIER = "modifier";
 
-    /** The page name : for test.page => page */
+    /** "title" : The page name : for test.page => page */
     final static String TITLE = "title";
 
-    /** The page id : test.page */
+    /** "id" : The page id : test.page */
     final static String ID = "id";
 
-    /** Some user : XWiki.Admin */
+    /** "creator" : Some user : XWiki.Admin */
     final static String CREATOR = "creator";
 
-    /** The space name : for test.page =>test */
+    /** "space" : The space name : for test.page =>test */
     final static String SPACE = "space";
 
-    /** Some int : 2 */
+    /** "version" : Some int : 2 */
     final static String VERSION = "version";
 
-    /** Date Format : Fri Jul 25 11:00:15 CEST 2008 */
+    /** "modified" : Date Format : Fri Jul 25 11:00:15 CEST 2008 */
     final static String MODIFIED = "modified";
 
-    /** Boolean : true/false */
+    /** "homePage" : Boolean : true/false */
     final static String HOMEPAGE = "homePage";
 
-    /** DOCUMENT ME! Lost ?? */
+    /** "locks" : DOCUMENT ME! Lost ?? */
     final static String LOCKS = "locks";
 
     /**
-     * URL page : http://concerto.loria.fr:8080/xwiki-enterprise-web-1.5/bin/view/test/page
+     * "url" : URL page : http://concerto.loria.fr:8080/xwiki-enterprise-web-1.5/bin/view/test/page
      */
     final static String URL = "url";
 
-    /** DOCUMENT ME! Lost ?? */
+    /** "contentStatus" : DOCUMENT ME! Lost ?? */
     final static String CONTENTSTATUS = "contentStatus";
 
-    /** The page id link to a comment : test.page */
-    final static String PAGEID = "pageId";
+//    /** "pageId" : The page id link to a comment : test.page */
+//    final static String PAGEID = "pageId";
+//    
+//    final static String TAGCLASSID = "XWiki.TagClass";
+//    
+//    final static String TAGSPROPERTYID = "tags";
+//    
+//    final static String COMMENTCLASSID = "XWiki.XWikiComments";
     
     /** For XML conversion */
     public static final String XML_NODE_NAME_XWIKIPAGELIST="XWikiPageList";
@@ -214,14 +223,14 @@ public interface WikiContentManager
      */
     Map<String, String> createPage(String pageName, String content) throws WikiContentManagerException;
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param pageId DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws WikiContentManagerException DOCUMENT ME!
-     */
-    List<Map> getComments(String pageId) throws WikiContentManagerException;
+//    /**
+//     * DOCUMENT ME!
+//     * 
+//     * @param pageId DOCUMENT ME!
+//     * @return DOCUMENT ME!
+//     * @throws WikiContentManagerException DOCUMENT ME!
+//     */
+//    List<Map> getComments(String pageId) throws WikiContentManagerException;
 
     /**
      * DOCUMENT ME!
@@ -268,14 +277,14 @@ public interface WikiContentManager
      */
     String getWikiURL();
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param pageId DOCUMENT ME!
-     * @param comment DOCUMENT ME!
-     * @throws WikiContentManagerException DOCUMENT ME!
-     */
-    void overWriteComments(String pageId, List<Map> comment) throws WikiContentManagerException;
+//    /**
+//     * DOCUMENT ME!
+//     * 
+//     * @param pageId DOCUMENT ME!
+//     * @param comment DOCUMENT ME!
+//     * @throws WikiContentManagerException DOCUMENT ME!
+//     */
+//    void overWriteComments(String pageId, List<Map> comment) throws WikiContentManagerException;
 
     /**
      * DOCUMENT ME!
@@ -288,15 +297,17 @@ public interface WikiContentManager
 
     void removeSpace(String spaceKey) throws WikiContentManagerException;
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param pageId DOCUMENT ME!
-     * @param comment DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws WikiContentManagerException DOCUMENT ME!
-     */
-    Map setComment(String pageId, Map comment) throws WikiContentManagerException;
+//    /**
+//     * DOCUMENT ME!
+//     * 
+//     * @param pageId DOCUMENT ME!
+//     * @param comment DOCUMENT ME!
+//     * @return DOCUMENT ME!
+//     * @throws WikiContentManagerException DOCUMENT ME!
+//     */
+//    Map setComment(String pageId, Map comment) throws WikiContentManagerException;
+//    
+//    boolean removeComment(String commentId) throws WikiContentManagerException;
 
     // void _setField(String pageId, String fieldId,String value) throws
     // Exception;
@@ -332,4 +343,12 @@ public interface WikiContentManager
     void createSpace(String spaceKey) throws WikiContentManagerException;
     
     boolean existPage(String pageKey) throws WikiContentManagerException;
+    
+    String renderContent(String pageId) throws WikiContentManagerException;
+    
+//    Map<Integer,List<String>> getTags(String pageId) throws WikiContentManagerException;
+//    
+//    boolean addTag(String pageId, Integer id,String tag) throws WikiContentManagerException;
+//    
+//    boolean overwriteTags(String pageId, Integer id,List tags) throws  WikiContentManagerException;
 }

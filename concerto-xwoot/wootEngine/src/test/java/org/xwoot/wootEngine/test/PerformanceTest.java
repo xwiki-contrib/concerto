@@ -59,7 +59,7 @@ import java.util.Vector;
 /**
  * Stress and performance tests.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class PerformanceTest extends AbstractWootEngineTest
 {
@@ -79,9 +79,9 @@ public class PerformanceTest extends AbstractWootEngineTest
                 + "FLOOD---------------|---------------FLOOD---------------";
 
         // Add a first line between the default first and last woot row.
-        WootId firstRowId = new WootId(site0.getWootEngineId(), 0);
+        WootId firstRowId = new WootId(this.site0.getWootEngineId(), 0);
         WootIns op0 = new WootIns(new WootRow(firstRowId, line), WootId.FIRST_WOOT_ID, WootId.LAST_WOOT_ID);
-        op0.setPageName(pageName);
+        op0.setPageName(this.pageName);
         op0.setOpId(firstRowId);
 
         List<WootOp> data = new Vector<WootOp>();
@@ -89,22 +89,22 @@ public class PerformanceTest extends AbstractWootEngineTest
 
         // do 1000 insert operations on the first position, relative to the previous inserted row.
         for (int i = 0; i < 1000; i++) {
-            WootId previouslyAddedRowId = new WootId(site0.getWootEngineId(), i);
-            WootId newRowId = new WootId(site0.getWootEngineId(), i + 1);
+            WootId previouslyAddedRowId = new WootId(this.site0.getWootEngineId(), i);
+            WootId newRowId = new WootId(this.site0.getWootEngineId(), i + 1);
             WootIns op = new WootIns(new WootRow(newRowId, line), WootId.FIRST_WOOT_ID, previouslyAddedRowId);
-            op.setPageName(pageName);
+            op.setPageName(this.pageName);
             op.setOpId(newRowId);
             // woot.ins("index", line, 0).toString();
             data.add(op);
         }
 
-        Patch patch = new Patch(data, null, pageName);
+        Patch patch = new Patch(data, null, this.pageName);
 
         Log log = LogFactory.getLog(this.getClass());
         log.debug("Started time-consuming operation...");
 
         long start = System.currentTimeMillis();
-        site0.deliverPatch(patch);
+        this.site0.deliverPatch(patch);
 
         // Get elapsed time in milliseconds
         long elapsedTimeMillis = System.currentTimeMillis() - start;

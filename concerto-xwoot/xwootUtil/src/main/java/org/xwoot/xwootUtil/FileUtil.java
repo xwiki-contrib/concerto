@@ -370,7 +370,7 @@ public class FileUtil
             
             Enumeration< ? extends ZipEntry> entries = zippedFile.entries();
             while (entries.hasMoreElements()) {
-                ZipEntry entry = (ZipEntry) entries.nextElement();
+                ZipEntry entry = entries.nextElement();
                 String currentDestinationFilePath = dirPath + File.separator + entry.getName();
                 
                 InputStream currentZipEntryInputStream = zippedFile.getInputStream(entry);
@@ -396,8 +396,8 @@ public class FileUtil
                 if (zippedFile != null ) {
                     zippedFile.close();
                 }
-            } catch (Exception e) {
-                throw new IOException("Unable to close zip file " + zippedFile.toString());
+            } catch (Exception e) { 
+                throw new IOException("Unable to close zip file ");
             }
         }
         

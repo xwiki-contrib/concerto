@@ -3,7 +3,7 @@ package org.xwoot.xwootApp.test;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
-import org.xwoot.xwootApp.core.tre.MDValue;
+import org.xwoot.xwootApp.core.tre.PageFieldValue;
 
 public class MDValueTest
 {
@@ -13,17 +13,17 @@ public class MDValueTest
     {
 
         // initial field
-        MDValue v = new MDValue("Alien");
+        PageFieldValue v = new PageFieldValue("Alien");
         // field with no value
-        MDValue v0 = new MDValue(null);
+        PageFieldValue v0 = new PageFieldValue(null);
         // v1.value!=v.value
-        MDValue v1 = new MDValue("Predator");
+        PageFieldValue v1 = new PageFieldValue("Predator");
         // v2==v
-        MDValue v2 = new MDValue("Alien");
+        PageFieldValue v2 = new PageFieldValue("Alien");
         // v3==v
-        MDValue v3 = new MDValue("Alien");
+        PageFieldValue v3 = new PageFieldValue("Alien");
         // v4==v
-        MDValue v4 = v;
+        PageFieldValue v4 = v;
 
         // reflexive : x==x
         assertTrue(v.equals(v));
@@ -57,7 +57,7 @@ public class MDValueTest
     @Test
     public void testGet()
     {
-        MDValue v = new MDValue("Alien");
+        PageFieldValue v = new PageFieldValue("Alien");
 
         assertEquals("Alien", v.get());
     }
@@ -65,7 +65,7 @@ public class MDValueTest
     @Test
     public void testToString()
     {
-        MDValue v = new MDValue("Predator");
+        PageFieldValue v = new PageFieldValue("Predator");
 
         assertEquals("Predator", v.toString());
     }

@@ -107,7 +107,7 @@ public class EntriesListTest
     {
         // create new List
         EntriesList el = new EntriesList(WORKINGDIR, FILENAME);
-        MockIdentifier id1 = new MockIdentifier("Id1");
+        MockIdentifier id1 = new MockIdentifier("page1","Id1");
         MockValue val1 = new MockValue("value1");
         Entry entry1 = new Entry(id1, val1, false, null, null);
         // add one entry
@@ -125,13 +125,27 @@ public class EntriesListTest
         Assert.assertEquals(el.size(), 1);
 
         // test a second entry
-        MockIdentifier id2 = new MockIdentifier("Id2");
+        MockIdentifier id2 = new MockIdentifier("page1","Id2");
         val1.set("value2");
 
         Entry entry2 = new Entry(id2, val1, false, null, null);
         el.addEntry(entry2);
         Assert.assertEquals(2, el.size());
+        Assert.assertEquals(2, el.getEntries("page1").size());
         Assert.assertEquals(entry2, el.getEntry(id2));
+        
+        // test a third in a different page entry
+        MockIdentifier id3 = new MockIdentifier("page2","Id3");
+        val1.set("value3");
+
+        Entry entry3 = new Entry(id3, val1, false, null, null);
+        el.addEntry(entry3);
+        Assert.assertEquals(3, el.size());
+        Assert.assertEquals(2, el.getEntries("page1").size());
+        Assert.assertEquals(1, el.getEntries("page2").size());
+        Assert.assertEquals(entry3, el.getEntry(id3));
+        
+        
     }
 
     /**
@@ -178,7 +192,7 @@ public class EntriesListTest
     {
         // create new List
         EntriesList el = new EntriesList(WORKINGDIR, FILENAME);
-        MockIdentifier id1 = new MockIdentifier("Id1");
+        MockIdentifier id1 = new MockIdentifier("page1","Id1");
         MockValue val1 = new MockValue("value1");
         // add one entry
         el.addEntry(new Entry(id1, val1, false, null, null));
@@ -204,7 +218,7 @@ public class EntriesListTest
     {
         // create new List
         EntriesList el = new EntriesList(WORKINGDIR, FILENAME);
-        MockIdentifier id1 = new MockIdentifier("Id1");
+        MockIdentifier id1 = new MockIdentifier("page1","Id1");
         MockValue val1 = new MockValue("value1");
         // add one entry
         el.addEntry(new Entry(id1, val1, false, null, null));

@@ -44,7 +44,7 @@
 
 package org.xwoot.xwootApp;
 
-//Harg ! Coupling between patch and XWoot ...
+//TODO : re-architecture : Harg ! Coupling between patch and XWoot ...
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -84,7 +84,6 @@ import org.xwoot.lpbcast.util.NetUtil;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngine;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngineException;
 import org.xwoot.thomasRuleEngine.core.Entry;
-import org.xwoot.thomasRuleEngine.core.Identifier;
 import org.xwoot.thomasRuleEngine.core.Value;
 import org.xwoot.thomasRuleEngine.op.ThomasRuleOp;
 
@@ -98,9 +97,9 @@ import org.xwoot.wootEngine.WootEngineException;
 import org.xwoot.wootEngine.core.WootPage;
 import org.xwoot.wootEngine.op.WootOp;
 import org.xwoot.xwootApp.core.XWootPage;
-import org.xwoot.xwootApp.core.tre.CommentsValue;
+import org.xwoot.xwootApp.core.tre.CommentValue;
 import org.xwoot.xwootApp.core.tre.MDIdentifier;
-import org.xwoot.xwootApp.core.tre.MDValue;
+import org.xwoot.xwootApp.core.tre.PageFieldValue;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
@@ -152,7 +151,7 @@ public class XWoot implements XWootAPI
     private static final String PAGELISTFILEFORSTATE = "list.txt";
 
     private String workingDir;
-    
+
     /**
      * 
      * This structure associate a key to a list of pagenames. 
@@ -295,21 +294,21 @@ public class XWoot implements XWootAPI
                 }
 
                 // overwrite comments
-                CommentsValue value=null;
-                try {
-                    value = (CommentsValue) this.tre.getValue(new MDIdentifier(pageName, WikiContentManager.COMMENT));
-                } catch (ThomasRuleEngineException e) {
-                    this.logger.error("Problem when getting tre comment for page : "+pageName+"\n",e);
-                } 
-                if (value != null) {
-                    List<Map> comments = (List<Map>) value.get();
-                    try {
-                        this.contentManager.overWriteComments(pageName, comments);
-                    } catch (WikiContentManagerException e) {
-                        this.logger.error("Problem when overwritting page comments -- "+pageName+" \n",e);
-                    }
-                }
-                this.logger.info(this.siteId + " : overwrite page : " + pageName + " OK");
+//                CommentValue value=null;
+//                try {
+//                    value = (CommentValue) this.tre.getValue(new MDIdentifier(pageName, WikiContentManager.COMMENT));
+//                } catch (ThomasRuleEngineException e) {
+//                    this.logger.error("Problem when getting tre comment for page : "+pageName+"\n",e);
+//                } 
+//                if (value != null) {
+//                    List<Map> comments = (List<Map>) value.get();
+//                    try {
+//                        this.contentManager.overWriteComments(pageName, comments);
+//                    } catch (WikiContentManagerException e) {
+//                        this.logger.error("Problem when overwritting page comments -- "+pageName+" \n",e);
+//                    }
+//                }
+//                this.logger.info(this.siteId + " : overwrite page : " + pageName + " OK");
             }
         }
 
@@ -477,7 +476,7 @@ public class XWoot implements XWootAPI
 
         // Update TRE
         Map<String, String> fields = new HashMap<String, String>();
-        List<Map> comments = null;
+        List<Map> comments = new ArrayList<Map>();
         Collection entries = new ArrayList<Entry>();
         for (int i = 0; i < list.size(); i++) {
             Entry e=null;
@@ -518,16 +517,12 @@ public class XWoot implements XWootAPI
                 if (e != null) {
                     Value val = e.getValue();
                     if (val != null) {
-                        if (val instanceof MDValue) {
-                            fields.put(((MDIdentifier) e.getId()).getMetaDataId(), (String)((MDValue) e.getValue()).get());
+                        if (val instanceof PageFieldValue) {
+                            fields.put(((MDIdentifier) e.getId()).getMetaDataId(), (String)((PageFieldValue) e.getValue()).get());
                             this.logger.debug(this.siteId + " : set field -- "
-                                + ((MDIdentifier) e.getId()).getMetaDataId() + "," + ((MDValue) e.getValue()).get());
-                        } else if (val instanceof CommentsValue) {
-                            if (comments == null) {
-                                comments = (List<Map>) ((CommentsValue) e.getValue()).get();
-                            } else {
-                                throw new XWootException("One comments op per page !");
-                            }
+                                + ((MDIdentifier) e.getId()).getMetaDataId() + "," + ((PageFieldValue) e.getValue()).get());
+                        } else if (val instanceof CommentValue) {
+                            comments.add((Map) ((CommentValue) e.getValue()).get());
                         } else {
                             throw new ClassCastException("Bad given type : " + val.getClass());
                         }
@@ -541,14 +536,14 @@ public class XWoot implements XWootAPI
                 this.logger.error("Problem when setting page "+pageName+"\n",e);
             }
 
-            if (comments != null) {
-                try {
-                    this.contentManager.overWriteComments(pageName, comments);
-                } catch (WikiContentManagerException e) {
-                    this.logger.error("Problem when overwritting comments "+pageName+"\n",e);
-                }
-                this.logger.debug(this.siteId + " : set comments : " + comments);
-            }
+//            if (!comments.isEmpty()) {
+//                try {
+//                    this.contentManager.overWriteComments(pageName, comments);
+//                } catch (WikiContentManagerException e) {
+//                    this.logger.error("Problem when overwritting comments "+pageName+"\n",e);
+//                }
+//                this.logger.debug(this.siteId + " : set comments : " + comments);
+//            }
         }
     }
 
@@ -607,9 +602,19 @@ public class XWoot implements XWootAPI
 
         // synchronize MD contents
         List<ThomasRuleOp> mdOp = this.synchronizePageMD(pageName, fields);
-        ThomasRuleOp o;
-        try {
-            o = this.synchronizePageComments(pageName, this.contentManager.getComments(pageName));
+//        List<ThomasRuleOp> o=null;
+//        try {
+//            o = this.synchronizePageComments(pageName, this.contentManager.getComments(pageName));
+//            if (o != null){
+//                mdOp.addAll(o);
+//            }
+//
+//        } catch (WikiContentManagerException e) {
+//            this.logger.error("Problem when getting comments for page "+pageName+"\n",e);
+//        }
+
+        /*   try {
+            o = this.synchronizePageTags(pageName, this.contentManager.getTags(pageName));
             if (o != null){
                 mdOp.add(o);
             }
@@ -617,7 +622,7 @@ public class XWoot implements XWootAPI
         } catch (WikiContentManagerException e) {
             this.logger.error("Problem when getting comments for page "+pageName+"\n",e);
         }
-
+         */
         // CreatePatch if necessary
         if (!dataContent.isEmpty() || !mdOp.isEmpty()) {
             this.logger.debug(this.siteId + " : some change to send ; create patch");
@@ -626,8 +631,9 @@ public class XWoot implements XWootAPI
 
     }
 
-    private synchronized ThomasRuleOp synchronizePageComments(String pageName, List<Map> comments)
+    /* private ThomasRuleOp synchronizePageTags(String pageName, Map<Integer, List<String>> tags)
     {
+
         CommentsValue value = null;
         Identifier id = new MDIdentifier(pageName, WikiContentManager.COMMENT);
 
@@ -651,7 +657,52 @@ public class XWoot implements XWootAPI
         }
 
         return op;
-    }
+    }*/
+
+//    private synchronized List<ThomasRuleOp> synchronizePageComments(String pageName, List<Map> comments)
+//    {
+//        List<ThomasRuleOp> result=new ArrayList<ThomasRuleOp>();
+//
+//        if (comments==null){
+//            return null;
+//        }
+//        List<Identifier> pageIds=null;
+//        
+//        try {
+//            pageIds = this.tre.getEntriesIds(pageName);
+//        } catch (ThomasRuleEngineException e1) {
+//           return null;
+//        }
+//
+//        for(Map comment:comments){
+//            CommentValue value= null;
+//            try {
+//                if (comment != null) {
+//                    Identifier id = new MDIdentifier(pageName, WikiContentManager.COMMENT+comment.get(WikiContentManager.ID));
+//                    if (pageIds.contains(id)){
+//                        value = new CommentValue(comment);
+//                    }
+//                    ThomasRuleOp op=null;
+//                    op = this.tre.getOp(id, value);
+//                    this.tre.applyOp(op);
+//                    result.add(op);
+//
+//                }
+//            } catch (ThomasRuleEngineException e) {
+//                this.logger.error("Can't apply comment op ");
+//            }
+//
+//        }
+//
+//
+//        if (result.isEmpty()) {
+//            this.logger.info(this.siteId + " : no comment to synchronize\n\n");
+//        } else {
+//            this.logger.info(this.siteId + " : comments changed ; synchronizing");
+//        }
+//
+//        return result;
+//    }
 
     private synchronized List<ThomasRuleOp> synchronizePageMD(String pageName, Map<String, String> fields)
     {
@@ -664,7 +715,7 @@ public class XWoot implements XWootAPI
                 if (value != null) {
                     ThomasRuleOp op=null;
                     try {
-                        op = this.tre.getOp(new MDIdentifier(pageName, pageMd.toString()), new MDValue(value));
+                        op = this.tre.getOp(new MDIdentifier(pageName, pageMd.toString()), new PageFieldValue(value));
                         if (op != null) {
                             this.tre.applyOp(op);
                             result.add(op);
@@ -1628,7 +1679,7 @@ public class XWoot implements XWootAPI
         File file = new File(this.lastVuePagesDir + File.separator + page.getFileName());
         return file.delete();
     }
-    
+
     public List<String> getLastPages(String id) throws XWootException
     {
         List<String> result=null;
@@ -1641,7 +1692,7 @@ public class XWoot implements XWootAPI
         this.lastModifiedPageNames.put(id, new ArrayList());
         return result;
     }
-    
+
     private void addPageNameToLastPages(String pageName){
         Set s=this.lastModifiedPageNames.keySet();
         Iterator i=s.iterator();
@@ -1649,5 +1700,5 @@ public class XWoot implements XWootAPI
             this.lastModifiedPageNames.get(i.next()).add(pageName);
         }
     }
-    
+
 }

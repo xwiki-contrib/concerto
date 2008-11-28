@@ -6,10 +6,14 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.jdom.Document;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
+import org.jdom.output.DOMOutputter;
+import org.w3c.dom.NodeList;
 import org.xwoot.iwoot.xwootclient.XWootClientAPI;
 
 public class XWootClientServlet implements XWootClientAPI
@@ -134,9 +138,36 @@ public class XWootClientServlet implements XWootClientAPI
         
     }
     
-    public Document getPageList(String id){
+    public List getPageList(String id) throws XWootClientServletException{
         Document doc=this.getInfos(this.pageList+id);
-        return doc;
+        DOMOutputter domOutputter = new DOMOutputter();
+        org.w3c.dom.Document documentDOM;
+        try {
+            documentDOM = domOutputter.output(doc);
+        } catch (JDOMException e) {
+           throw new XWootClientServletException(e);
+        }
+       
+        if (documentDOM==null){
+            return null;
+        }
+        if (documentDOM.getFirstChild()==null){
+            return null;
+        }
         
+        if(documentDOM.getFirstChild().getChildNodes()==null){
+            return null;
+        }
+        
+        NodeList nodeList=documentDOM.getFirstChild().getChildNodes();
+        
+        List pageL=new ArrayList<String>();
+        
+        for (int i=0;i<nodeList.getLength();i++){
+            if (nodeList.item(i).getNodeName().equals("page") && nodeList.item(i).getTextContent()!=null ){
+                pageL.add(nodeList.item(i).getTextContent());
+            }
+        }       
+        return pageL;  
     }
 }

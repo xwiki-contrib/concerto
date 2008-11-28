@@ -52,7 +52,7 @@ import java.io.Serializable;
 /**
  * Abstract Woot Operation.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public abstract class AbstractWootOp implements WootOp, Serializable
 {
@@ -104,7 +104,7 @@ public abstract class AbstractWootOp implements WootOp, Serializable
     @Override
     public String toString()
     {
-        return "siteId: " + (this.opId != null ? this.opId.getSiteid() : "null") + " opid: " + this.opId
+        return "siteId: " + (this.opId != null ? Integer.valueOf(this.opId.getSiteid()) : "null") + " opid: " + this.opId
             + " pageName: " + this.pageName;
     }
 

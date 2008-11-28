@@ -1,8 +1,5 @@
 package org.xwoot.iwoot;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -10,21 +7,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.xwoot.iwoot.xwootclient.XWootClientAPI;
+import org.xwoot.iwoot.xwootclient.XWootClientException;
 import org.xwoot.wikiContentManager.WikiContentManager;
 import org.xwoot.wikiContentManager.WikiContentManagerException;
 
 public class IWoot
 {
-    public Integer getId()
-    {
-        return this.id;
-    }
-
-    public WikiContentManager getWcm()
-    {
-        return this.wcm;
-    }
-
     private XWootClientAPI xwoot;
     private WikiContentManager wcm;
     private Integer id;
@@ -65,57 +53,67 @@ public class IWoot
     //        return result;
     //    }
 
-    private void disconnectXWoot()
-    {
-        this.xwoot.disconnectFromContentManager();  
-    }
-
-    private void reconnectXwoot() 
-    {
-        this.xwoot.connectToContentManager(); 
-    }
-
-    private synchronized List<String> getPagesNames() throws IWootException
-    { 
-        this.reconnectXwoot();
-        ArrayList< String> result=new ArrayList<String>();
-        Collection spaces;
-        try {
-            spaces = this.wcm.getListSpaceId();
-        } catch (WikiContentManagerException e) {
-            throw new IWootException(this.id+" : Problem with WikiContentManager (getListSpaceId)",e);
-        }
-        Iterator i=spaces.iterator();
-        while(i.hasNext()){
-            String space=(String)i.next();
-            try {
-                Collection pages=this.wcm.getListPageId(space);
-                result.addAll(pages);
-            } catch(WikiContentManagerException e ){
-                throw new IWootException(this.id+" : Problem with WikiContentManager (getListPageId)",e);
-            }  
-        }
-        this.disconnectXWoot();
-        return result;
-    }
+//    private synchronized List<String> getPagesNames() throws IWootException
+//    { 
+//        this.reconnectXwoot();
+//        ArrayList< String> result=new ArrayList<String>();
+//        Collection spaces;
+//        try {
+//            spaces = this.wcm.getListSpaceId();
+//        } catch (WikiContentManagerException e) {
+//            throw new IWootException(this.id+" : Problem with WikiContentManager (getListSpaceId)",e);
+//        }
+//        Iterator i=spaces.iterator();
+//        while(i.hasNext()){
+//            String space=(String)i.next();
+//            try {
+//                Collection pages=this.wcm.getListPageId(space);
+//                result.addAll(pages);
+//            } catch(WikiContentManagerException e ){
+//                throw new IWootException(this.id+" : Problem with WikiContentManager (getListPageId)",e);
+//            }  
+//        }
+//        this.disconnectXWoot();
+//        return result;
+//    }
 
     public synchronized Document getPageList(String pagesHRef) throws IWootException{
-        List<String> list=this.getPagesNames();
-        if (list!=null){
-            try {
-                return this.wcm.PageListToXml(pagesHRef, list);
-            } catch (WikiContentManagerException e) {
-                throw new IWootException(this.id+" : Problem with WikiContentManager (pageListToXml)",e);
-            }
+        List list;
+        try {
+            this.xwoot.connectToContentManager();
+            list = this.xwoot.getPageList(String.valueOf(this.id));
+            this.xwoot.disconnectFromContentManager();
+            return this.wcm.PageListToXml(pagesHRef, list);
+        } catch (XWootClientException e) {
+            throw new IWootException("Problem with XWoot client (get page list)",e);
+        } catch (WikiContentManagerException e) {
+            throw new IWootException("Problem with Wiki Content Manager (page list to xml)",e);
         }
-        return null;
+       
     }
+    
+//  {
+//        List<String> list=this.getPagesNames();
+//        if (list!=null){
+//            try {
+//                return this.wcm.PageListToXml(pagesHRef, list);
+//            } catch (WikiContentManagerException e) {
+//                throw new IWootException(this.id+" : Problem with WikiContentManager (pageListToXml)",e);
+//            }
+//        }
+//        return null;
+//  }
 
     public synchronized Document getPage(String pageId,String href) throws IWootException
     {
         Map pageMap=null;
         try {
             pageMap=this.wcm.getFields(pageId);
+            if (pageMap==null){
+                return null;
+            }
+            String render=this.wcm.renderContent(pageId);
+            pageMap.put(WikiContentManager.RENDERCONTENT, render);
             return this.wcm.toXml(pageId,href,pageMap);
         } catch (WikiContentManagerException e) {
             throw new IWootException(this.id+" : Problem with WikiContentManager (getFields)",e);
@@ -176,4 +174,13 @@ public class IWoot
         }
     }
 
+    public Integer getId()
+    {
+        return this.id;
+    }
+
+    public WikiContentManager getWcm()
+    {
+        return this.wcm;
+    }
 }
