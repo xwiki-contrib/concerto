@@ -1,5 +1,6 @@
 package org.xwoot.lpbcast.sender;
 
+import java.security.InvalidParameterException;
 import java.util.Collection;
 
 import org.xwoot.lpbcast.message.Message;
@@ -12,7 +13,7 @@ import org.xwoot.lpbcast.sender.httpservletlpbcast.HttpServletLpbCastException;
  * {@link LpbCastAPI} are delegated to the owning {@link HttpServletLpbCast} and the rest are up to the subclasses to
  * implement, for they are sensible to the state of the sender.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public abstract class AbstractLpbCastState implements LpbCastAPI
 {
@@ -23,9 +24,13 @@ public abstract class AbstractLpbCastState implements LpbCastAPI
      * Creates a new state instance.
      * 
      * @param connection the connection instance that this state belongs to.
+     * @throws InvalidParameterException if the connection parameter is null.
      */
     public AbstractLpbCastState(HttpServletLpbCast connection)
     {
+        if (connection == null) {
+            throw new InvalidParameterException("The provided parameter must not be null.");
+        }
         this.connection = connection;
     }
 

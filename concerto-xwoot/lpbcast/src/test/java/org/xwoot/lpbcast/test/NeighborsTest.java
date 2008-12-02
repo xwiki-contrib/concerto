@@ -50,45 +50,59 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.xwoot.lpbcast.neighbors.Neighbors;
 import org.xwoot.lpbcast.neighbors.httpservletneighbors.HttpServletNeighbors;
+import org.xwoot.xwootUtil.FileUtil;
 
-import java.io.File;
+import java.util.Random;
 
 import junit.framework.Assert;
 
 /**
- * DOCUMENT ME!
+ * Tests for the neighbors manager.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
 public class NeighborsTest
 {
-    private String neighborsFilePath;
+    /** Working directory for testing this module. */
+    protected static final String WORKINGDIR = FileUtil.getTestsWorkingDirectoryPathForModule("lpbcast");
 
+    /** The maximum number of neighbors used for the test object. */
+    protected static final int MAXIMUM_NUMBER_OF_NEIGHBORS = 10;
+
+    /** The neighbors object to test. */
     private Neighbors neighbors;
 
-    protected final static String WORKINGDIR = "/tmp/testsPbcast";
+    /** A test neighbor. */
+    private String testNeighbor = "testNeighbor";
 
     /**
-     * Creates a new LpbCastCase object.
+     * Initializes the working directory.
      * 
-     * @param name DOCUMENT ME!
+     * @throws Exception if the directory is not usable.
+     * @see FileUtil#checkDirectoryPath(String)
      */
     @BeforeClass
-    public static void initFile()
+    public static void initFile() throws Exception
     {
-        if (!new File(WORKINGDIR).exists()) {
-            new File(WORKINGDIR).mkdirs();
-        }
+        FileUtil.checkDirectoryPath(WORKINGDIR);
     }
 
+    /**
+     * Creates a new test object.
+     * 
+     * @throws Exception if problems occur.
+     */
     @Before
     public void setUp() throws Exception
     {
-        this.neighborsFilePath = WORKINGDIR + File.separator + "neighbors";
-        this.neighbors = new HttpServletNeighbors(this.neighborsFilePath, 10, new Integer(0));
+        this.neighbors = new HttpServletNeighbors(WORKINGDIR, MAXIMUM_NUMBER_OF_NEIGHBORS, new Integer(0));
     }
 
+    /**
+     * Clears the test object's contents.
+     * 
+     * @throws Exception if problems occur.
+     */
     @After
     public void tearDown() throws Exception
     {
@@ -97,30 +111,18 @@ public class NeighborsTest
     }
 
     /**
-     * DOCUMENT ME!
+     * Test if the working
      * 
      * @throws Exception DOCUMENT ME!
      */
-    @Test
-    public void testInitFile() throws Exception
-    {
-        Assert.assertTrue(new File(WORKINGDIR).exists());
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @throws Exception DOCUMENT ME!
+    /*
+     * @Test public void testInitFile() throws Exception { Assert.assertTrue(new File(WORKINGDIR).exists()); }
      */
-    @Test
-    public void testAdd() throws Exception
-    {
-        this.neighbors.addNeighbor("neighbor 0");
-        Assert.assertEquals(this.neighbors.getNeighborsListSize(), 1);
-    }
 
     /**
-     * DOCUMENT ME!
+     * Check the status of the neighbors manager right after initialization.
+     * <p>
+     * Result: the list of neighbors should be empty.
      * 
      * @throws Exception DOCUMENT ME!
      */
@@ -131,82 +133,119 @@ public class NeighborsTest
     }
 
     /**
-     * DOCUMENT ME!
+     * Test adding a neighbor.
+     * <p>
+     * Result: The list of neighbors should contain only the added neighbor.
      * 
-     * @throws Exception DOCUMENT ME!
+     * @throws Exception if problems occur.
+     */
+    @Test
+    public void testAdd() throws Exception
+    {
+        this.neighbors.addNeighbor(this.testNeighbor);
+
+        Assert.assertTrue(this.neighbors.getNeighborsList().contains(this.testNeighbor));
+        Assert.assertEquals(this.neighbors.getNeighborsListSize(), 1);
+    }
+
+    /**
+     * When no neighbors are known, then the neighbor manages is not connected.
+     * <p>
+     * After adding at least one neighbor, it becomes connected.
+     * 
+     * @throws Exception if problems occur.
      */
     @Test
     public void testIsConnected() throws Exception
     {
         Assert.assertFalse(this.neighbors.isConnected());
 
-        this.neighbors.addNeighbor("neighbor 0");
+        this.neighbors.addNeighbor(this.testNeighbor);
         Assert.assertTrue(this.neighbors.isConnected());
     }
 
     /**
-     * DOCUMENT ME!
+     * Add 10 neighbors, clear the list then add other 5 neighbors.
+     * <p>
+     * Result: the list of neighbors will contain only the 5 neighbors added at the end.
      * 
-     * @throws Exception DOCUMENT ME!
+     * @throws Exception if problems occur.
      */
     @Test
     public void testList() throws Exception
     {
         for (int i = 0; i < 10; i++) {
-            this.neighbors.addNeighbor("neighbor " + i);
+            this.neighbors.addNeighbor(this.testNeighbor + i);
         }
 
         Assert.assertEquals(this.neighbors.getNeighborsList().size(), 10);
 
+        String randomTestNeighbor = this.testNeighbor + new Random().nextInt(10);
+
+        Assert.assertTrue(this.neighbors.getNeighborsList().contains(randomTestNeighbor));
+
         this.neighbors.clearNeighbors();
 
-        for (int i = 0; i < 5; i++) {
-            this.neighbors.addNeighbor("neighbor " + i);
+        for (int i = 10; i < 15; i++) {
+            this.neighbors.addNeighbor(this.testNeighbor + i);
         }
 
         Assert.assertEquals(this.neighbors.getNeighborsList().size(), 5);
+
+        randomTestNeighbor = this.testNeighbor + (10 + new Random().nextInt(5));
+
+        Assert.assertTrue(this.neighbors.getNeighborsList().contains(randomTestNeighbor));
     }
 
     /**
-     * DOCUMENT ME!
+     * Add more neighbors than the test object is set to allow.
+     * <p>
+     * Result: Each time a neighbor add request is received and the list of neighbors is full, a random neighbor from
+     * the list will be removed so that the new neighbor can be added. In the end, the list will contain exactly or less
+     * than {@link #MAXIMUM_NUMBER_OF_NEIGHBORS}.
      * 
-     * @throws Exception DOCUMENT ME!
+     * @throws Exception if problems occur.
      */
     @Test
     public void testMax() throws Exception
     {
-        for (int i = 0; i < 100; i++) {
-            this.neighbors.addNeighbor("neighbor " + i);
+        for (int i = 0; i < (MAXIMUM_NUMBER_OF_NEIGHBORS * 2); i++) {
+            this.neighbors.addNeighbor(this.testNeighbor + i);
         }
 
-        Assert.assertEquals(this.neighbors.getNeighborsListSize(), 10);
+        Assert.assertEquals(this.neighbors.getNeighborsListSize(), MAXIMUM_NUMBER_OF_NEIGHBORS);
     }
 
     /**
-     * DOCUMENT ME!
+     * Add a neighbor and then remove him.
+     * <p>
+     * Result: The list of neighbors will be empty.
      * 
-     * @throws Exception DOCUMENT ME!
+     * @throws Exception if problems occur.
      */
     @Test
     public void testRemove() throws Exception
     {
-        this.neighbors.addNeighbor("neighbor 0");
+        this.neighbors.addNeighbor(this.testNeighbor);
         Assert.assertEquals(this.neighbors.getNeighborsListSize(), 1);
 
-        this.neighbors.removeNeighbor("neighbor 0");
+        this.neighbors.removeNeighbor(testNeighbor);
         Assert.assertEquals(this.neighbors.getNeighborsListSize(), 0);
     }
 
     /**
-     * DOCUMENT ME!
+     * Add a neighbor twice.
+     * <p>
+     * Result: Only one instance of that neighbor will be in the list.
      * 
-     * @throws Exception DOCUMENT ME!
+     * @throws Exception if problems occur.
      */
     @Test
     public void testUnicity() throws Exception
     {
-        this.neighbors.addNeighbor("neighbor 0");
-        this.neighbors.addNeighbor("neighbor 0");
+        this.neighbors.addNeighbor(this.testNeighbor);
+        this.neighbors.addNeighbor(this.testNeighbor);
+
         Assert.assertEquals(this.neighbors.getNeighborsListSize(), 1);
     }
 }

@@ -47,35 +47,44 @@ package org.xwoot.lpbcast.util;
 import java.net.InetAddress;
 
 /**
- * DOCUMENT ME!
+ * A 32 byte GUID generator (Globally Unique ID).
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
-public class Guid
+public final class Guid
 {
-    private static String hexServerIP = null;
+    /** The server's ip address in hex format. */
+    private static String hexServerIP;
 
+    /** Secure random number generator. */
     private static final java.security.SecureRandom SEEDER = new java.security.SecureRandom();
 
+    /** The default server ip in raw format to fall back on if getting the localhost fails. */
+    private static final byte[] DEFAULT_SERVER_IP = new byte[] {127, 0, 0, 1};
+
+    /** Disable utility class instantiation. */
     private Guid()
     {
         // void
     }
 
     /**
-     * A 32 byte GUID generator (Globally Unique ID).
+     * Generate a 32 byte GUID (Globally Unique ID) using the hashcode of the given object.
+     * <p>
+     * The resulted Guid looks something like: &lt;integer as lower part in bites of the current time&gt; &lt;the
+     * server's IP address&gt; &lt;the object's hashcode&gt; &lt;a secure random integer&gt;, each representing 8 digit
+     * hex numbers.
      * 
-     * @param o DOCUMENT ME!
-     * @return DOCUMENT ME!
+     * @param o the object to use.
+     * @return the GUID in hex format.
      */
-    public static final String generateGUID(Object o)
+    public static String generateGUID(Object o)
     {
         StringBuffer tmpBuffer = new StringBuffer(16);
 
         if (Guid.hexServerIP == null) {
             InetAddress localInetAddress = null;
-            byte[] serverIP = new byte[] {127, 0, 0, 1};
+            byte[] serverIP = DEFAULT_SERVER_IP;
 
             try {
                 // get the inet address
@@ -104,7 +113,13 @@ public class Guid
         return guid.toString();
     }
 
-    private static int getInt(byte[] bytes)
+    /**
+     * Convert a byte array to int.
+     * 
+     * @param bytes the byte array having 4 elements.
+     * @return the int value.
+     */
+    protected static int getInt(byte[] bytes)
     {
         int i = 0;
         int j = 24;
@@ -118,29 +133,30 @@ public class Guid
         return i;
     }
 
-    private static String hexFormat(int i, int j)
+    /**
+     * @param number the number to convert.
+     * @param numberOfDigits the numberOfDigits of the resulting number.
+     * @return the hex string number having the specified number of digits with padded 0s in fronf of it in order to
+     *         reach that.
+     */
+    private static String hexFormat(int number, int numberOfDigits)
     {
-        String s = Integer.toHexString(i);
+        String s = Integer.toHexString(number);
 
-        return Guid.padHex(s, j) + s;
+        return Guid.padHex(s, numberOfDigits) + s;
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param args DOCUMENT ME!
+     * @param hexNumber the number in hex format to pad.
+     * @param desiredLength the desired length to pad to.
+     * @return a string containing the padded 0s needed by the number to reach the deiredLength in digits.
      */
-    public static void main(String[] args)
-    {
-        Guid.generateGUID("tagada");
-    }
-
-    private static String padHex(String s, int i)
+    private static String padHex(String hexNumber, int desiredLength)
     {
         StringBuffer tmpBuffer = new StringBuffer();
 
-        if (s.length() < i) {
-            for (int j = 0; j < (i - s.length()); j++) {
+        if (hexNumber.length() < desiredLength) {
+            for (int j = 0; j < (desiredLength - hexNumber.length()); j++) {
                 tmpBuffer.append('0');
             }
         }
