@@ -61,7 +61,8 @@
       </activation>
       <properties>
         <var.working.dir>/home/maire/Projet</var.working.dir>
-        <var.localhost>http://concerto.loria.fr:8080
+        <var.localhost><!--  http://concerto.loria.fr:8080  -->
+        				http://localhost:8080
         </var.localhost>
         <!-- ############################################ -->
         <!-- # servlet container properties (ex : tomcat) # -->
