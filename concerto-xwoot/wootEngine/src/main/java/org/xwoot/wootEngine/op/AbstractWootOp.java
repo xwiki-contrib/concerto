@@ -104,7 +104,7 @@ public abstract class AbstractWootOp implements WootOp, Serializable
     @Override
     public String toString()
     {
-        return "siteId: " + (this.opId != null ? Integer.valueOf(this.opId.getSiteid()) : "null") + " opid: " + this.opId
+        return "siteId: " + (this.opId != null ? String.valueOf(this.opId.getSiteid()) : "null") + " opid: " + this.opId
             + " pageName: " + this.pageName;
     }
 
@@ -125,9 +125,7 @@ public abstract class AbstractWootOp implements WootOp, Serializable
         return (this.opId.equals(other.getOpId()) && this.pageName.equals(this.getPageName()));
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public int hashCode()
     {

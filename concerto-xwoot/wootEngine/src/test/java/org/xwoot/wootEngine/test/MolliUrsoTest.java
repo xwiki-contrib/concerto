@@ -46,7 +46,6 @@ package org.xwoot.wootEngine.test;
 
 import org.junit.Test;
 import org.xwoot.wootEngine.Patch;
-import org.xwoot.wootEngine.WootEngine;
 import org.xwoot.wootEngine.core.WootPage;
 import org.xwoot.wootEngine.op.WootOp;
 
@@ -118,9 +117,10 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         this.site0.deliverPatch(patch0);
         this.site1.deliverPatch(patch1);
 
-        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2), this.site0.getPageManager().getPageInternal(this.pageName));
-        Assert.assertEquals(this.site0.getPageManager().getPageInternal(this.pageName), this.site1.getPageManager().getPageInternal(
+        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2), this.site0.getPageManager().getPageInternal(
             this.pageName));
+        Assert.assertEquals(this.site0.getPageManager().getPageInternal(this.pageName), this.site1.getPageManager()
+            .getPageInternal(this.pageName));
     }
 
     /**
@@ -141,8 +141,8 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         this.site0.insert(wp, this.line4, 0);
         this.site0.getPageManager().unloadPage(wp);
 
-        Assert.assertEquals(wrapStartEndMarkers(this.line4 + this.line1 + this.line2 + this.line3), this.site0.getPageManager().getPageInternal(
-            this.pageName));
+        Assert.assertEquals(wrapStartEndMarkers(this.line4 + this.line1 + this.line2 + this.line3), this.site0
+            .getPageManager().getPageInternal(this.pageName));
     }
 
     /**
@@ -158,7 +158,8 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         WootPage wp1 = this.site0.getPageManager().loadPage(this.pageName);
         this.site0.insert(wp1, this.line1, 0);
         this.site0.getPageManager().unloadPage(wp1);
-        Assert.assertEquals(wrapStartEndMarkers(this.line1), this.site0.getPageManager().getPageInternal(this.pageName));
+        Assert
+            .assertEquals(wrapStartEndMarkers(this.line1), this.site0.getPageManager().getPageInternal(this.pageName));
 
         wp1 = this.site0.getPageManager().loadPage(this.pageName);
         this.site0.delete(wp1, 0);
@@ -193,8 +194,10 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         /*
          * site0: line1 line2 line3 site1: line1 line2 line3 site2: line1 line2 line3
          */
-        Assert.assertEquals(this.site0.getPageManager().getPage(this.pageName), this.site1.getPageManager().getPage(this.pageName));
-        Assert.assertEquals(this.site1.getPageManager().getPage(this.pageName), this.site2.getPageManager().getPage(this.pageName));
+        Assert.assertEquals(this.site0.getPageManager().getPage(this.pageName), this.site1.getPageManager().getPage(
+            this.pageName));
+        Assert.assertEquals(this.site1.getPageManager().getPage(this.pageName), this.site2.getPageManager().getPage(
+            this.pageName));
 
         wp = this.site0.getPageManager().loadPage(this.pageName);
         WootPage wp2 = this.site1.getPageManager().loadPage(this.pageName);
@@ -216,7 +219,8 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         /*
          * site1: line1 line2 {deleted line3} line5 site2: line1 line2 {deleted line3} line5
          */
-        Assert.assertEquals(this.site1.getPageManager().getPage(this.pageName), this.site2.getPageManager().getPage(this.pageName));
+        Assert.assertEquals(this.site1.getPageManager().getPage(this.pageName), this.site2.getPageManager().getPage(
+            this.pageName));
 
         // op3 descent
         // data = Arrays.asList(new WootOp[] {op3});
@@ -228,7 +232,8 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         /*
          * site1: line1 line2 {deleted line3} line4 line5 site2: line1 line2 {deleted line3} line4 line5
          */
-        Assert.assertEquals(this.site1.getPageManager().getPage(this.pageName), this.site2.getPageManager().getPage(this.pageName));
+        Assert.assertEquals(this.site1.getPageManager().getPage(this.pageName), this.site2.getPageManager().getPage(
+            this.pageName));
 
         // data = Arrays.asList(new WootOp[] {op4});
         this.site0.deliverPatch(new Patch(Arrays.asList(new WootOp[] {op4}), null, this.pageName));
@@ -239,7 +244,8 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         /*
          * site0: line1 line2 {deleted line3} line4 line5 site1: line1 line2 {deleted line3} line4 line5
          */
-        Assert.assertEquals(this.site0.getPageManager().getPage(this.pageName), this.site1.getPageManager().getPage(this.pageName));
+        Assert.assertEquals(this.site0.getPageManager().getPage(this.pageName), this.site1.getPageManager().getPage(
+            this.pageName));
     }
 
     /**
@@ -300,7 +306,8 @@ public class MolliUrsoTest extends AbstractWootEngineTest
          * SITE0: [line1line5line3line4line2] SITE1: [line1line4line2] SITE2: [line1line5line3line4line2]
          */
 
-        Assert.assertEquals(this.site0.getPageManager().getPage(this.pageName), this.site2.getPageManager().getPage(this.pageName));
+        Assert.assertEquals(this.site0.getPageManager().getPage(this.pageName), this.site2.getPageManager().getPage(
+            this.pageName));
     }
 
     /**
@@ -362,8 +369,8 @@ public class MolliUrsoTest extends AbstractWootEngineTest
          * Site0: [line2line3] Site1: [line2line3]
          */
 
-        Assert.assertEquals(this.site0.getPageManager().getPageInternal(this.pageName), this.site1.getPageManager().getPageInternal(
-            this.pageName));
+        Assert.assertEquals(this.site0.getPageManager().getPageInternal(this.pageName), this.site1.getPageManager()
+            .getPageInternal(this.pageName));
     }
 
     /**
@@ -389,22 +396,21 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         // => wootEngine must put this two last op in wating queue
         // after send the first op => woot engine can integrate
         // the 3 op in the good order
-        WootEngine site_1 = this.createEngine(1);
 
         List<WootOp> data = new Vector<WootOp>();
         data.add(op3);
         data.add(op2);
         Patch patch = new Patch(data, null, this.pageName);
 
-        site_1.deliverPatch(patch);
-        Assert.assertEquals(this.emptyPageContent, site_1.getPageManager().getPageInternal(this.pageName));
+        site1.deliverPatch(patch);
+        Assert.assertEquals(this.emptyPageContent, site1.getPageManager().getPageInternal(this.pageName));
 
         data.clear();
         data.add(op1);
         patch.setData(data);
 
-        site_1.deliverPatch(patch);
-        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), site_1.getPageManager()
+        site1.deliverPatch(patch);
+        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), site1.getPageManager()
             .getPageInternal(this.pageName));
     }
 
@@ -419,46 +425,41 @@ public class MolliUrsoTest extends AbstractWootEngineTest
     @Test
     public void testWaitingQueue2() throws Exception
     {
-        // used site0 for creating op
-        WootEngine site_0 = this.createEngine(0);
+        WootPage wp = site0.getPageManager().loadPage(this.pageName);
+        WootOp op1 = site0.insert(wp, this.line1, 0);
+        WootOp op2 = site0.insert(wp, this.line2, 1);
+        WootOp op3 = site0.insert(wp, this.line3, 2);
+        site0.getPageManager().unloadPage(wp);
 
-        WootPage wp = site_0.getPageManager().loadPage(this.pageName);
-        WootOp op1 = site_0.insert(wp, this.line1, 0);
-        WootOp op2 = site_0.insert(wp, this.line2, 1);
-        WootOp op3 = site_0.insert(wp, this.line3, 2);
-        site_0.getPageManager().unloadPage(wp);
-
-        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), site_0.getPageManager()
+        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), site0.getPageManager()
             .getPageInternal(this.pageName));
 
         // real test : send 2 last op without the first
         // => wootEngine must put this two last op in wating queue
         // after send the first op => woot engine can integrate
         // the 3 op in the good order
-        WootEngine site_1 = this.createEngine(1);
-
         List<WootOp> data = new Vector<WootOp>();
         data.add(op3);
         data.add(op2);
         data.add(op2);
         Patch patch = new Patch(data, null, this.pageName);
-        site_1.deliverPatch(patch);
+        site1.deliverPatch(patch);
 
-        Assert.assertEquals(this.emptyPageContent, site_1.getPageManager().getPageInternal(this.pageName));
+        Assert.assertEquals(this.emptyPageContent, site1.getPageManager().getPageInternal(this.pageName));
 
         data.clear();
         data.add(op1);
         patch.setData(data);
 
-        site_1.deliverPatch(patch);
-        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), site_1.getPageManager()
+        site1.deliverPatch(patch);
+        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), site1.getPageManager()
             .getPageInternal(this.pageName));
 
         data.add(op2);
         patch.setData(data);
-        site_1.deliverPatch(patch);
+        site1.deliverPatch(patch);
 
-        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), site_1.getPageManager()
+        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), site1.getPageManager()
             .getPageInternal(this.pageName));
     }
 }

@@ -85,13 +85,13 @@ public abstract class AbstractWootEngineTest
 
     /** Name of page used for testing. */
     protected String pageName = "testPage";
-    
+
     /** Test WootEngine. */
     protected WootEngine site0;
-    
+
     /** Test WootEngine. */
     protected WootEngine site1;
-    
+
     /** Test WootEngine. */
     protected WootEngine site2;
 
@@ -128,12 +128,14 @@ public abstract class AbstractWootEngineTest
 
     /**
      * Clears the test's working directory if it exists. This is executed before each test.
+     * 
+     * @throws Exception if problems occur initializing the wootEngines.
      */
     @Before
     public void setUp() throws Exception
     {
         FileUtil.deleteDirectory(this.workingDir);
-        
+
         this.site0 = this.createEngine(0);
         this.site1 = this.createEngine(1);
         this.site2 = this.createEngine(2);

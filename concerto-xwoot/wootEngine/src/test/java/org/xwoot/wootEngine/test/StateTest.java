@@ -93,7 +93,8 @@ public class StateTest extends AbstractWootEngineTest
 
         // tests
         Assert.assertEquals(this.site0.getPageManager().listPages().length, numberOfPages);
-        Assert.assertEquals(this.site0.getPageManager().listPages().length, this.site1.getPageManager().listPages().length);
+        Assert.assertEquals(this.site0.getPageManager().listPages().length,
+            this.site1.getPageManager().listPages().length);
 
         // Pick a random page from the previously generated.
         int randomPageNumber = new Random().nextInt() % numberOfPages;
@@ -129,8 +130,10 @@ public class StateTest extends AbstractWootEngineTest
         this.site1.setState(state);
 
         // tests state
-        Assert.assertEquals(this.site0.getPageManager().listPages().length, this.site1.getPageManager().listPages().length);
-        Assert.assertEquals(this.site0.getPageManager().getPage(this.pageName), this.site1.getPageManager().getPage(this.pageName));
+        Assert.assertEquals(this.site0.getPageManager().listPages().length,
+            this.site1.getPageManager().listPages().length);
+        Assert.assertEquals(this.site0.getPageManager().getPage(this.pageName), this.site1.getPageManager().getPage(
+            this.pageName));
 
         // pool simulation
         List<WootOp> data = new Vector<WootOp>();
@@ -140,8 +143,8 @@ public class StateTest extends AbstractWootEngineTest
 
         this.site1.deliverPatch(patch);
 
-        Assert.assertEquals(this.site0.getPageManager().getPageInternal(this.pageName), this.site1.getPageManager().getPageInternal(
-            this.pageName));
+        Assert.assertEquals(this.site0.getPageManager().getPageInternal(this.pageName), this.site1.getPageManager()
+            .getPageInternal(this.pageName));
 
         data.clear();
         data.add(op1);
@@ -149,7 +152,7 @@ public class StateTest extends AbstractWootEngineTest
 
         this.site1.deliverPatch(patch);
 
-        Assert.assertEquals(this.site0.getPageManager().getPageInternal(this.pageName), this.site1.getPageManager().getPageInternal(
-            this.pageName));
+        Assert.assertEquals(this.site0.getPageManager().getPageInternal(this.pageName), this.site1.getPageManager()
+            .getPageInternal(this.pageName));
     }
 }
