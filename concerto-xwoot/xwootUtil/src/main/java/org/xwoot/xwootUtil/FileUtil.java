@@ -173,7 +173,7 @@ public class FileUtil
     
     public static void deleteDirectory(String directoryPath)
     {
-        if (directoryPath == null || directoryPath.isEmpty()) {
+        if (directoryPath == null || directoryPath.length() == 0) {
             throw new InvalidParameterException("An empty or null value was provided for directory path.");
         }
         
@@ -599,7 +599,7 @@ public class FileUtil
      */
     public static String getTestsWorkingDirectoryPathForModule(String moduleName)
     {
-        if (moduleName == null || moduleName.isEmpty()) {
+        if (moduleName == null || moduleName.length() == 0) {
             throw new InvalidParameterException("Module name must not be null or empty.");
         }
         

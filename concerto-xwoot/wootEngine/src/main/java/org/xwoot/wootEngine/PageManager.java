@@ -177,7 +177,7 @@ public class PageManager extends LoggedWootExceptionThrower
      */
     public boolean pageExists(String pageName) throws WootEngineException
     {
-        if (pageName == null || pageName.isEmpty()) {
+        if (pageName == null || pageName.length() == 0) {
             return false;
         }
 

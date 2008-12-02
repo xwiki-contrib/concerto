@@ -61,7 +61,7 @@ import java.net.URLConnection;
 /**
  * Utility class for network operations.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public final class NetUtil
 {
@@ -120,7 +120,7 @@ public final class NetUtil
                 bos.flush();
             }
         } catch (Exception e) {
-            throw new IOException("Problems while getting file from Url: " + url + "\n ", e);
+            throw new IOException("Problems while getting file from Url: " + url + "\n" + e.getMessage());
         } finally {
             try {
                 if (connectionInputStream != null) {
@@ -130,7 +130,7 @@ public final class NetUtil
                     bos.close();
                 }
             } catch (Exception e) {
-                throw new IOException("Problems closing the output file.\n", e);
+                throw new IOException("Problems closing the output file.\n" + e.getMessage());
             }
         }
 
@@ -202,7 +202,7 @@ public final class NetUtil
             // Read timed out - try another time...
             init.getResponseCode();
         } catch (Exception e) {
-            throw new IOException("Problems while sending the object " + object + " via HTTP at url " + url + "\n", e);
+            throw new IOException("Problems while sending the object " + object + " via HTTP at url " + url + "\n" + e.getMessage());
         } finally {
             try {
                 if (out != null) {
@@ -212,7 +212,7 @@ public final class NetUtil
                     init.disconnect();
                 }
             } catch (Exception e) {
-                throw new IOException("Problems closing the connection.\n", e);
+                throw new IOException("Problems closing the connection.\n" + e.getMessage());
             }
         }
     }

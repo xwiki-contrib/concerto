@@ -318,7 +318,7 @@ public class WootPage implements Serializable
      */
     public void setPageName(String pageName) throws IllegalArgumentException
     {
-        if (pageName == null || pageName.isEmpty()) {
+        if (pageName == null || pageName.length() == 0) {
             throw new IllegalArgumentException("Empty page names are not allowed.");
         }
 
