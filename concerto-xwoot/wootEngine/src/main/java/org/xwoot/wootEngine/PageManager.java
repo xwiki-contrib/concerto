@@ -40,10 +40,9 @@ public class PageManager extends LoggedWootExceptionThrower
 
     /** The directory path where to store pages. */
     private String pagesDirPath;
-    
-    /** A page name list. PageManager add a name when a page change occurs (see {@link LastModifiedPageNameList})*/
-    private LastModifiedPageNameList lmpnl;
 
+    /** A page name list. PageManager adds a name when a page change occurs. (see {@link LastModifiedPageNameList}) */
+    private LastModifiedPageNameList lastModifiedPageNameList;
 
     /**
      * Creates a new PageManager instance to be used by the WootEngine. The PageManager will store it's pages in a
@@ -63,7 +62,7 @@ public class PageManager extends LoggedWootExceptionThrower
         this.pagesDirPath = newPagesDirPath;
 
         this.createWorkingDir();
-        this.lmpnl=new LastModifiedPageNameList(wootEngineWorkingDirPath);
+        this.lastModifiedPageNameList = new LastModifiedPageNameList(wootEngineWorkingDirPath);
 
         this.wootEngineId = wootEngineId;
         this.logger = LogFactory.getLog(this.getClass());
@@ -381,12 +380,11 @@ public class PageManager extends LoggedWootExceptionThrower
     }
 
     /**
-     * 
-     * @return a {@link LastModifiedPageNameList} 
+     * @return a list of page names that have suffered modification.
      */
     public LastModifiedPageNameList getLastModifiedPageNameList()
     {
-        return this.lmpnl;
+        return this.lastModifiedPageNameList;
     }
 
 }

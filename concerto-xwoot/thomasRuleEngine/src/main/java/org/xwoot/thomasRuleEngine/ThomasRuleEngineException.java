@@ -1,31 +1,48 @@
 package org.xwoot.thomasRuleEngine;
 
+/**
+ * Exception handling for LPBcast module.
+ * 
+ * @version $Id:$
+ */
 public class ThomasRuleEngineException extends Exception
 {
-
-    /**
-     * 
-     */
+    /** Unique ID used for serialization. */
     private static final long serialVersionUID = -2568698052987298242L;
 
+    /**
+     * @see Exception#Exception()
+     */
     public ThomasRuleEngineException()
     {
         super();
     }
 
-    public ThomasRuleEngineException(Throwable arg0)
+    /**
+     * @param cause the cause.
+     * @see Exception#Exception(Throwable)
+     */
+    public ThomasRuleEngineException(Throwable cause)
     {
-        super(arg0);
-        // TODO Auto-generated constructor stub
+        super(cause);
     }
 
-    public ThomasRuleEngineException(String arg0)
+    /**
+     * @param message the message.
+     * @see Exception#Exception(String)
+     */
+    public ThomasRuleEngineException(String message)
     {
-        super(arg0);
+        super(message);
     }
 
-    public ThomasRuleEngineException(String arg0, Throwable t)
+    /**
+     * @param message the message.
+     * @param cause the cause.
+     * @see Exception#Exception(String, Throwable)
+     */
+    public ThomasRuleEngineException(String message, Throwable cause)
     {
-        super(arg0, t);
+        super(message, cause);
     }
 }
