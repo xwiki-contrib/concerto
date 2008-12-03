@@ -22,8 +22,6 @@ package org.xwoot.wootEngine;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
-import java.util.List;
-import java.util.Vector;
 
 import org.apache.commons.logging.LogFactory;
 import org.xwoot.wootEngine.core.WootPage;
@@ -40,17 +38,12 @@ public class PageManager extends LoggedWootExceptionThrower
     /** The name of the directory inside the workingDir where to serialize {@link WootPage} objects. */
     public static final String PAGES_DIRECTORY_NAME = "pages";
 
-    /** The name of the file where to serialize {@link WootPage} the last page name list. */
-    public static final String PAGENAME_LIST_FILE_NAME = "pageList";
-
     /** The directory path where to store pages. */
     private String pagesDirPath;
+    
+    /** A page name list. PageManager add a name when a page change occurs (see {@link LastModifiedPageNameList})*/
+    private LastModifiedPageNameList lmpnl;
 
-    /** The list of the names of the modified pages. */
-    private List<String> pageNameList;
-
-    /** The file path where to serialize {@link WootPage} the last page name list. */
-    private String pagenameListPath;
 
     /**
      * Creates a new PageManager instance to be used by the WootEngine. The PageManager will store it's pages in a
@@ -69,9 +62,8 @@ public class PageManager extends LoggedWootExceptionThrower
 
         this.pagesDirPath = newPagesDirPath;
 
-        this.pagenameListPath = wootEngineWorkingDirPath + File.separator + PAGENAME_LIST_FILE_NAME;
-
         this.createWorkingDir();
+        this.lmpnl=new LastModifiedPageNameList(wootEngineWorkingDirPath);
 
         this.wootEngineId = wootEngineId;
         this.logger = LogFactory.getLog(this.getClass());
@@ -106,8 +98,6 @@ public class PageManager extends LoggedWootExceptionThrower
             FileUtil.deleteDirectory(workingDir);
         }
 
-        File pageNameVectorFile = new File(this.getPagenameListPath());
-        pageNameVectorFile.delete();
         createWorkingDir();
     }
 
@@ -154,7 +144,7 @@ public class PageManager extends LoggedWootExceptionThrower
             this.throwLoggedException("Problems storing page " + pageName);
         }
 
-        this.addPageNameInList(pageName);
+        this.getLastModifiedPageNameList().addPageNameInList(pageName);
     }
 
     /**
@@ -390,74 +380,13 @@ public class PageManager extends LoggedWootExceptionThrower
         return this.pagesDirPath;
     }
 
-    @SuppressWarnings("unchecked")
-    private void loadPageNameList() throws WootEngineException
+    /**
+     * 
+     * @return a {@link LastModifiedPageNameList} 
+     */
+    public LastModifiedPageNameList getLastModifiedPageNameList()
     {
-        String filePath = this.getPagenameListPath();
-
-        if (!new File(filePath).exists()) {
-            this.setPageNameList(new Vector<String>());
-        } else {
-            try {
-                this.setPageNameList((Vector<String>) FileUtil.loadObjectFromXml(filePath));
-            } catch (Exception e) {
-                this.throwLoggedException("Problems loading the pagename list.", e);
-            }
-        }
+        return this.lmpnl;
     }
 
-    private void storePageNameList() throws WootEngineException
-    {
-        try {
-            FileUtil.saveCollectionToXml(this.getPageNameList(), this.getPagenameListPath());
-        } catch (Exception e) {
-            this.throwLoggedException("Problems while storing the page name list.", e);
-        }
-    }
-
-    public void addPageNameInList(String pageName) throws WootEngineException
-    {
-        this.loadPageNameList();
-        this.getPageNameList().add(pageName);
-        this.storePageNameList();
-    }
-
-    public void removeNOccurencesInList(String pageName, int number) throws WootEngineException
-    {
-        this.loadPageNameList();
-        int index = 0;
-        for (int i = 0; i < number && index != -1; i++) {
-            index = this.getPageNameList().indexOf(pageName);
-            if (index != -1) {
-                this.getPageNameList().remove(index);
-            }
-        }
-        this.storePageNameList();
-    }
-
-    public List<String> getCurrentPageNameList() throws WootEngineException
-    {
-        this.loadPageNameList();
-        return this.getPageNameList();
-    }
-
-    private void setPageNameList(List<String> list)
-    {
-        this.pageNameList = list;
-    }
-
-    public List<String> getPageNameList()
-    {
-        return this.pageNameList;
-    }
-
-    public String getPagenameListPath()
-    {
-        return this.pagenameListPath;
-    }
-
-    public void setPagenameVectorPath(String pagenameVectorPath)
-    {
-        this.pagenameListPath = pagenameVectorPath;
-    }
 }
