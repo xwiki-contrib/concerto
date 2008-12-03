@@ -21,17 +21,6 @@
       <artifactId>xwootUtil</artifactId>
       <version>${pom.version}</version>
     </dependency>
-    <dependency>
-      <groupId>com.thoughtworks.xstream</groupId>
-      <artifactId>xstream</artifactId>
-      <version>1.2.2</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>xpp3_min</artifactId>
-          <groupId>xpp3</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
     <!-- Helper dependencies -->
     <dependency>
       <groupId>commons-codec</groupId>

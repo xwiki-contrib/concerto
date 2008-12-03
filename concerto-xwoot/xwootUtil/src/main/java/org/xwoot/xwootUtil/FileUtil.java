@@ -54,11 +54,14 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
 
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
@@ -74,6 +77,9 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.codec.binary.Base64;
 
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.xml.DomDriver;
+
 /**
  * DOCUMENT ME!
  * 
@@ -83,7 +89,7 @@ public class FileUtil
 {
     /** DOCUMENT ME! */
     public static final int BUFFER = 2048;
-    
+
     public static final String TESTS_DIRECTORY_NAME = "xwootTests";
 
     private FileUtil()
@@ -129,7 +135,7 @@ public class FileUtil
      * Copies data from the InputStream to the OutputStream using {@link #BUFFER} bytes at a time.
      * <p>
      * NOTE: Both streams are <b>not</b> automatically closed, so the user will have to take care of that.
-     *  
+     * 
      * @param in the source Stream.
      * @param out the destination Stream.
      * @throws IOException if transfer problems occur.
@@ -154,7 +160,7 @@ public class FileUtil
         if (dir == null) {
             throw new NullPointerException("A null value was provided instead of a File object.");
         }
-        
+
         if (dir.exists()) {
             String[] children = dir.list();
 
@@ -170,13 +176,13 @@ public class FileUtil
             dir.delete();
         }
     }
-    
+
     public static void deleteDirectory(String directoryPath)
     {
         if (directoryPath == null || directoryPath.length() == 0) {
             throw new InvalidParameterException("An empty or null value was provided for directory path.");
         }
-        
+
         deleteDirectory(new File(directoryPath));
     }
 
@@ -357,50 +363,51 @@ public class FileUtil
      * @param dirPath the directory where to extract the zip file.
      * @throws IOException if I/O problems occur.
      * @throws ZipException if zip format errors occur.
-     * 
      * @see ZipFile
      */
     public static List<String> unzipInDirectory(String zippedFilePath, String dirPath) throws IOException, ZipException
     {
         List<String> result = new ArrayList<String>();
         ZipFile zippedFile = null;
-        
-        try{
+
+        try {
             zippedFile = new ZipFile(zippedFilePath);
-            
+
             Enumeration< ? extends ZipEntry> entries = zippedFile.entries();
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
                 String currentDestinationFilePath = dirPath + File.separator + entry.getName();
-                
+
                 InputStream currentZipEntryInputStream = zippedFile.getInputStream(entry);
-                BufferedOutputStream bosToFile = new BufferedOutputStream(new FileOutputStream(currentDestinationFilePath));
-                
+                BufferedOutputStream bosToFile =
+                    new BufferedOutputStream(new FileOutputStream(currentDestinationFilePath));
+
                 try {
                     FileUtil.copyInputStream(currentZipEntryInputStream, bosToFile);
                 } catch (IOException ioe) {
-                    throw new IOException("Error unzipping entry " + entry.getName() + ". Check disk space or write access.");
+                    throw new IOException("Error unzipping entry " + entry.getName()
+                        + ". Check disk space or write access.");
                 } finally {
-                    try{
+                    try {
                         currentZipEntryInputStream.close();
                         bosToFile.close();
                     } catch (Exception e) {
                         throw new IOException("Unable to close file " + currentDestinationFilePath);
                     }
                 }
-                
+
                 result.add(entry.getName());
             }
         } finally {
             try {
-                if (zippedFile != null ) {
+                if (zippedFile != null) {
                     zippedFile.close();
                 }
-            } catch (Exception e) { 
+            } catch (Exception e) {
                 throw new IOException("Unable to close zip file ");
             }
         }
-        
+
         return result;
     }
 
@@ -452,10 +459,11 @@ public class FileUtil
 
         return file.getAbsolutePath();
     }
-    
+
     /**
-     * Zips a directory and saves the resulting file in the temporary directory. The file will be named "&lt;directory_name&gt;.zip".
-     *  
+     * Zips a directory and saves the resulting file in the temporary directory. The file will be named
+     * "&lt;directory_name&gt;.zip".
+     * 
      * @param directoryPath the directory to zip.
      * @return the actual location of the resulting temporary zip file.
      * @throws IOException if problems occur.
@@ -463,19 +471,22 @@ public class FileUtil
     public static String zipDirectory(String directoryPath) throws IOException
     {
         File tempFile = File.createTempFile(new File(directoryPath).getName(), ".zip");
-        
+
         return zipDirectory(directoryPath, tempFile.toString());
     }
-    
+
     /**
-     * Checks if the given directory path exists and if it's a valid and writable directory. If it doesn't exist, it is created.
+     * Checks if the given directory path exists and if it's a valid and writable directory. If it doesn't exist, it is
+     * created.
      * 
      * @param directoryPath : the path to check.
-     * @throws IOException if the directory did not exist and can not be created. It is also thrown if the path is valid but not writable.
-     * @throws InvalidParameterException if the given path is valid but it points to a file instead of pointing to a directory.
+     * @throws IOException if the directory did not exist and can not be created. It is also thrown if the path is valid
+     *             but not writable.
+     * @throws InvalidParameterException if the given path is valid but it points to a file instead of pointing to a
+     *             directory.
      */
     public static void checkDirectoryPath(String directoryPath) throws IOException, InvalidParameterException
-    {            
+    {
         File directory = new File(directoryPath);
 
         if (!directory.exists()) {
@@ -490,12 +501,11 @@ public class FileUtil
     }
 
     /**
-     * Serializes an object to file using the {@link ObjectOutputStream#writeObject(Object)} method. 
+     * Serializes an object to file using the {@link ObjectOutputStream#writeObject(Object)} method.
      * 
      * @param object the object to save.
      * @param filePath the path of the file where to save the object.
      * @throws Exception if problems occur saving the object.
-     * 
      * @see {@link #loadObjectFromFile(String)}
      */
     public static void saveObjectToFile(Object object, String filePath) throws Exception
@@ -524,13 +534,13 @@ public class FileUtil
             }
         }
     }
-    
+
     public static void saveCollectionToFile(Collection collection, String filePath) throws Exception
     {
         if (collection == null) {
             throw new NullPointerException("A null value was provided instead of a valid collection.");
         }
-        
+
         if (collection.isEmpty()) {
             File file = new File(filePath);
 
@@ -540,13 +550,14 @@ public class FileUtil
 
             return;
         }
-        
+
         saveObjectToFile(collection, filePath);
     }
-    
+
     /**
-     * Loads an object from file. The object must have been previously serialized using the {@link ObjectOutputStream#writeObject(Object)} method.
-     *  
+     * Loads an object from file. The object must have been previously serialized using the
+     * {@link ObjectOutputStream#writeObject(Object)} method.
+     * 
      * @param filePath the file to load from.
      * @return the read object.
      * @throws Exception if the file was not found or problems reading the object occured.
@@ -576,7 +587,77 @@ public class FileUtil
             }
         }
     }
-    
+
+    public static void saveObjectToXml(Object object, String xmlFilePath) throws Exception
+    {
+        XStream xstream = new XStream(new DomDriver());
+        Charset fileEncodingCharset = Charset.forName(System.getProperty("file.encoding"));
+
+        OutputStreamWriter osw = null;
+        PrintWriter output = null;
+
+        try {
+            osw = new OutputStreamWriter(new FileOutputStream(xmlFilePath), fileEncodingCharset);
+            output = new PrintWriter(osw);
+            output.print(xstream.toXML(object));
+            output.flush();
+        } catch (Exception e) {
+            throw new Exception("Problems saving an object to xml file " + xmlFilePath, e);
+        } finally {
+            try {
+                if (osw != null) {
+                    osw.close();
+                }
+                if (output != null) {
+                    output.close();
+                }
+            } catch (Exception e) {
+                throw new Exception("Problems closing file " + xmlFilePath + " after saving an object in it.", e);
+            }
+        }
+    }
+
+    public static void saveCollectionToXml(Collection collection, String xmlFilePath) throws Exception
+    {
+        if (collection == null) {
+            throw new NullPointerException("A null value was provided instead of a valid collection.");
+        }
+
+        if (collection.isEmpty()) {
+            File file = new File(xmlFilePath);
+
+            if (file.exists()) {
+                file.delete();
+            }
+
+            return;
+        }
+
+        saveObjectToXml(collection, xmlFilePath);
+    }
+
+    public static Object loadObjectFromXml(String xmlFilePath) throws Exception
+    {
+        XStream xstream = new XStream(new DomDriver());
+
+        FileInputStream fis = null;
+        try {
+            fis = new FileInputStream(xmlFilePath);
+            return xstream.fromXML(fis);
+        } catch (Exception e) {
+            throw new Exception("Problems loading object from file " + xmlFilePath, e);
+        } finally {
+            try {
+                if (fis != null) {
+                    fis.close();
+                }
+            } catch (Exception e) {
+                throw new Exception("Problems closing file " + xmlFilePath, e);
+            }
+        }
+
+    }
+
     /**
      * @return the operating-system-independent temporary directory.
      */
@@ -584,7 +665,7 @@ public class FileUtil
     {
         return System.getProperty("java.io.tmpdir");
     }
-    
+
     /**
      * @return the working directory for tests.
      */
@@ -592,7 +673,7 @@ public class FileUtil
     {
         return getSystemTemporaryDirectory() + File.separator + TESTS_DIRECTORY_NAME;
     }
-    
+
     /**
      * @param moduleName the name of the module.
      * @return the working directory for tests for the specified module.
@@ -602,7 +683,7 @@ public class FileUtil
         if (moduleName == null || moduleName.length() == 0) {
             throw new InvalidParameterException("Module name must not be null or empty.");
         }
-        
+
         return getTestsWorkingDirectoryPath() + File.separator + moduleName;
     }
 }
