@@ -27,6 +27,8 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
+import java.util.List;
+import java.util.Vector;
 
 import org.apache.commons.logging.LogFactory;
 import org.xwoot.wootEngine.core.WootPage;
@@ -45,10 +47,18 @@ public class PageManager extends LoggedWootExceptionThrower
 {
     /** The name of the directory inside the workingDir where to serialize {@link WootPage} objects. */
     public static final String PAGES_DIRECTORY_NAME = "pages";
-
+    
+    /** The name of the file where to serialize {@link WootPage} the last page name list. */
+    public static final String PAGENAME_LIST_FILE_NAME = "pageList";
+    
     /** The directory path where to store pages. */
     private String pagesDirPath;
 
+    /** The list of the names of the modified pages */
+    private List pageNameList;
+    
+    /** The file path where to serialize {@link WootPage} the last page name list. */
+    private String PagenameListPath;
     /**
      * Creates a new PageManager instance to be used by the WootEngine. The PageManager will store it's pages in a
      * sub-directory of the owning WootEngine's working directory.
@@ -63,7 +73,10 @@ public class PageManager extends LoggedWootExceptionThrower
     public PageManager(int wootEngineId, String wootEngineWorkingDirPath) throws WootEngineException
     {
         String newPagesDirPath = wootEngineWorkingDirPath + File.separator + PAGES_DIRECTORY_NAME;
+        
         this.pagesDirPath = newPagesDirPath;
+        
+        this.PagenameListPath=wootEngineWorkingDirPath + File.separator + PAGENAME_LIST_FILE_NAME;
 
         this.createWorkingDir();
 
@@ -99,7 +112,9 @@ public class PageManager extends LoggedWootExceptionThrower
         if (workingDir.exists()) {
             FileUtil.deleteDirectory(workingDir);
         }
-
+        
+        File pageNameVectorFile=new File(this.getPagenameListPath());
+        pageNameVectorFile.delete();
         createWorkingDir();
     }
 
@@ -165,6 +180,7 @@ public class PageManager extends LoggedWootExceptionThrower
                     + wootPage.getPageName(), e);
             }
         }
+        this.addPageNameInList(wootPage.getPageName());
     }
 
     /**
@@ -410,5 +426,105 @@ public class PageManager extends LoggedWootExceptionThrower
     public String getPagesDirPath()
     {
         return this.pagesDirPath;
+    }
+    
+    
+    private void loadPageNameList() throws WootEngineException{
+        XStream xstream = new XStream(new DomDriver());
+        String filePath = this.getPagenameListPath();
+        
+        if (!new File(filePath).exists())
+        {
+            this.setPageNameList(new Vector<String>());
+        }
+        else {
+            FileInputStream fis = null;
+            try {
+                fis = new FileInputStream(filePath);
+                this.setPageNameList((Vector<String>) xstream.fromXML(fis));
+            } catch (Exception e) {
+                this.throwLoggedException("Problems loading pagename vector file " + this.getPagenameListPath(), e);
+            } finally {
+                try {
+                    if (fis != null) {
+                        fis.close();
+                    }
+                } catch (Exception e) {
+                    this.throwLoggedException("Problems closing file " + filePath,e);
+                }
+            }  
+        }
+    }
+    
+    private void storePageNameList() throws WootEngineException{
+        
+        XStream xstream = new XStream(new DomDriver());
+        String filePath = this.getPagenameListPath();
+        Charset fileEncodingCharset = Charset.forName(System.getProperty("file.encoding"));
+        OutputStreamWriter osw = null;
+        PrintWriter output = null;
+        try {
+            osw = new OutputStreamWriter(new FileOutputStream(filePath), fileEncodingCharset);
+            output = new PrintWriter(osw);
+            output.print(xstream.toXML(this.getPageNameList()));
+            output.flush();
+            
+        } catch (Exception e) {
+            this.throwLoggedException("Problems loading file " + this.getPagenameListPath(), e);
+        } finally {
+            try {
+                if (osw != null) {
+                    osw.close();
+                }
+                if (output != null) {
+                    output.close();
+                }
+            } catch (Exception e) {
+                this.throwLoggedException("Problems closing file " + filePath,e);
+            }
+        }
+    }
+    
+    public void addPageNameInList(String pageName) throws WootEngineException{
+        this.loadPageNameList();
+        this.getPageNameList().add(pageName);
+        this.storePageNameList();
+    }
+    
+    public void removeNOccurencesInList(String pageName,int number) throws WootEngineException{
+       this.loadPageNameList();
+       int index=0;
+       for(int i=0;i<number && index!=-1;i++){
+           index=this.getPageNameList().indexOf(pageName);
+           if (index!=-1){
+               this.getPageNameList().remove(index);
+           }  
+       }
+       this.storePageNameList();
+    }
+    
+    public List getCurrentPageNameList() throws WootEngineException{
+        this.loadPageNameList();
+        return this.getPageNameList();
+    }
+
+    private void setPageNameList(List list)
+    {
+       this.pageNameList=list; 
+    }
+    
+    public List getPageNameList()
+    {
+        return this.pageNameList;
+    }
+
+    public String getPagenameListPath()
+    {
+        return this.PagenameListPath;
+    }
+
+    public void setPagenameVectorPath(String pagenameVectorPath)
+    {
+        this.PagenameListPath = pagenameVectorPath;
     }
 }
