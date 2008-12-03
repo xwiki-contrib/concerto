@@ -45,9 +45,9 @@
 package org.xwoot.lpbcast.message;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 import org.xwoot.lpbcast.sender.LpbCastAPI;
-import org.xwoot.lpbcast.util.Guid;
 
 /**
  * Describes a message sent trough the P2P network.
@@ -80,7 +80,7 @@ public class Message implements Serializable
     /** Creates a new Message object. */
     public Message()
     {
-        this.id = Guid.generateGUID(this);
+        this.id = UUID.randomUUID();
     }
 
     /**
