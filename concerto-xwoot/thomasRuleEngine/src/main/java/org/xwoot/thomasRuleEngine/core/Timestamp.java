@@ -47,39 +47,49 @@ package org.xwoot.thomasRuleEngine.core;
 import java.io.Serializable;
 
 /**
- * DOCUMENT ME!
+ * A timestamp containing the real time and the id of the {@link org.xwoot.thomasRuleEngine.ThomasRuleEngine
+ * ThomasRuleEngine}. This timestamp is to be used in {@link org.xwoot.thomasRuleEngine.op.ThomasRuleOp ThomasRuleOp}
+ * objects.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
+@SuppressWarnings("unchecked")
 public class Timestamp implements Comparable, Serializable
 {
-    /**  */
+    /** Unique ID used for serialization. */
     private static final long serialVersionUID = 6774663614344345010L;
 
+    /** The time in milliseconds this timestamp was created. */
     private long time;
 
-    private int id;
+    /** The id of the ThomasRuleEngine. */
+    private int treId;
 
     /**
      * Creates a new Timestamp object.
      * 
-     * @param time DOCUMENT ME!
-     * @param id DOCUMENT ME!
+     * @param time the current time in milliseconds.
+     * @param treId the id of the ThomasRuleEngine.
      */
-    public Timestamp(long time, int id)
+    public Timestamp(long time, int treId)
     {
         this.time = time;
-        this.id = id;
+        this.treId = treId;
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param o DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * 
-     */
+    /** @return the id of the ThomasRuleEngine. */
+    public int getId()
+    {
+        return this.treId;
+    }
+
+    /** @return the time in milliseconds this timestamp was created. */
+    public long getTime()
+    {
+        return this.time;
+    }
+
+    /** {@inheritDoc} */
     public int compareTo(Object o)
     {
         if (!(o instanceof Timestamp)) {
@@ -92,28 +102,23 @@ public class Timestamp implements Comparable, Serializable
             return 0;
         }
 
-        if ((this.time > with.getTime()) || ((this.time == with.getTime()) && (this.id > with.getId()))) {
+        if ((this.time > with.getTime()) || ((this.time == with.getTime()) && (this.treId > with.getId()))) {
             return 1;
         }
 
         return -1;
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param obj DOCUMENT ME!
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
     public boolean equals(Object obj)
     {
-        if (this == obj) {
-            return true;
-        }
-
         if (obj == null) {
             return false;
+        }
+
+        if (this == obj) {
+            return true;
         }
 
         if (this.getClass() != obj.getClass()) {
@@ -122,61 +127,25 @@ public class Timestamp implements Comparable, Serializable
 
         final Timestamp other = (Timestamp) obj;
 
-        if (this.id != other.id) {
-            return false;
-        }
-
-        if (this.time != other.time) {
-            return false;
-        }
-
-        return true;
+        return (this.treId == other.treId && this.time == other.time);
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public int getId()
-    {
-        return this.id;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public long getTime()
-    {
-        return this.time;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
     public int hashCode()
     {
         final int prime = 31;
-        int result = 1;
-        result = (prime * result) + this.id;
-        result = (prime * result) + (int) (this.time ^ (this.time >>> 32));
+        int result = 7;
+        result = prime * result + this.treId;
+        result = prime * result + (int) (this.time ^ (this.time >>> 32));
 
         return result;
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
     public String toString()
     {
-        return "(" + this.time + "," + this.id + ")";
+        return "Timestamp(" + this.time + "," + this.treId + ")";
     }
 }

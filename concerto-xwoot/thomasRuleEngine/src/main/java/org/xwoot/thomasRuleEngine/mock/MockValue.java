@@ -52,7 +52,7 @@ import org.xwoot.thomasRuleEngine.core.Value;
  * @author $author$
  * @version $Revision$
  */
-public class MockValue extends Value
+public class MockValue implements Value
 {
     /** SerialVesrionUID for serialized object */
     private static final long serialVersionUID = 5957593391711730737L;
@@ -108,7 +108,6 @@ public class MockValue extends Value
      * 
      * @return DOCUMENT ME!
      */
-    @Override
     public Object get()
     {
         return this.value;

@@ -54,7 +54,7 @@ import java.util.List;
  * @author $author$
  * @version $Revision$
  */
-public class TagValue extends Value
+public class TagValue implements Value
 {
     /**  */
     private static final long serialVersionUID = 3460912988689095045L;
@@ -110,7 +110,6 @@ public class TagValue extends Value
      * 
      * @return DOCUMENT ME!
      */
-    @Override
     public Object get()
     {
         return this.value;

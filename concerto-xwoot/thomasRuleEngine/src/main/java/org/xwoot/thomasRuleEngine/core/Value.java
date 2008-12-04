@@ -47,47 +47,24 @@ package org.xwoot.thomasRuleEngine.core;
 import java.io.Serializable;
 
 /**
- * DOCUMENT ME!
+ * Defines the values stored in {@link Entry} objects.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
-public abstract class Value implements Serializable
+public interface Value extends Serializable
 {
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 4501754324387243933L;
+    /** @return the actual value of this instance. */
+    Object get();
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param with DOCUMENT ME!
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
-    public abstract boolean equals(Object with);
+    String toString();
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public abstract Object get();
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
-    public abstract int hashCode();
+    boolean equals(Object with);
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
-    public abstract String toString();
+    int hashCode();
 }

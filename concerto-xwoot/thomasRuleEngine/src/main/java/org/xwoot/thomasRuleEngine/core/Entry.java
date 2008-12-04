@@ -46,35 +46,43 @@ package org.xwoot.thomasRuleEngine.core;
 
 import java.io.Serializable;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 /**
- * DOCUMENT ME!
+ * An entry in the {@link EntriesList} that represents an executet {@link org.xwoot.thomasRuleEngine.op.ThomasRuleOp
+ * ThomasRuleOp}.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
 public class Entry implements Serializable
 {
-    /**  */
+    /** SerialVesrionUID for serialized object. */
     private static final long serialVersionUID = 4868709501409852809L;
 
+    /** The ID of this entry. */
     private Identifier id;
 
+    /** The value of this entry. */
     private Value value;
 
+    /** Marks whether this entry was deleted or not. */
     private boolean tombstone;
 
+    /** The time the {@link ThomasRuleOp} was modified. */
     private Timestamp timestampModif;
 
+    /** The time the {@link org.xwoot.thomasRuleEngine.op.ThomasRuleOp ThomasRuleOp} was created. */
     private Timestamp timestampIdCreation;
 
     /**
      * Creates a new Entry object.
      * 
-     * @param id DOCUMENT ME!
-     * @param value DOCUMENT ME!
-     * @param tombstone DOCUMENT ME!
-     * @param timestampCreation DOCUMENT ME!
-     * @param timestampModif DOCUMENT ME!
+     * @param id the ID of this entry.
+     * @param value the value of this entry.
+     * @param tombstone whether or not this entry was deleted.
+     * @param timestampCreation the time the {@link ThomasRuleOp} was created.
+     * @param timestampModif the time the {@link ThomasRuleOp} was modified.
      */
     public Entry(Identifier id, Value value, boolean tombstone, Timestamp timestampCreation, Timestamp timestampModif)
     {
@@ -85,12 +93,82 @@ public class Entry implements Serializable
         this.timestampModif = timestampModif;
     }
 
+    /** @return the ID of this entry. */
+    public Identifier getId()
+    {
+        return this.id;
+    }
+
+    /** @param id the id to set. */
+    public void setId(Identifier id)
+    {
+        this.id = id;
+    }
+
+    /** @return the time the {@link org.xwoot.thomasRuleEngine.op.ThomasRuleOp ThomasRuleOp} was created. */
+    public Timestamp getTimestampIdCreation()
+    {
+        return this.timestampIdCreation;
+    }
+
     /**
-     * DOCUMENT ME!
-     * 
-     * @param obj DOCUMENT ME!
-     * @return DOCUMENT ME!
+     * @param timestampIdCreation the timestampIdCreation to set.
+     * @see #getTimestampIdCreation()
      */
+    public void setTimestampCreation(Timestamp timestampIdCreation)
+    {
+        this.timestampIdCreation = timestampIdCreation;
+    }
+
+    /** @return the time the {@link org.xwoot.thomasRuleEngine.op.ThomasRuleOp ThomasRuleOp} was modified. */
+    public Timestamp getTimestampModif()
+    {
+        return this.timestampModif;
+    }
+
+    /**
+     * @param timestampModif the timestampModif to set.
+     * @see #getTimestampModif()
+     */
+    public void setTimestampModif(Timestamp timestampModif)
+    {
+        this.timestampModif = timestampModif;
+    }
+
+    /** @return the value of this entry. */
+    public Value getValue()
+    {
+        return this.value;
+    }
+
+    /** @param value the value to set. */
+    public void setValue(Value value)
+    {
+        this.value = value;
+    }
+
+    /** @return whether this entry was deleted or not. */
+    public boolean isDeleted()
+    {
+        return this.tombstone;
+    }
+
+    /** @param tombstone mark this entry's deletion status. */
+    public void setDeleted(boolean tombstone)
+    {
+        this.tombstone = tombstone;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString()
+    {
+        String separator = ",";
+        return "Entry(" + this.id + separator + this.timestampIdCreation + separator + this.timestampModif + separator
+            + this.value + separator + this.tombstone + ")";
+    }
+
+    /** {@inheritDoc} */
     @Override
     public boolean equals(Object obj)
     {
@@ -98,183 +176,23 @@ public class Entry implements Serializable
             return true;
         }
 
-        if (obj == null) {
-            return false;
-        }
-
-        if (this.getClass() != obj.getClass()) {
+        if (!(obj instanceof Entry)) {
             return false;
         }
 
         final Entry other = (Entry) obj;
 
-        if (this.id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!this.id.equals(other.id)) {
-            return false;
-        }
-
-        if (this.timestampIdCreation == null) {
-            if (other.timestampIdCreation != null) {
-                return false;
-            }
-        } else if (!this.timestampIdCreation.equals(other.timestampIdCreation)) {
-            return false;
-        }
-
-        if (this.timestampModif == null) {
-            if (other.timestampModif != null) {
-                return false;
-            }
-        } else if (!this.timestampModif.equals(other.timestampModif)) {
-            return false;
-        }
-
-        if (this.tombstone != other.tombstone) {
-            return false;
-        }
-
-        if (this.value == null) {
-            if (other.value != null) {
-                return false;
-            }
-        } else if (!this.value.equals(other.value)) {
-            return false;
-        }
-
-        return true;
+        return new EqualsBuilder().append(this.id, other.id)
+            .append(this.timestampIdCreation, other.timestampIdCreation).append(this.timestampModif,
+                other.timestampModif).append(this.value, other.value).append(this.tombstone, other.tombstone)
+            .isEquals();
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public Identifier getId()
-    {
-        return this.id;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public Timestamp getTimestampIdCreation()
-    {
-        return this.timestampIdCreation;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public Timestamp getTimestampModif()
-    {
-        return this.timestampModif;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public Value getValue()
-    {
-        return this.value;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
     public int hashCode()
     {
-        final int prime = 31;
-        int result = 1;
-        result = (prime * result) + ((this.id == null) ? 0 : this.id.hashCode());
-        result = (prime * result) + ((this.timestampIdCreation == null) ? 0 : this.timestampIdCreation.hashCode());
-        result = (prime * result) + ((this.timestampModif == null) ? 0 : this.timestampModif.hashCode());
-        result = (prime * result) + (this.tombstone ? 1231 : 1237);
-        result = (prime * result) + ((this.value == null) ? 0 : this.value.hashCode());
-
-        return result;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public boolean isDeleted()
-    {
-        return this.tombstone;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param tombstone DOCUMENT ME!
-     */
-    public void setDeleted(boolean tombstone)
-    {
-        this.tombstone = tombstone;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param id DOCUMENT ME!
-     */
-    public void setId(Identifier id)
-    {
-        this.id = id;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param timestampIdCreation DOCUMENT ME!
-     */
-    public void setTimestampCreation(Timestamp timestampIdCreation)
-    {
-        this.timestampIdCreation = timestampIdCreation;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param timestampModif DOCUMENT ME!
-     */
-    public void setTimestampModif(Timestamp timestampModif)
-    {
-        this.timestampModif = timestampModif;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param value DOCUMENT ME!
-     */
-    public void setValue(Value value)
-    {
-        this.value = value;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    @Override
-    public String toString()
-    {
-        return "Entry(" + this.id + "," + this.timestampIdCreation + "," + this.timestampModif + "," + this.value + ","
-            + this.tombstone + ")";
+        return new HashCodeBuilder().append(this.id).append(this.timestampIdCreation).append(this.timestampModif)
+            .append(this.tombstone).append(this.value).toHashCode();
     }
 }

@@ -52,7 +52,7 @@ import org.xwoot.thomasRuleEngine.core.Value;
  * @author $author$
  * @version $Revision$
  */
-public class PageFieldValue extends Value
+public class PageFieldValue implements Value
 {
     /**  */
     private static final long serialVersionUID = 3460912988689095045L;
@@ -108,7 +108,6 @@ public class PageFieldValue extends Value
      * 
      * @return DOCUMENT ME!
      */
-    @Override
     public Object get()
     {
         return this.value;

@@ -68,6 +68,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
@@ -535,6 +536,16 @@ public class FileUtil
         }
     }
 
+    /**
+     * Serializes a Collection to file using the {@link ObjectOutputStream#writeObject(Object)} method.
+     * 
+     * @param collection the collection to save.
+     * @param filePath the path of the file where to save the collection.
+     * @throws Exception if problems occur saving the object.
+     * @see {@link #saveObjectToFile(Object, String)}
+     * @see {@link #loadObjectFromFile(String)}
+     */
+    @SuppressWarnings("unchecked")
     public static void saveCollectionToFile(Collection collection, String filePath) throws Exception
     {
         if (collection == null) {
@@ -552,6 +563,35 @@ public class FileUtil
         }
 
         saveObjectToFile(collection, filePath);
+    }
+    
+    /**
+     * Serializes a Map to file using the {@link ObjectOutputStream#writeObject(Object)} method.
+     * 
+     * @param map the map to save.
+     * @param filePath the path of the file where to save the object.
+     * @throws Exception if problems occur saving the object.
+     * @see {@link #saveObjectToFile(Object, String)}
+     * @see {@link #loadObjectFromFile(String)}
+     */
+    @SuppressWarnings("unchecked")
+    public static void saveMapToFile(Map map, String filePath) throws Exception
+    {
+        if (map == null) {
+            throw new NullPointerException("A null value was provided instead of a valid map.");
+        }
+
+        if (map.isEmpty()) {
+            File file = new File(filePath);
+
+            if (file.exists()) {
+                file.delete();
+            }
+
+            return;
+        }
+
+        saveObjectToFile(map, filePath);
     }
 
     /**

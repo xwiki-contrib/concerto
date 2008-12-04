@@ -54,7 +54,7 @@ import java.util.Map;
  * @author $author$
  * @version $Revision$
  */
-public class CommentValue extends Value
+public class CommentValue implements Value
 {
     /**  */
     private static final long serialVersionUID = 3460912988689095045L;
@@ -110,7 +110,6 @@ public class CommentValue extends Value
      * 
      * @return DOCUMENT ME!
      */
-    @Override
     public Object get()
     {
         return this.value;

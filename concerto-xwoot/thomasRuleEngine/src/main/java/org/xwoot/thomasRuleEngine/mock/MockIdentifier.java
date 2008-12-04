@@ -52,11 +52,12 @@ import org.xwoot.thomasRuleEngine.core.Identifier;
  * @author $author$
  * @version $Revision$
  */
-public class MockIdentifier extends Identifier
+public class MockIdentifier implements Identifier
 {
-    /**  */
+    /** Unique ID used for serialization. */
     private static final long serialVersionUID = 4717183124930677075L;
 
+    /** The name of the page this ID belongs to. */
     private String pageName;
 
     private String metaDataId;

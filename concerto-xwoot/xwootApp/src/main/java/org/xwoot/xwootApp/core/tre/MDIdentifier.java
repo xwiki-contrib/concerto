@@ -52,7 +52,7 @@ import org.xwoot.thomasRuleEngine.core.Identifier;
  * @author $author$
  * @version $Revision$
  */
-public class MDIdentifier extends Identifier
+public class MDIdentifier implements Identifier
 {
     /**  */
     private static final long serialVersionUID = 4717183124930677075L;

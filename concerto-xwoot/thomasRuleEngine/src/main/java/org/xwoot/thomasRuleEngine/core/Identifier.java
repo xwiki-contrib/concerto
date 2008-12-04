@@ -47,42 +47,24 @@ package org.xwoot.thomasRuleEngine.core;
 import java.io.Serializable;
 
 /**
- * DOCUMENT ME!
+ * Identifies an entry in the EntriesList.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
-public abstract class Identifier implements Serializable
+public interface Identifier extends Serializable
 {
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 3902139141869606474L;
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param with DOCUMENT ME!
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
-    public abstract boolean equals(Object with);
+    boolean equals(Object with);
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
-    public abstract int hashCode();
+    int hashCode();
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
-    public abstract String toString();
-    
-    public abstract String getPageName();
+    String toString();
+
+    /** @return the pageName this identifier belongs to. */
+    String getPageName();
 }
