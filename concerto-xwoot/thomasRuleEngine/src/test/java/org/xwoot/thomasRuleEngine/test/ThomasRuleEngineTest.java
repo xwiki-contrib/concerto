@@ -95,10 +95,10 @@ public class ThomasRuleEngineTest
     @Before
     public void removeFile() throws Exception
     {
-        File f1 = new File(WORKINGDIR + File.separatorChar + ThomasRuleEngine.TREFILENAME + "1");
+        File f1 = new File(WORKINGDIR + File.separatorChar + ThomasRuleEngine.TRE_FILE_NAME_PREFIX + "1");
         if (f1.exists())
             f1.delete();
-        File f2 = new File(WORKINGDIR + File.separatorChar + ThomasRuleEngine.TREFILENAME + "2");
+        File f2 = new File(WORKINGDIR + File.separatorChar + ThomasRuleEngine.TRE_FILE_NAME_PREFIX + "2");
         if (f2.exists())
             f2.delete();
 
@@ -366,9 +366,10 @@ public class ThomasRuleEngineTest
      * DOCUMENT ME!
      * 
      * @throws InterruptedException DOCUMENT ME!
+     * @throws ThomasRuleEngineException 
      */
     @Test
-    synchronized public void testGetTimestamp() throws InterruptedException
+    synchronized public void testGetTimestamp() throws InterruptedException, ThomasRuleEngineException
     {
         ThomasRuleEngine tre1 = new ThomasRuleEngine(1, WORKINGDIR);
         ThomasRuleEngine tre2 = new ThomasRuleEngine(2022222220, WORKINGDIR);

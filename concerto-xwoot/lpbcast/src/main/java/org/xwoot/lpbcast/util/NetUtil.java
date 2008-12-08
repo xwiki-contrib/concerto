@@ -120,7 +120,7 @@ public final class NetUtil
                 bos.flush();
             }
         } catch (Exception e) {
-            throw new IOException("Problems while getting file from Url: " + url + "\n" + e.getMessage());
+            throw new IOException("Problems while getting file from Url: " + url + "\n " + e.getMessage());
         } finally {
             try {
                 if (connectionInputStream != null) {
@@ -202,7 +202,8 @@ public final class NetUtil
             // Read timed out - try another time...
             init.getResponseCode();
         } catch (Exception e) {
-            throw new IOException("Problems while sending the object " + object + " via HTTP at url " + url + "\n" + e.getMessage());
+            throw new IOException("Problems while sending the object " + object + " via HTTP at url " + url + "\n"
+                + e.getMessage());
         } finally {
             try {
                 if (out != null) {

@@ -47,8 +47,6 @@ package org.xwoot.lpbcast.message;
 import java.io.Serializable;
 import java.util.UUID;
 
-import org.xwoot.lpbcast.sender.LpbCastAPI;
-
 /**
  * Describes a message sent trough the P2P network.
  * 

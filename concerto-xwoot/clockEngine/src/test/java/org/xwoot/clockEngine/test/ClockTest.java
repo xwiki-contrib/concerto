@@ -27,7 +27,7 @@ public class ClockTest
      * @see FileUtil#checkDirectoryPath(String)
      */
     @BeforeClass
-    public static void setUp() throws Exception
+    public static void init() throws Exception
     {
         FileUtil.checkDirectoryPath(WORKING_DIR);
     }

@@ -1245,7 +1245,7 @@ public class XWoot implements XWootAPI
             // get XWOOT state
             FileUtil.zipDirectory(this.lastVuePagesDir,this.stateDir + File.separatorChar + XWOOTSTATEFILENAME);
             // get TRE state
-            FileUtil.zipDirectory(this.tre.getWorkingDir(),this.stateDir + File.separatorChar + ThomasRuleEngine.TRESTATEFILENAME);
+            FileUtil.zipDirectory(this.tre.getWorkingDir(),this.stateDir + File.separatorChar + ThomasRuleEngine.TRE_STATE_FILE_NAME);
             // create page list file
             File pageListFile = new File(this.stateDir + File.separator + PAGELISTFILEFORSTATE);
             XStream xstream = new XStream();
@@ -1302,7 +1302,7 @@ public class XWoot implements XWootAPI
                     j = 0;
                 } else if (l[i].equals(XWOOTSTATEFILENAME)) {
                     j = 1;
-                } else if (l[i].equals(ThomasRuleEngine.TRESTATEFILENAME)) {
+                } else if (l[i].equals(ThomasRuleEngine.TRE_STATE_FILE_NAME)) {
                     j = 2;
                 } else if (l[i].equals(PAGELISTFILEFORSTATE)) {
                     j = 3;

@@ -44,88 +44,39 @@
 
 package org.xwoot.thomasRuleEngine.mock;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.xwoot.thomasRuleEngine.core.Value;
 
 /**
- * DOCUMENT ME!
+ * Mockup for the Value interface.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
 public class MockValue implements Value
 {
-    /** SerialVesrionUID for serialized object */
+    /** SerialVesrionUID for serialized object. */
     private static final long serialVersionUID = 5957593391711730737L;
 
+    /**
+     * @see #get()
+     */
     private String value;
 
     /**
      * Creates a new MockValue object.
      * 
-     * @param value DOCUMENT ME!
+     * @param value the value.
      */
     public MockValue(String value)
     {
         this.value = value;
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param obj DOCUMENT ME!
-     * @return DOCUMENT ME!
-     */
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-
-        if (obj == null) {
-            return false;
-        }
-
-        if (this.getClass() != obj.getClass()) {
-            return false;
-        }
-
-        final MockValue other = (MockValue) obj;
-
-        if (this.value == null) {
-            if (other.value != null) {
-                return false;
-            }
-        } else if (!(this.value.compareTo(other.value) == 0)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     public Object get()
     {
         return this.value;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    @Override
-    public int hashCode()
-    {
-        final int prime = 31;
-        int result = 1;
-        result = (prime * result) + ((this.value == null) ? 0 : this.value.hashCode());
-
-        return result;
     }
 
     /**
@@ -138,14 +89,30 @@ public class MockValue implements Value
         this.value = value;
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
     public String toString()
     {
         return "MockValue:" + this.value;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (!(obj instanceof Value)) {
+            return false;
+        }
+
+        final MockValue other = (MockValue) obj;
+
+        return new EqualsBuilder().append(this.value, other.value).isEquals();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder().append(this.value).hashCode();
     }
 }

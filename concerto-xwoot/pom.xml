@@ -265,8 +265,11 @@
     <!-- Utility module for tasks common to most of the modules -->
     <module>xwootUtil</module>
   </modules>
+  
   <build>
+  
     <plugins>
+    
       <plugin>
         <groupId>org.apache.maven.plugins
         </groupId>
@@ -324,8 +327,6 @@
         </configuration>
       </plugin>
 
-
-
       <!-- to make project archive -->
       <plugin>
         <artifactId>maven-assembly-plugin
@@ -337,10 +338,47 @@
           </descriptors>
         </configuration>
       </plugin>
+      
+      <!-- To enforce checkstyle complience. -->
+      <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <!-- Lock down plugin version for build reproducibility -->
+          <version>2.2</version>
+          <dependencies>
+            <dependency>
+              <groupId>com.xpn.xwiki.platform.tools</groupId>
+              <artifactId>xwiki-verification-resources</artifactId>
+              <version>1.11</version>
+            </dependency>
+          </dependencies>
+          <configuration>
+            <consoleOutput>true</consoleOutput>
+            <configLocation>checkstyle.xml</configLocation>
+            <headerLocation>checkstyle.license</headerLocation>
+            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+            <!-- We use this to disable checkstyle when the clover profile is executed since there's a
+                 conflict between checkstyle and clover. Namely the clovered code doesn't pass our
+                 checkstyle rules -->
+            <skip>${xwoot.checkstyle.skip}</skip>
+          </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+      
     </plugins>
+    
   </build>
+  
   <reporting>
+  
     <plugins>
+    
       <!--
         The PMD plugin allows you to automatically run the PMD code
         analysis tool on your project's source code and generate a site
@@ -372,6 +410,7 @@
             -nodefontsize 9 -nodefontpackagesize 7</additionalparam>
         </configuration>
       </plugin>
+      
       <!--
         The JXR plugin produces a cross-reference of the project's
         sources.
@@ -383,6 +422,7 @@
           <aggregate>true</aggregate>
         </configuration>
       </plugin>
+      
       <!--
         The Maven Project Info Reports plugin is used to generate
         reports information about the project.
@@ -406,6 +446,19 @@
           </password>
         </configuration>
       </plugin>
+      
+      <!-- Checkstyle report. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+      </plugin>
+      
+      
     </plugins>
+    
   </reporting>
+  
+  <properties>
+  	<xwoot.checkstyle.skip>false</xwoot.checkstyle.skip>
+  </properties>
 </project>

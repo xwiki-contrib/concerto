@@ -53,7 +53,8 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
  * An entry in the {@link EntriesList} that represents an executet {@link org.xwoot.thomasRuleEngine.op.ThomasRuleOp
  * ThomasRuleOp}.
  * 
- * @version $Id:$
+ * @see <a href="http://tools.ietf.org/html/rfc677">RFC677 - The Maintenance of Duplicate Databases</a>
+ * @version $Id$
  */
 public class Entry implements Serializable
 {
@@ -69,10 +70,10 @@ public class Entry implements Serializable
     /** Marks whether this entry was deleted or not. */
     private boolean tombstone;
 
-    /** The time the {@link ThomasRuleOp} was modified. */
+    /** The time this entry was modified by changing its value or its deletion status. */
     private Timestamp timestampModif;
 
-    /** The time the {@link org.xwoot.thomasRuleEngine.op.ThomasRuleOp ThomasRuleOp} was created. */
+    /** The time this entry was created. */
     private Timestamp timestampIdCreation;
 
     /**
@@ -81,8 +82,8 @@ public class Entry implements Serializable
      * @param id the ID of this entry.
      * @param value the value of this entry.
      * @param tombstone whether or not this entry was deleted.
-     * @param timestampCreation the time the {@link ThomasRuleOp} was created.
-     * @param timestampModif the time the {@link ThomasRuleOp} was modified.
+     * @param timestampCreation the time the time this entry was created.
+     * @param timestampModif time this entry was modified.
      */
     public Entry(Identifier id, Value value, boolean tombstone, Timestamp timestampCreation, Timestamp timestampModif)
     {
@@ -105,7 +106,7 @@ public class Entry implements Serializable
         this.id = id;
     }
 
-    /** @return the time the {@link org.xwoot.thomasRuleEngine.op.ThomasRuleOp ThomasRuleOp} was created. */
+    /** @return the time this entry was created. */
     public Timestamp getTimestampIdCreation()
     {
         return this.timestampIdCreation;
@@ -120,7 +121,7 @@ public class Entry implements Serializable
         this.timestampIdCreation = timestampIdCreation;
     }
 
-    /** @return the time the {@link org.xwoot.thomasRuleEngine.op.ThomasRuleOp ThomasRuleOp} was modified. */
+    /** @return the time this entry was modified by changing its value or its deletion status. */
     public Timestamp getTimestampModif()
     {
         return this.timestampModif;

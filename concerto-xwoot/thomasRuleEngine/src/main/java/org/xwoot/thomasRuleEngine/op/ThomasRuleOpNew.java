@@ -50,56 +50,53 @@ import org.xwoot.thomasRuleEngine.core.Timestamp;
 import org.xwoot.thomasRuleEngine.core.Value;
 
 /**
- * DOCUMENT ME!
+ * Entry Creation operation.
  * 
- * @author $author$
- * @version $Revision$
+ * @see <a href="http://tools.ietf.org/html/rfc677">RFC677 - The Maintenance of Duplicate Databases</a>
+ * @version $Id:$
  */
-public class ThomasRuleOpNew extends ThomasRuleOp
+public class ThomasRuleOpNew extends AbstractThomasRuleOp
 {
-    /**  */
+    /** Unique ID used in the serialization process. */
     private static final long serialVersionUID = -8511654120302474839L;
 
     /**
      * Creates a new ThomasRuleOpNew object.
      * 
-     * @param id DOCUMENT ME!
-     * @param val DOCUMENT ME!
-     * @param isDeleted DOCUMENT ME!
-     * @param timestampIdCreation DOCUMENT ME!
-     * @param timestampModif DOCUMENT ME!
+     * @param id the id of the affected entry.
+     * @param value the new value of the affected entry.
+     * @param isDeleted the new deletion status of the affected entry.
+     * @param timestampIdCreation when the affected entry was created.
+     * @param timestampModif when this operation affected the entry.
      */
-    public ThomasRuleOpNew(Identifier id, Value val, boolean isDeleted, Timestamp timestampIdCreation,
+    public ThomasRuleOpNew(Identifier id, Value value, boolean isDeleted, Timestamp timestampIdCreation,
         Timestamp timestampModif)
     {
-        super(id, val, isDeleted, timestampIdCreation, timestampModif);
+        super(id, value, isDeleted, timestampIdCreation, timestampModif);
     }
 
     /**
-     * DOCUMENT ME!
+     * {@inheritDoc}
      * 
-     * @param e DOCUMENT ME!
-     * @return DOCUMENT ME!
+     * @return If this operation's timestamps are not valid when compared to the entry, null is returned.
+     *         <p>
+     *         Otherwise, an new entry will be returned having the {@link Entry#isDeleted()} set to false and the rest
+     *         of it's data the data of this operation.
      */
     @Override
-    public Entry execute(Entry e)
+    public Entry execute(Entry from)
     {
-        if (!this.isOpTimestampsValid(e)) {
+        if (!this.isOpTimestampsValid(from)) {
             return null;
         }
 
-        return new Entry(this.getId(), this.getVal(), false, this.getTimestampIdCreation(), this.getTimestampModif());
+        return new Entry(this.getId(), this.getValue(), false, this.getTimestampIdCreation(), this.getTimestampModif());
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
     public String toString()
     {
-        return "NewOp(" + this.getId() + "," + this.getVal() + "," + this.isDeleted() + ","
-            + this.getTimestampIdCreation() + "," + this.getTimestampModif() + "," + this.getVal() + ")";
+        return "New" + super.toString();
     }
 }

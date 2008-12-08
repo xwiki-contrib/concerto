@@ -382,7 +382,7 @@ public class WootPage implements Serializable
 
         return sb.toString();
     }
-    
+
     /**
      * @return the content of all the visible rows in this page, including the default rows.
      */
@@ -390,13 +390,13 @@ public class WootPage implements Serializable
     {
         StringBuffer sb = new StringBuffer();
 
-        for(WootRow row : this.getRows()) {
+        for (WootRow row : this.getRows()) {
             if (row.isVisible()) {
                 sb.append(row.getContent());
             }
         }
 
-        return sb.toString();        
+        return sb.toString();
     }
 
     /** {@inheritDoc} */

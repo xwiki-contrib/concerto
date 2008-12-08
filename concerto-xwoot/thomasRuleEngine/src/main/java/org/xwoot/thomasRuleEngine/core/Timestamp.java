@@ -51,7 +51,8 @@ import java.io.Serializable;
  * ThomasRuleEngine}. This timestamp is to be used in {@link org.xwoot.thomasRuleEngine.op.ThomasRuleOp ThomasRuleOp}
  * objects.
  * 
- * @version $Id:$
+ * @see <a href="http://tools.ietf.org/html/rfc677">RFC677 - The Maintenance of Duplicate Databases</a>
+ * @version $Id$
  */
 @SuppressWarnings("unchecked")
 public class Timestamp implements Comparable, Serializable
@@ -62,25 +63,25 @@ public class Timestamp implements Comparable, Serializable
     /** The time in milliseconds this timestamp was created. */
     private long time;
 
-    /** The id of the ThomasRuleEngine. */
-    private int treId;
+    /** The id of the site that generated this ID. */
+    private int siteId;
 
     /**
      * Creates a new Timestamp object.
      * 
      * @param time the current time in milliseconds.
-     * @param treId the id of the ThomasRuleEngine.
+     * @param siteId the siteId where this id was generated.
      */
-    public Timestamp(long time, int treId)
+    public Timestamp(long time, int siteId)
     {
         this.time = time;
-        this.treId = treId;
+        this.siteId = siteId;
     }
 
-    /** @return the id of the ThomasRuleEngine. */
+    /** @return the id of the site that generated this ID. */
     public int getId()
     {
-        return this.treId;
+        return this.siteId;
     }
 
     /** @return the time in milliseconds this timestamp was created. */
@@ -102,7 +103,7 @@ public class Timestamp implements Comparable, Serializable
             return 0;
         }
 
-        if ((this.time > with.getTime()) || ((this.time == with.getTime()) && (this.treId > with.getId()))) {
+        if ((this.time > with.getTime()) || ((this.time == with.getTime()) && (this.siteId > with.getId()))) {
             return 1;
         }
 
@@ -127,7 +128,7 @@ public class Timestamp implements Comparable, Serializable
 
         final Timestamp other = (Timestamp) obj;
 
-        return (this.treId == other.treId && this.time == other.time);
+        return (this.siteId == other.siteId && this.time == other.time);
     }
 
     /** {@inheritDoc} */
@@ -136,7 +137,7 @@ public class Timestamp implements Comparable, Serializable
     {
         final int prime = 31;
         int result = 7;
-        result = prime * result + this.treId;
+        result = prime * result + this.siteId;
         result = prime * result + (int) (this.time ^ (this.time >>> 32));
 
         return result;
@@ -146,6 +147,6 @@ public class Timestamp implements Comparable, Serializable
     @Override
     public String toString()
     {
-        return "Timestamp(" + this.time + "," + this.treId + ")";
+        return "Timestamp(" + this.time + "," + this.siteId + ")";
     }
 }

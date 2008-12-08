@@ -1,181 +1,65 @@
-/**
- * 
- *        -- class header / Copyright (C) 2008  100 % INRIA / LGPL v2.1 --
- * 
- *  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- *  Copyright (C) 2008  100 % INRIA
- *  Authors :
- *                       
- *                       Gerome Canals
- *                     Nabil Hachicha
- *                     Gerald Hoster
- *                     Florent Jouille
- *                     Julien Maire
- *                     Pascal Molli
- * 
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- * 
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- * 
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- * 
- *  INRIA disclaims all copyright interest in the application XWoot written
- *  by :    
- *          
- *          Gerome Canals
- *         Nabil Hachicha
- *         Gerald Hoster
- *         Florent Jouille
- *         Julien Maire
- *         Pascal Molli
- * 
- *  contact : maire@loria.fr
- *  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- *  
+/*
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
 package org.xwoot.thomasRuleEngine.op;
+
+import java.io.Serializable;
 
 import org.xwoot.thomasRuleEngine.core.Entry;
 import org.xwoot.thomasRuleEngine.core.Identifier;
 import org.xwoot.thomasRuleEngine.core.Timestamp;
 import org.xwoot.thomasRuleEngine.core.Value;
 
-import java.io.Serializable;
-
 /**
- * DOCUMENT ME!
+ * Defines the structure of an operation as described in RFC677.
  * 
- * @author $author$
- * @version $Revision$
+ * @see <a href="http://tools.ietf.org/html/rfc677">RFC677 - The Maintenance of Duplicate Databases</a>
+ * @version $Id:$
  */
-public abstract class ThomasRuleOp implements Serializable
+public interface ThomasRuleOp extends Serializable
 {
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 3952443924428463564L;
+    /** @return the id of the affected entry. */
+    Identifier getId();
 
-    private Identifier id;
+    /** @return when the affected entry was created. */
+    Timestamp getTimestampIdCreation();
 
-    private Timestamp timestampModif;
+    /** @return when this operation affected the entry. */
+    Timestamp getTimestampModif();
 
-    private Timestamp timestampIdCreation;
+    /** @return the new value of the affected entry. */
+    Value getValue();
 
-    private Value val;
-
-    private boolean isDeleted;
-
-    /**
-     * Creates a new ThomasRuleOp object.
-     * 
-     * @param id DOCUMENT ME!
-     * @param val DOCUMENT ME!
-     * @param isDeleted DOCUMENT ME!
-     * @param timestampIdCreation DOCUMENT ME!
-     * @param timestampModif DOCUMENT ME!
-     */
-    public ThomasRuleOp(Identifier id, Value val, boolean isDeleted, Timestamp timestampIdCreation,
-        Timestamp timestampModif)
-    {
-        this.id = id;
-        this.val = val;
-        this.isDeleted = isDeleted;
-        this.timestampIdCreation = timestampIdCreation;
-        this.timestampModif = timestampModif;
-    }
+    /** @return the new deletion status of the affected entry. */
+    boolean isDeleted();
 
     /**
-     * DOCUMENT ME!
+     * Execute this operation.
      * 
-     * @param from DOCUMENT ME!
-     * @return DOCUMENT ME!
+     * @param from the entry from which to determine the operation's type.
+     * @return the resulting entry.
      */
-    public abstract Entry execute(Entry from);
+    Entry execute(Entry from);
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
+     * {@inheritDoc}
      */
-    public Identifier getId()
-    {
-        return this.id;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public Timestamp getTimestampIdCreation()
-    {
-        return this.timestampIdCreation;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public Timestamp getTimestampModif()
-    {
-        return this.timestampModif;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public Value getVal()
-    {
-        return this.val;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public boolean isDeleted()
-    {
-        return this.isDeleted;
-    }
-
-    protected boolean isOpTimestampsValid(Entry e)
-    {
-        if (e != null) {
-            // existing TimestampIdCreation > : nothing to do
-            if (e.getTimestampIdCreation().compareTo(this.getTimestampIdCreation()) >= 1) {
-                return false;
-            }
-            // existing TimestampIdCreation == :
-            else if (e.getTimestampIdCreation().compareTo(this.getTimestampIdCreation()) == 0) {
-                // nothing to do when existing entry modif timestamp > given om
-                // modif timestamp
-                if (e.getTimestampModif().compareTo(this.getTimestampModif()) > -1) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    @Override
-    public abstract String toString();
+    String toString();
 }

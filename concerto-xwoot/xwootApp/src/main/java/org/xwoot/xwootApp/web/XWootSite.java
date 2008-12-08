@@ -54,6 +54,7 @@ import org.xwoot.lpbcast.sender.httpservletlpbcast.HttpServletLpbCast;
 import org.xwoot.lpbcast.sender.httpservletlpbcast.HttpServletLpbCastException;
 
 import org.xwoot.thomasRuleEngine.ThomasRuleEngine;
+import org.xwoot.thomasRuleEngine.ThomasRuleEngineException;
 
 import org.xwoot.wikiContentManager.WikiContentManager;
 import org.xwoot.wikiContentManager.WikiContentManagerException;
@@ -183,9 +184,10 @@ public class XWootSite
      * @throws HttpServletLpbCastException 
      * @throws AntiEntropyException 
      * @throws XWootException 
+     * @throws ThomasRuleEngineException 
      */
     public void init(int siteId, String peerId, String workingDirPath, int messagesRound, /* int logDelay, */
-    int maxNeighbors, String url, String login, String pwd) throws RuntimeException, ClockException, WikiContentManagerException, WootEngineException, HttpServletLpbCastException, AntiEntropyException, XWootException
+    int maxNeighbors, String url, String login, String pwd) throws RuntimeException, ClockException, WikiContentManagerException, WootEngineException, HttpServletLpbCastException, AntiEntropyException, XWootException, ThomasRuleEngineException
     {
 
         File pbCastDir = new File(workingDirPath + File.separator + PBCAST_DIR_NAME);

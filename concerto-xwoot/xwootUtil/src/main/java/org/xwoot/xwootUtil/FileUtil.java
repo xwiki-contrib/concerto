@@ -485,9 +485,14 @@ public class FileUtil
      *             but not writable.
      * @throws InvalidParameterException if the given path is valid but it points to a file instead of pointing to a
      *             directory.
+     * @throws NullPointerException if the directoryPath is null.
      */
     public static void checkDirectoryPath(String directoryPath) throws IOException, InvalidParameterException
     {
+        if (directoryPath == null) {
+            throw new NullPointerException("The provided directoryPath is null.");
+        }
+        
         File directory = new File(directoryPath);
 
         if (!directory.exists()) {
@@ -571,6 +576,7 @@ public class FileUtil
      * @param map the map to save.
      * @param filePath the path of the file where to save the object.
      * @throws Exception if problems occur saving the object.
+     * @throws NullPointerException if the map is null.
      * @see {@link #saveObjectToFile(Object, String)}
      * @see {@link #loadObjectFromFile(String)}
      */
@@ -600,11 +606,16 @@ public class FileUtil
      * 
      * @param filePath the file to load from.
      * @return the read object.
-     * @throws Exception if the file was not found or problems reading the object occured.
+     * @throws Exception if the file was not found or problems reading the object occurred.
+     * @throws NullPointerException if the provided filePath is null.
      * @see #saveObjectToFile(Object, String)
      */
     public static Object loadObjectFromFile(String filePath) throws Exception
     {
+        if (filePath == null) {
+            throw new NullPointerException("Null value provided as filePath.");
+        }
+        
         FileInputStream fis = null;
         ObjectInputStream ois = null;
         try {
@@ -625,6 +636,27 @@ public class FileUtil
             } catch (IOException e) {
                 throw new Exception("Problems closing the file " + filePath + " after loading an object from it: ", e);
             }
+        }
+    }
+    
+    /**
+     * Convenience method.
+     * <p>
+     * If the specified file location does not exist, the provided fallback object will be returned. Null value is allowed for fallback object, this being subject to the user's logic. 
+     * 
+     * @param filePath the file to load from.
+     * @return the read object or the fallback object if the file does not exist.
+     * @throws Exception if problems reading the object occurred.
+     * @throws NullPointerException if the filePath is null.
+     * @see #saveObjectToFile(Object, String)
+     * @see #loadObjectFromFile(String)
+     */
+    public static Object loadObjectFromFile(String filePath, Object fallBackIfFileNotFound) throws Exception
+    {
+        if (!new File(filePath).exists()) {
+            return fallBackIfFileNotFound;
+        } else {
+            return loadObjectFromFile(filePath);
         }
     }
 

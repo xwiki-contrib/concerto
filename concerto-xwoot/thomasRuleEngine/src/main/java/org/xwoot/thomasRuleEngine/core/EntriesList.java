@@ -45,86 +45,87 @@
 package org.xwoot.thomasRuleEngine.core;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.xwoot.thomasRuleEngine.ThomasRuleEngineException;
+import org.xwoot.xwootUtil.FileUtil;
 
 /**
- * DOCUMENT ME!
+ * A persistent collection (database) of entries that will be synchronized.
+ * <p>
+ * Each entry is stored in a HashMap&lt;Identifier, Entry&gt;.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
 public class EntriesList
 {
+    /** The list of entries. */
     private Map<Identifier, Entry> entriesList;
 
+    /** The location on drive where to store the database. */
     private String filePath;
 
+    /** The name of the file where the database is saved. */
     private String filename;
 
+    /** The location of the directory where the database is saved. */
     private String workingDir;
 
     /**
      * Creates a new EntriesList object.
      * 
-     * @param WORKINGDIR DOCUMENT ME!
+     * @param workingDir DOCUMENT ME!
      * @param filename DOCUMENT ME!
+     * @throws ThomasRuleEngineException if the workingDir is not usable or the fileName is null. 
      */
-    public EntriesList(String workingDir, String filename)
+    public EntriesList(String workingDir, String filename) throws ThomasRuleEngineException
     {
-        if ((workingDir == null) || (filename == null)) {
-            throw new NullPointerException("Parameters must not be null.");
+        try {
+            FileUtil.checkDirectoryPath(workingDir);
+            if (filename == null) {
+                throw new NullPointerException("filename must not be null.");
+            }
+        } catch (Exception e) {
+            throw new ThomasRuleEngineException("Problems initializing EntriesList.\n", e);
         }
 
         this.workingDir = workingDir;
         this.filename = filename;
         this.filePath = this.workingDir + File.separator + this.filename;
-
-        File working = new File(workingDir);
-
-        if (!working.exists()) {
-            throw new RuntimeException("Directory " + workingDir + " doesn't exist");
-        }
-
-        File file = new File(this.filePath);
-
-        if (file.exists()) {
-            file.delete();
-        }
     }
 
+    /** @return the location of the directory where the database is saved. */
+    public String getWorkingDir()
+    {
+        return this.workingDir;
+    }
+
+    /** Removes the file where the entries list is saved. */
     public void clearWorkingDir()
     {
-        File f = new File(this.filePath);
-        if (f.exists()) {
-            f.delete();
+        File entriesListFile = new File(this.filePath);
+        if (entriesListFile.exists()) {
+            entriesListFile.delete();
         }
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param entry DOCUMENT ME!
-     * @throws ThomasRuleEngineException 
-     * 
+     * @param entry the entry to add.
+     * @throws ThomasRuleEngineException if loading/storing problems occur.
+     * @throws NullPointerException if either the entry or the entry's ID is null.
+     * @see #load()
+     * @see #store()
      */
-    public void addEntry(Entry entry) throws ThomasRuleEngineException 
+    public void addEntry(Entry entry) throws ThomasRuleEngineException
     {
         if ((entry == null) || (entry.getId() == null)) {
-            throw new ThomasRuleEngineException("Parameters must not be null");
+            throw new NullPointerException("The entry must not be null.");
         }
 
         this.load();
@@ -133,16 +134,16 @@ public class EntriesList
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param id DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws ThomasRuleEngineException 
+     * @param id the id of the entry to get.
+     * @return the entry having the specified id.
+     * @throws ThomasRuleEngineException if loading problems occur.
+     * @throws NullPointerException if the id is null.
+     * @see #load()
      */
     public Entry getEntry(Identifier id) throws ThomasRuleEngineException
     {
         if (id == null) {
-            throw new NullPointerException("Parameters must not be null");
+            throw new NullPointerException("The ID must not be null.");
         }
 
         this.load();
@@ -151,62 +152,33 @@ public class EntriesList
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
+     * @param pageId the page ID.
+     * @return a list of entries that refer to the supplied pageId.
+     * @throws ThomasRuleEngineException if problems occur while loading.
+     * @throws NullPointerException if the pageId is null.
      */
-    public String getWorkingDir()
+    public List<Entry> getEntries(String pageId) throws ThomasRuleEngineException
     {
-        return this.workingDir;
-    }
-
-    private void load() throws ThomasRuleEngineException
-    {
-        File file = new File(this.filePath);
-        ObjectInputStream ois = null;
-
-        if (!file.exists()) {
-            this.entriesList = new Hashtable<Identifier, Entry>();
-
-            return;
-        }
-        try {
-            ois = new ObjectInputStream(new FileInputStream(file));
-            this.entriesList = (Hashtable<Identifier, Entry>) ois.readObject();
-            ois.close();
-        } catch (FileNotFoundException e) {
-          throw new ThomasRuleEngineException("File not found"+this.filePath,e);
-        } catch (IOException e) {
-          throw new ThomasRuleEngineException("Problem to load file"+this.filePath,e);
-        } catch (ClassNotFoundException e) {
-          throw new ThomasRuleEngineException("Class cast problem when loading file "+this.filePath,e);
-        }   
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param id DOCUMENT ME!
-     * @throws ThomasRuleEngineException 
-     * 
-     */
-    public void removeEntry(Identifier id) throws ThomasRuleEngineException
-    {
-        if (id == null) {
+        if (pageId == null || pageId.length() == 0) {
             throw new NullPointerException("Parameters must not be null");
         }
 
         this.load();
-        this.entriesList.remove(id);
-        this.store();
+
+        List<Entry> result = new ArrayList<Entry>();
+
+        for (Identifier id : this.entriesList.keySet()) {
+            if (id.getPageName().equals(pageId)) {
+                result.add(this.entriesList.get(id));
+            }
+        }
+
+        return result;
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     * @throws ThomasRuleEngineException 
-     * 
+     * @return the number of entries currently in the list.
+     * @throws ThomasRuleEngineException if problems occur while loading.
      */
     public int size() throws ThomasRuleEngineException
     {
@@ -215,52 +187,67 @@ public class EntriesList
         return this.entriesList.size();
     }
 
-    private void store() throws ThomasRuleEngineException
+    /**
+     * @param id the id of the entry to remove.
+     * @throws ThomasRuleEngineException if problems loading/storing occur.
+     * @throws NullPointerException if the id is null.
+     */
+    public void removeEntry(Identifier id) throws ThomasRuleEngineException
     {
-        if (this.entriesList.isEmpty()) {
-            File file = new File(this.filePath);
-
-            if (file.exists()) {
-                file.delete();
-            }
-
-            return;
+        if (id == null) {
+            throw new NullPointerException("Parameters must not be null.");
         }
 
-        FileOutputStream fout = null;
-        ObjectOutputStream oos = null;
-        try {
-            fout = new FileOutputStream(this.filePath);
-            oos = new ObjectOutputStream(fout);
-            oos.writeObject(this.entriesList);
-            oos.flush();
-            oos.close();
-            fout.close();
-        } catch (IOException e) {
-            throw new ThomasRuleEngineException("Problem to store file : "+this.filePath,e);
-        }
-       
+        this.load();
+        this.entriesList.remove(id);
+        this.store();
     }
 
     /**
-     * DOCUMENT ME!
+     * Store the entries to file.
      * 
-     * @return DOCUMENT ME!
+     * @throws ThomasRuleEngineException if problems occur.
+     * @see {@link FileUtil#saveMapToFile(Map, String)}
      */
+    private void store() throws ThomasRuleEngineException
+    {
+        try {
+            FileUtil.saveMapToFile(this.entriesList, this.filePath);
+        } catch (Exception e) {
+            throw new ThomasRuleEngineException("Problems storing the entries list.\n", e);
+        }
+    }
+
+    /**
+     * Loads the entries from file. If the file does not exist, a new and empty collection will be loaded.
+     * 
+     * @throws ThomasRuleEngineException if problems occur.
+     * @see FileUtil#loadObjectFromFile(String)
+     */
+    @SuppressWarnings("unchecked")
+    private void load() throws ThomasRuleEngineException
+    {
+        Object fallback = new Hashtable<Identifier, Entry>();
+        try {
+            this.entriesList = (Hashtable<Identifier, Entry>) FileUtil.loadObjectFromFile(this.filePath, fallback);
+        } catch (Exception e) {
+            throw new ThomasRuleEngineException("Problems loading the entris list.\n", e);
+        }
+    }
+
+    /** {@inheritDoc} */
     @Override
     public String toString()
     {
-       
         try {
             this.load();
         } catch (ThomasRuleEngineException e1) {
-           e1.printStackTrace();
+            e1.printStackTrace();
         }
 
-        String result = "List : ";
-        Set e = this.entriesList.entrySet();
-        Iterator i = e.iterator();
+        Iterator<Map.Entry<Identifier, Entry>> i = this.entriesList.entrySet().iterator();
 
+        String result = "List : ";
         while (i.hasNext()) {
             Entry temp = (Entry) i.next();
             result = result + "<" + temp.toString() + ">";
@@ -269,22 +256,4 @@ public class EntriesList
         return result;
     }
 
-    public List<Entry> getEntries(String pageId) throws ThomasRuleEngineException
-    { 
-        if (pageId == null || pageId.equals("")) {
-        throw new NullPointerException("Parameters must not be null");
-        }
-
-        this.load();
-
-        List<Entry> result=new ArrayList<Entry>();
-  
-        for(Identifier t:this.entriesList.keySet()){
-            if (t.getPageName().equals(pageId)){
-                result.add(this.entriesList.get(t));
-            }
-        }
-        
-        return result;
-    }
 }

@@ -56,114 +56,98 @@ import org.xwoot.thomasRuleEngine.op.ThomasRuleOp;
 import org.xwoot.thomasRuleEngine.op.ThomasRuleOpDel;
 import org.xwoot.thomasRuleEngine.op.ThomasRuleOpNew;
 import org.xwoot.thomasRuleEngine.op.ThomasRuleOpSet;
-
-import java.io.File;
+import org.xwoot.xwootUtil.FileUtil;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
 /**
- * DOCUMENT ME!
+ * Implements the maintenance of duplicate databases on a "last writer wins" basis as described in RFC677.
  * 
- * @author $author$
- * @version $Revision$
+ * @see <a href="http://tools.ietf.org/html/rfc677">RFC677 - The Maintenance of Duplicate Databases</a>
+ * @version $Id:$
  */
 public class ThomasRuleEngine
 {
+    /** FileName prefix to be used when saving the entriesList. */
+    public static final String TRE_FILE_NAME_PREFIX = "EntriesListFile";
+
+    /** Used when computing the state of the TRE. */
+    public static final String TRE_STATE_FILE_NAME = "tre.zip";
+
+    /** @see #getThomasRuleEngineId() */
     private int thomasRuleEngineId;
 
+    /** The associated EntriesList for managing entries. */
     private EntriesList entriesList;
 
+    /** Used for logging. */
     private final Log logger = LogFactory.getLog(this.getClass());
-
-    public final static String TREFILENAME = "EntriesListFile";
-
-    public final static String TRESTATEFILENAME = "tre.zip";
 
     /**
      * Creates a new ThomasRuleEngine object.
      * 
-     * @param thomasRuleEngineId DOCUMENT ME!
-     * @param WORKINGDIR DOCUMENT ME!
+     * @param thomasRuleEngineId the siteId of the owning node.
+     * @param workingDir working directory where to store the entries.
+     * @throws ThomasRuleEngineException if the workingDir is not usable.
      */
-    public ThomasRuleEngine(int thomasRuleEngineId, String workingDir)
+    public ThomasRuleEngine(int thomasRuleEngineId, String workingDir) throws ThomasRuleEngineException
     {
         this.thomasRuleEngineId = thomasRuleEngineId;
 
-        File working = new File(workingDir);
-
-        if (!working.exists()) {
-            if (!working.mkdir()) {
-                throw new RuntimeException("Can't create pages directory: " + working);
-            }
+        try {
+            FileUtil.checkDirectoryPath(workingDir);
+        } catch (Exception e) {
+            throw new ThomasRuleEngineException("Problems initializing TRE.");
         }
 
-        this.entriesList = new EntriesList(workingDir, TREFILENAME + this.thomasRuleEngineId);
+        this.entriesList = new EntriesList(workingDir, TRE_FILE_NAME_PREFIX + this.thomasRuleEngineId);
 
-        this.logger.info(this.thomasRuleEngineId + " : Thomas rule engine created !");
-    }
-
-    public void clearWorkingDir()
-    {
-        this.entriesList.clearWorkingDir();
+        this.logger.info(this.thomasRuleEngineId + " - Thomas rule engine created !");
     }
 
     /**
-     * DOCUMENT ME!
+     * Creates a new ThomasRuleOp, corresponding to the provided values.
      * 
-     * @param o DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws ThomasRuleEngineException 
-     * 
+     * @param id the id of the entry.
+     * @param value the value of the entry.
+     * @return A ThomasRuleOpNew having the provided id and value if the value is not null and the entry does not
+     *         already exist or is marked as deleted.
+     *         <p>
+     *         A ThomasRuleOpSet having the provided id and value if the entry already exists, the value is not null and
+     *         is different from the existing entry's value and the entry is not marked as deleted.
+     *         <p>
+     *         A ThomasRuleOpDel having the provided id, the deletion status set to true and the value of the existing
+     *         entry if the value is not null and the entry already exists and is not marked as deleted.
+     *         <p>
+     *         null otherwise.
+     *         <p>
+     *         Note: All operations have the modifiedTimestamp set to the time when getOp is called and, in the case of
+     *         a New operation, the creationTimestamp set tot the same value.
+     * @see <a href="http://tools.ietf.org/html/rfc677">RFC677 - The Maintenance of Duplicate Databases</a>
+     * @throws ThomasRuleEngineException if problems occur while getting the entry with the specified id.
+     * @throws NullPointerException if the id is null.
      */
-    synchronized public Entry applyOp(ThomasRuleOp op) throws ThomasRuleEngineException 
+    public synchronized ThomasRuleOp getOp(Identifier id, Value value) throws ThomasRuleEngineException
     {
-        if (op == null) {
-            return null;
-        }
-
-        // execute op
-        Entry result = op.execute(this.entriesList.getEntry(op.getId()));
-
-        // add the result of op execution
-        if (result != null) {
-            this.entriesList.addEntry(result);
-
-            return result;
-        }
-
-        return null;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param id DOCUMENT ME!
-     * @param value DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws ThomasRuleEngineException 
-     * 
-     */
-    synchronized public ThomasRuleOp getOp(Identifier id, Value value) throws ThomasRuleEngineException 
-    {
-        Entry e = this.entriesList.getEntry(id);
+        Entry entry = this.entriesList.getEntry(id);
 
         // new
-        if ((value != null) && ((e == null) || e.isDeleted())) {
+        if ((value != null) && ((entry == null) || entry.isDeleted())) {
             return new ThomasRuleOpNew(id, value, false, this.getTimestamp(), this.getTimestamp());
-        } else if (e != null) {
+        } else if (entry != null) {
             // set
-            if ((value != null) && !e.isDeleted()) {
-                if (!value.equals(e.getValue())) {
-                    return new ThomasRuleOpSet(id, value, false, e.getTimestampIdCreation(), this.getTimestamp());
+            if ((value != null) && !entry.isDeleted()) {
+                if (!value.equals(entry.getValue())) {
+                    return new ThomasRuleOpSet(id, value, false, entry.getTimestampIdCreation(), this.getTimestamp());
                 }
 
                 return null;
             }
 
             // del
-            return new ThomasRuleOpDel(id, e.getValue(), true, e.getTimestampIdCreation(), this.getTimestamp());
+            return new ThomasRuleOpDel(id, entry.getValue(), true, entry.getTimestampIdCreation(), this.getTimestamp());
         }
 
         // nothing
@@ -171,19 +155,81 @@ public class ThomasRuleEngine
     }
 
     /**
-     * DOCUMENT ME!
+     * Applies an opperation and adds the resultin entry in the entriesList.
      * 
-     * @return DOCUMENT ME!
+     * @param operation the operation to apply.
+     * @return the resulting entry or null if the opperation is null.
+     * @throws ThomasRuleEngineException if loading/storing entry problems occur.
      */
-    public int getThomasRuleEngineId()
+    public synchronized Entry applyOp(ThomasRuleOp operation) throws ThomasRuleEngineException
     {
-        return this.thomasRuleEngineId;
+        if (operation == null) {
+            return null;
+        }
+
+        // execute op
+        Entry result = operation.execute(this.entriesList.getEntry(operation.getId()));
+
+        // add the result of op execution
+        if (result != null) {
+            this.entriesList.addEntry(result);
+        }
+
+        return result;
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
+     * @param id the id of the entry.
+     * @return the value of the entry at the specified id if that entry is not marked as deleted; null otherwise or if
+     *         the entry does not exist.
+     * @throws ThomasRuleEngineException if problems getting the entry occur.
+     * @throws NullPointerException if the id is null.
+     */
+    public synchronized Value getValue(Identifier id) throws ThomasRuleEngineException
+    {
+        Entry entry = this.entriesList.getEntry(id);
+
+        if (entry != null) {
+            if (!entry.isDeleted()) {
+                return entry.getValue();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param pageId the pageId
+     * @return a list of ids of entries reffering to the provided pageId.
+     * @throws ThomasRuleEngineException if problems loading the entriesList occur.
+     */
+    public synchronized List<Identifier> getEntriesIds(String pageId) throws ThomasRuleEngineException
+    {
+        List<Identifier> result = new ArrayList<Identifier>();
+
+        List<Entry> entries = this.entriesList.getEntries(pageId);
+        for (Entry e : entries) {
+            result.add(e.getId());
+        }
+        return result;
+    }
+
+    /**
+     * @return the working directory where to store the entries.
+     */
+    public String getWorkingDir()
+    {
+        return this.entriesList.getWorkingDir();
+    }
+
+    /** Clear the working directory. */
+    public void clearWorkingDir()
+    {
+        this.entriesList.clearWorkingDir();
+    }
+
+    /**
+     * @return the current time.
      */
     public Timestamp getTimestamp()
     {
@@ -194,51 +240,8 @@ public class ThomasRuleEngine
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param id DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws ThomasRuleEngineException 
-     */
-    synchronized public Value getValue(Identifier id) throws ThomasRuleEngineException 
-    {
-        Entry e = this.entriesList.getEntry(id);
-
-        if (e != null) {
-            if (!e.isDeleted()) {
-                return e.getValue();
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public String getWorkingDir()
-    {
-        return this.entriesList.getWorkingDir();
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param thomasRuleEngineId DOCUMENT ME!
-     */
-    public void setThomasRuleEngineId(int thomasRuleEngineId)
-    {
-        this.thomasRuleEngineId = thomasRuleEngineId;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     * @throws ThomasRuleEngineException 
-     * 
+     * @return the number of entries in the entriesList.
+     * @throws ThomasRuleEngineException if problems occur while loading the list.
      */
     public int size() throws ThomasRuleEngineException
     {
@@ -246,23 +249,27 @@ public class ThomasRuleEngine
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
+     * @return the siteId of the owning node.
      */
+    public int getThomasRuleEngineId()
+    {
+        return this.thomasRuleEngineId;
+    }
+
+    /**
+     * @param thomasRuleEngineId the thomasRuleEngineId to set.
+     * @see #getThomasRuleEngineId()
+     */
+    public void setThomasRuleEngineId(int thomasRuleEngineId)
+    {
+        this.thomasRuleEngineId = thomasRuleEngineId;
+    }
+
+    /** {@inheritDoc} */
     @Override
-    synchronized public String toString()
+    public synchronized String toString()
     {
         return "Id - " + this.thomasRuleEngineId + " : " + this.entriesList.toString();
     }
-    
-    synchronized public List<Identifier> getEntriesIds(String pageId) throws ThomasRuleEngineException{
-        List result= new ArrayList<Identifier>();
-        
-        List<Entry> entries=this.entriesList.getEntries(pageId);
-        for(Entry e:entries){
-            result.add(e.getId());
-        }
-        return result;
-    }
+
 }

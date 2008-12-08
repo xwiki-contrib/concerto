@@ -47,28 +47,33 @@ package org.xwoot.thomasRuleEngine.mock;
 import org.xwoot.thomasRuleEngine.core.Identifier;
 
 /**
- * DOCUMENT ME!
+ * Mockup for the Indetifier interface.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
 public class MockIdentifier implements Identifier
 {
     /** Unique ID used for serialization. */
     private static final long serialVersionUID = 4717183124930677075L;
 
-    /** The name of the page this ID belongs to. */
+    /**
+     * @see #getPageName()
+     */
     private String pageName;
 
+    /** The ID of the metadata. */
     private String metaDataId;
 
+    /**
+     * @see #getId()
+     */
     private String id;
 
     /**
      * Creates a new MDIdentifier object.
      * 
-     * @param pageName DOCUMENT ME!
-     * @param metaDataId DOCUMENT ME!
+     * @param pageName the page name.
+     * @param metaDataId the id of the metadata.
      */
     public MockIdentifier(String pageName, String metaDataId)
     {
@@ -77,12 +82,7 @@ public class MockIdentifier implements Identifier
         this.setId();
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param with DOCUMENT ME!
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
     public boolean equals(Object with)
     {
@@ -94,9 +94,7 @@ public class MockIdentifier implements Identifier
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
+     * @return the computed id.
      */
     public String getId()
     {
@@ -104,45 +102,36 @@ public class MockIdentifier implements Identifier
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
+     * @return the metadata ID.
      */
     public String getMetaDataId()
     {
         return this.metaDataId;
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     public String getPageName()
     {
         return this.pageName;
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
     public int hashCode()
     {
         return this.id.hashCode();
     }
 
+    /**
+     * Computes the id.
+     */
     private void setId()
     {
         this.id = this.pageName + "." + this.metaDataId;
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param metaDataId DOCUMENT ME!
+     * @param metaDataId the metaDataId to set.
      */
     public void setMetaDataId(String metaDataId)
     {
@@ -151,9 +140,7 @@ public class MockIdentifier implements Identifier
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param pageName DOCUMENT ME!
+     * @param pageName the pageName to set.
      */
     public void setPageName(String pageName)
     {
@@ -161,11 +148,7 @@ public class MockIdentifier implements Identifier
         this.setId();
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
     public String toString()
     {

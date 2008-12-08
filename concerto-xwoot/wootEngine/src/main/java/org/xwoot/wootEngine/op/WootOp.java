@@ -26,7 +26,7 @@ import org.xwoot.wootEngine.core.WootPage;
 /**
  * Describes the structure of a Woot operation that each class implementing this interface will have to provide.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public interface WootOp
 {
@@ -36,7 +36,6 @@ public interface WootOp
      * Users have to implement the behavior of the operation trough this method.
      * 
      * @param page the page where to execute this operation.
-     * @return true if the operation was executed successfully, false otherwise.
      */
     void execute(WootPage page);
 

@@ -49,10 +49,14 @@ import java.io.Serializable;
 /**
  * Identifies an entry in the EntriesList.
  * 
- * @version $Id:$
+ * @see <a href="http://tools.ietf.org/html/rfc677">RFC677 - The Maintenance of Duplicate Databases</a>
+ * @version $Id$
  */
 public interface Identifier extends Serializable
 {
+    /** @return the pageName this identifier belongs to. */
+    String getPageName();
+    
     /** {@inheritDoc} */
     @Override
     boolean equals(Object with);
@@ -64,7 +68,4 @@ public interface Identifier extends Serializable
     /** {@inheritDoc} */
     @Override
     String toString();
-
-    /** @return the pageName this identifier belongs to. */
-    String getPageName();
 }

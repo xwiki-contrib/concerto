@@ -50,60 +50,59 @@ import org.xwoot.thomasRuleEngine.core.Timestamp;
 import org.xwoot.thomasRuleEngine.core.Value;
 
 /**
- * DOCUMENT ME!
+ * Entry Assignment operation.
  * 
- * @author $author$
- * @version $Revision$
+ * @see <a href="http://tools.ietf.org/html/rfc677">RFC677 - The Maintenance of Duplicate Databases</a>
+ * @version $Id:$
  */
-public class ThomasRuleOpSet extends ThomasRuleOp
+public class ThomasRuleOpSet extends AbstractThomasRuleOp
 {
-    /**  */
+    /** Unique ID used in the serialization process. */
     private static final long serialVersionUID = 4431965730152629744L;
 
     /**
      * Creates a new ThomasRuleOpSet object.
      * 
-     * @param id DOCUMENT ME!
-     * @param val DOCUMENT ME!
-     * @param isDeleted DOCUMENT ME!
-     * @param timestampIdCreation DOCUMENT ME!
-     * @param timestampModif DOCUMENT ME!
+     * @param id the id of the affected entry.
+     * @param value the new value of the affected entry.
+     * @param isDeleted the new deletion status of the affected entry.
+     * @param timestampIdCreation when the affected entry was created.
+     * @param timestampModif when this operation affected the entry.
      */
-    public ThomasRuleOpSet(Identifier id, Value val, boolean isDeleted, Timestamp timestampIdCreation,
+    public ThomasRuleOpSet(Identifier id, Value value, boolean isDeleted, Timestamp timestampIdCreation,
         Timestamp timestampModif)
     {
-        super(id, val, isDeleted, timestampIdCreation, timestampModif);
+        super(id, value, isDeleted, timestampIdCreation, timestampModif);
     }
 
     /**
-     * DOCUMENT ME!
+     * {@inheritDoc}
      * 
-     * @param e DOCUMENT ME!
-     * @return DOCUMENT ME!
+     * @return if the entry is null, a ThomasRuleOpNew will be created by using this operation's data and its result
+     *         will be returned.
+     *         <p>
+     *         If this operation's timestamps are not valid when compared to the entry, null is returned.
+     *         <p>
+     *         Otherwise, an new entry will be returned having it's data the data of this operation.
      */
     @Override
-    public Entry execute(Entry e)
+    public Entry execute(Entry from)
     {
-        if (e == null) {
-            return (new ThomasRuleOpNew(this.getId(), this.getVal(), this.isDeleted(), this.getTimestampIdCreation(),
+        if (from == null) {
+            return (new ThomasRuleOpNew(this.getId(), this.getValue(), this.isDeleted(), this.getTimestampIdCreation(),
                 this.getTimestampModif())).execute(null);
-        } else if (!this.isOpTimestampsValid(e)) {
+        } else if (!this.isOpTimestampsValid(from)) {
             return null;
         }
 
-        return new Entry(this.getId(), this.getVal(), this.isDeleted(), this.getTimestampIdCreation(), this
+        return new Entry(this.getId(), this.getValue(), this.isDeleted(), this.getTimestampIdCreation(), this
             .getTimestampModif());
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
     public String toString()
     {
-        return "SetOp(" + this.getId() + "," + this.getVal() + "," + this.isDeleted() + ","
-            + this.getTimestampIdCreation() + "," + this.getTimestampModif() + "," + this.getVal() + ")";
+        return "Set" + super.toString();
     }
 }
