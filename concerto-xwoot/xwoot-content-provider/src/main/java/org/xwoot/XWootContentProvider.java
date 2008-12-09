@@ -17,6 +17,12 @@ import org.slf4j.LoggerFactory;
 import org.xwiki.xmlrpc.XWikiXmlRpcClient;
 import org.xwiki.xmlrpc.model.XWikiPageHistorySummary;
 
+/**
+ * XWootContentProvider. This class is the implementation of the XWiki interface for handling modifications and
+ * performing changes. For more details see {@link http://concerto.xwiki.com/xwiki/bin/view/Main/APIChat281108}
+ * 
+ * @version $Id$
+ */
 public class XWootContentProvider
 {
     final Logger logger = LoggerFactory.getLogger(XWootContentProvider.class);
@@ -27,6 +33,9 @@ public class XWootContentProvider
 
     private static final String DB_NAME = "DB";
 
+    /**
+     * Number of modification results requested for each XMLRPC call, in order to avoid server overload.
+     */
     private static final int MODIFICATION_RESULTS_PER_CALL = 25;
 
     private XWikiXmlRpcClient rpc;
@@ -35,6 +44,12 @@ public class XWootContentProvider
 
     private String endpoint;
 
+    /**
+     * Constructor.
+     * 
+     * @param endpoint The target XWiki XMLRPC endpoint URL.
+     * @throws XWootContentProviderException
+     */
     public XWootContentProvider(String endpoint) throws XWootContentProviderException
     {
         this(endpoint, false);
@@ -43,16 +58,16 @@ public class XWootContentProvider
     /**
      * Constructor.
      * 
-     * @param endpoint The XWiki XMLRPC endpoint.
-     * @param createDB If true the modifications DB is (re)created (removing the previous one if it existed)
+     * @param endpoint The target XWiki XMLRPC endpoint URL.
+     * @param createDB If true the modifications DB is recreated (removing the previous one if it existed)
      * @throws XWootContentProviderException
      */
-    public XWootContentProvider(String endpoint, boolean createDB) throws XWootContentProviderException
+    public XWootContentProvider(String endpoint, boolean recreateDB) throws XWootContentProviderException
     {
         try {
             rpc = null;
             this.endpoint = endpoint;
-            init(createDB);
+            init(recreateDB);
         } catch (Exception e) {
             throw new XWootContentProviderException(e);
         }
@@ -61,7 +76,7 @@ public class XWootContentProvider
     /**
      * Initialize the SQL DB for keeping track of the modification history.
      * 
-     * @param createDB
+     * @param createDB If true the modifications DB is recreated (removing the previous one if it existed)
      * @throws InstantiationException
      * @throws IllegalAccessException
      * @throws ClassNotFoundException
@@ -169,6 +184,10 @@ public class XWootContentProvider
      */
     private void updateModifiedPages() throws XWootContentProviderException
     {
+        if (rpc == null) {
+            throw new XWootContentProviderException("XWootContentProvider is not logged in.");
+        }
+
         try {
             Statement s = connection.createStatement();
             ResultSet rs = s.executeQuery("SELECT MAX(timestamp) FROM modifications");
@@ -181,7 +200,7 @@ public class XWootContentProvider
             s.close();
 
             PreparedStatement ps = connection.prepareStatement("INSERT INTO modifications VALUES (?, ?, ?, ?, 0)");
-                        
+
             int entriesReceived = 0;
             int duplicatedEntries = 0;
             int start = 0;
@@ -216,8 +235,9 @@ public class XWootContentProvider
                 start = start + MODIFICATION_RESULTS_PER_CALL;
             }
 
-            logger.info(String.format("Modifcations list updated. Received %d entries starting from %s (%d). %d duplicates.",
-                entriesReceived,  new Date(maxTimestamp), maxTimestamp, duplicatedEntries));
+            logger.info(String.format(
+                "Modifcations list updated. Received %d entries starting from %s (%d). %d duplicates.",
+                entriesReceived, new Date(maxTimestamp), maxTimestamp, duplicatedEntries));
 
             ps.close();
         } catch (Exception e) {
@@ -227,14 +247,18 @@ public class XWootContentProvider
     }
 
     /**
-     * Returns a list of references where each reference points to a different page at its oldest modification
-     * available that has not been cleared.
+     * Returns a list of references where each reference points to a different page at its oldest modification available
+     * that has not been cleared.
      * 
      * @return A list of XWootIds.
      * @throws XWootContentProviderException
      */
     public List<XWootId> getModifiedPagesIds() throws XWootContentProviderException
     {
+        if (rpc == null) {
+            throw new XWootContentProviderException("XWootContentProvider is not logged in.");
+        }
+
         List<XWootId> result = new ArrayList<XWootId>();
 
         /* Download last modifications from the server */
@@ -260,6 +284,13 @@ public class XWootContentProvider
         return result;
     }
 
+    /**
+     * Set the "cleared" flag of the modification related to the id passed as parameter. This means that the
+     * modification has been processed and should not be returned in subsequent calls.
+     * 
+     * @param xwootId
+     * @throws XWootContentProviderException
+     */
     public void clearModification(XWootId xwootId) throws XWootContentProviderException
     {
         try {
@@ -279,6 +310,12 @@ public class XWootContentProvider
         }
     }
 
+    /**
+     * Set the "cleared" flag of all the modifications up to the one (included) related to the id passed as parameter.
+     * 
+     * @param xwootId
+     * @throws XWootContentProviderException
+     */
     public void clearAllModifications(XWootId xwootId) throws XWootContentProviderException
     {
         try {
@@ -298,6 +335,12 @@ public class XWootContentProvider
         }
     }
 
+    /**
+     * Debugging method. Dump the internal table for debugging purposes. Remove this when it will be no more needed.
+     * 
+     * @param orderBy The field to be sorted by. Can be 'pageId' or 'timestamp'.
+     * @throws SQLException
+     */
     public void dumpTable(String orderBy) throws SQLException
     {
         Statement s = connection.createStatement();
@@ -309,6 +352,14 @@ public class XWootContentProvider
         }
     }
 
+    /**
+     * Debugging method. Dump the internal table for debugging purposes. Shows only the rows concerning a given pageId.
+     * Remove this when it will be no more needed.
+     * 
+     * @param pageId The pageId to be selected.
+     * @param orderBy The field to be sorted by. Can be 'pageId' or 'timestamp'.
+     * @throws SQLException
+     */
     public void dumpTable(String pageId, String orderBy) throws SQLException
     {
         PreparedStatement ps =

@@ -1,5 +1,10 @@
 package org.xwoot;
 
+/**
+ * A class representing an XWoot Id, i.e. a page id and a timestamp. This id is used to reference a modification.
+ * 
+ * @vesion $Id$
+ */
 public class XWootId
 {
     private String pageId;
