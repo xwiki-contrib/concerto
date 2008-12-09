@@ -52,7 +52,7 @@ import org.xwoot.thomasRuleEngine.core.Value;
 /**
  * Implements the behavior of a ThomasRuleOp, common to all implementations.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public abstract class AbstractThomasRuleOp implements ThomasRuleOp
 {
@@ -119,7 +119,7 @@ public abstract class AbstractThomasRuleOp implements ThomasRuleOp
                 return false;
             } else if (entry.getTimestampIdCreation().compareTo(this.getTimestampIdCreation()) == 0) {
                 // existing TimestampIdCreation == :
-                
+
                 // nothing to do when existing entry modif timestamp > given om
                 // modif timestamp
                 if (entry.getTimestampModif().compareTo(this.getTimestampModif()) > -1) {
@@ -166,8 +166,10 @@ public abstract class AbstractThomasRuleOp implements ThomasRuleOp
 
     /** {@inheritDoc} */
     @Override
-    public String toString() {
-        return "Op(" + this.getId() + "," + this.getValue() + "," + this.isDeleted() + ","
-            + this.getTimestampIdCreation() + "," + this.getTimestampModif() + ")";
+    public String toString()
+    {
+        String separator = ",";
+        return "Op(" + this.getId() + separator + this.getValue() + separator + this.isDeleted() + separator
+            + this.getTimestampIdCreation() + separator + this.getTimestampModif() + ")";
     }
 }

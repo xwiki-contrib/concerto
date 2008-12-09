@@ -66,7 +66,7 @@ import java.util.List;
  * Implements the maintenance of duplicate databases on a "last writer wins" basis as described in RFC677.
  * 
  * @see <a href="http://tools.ietf.org/html/rfc677">RFC677 - The Maintenance of Duplicate Databases</a>
- * @version $Id:$
+ * @version $Id$
  */
 public class ThomasRuleEngine
 {
@@ -119,7 +119,7 @@ public class ThomasRuleEngine
      *         is different from the existing entry's value and the entry is not marked as deleted.
      *         <p>
      *         A ThomasRuleOpDel having the provided id, the deletion status set to true and the value of the existing
-     *         entry if the value is not null and the entry already exists and is not marked as deleted.
+     *         entry and the value is null or the entry is marked as deleted.
      *         <p>
      *         null otherwise.
      *         <p>
@@ -155,10 +155,10 @@ public class ThomasRuleEngine
     }
 
     /**
-     * Applies an opperation and adds the resultin entry in the entriesList.
+     * Applies an operation and adds the resulting entry in the entriesList.
      * 
      * @param operation the operation to apply.
-     * @return the resulting entry or null if the opperation is null.
+     * @return the resulting entry or null if the operation is null.
      * @throws ThomasRuleEngineException if loading/storing entry problems occur.
      */
     public synchronized Entry applyOp(ThomasRuleOp operation) throws ThomasRuleEngineException

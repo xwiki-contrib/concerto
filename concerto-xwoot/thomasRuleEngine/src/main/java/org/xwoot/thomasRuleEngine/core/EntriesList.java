@@ -46,7 +46,6 @@ package org.xwoot.thomasRuleEngine.core;
 
 import java.io.File;
 
-import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -61,7 +60,7 @@ import org.xwoot.xwootUtil.FileUtil;
  * <p>
  * Each entry is stored in a HashMap&lt;Identifier, Entry&gt;.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class EntriesList
 {

@@ -58,71 +58,109 @@ import org.xwoot.thomasRuleEngine.op.ThomasRuleOp;
 import org.xwoot.thomasRuleEngine.op.ThomasRuleOpDel;
 import org.xwoot.thomasRuleEngine.op.ThomasRuleOpNew;
 import org.xwoot.thomasRuleEngine.op.ThomasRuleOpSet;
+import org.xwoot.xwootUtil.FileUtil;
 
 import java.io.File;
 
 import junit.framework.Assert;
 
 /**
- * DOCUMENT ME!
+ * Tests for the ThomasRuleEngine class.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
 public class ThomasRuleEngineTest
 {
-    private final static String WORKINGDIR = "/tmp/testsThomasRuleEngine";
+    /** Test working dir path for saving entries. */
+    private static final String WORKING_DIR_PATH = FileUtil.getTestsWorkingDirectoryPathForModule("thomasRuleEngine");
 
+    /** Test treId. */
+    private int treId1 = 1;
+
+    /** Test treId. */
+    private int treId2 = 2;
+
+    /** Test instance. */
+    private ThomasRuleEngine tre1;
+
+    /** Test instance. */
+    private ThomasRuleEngine tre2;
+
+    /** Test ID. */
+    private Identifier id1;
+
+    /** Test ID. */
+    private Identifier id2;
+
+    /** Test ID. */
+    private Identifier id3;
+
+    /** Test value. */
+    private Value val1;
+
+    /** Test value. */
+    private Value val2;
+
+    /** Test value. */
+    private Value val3;
+
+    /**
+     * Check/Create working directory.
+     * 
+     * @throws Exception if the directory is not usable.
+     */
     @BeforeClass
-    public static void initFile()
+    public static void initFile() throws Exception
     {
-        if (!new File(WORKINGDIR).exists()) {
-            new File(WORKINGDIR).mkdirs();
-        }
+        FileUtil.checkDirectoryPath(WORKING_DIR_PATH);
     }
 
     /**
-     * DOCUMENT ME!
+     * Tests if the working dir was initialized.
      * 
-     * @throws Exception
+     * @throws Exception if the working dir is null.
      */
     @Test
     public void testInit() throws Exception
     {
-        Assert.assertTrue(new File(WORKINGDIR).exists());
-    }
-
-    @Before
-    public void removeFile() throws Exception
-    {
-        File f1 = new File(WORKINGDIR + File.separatorChar + ThomasRuleEngine.TRE_FILE_NAME_PREFIX + "1");
-        if (f1.exists())
-            f1.delete();
-        File f2 = new File(WORKINGDIR + File.separatorChar + ThomasRuleEngine.TRE_FILE_NAME_PREFIX + "2");
-        if (f2.exists())
-            f2.delete();
-
+        Assert.assertTrue(new File(WORKING_DIR_PATH).exists());
     }
 
     /**
-     * DOCUMENT ME!
-     * @throws ThomasRuleEngineException 
+     * Initialize test objects.
      * 
+     * @throws Exception if problems occur.
+     */
+    @Before
+    public void initTest() throws Exception
+    {
+        this.tre1 = new ThomasRuleEngine(this.treId1, WORKING_DIR_PATH);
+        this.tre2 = new ThomasRuleEngine(this.treId2, WORKING_DIR_PATH);
+
+        this.tre1.clearWorkingDir();
+        this.tre2.clearWorkingDir();
+
+        String pageName = "page1";
+
+        this.id1 = new MockIdentifier(pageName, "id1");
+        this.id2 = new MockIdentifier(pageName, "id2");
+        this.id3 = new MockIdentifier(pageName, "id3");
+
+        this.val1 = new MockValue("val1");
+        this.val2 = new MockValue("val2");
+        this.val3 = new MockValue("val3");
+    }
+
+    /**
+     * Tests the basic behavior of applyOp.
+     * <p>
+     * Result: as described in {@link ThomasRuleEngine#applyOp(ThomasRuleOp)}.
+     * 
+     * @throws ThomasRuleEngineException if problems occur.
      */
     @Test
-    public void testApplyOp() throws ThomasRuleEngineException 
+    public void testApplyOpBasic() throws ThomasRuleEngineException
     {
-        ThomasRuleEngine tre1 = new ThomasRuleEngine(1, WORKINGDIR);
-        ThomasRuleEngine tre2 = new ThomasRuleEngine(2, WORKINGDIR);
-
-        Identifier id1 = new MockIdentifier("page1","id1");
-        Identifier id2 = new MockIdentifier("page1","id2");
-        Identifier id3 = new MockIdentifier("page1","id3");
-
-        Value val1 = new MockValue("val1");
-        Value val2 = new MockValue("val2");
-        Value val3 = new MockValue("val3");
-
         // ////////////////////
         // (!existInBase,NewOp) => Creation
         // ////////////////////
@@ -149,7 +187,6 @@ public class ThomasRuleEngineTest
         // (!existInBase,DelOp) => Nothing
         // ////////////////////
         ThomasRuleOp op0del = tre1.getOp(id3, null);
-
         Assert.assertNull(op0del);
 
         // /////////////////////////
@@ -165,17 +202,33 @@ public class ThomasRuleEngineTest
         // del id3 on tre1
         ThomasRuleOp op1greaterBis = tre1.getOp(id3, null);
         tre1.applyOp(op1greaterBis);
+        Assert.assertNull(tre1.getValue(id3));
+    }
+
+    /**
+     * Tests the behavior of applyOp based on consulting the timestamps.
+     * <p>
+     * Result: No operation older than the last modification done on an entry is performed, as described in
+     * {@link ThomasRuleEngine#applyOp(ThomasRuleOp)}.
+     * 
+     * @throws ThomasRuleEngineException if problems occur.
+     */
+    @Test
+    public void testApplyOpBasedOnTimestamps() throws ThomasRuleEngineException
+    {
+        // /////////////////////////
+        // Don't apply an operation that is older than the last operation applied on the entry.
+        // /////////////////////////
 
         // set id3 to val2 on tre2
         ThomasRuleOp op1greaterQ = tre2.getOp(id3, val2);
         tre2.applyOp(op1greaterQ);
 
-        // recreate id3 with val3 on tre1
+        // create id3 with val3 on tre1
         ThomasRuleOp op1greaterTer = tre1.getOp(id3, val3);
 
         // compare with the latest op applied to the wanted id
-        Assert.assertTrue(op1greaterTer.getTimestampIdCreation().compareTo(
-            op1greaterQ.getTimestampIdCreation()) == 1);
+        Assert.assertTrue(op1greaterTer.getTimestampIdCreation().compareTo(op1greaterQ.getTimestampIdCreation()) == 1);
         tre1.applyOp(op1greaterTer);
         Assert.assertEquals(val3, tre1.getValue(id3));
 
@@ -190,11 +243,26 @@ public class ThomasRuleEngineTest
         Assert.assertTrue((op1greaterTer instanceof ThomasRuleOpNew));
 
         // compare with the latest op applied to the wanted id
-        Assert.assertTrue(op1greaterTer.getTimestampIdCreation().compareTo(
-            op1greaterQ.getTimestampIdCreation()) == 1);
+        Assert.assertTrue(op1greaterTer.getTimestampIdCreation().compareTo(op1greaterQ.getTimestampIdCreation()) == 1);
 
         tre2.applyOp(op1greaterTer);
         Assert.assertEquals(val3, tre2.getValue(id3));
+    }
+
+    /**
+     * Tests the behavior of applyOp.
+     * <p>
+     * Result: as described in {@link ThomasRuleEngine#applyOp(ThomasRuleOp)}.
+     * 
+     * @throws Exception if problems occur.
+     */
+    @Test
+    public void testApplyOpBasedOnTimestamps2() throws Exception
+    {
+
+        // create a New operation. 
+        ThomasRuleOp op1greaterTer = tre1.getOp(id3, val3);
+        Thread.sleep(10);
 
         // ///////////////////////////////
         // (existInBase,BaseTc<opTc,SetOp) => overwrite local value
@@ -205,9 +273,9 @@ public class ThomasRuleEngineTest
         ThomasRuleOp op1lowerSet = tre1.getOp(id3, val2);
         Assert.assertTrue((op1lowerSet instanceof ThomasRuleOpSet));
         tre1.applyOp(op1lowerSet);
+        
         // compare with the latest op applied to the wanted id
-        Assert.assertTrue(op1lowerSet.getTimestampIdCreation().compareTo(
-            op1greaterTer.getTimestampIdCreation()) == 1);
+        Assert.assertTrue(op1lowerSet.getTimestampIdCreation().compareTo(op1greaterTer.getTimestampIdCreation()) == 1);
 
         tre2.applyOp(op1lowerSet);
         Assert.assertEquals(val2, tre2.getValue(id3));
@@ -223,8 +291,7 @@ public class ThomasRuleEngineTest
 
         tre1.applyOp(op1lowerDel);
         // compare with the latest op applied to the wanted id
-        Assert.assertTrue(op1lowerDel.getTimestampIdCreation().compareTo(
-            op1lowerSet.getTimestampIdCreation()) == 1);
+        Assert.assertTrue(op1lowerDel.getTimestampIdCreation().compareTo(op1lowerSet.getTimestampIdCreation()) == 1);
 
         tre2.applyOp(op1lowerDel);
         Assert.assertNull(tre2.getValue(id3));
@@ -252,42 +319,34 @@ public class ThomasRuleEngineTest
     }
 
     /**
-     * DOCUMENT ME!
-     * @throws ThomasRuleEngineException 
-     * @throws InterruptedException 
+     * Tests the behavior of getOp.
+     * <p>
+     * Result: As described in {@link ThomasRuleEngine#getOp(Identifier, Value)}.
      * 
+     * @throws Exception if problems occur.
      */
     @Test
-    public void testGetOp() throws ThomasRuleEngineException, InterruptedException 
+    public void testGetOp() throws Exception
     {
-        ThomasRuleEngine tre1 = new ThomasRuleEngine(1, WORKINGDIR);
-
-        Identifier id1 = new MockIdentifier("page1","id1");
-        Identifier id2 = new MockIdentifier("page1","id2");
-
-        Value val1 = new MockValue("val1");
-        Value val2 = new MockValue("val2");
-        Value val3 = new MockValue("val3");
-
         // get op new
         // ////////////////////////
         // (!existInBase,givenVal) => normal id creation
         // ////////////////////////
         ThomasRuleOp op01 = tre1.getOp(id1, val1);
         Assert.assertTrue((op01 instanceof ThomasRuleOpNew));
-        Thread.sleep(50);
+        // Thread.sleep(50);
 
         // /////////////////////////
         // (!existInBase,!givenVal) => del on unknow value == return null
         // /////////////////////////
         ThomasRuleOp op00 = tre1.getOp(id2, null);
         Assert.assertNull(op00);
-        Thread.sleep(50);
+        // Thread.sleep(50);
 
         // apply op new
         tre1.applyOp(op01);
         Assert.assertEquals(val1, tre1.getValue(id1));
-        Thread.sleep(50);
+        // Thread.sleep(50);
 
         // get op set
         // ///////////////////////////////////////
@@ -296,7 +355,7 @@ public class ThomasRuleEngineTest
         // NORMAL SET
         ThomasRuleOp op101 = tre1.getOp(id1, val2);
         Assert.assertTrue((op101 instanceof ThomasRuleOpSet));
-        Thread.sleep(50);
+        // Thread.sleep(50);
 
         // ///////////////////////////////////////
         // (existInBase,!deletedInBase,!givenVal) => normal del value
@@ -304,17 +363,17 @@ public class ThomasRuleEngineTest
         // NORMAL DEL
         ThomasRuleOp op100 = tre1.getOp(id1, null);
         Assert.assertTrue((op100 instanceof ThomasRuleOpDel));
-        Thread.sleep(50);
+        // Thread.sleep(50);
 
         // apply op set
         tre1.applyOp(op101);
         Assert.assertEquals(val2, tre1.getValue(id1));
-        Thread.sleep(50);
+        // Thread.sleep(50);
 
         // apply op del
         Assert.assertNotNull(tre1.applyOp(op100));
         Assert.assertEquals(null, tre1.getValue(id1));
-        Thread.sleep(50);
+        // Thread.sleep(50);
 
         // get op with new val on a deleted entry
         // /////////////////////////////////////
@@ -324,9 +383,8 @@ public class ThomasRuleEngineTest
         // NORMAL RE-NEW
         ThomasRuleOp op111 = tre1.getOp(id1, val3);
         Assert.assertTrue((op111 instanceof ThomasRuleOpNew));
-        Assert.assertTrue(op111.getTimestampIdCreation().compareTo(
-            op01.getTimestampIdCreation()) > 0);
-        Thread.sleep(50);
+        Assert.assertTrue(op111.getTimestampIdCreation().compareTo(op01.getTimestampIdCreation()) > 0);
+        // Thread.sleep(50);
 
         // get op with no val on a deleted entry
         // ///////////////////////////////////////
@@ -335,23 +393,21 @@ public class ThomasRuleEngineTest
         // ///////////////////////////////////////
         // NORMAL RE-DEL
         ThomasRuleOp op110 = tre1.getOp(id1, null);
-
         Assert.assertTrue((op110 instanceof ThomasRuleOpDel));
-        Assert.assertTrue(op110.getTimestampModif().compareTo(
-            op111.getTimestampModif()) >= 0);
-        Thread.sleep(50);
+        Assert.assertTrue(op110.getTimestampModif().compareTo(op111.getTimestampModif()) >= 0);
+        // Thread.sleep(50);
 
         // tre1 must not apply the new op (same timestamp of creation and
         // timestamp modif of op new is older than the lattest modif)
         tre1.applyOp(op01);
         Assert.assertNull(tre1.getValue(id1));
-        Thread.sleep(50);
+        // Thread.sleep(50);
 
         // tre1 must not apply the new op (same timestamp of creation and
         // timestamp modif of op set is older than the lattest modif)
         tre1.applyOp(op101);
         Assert.assertNull(tre1.getValue(id1));
-        Thread.sleep(50);
+        // Thread.sleep(50);
 
         // ////////////////////////////////////////
         // test set with same value than in base
@@ -363,18 +419,19 @@ public class ThomasRuleEngineTest
     }
 
     /**
-     * DOCUMENT ME!
+     * Generate timestamps on 2 different TREs.
+     * <p>
+     * Result: the latest timestamp will always be greater than any other previously generated timestamp, no matter on
+     * what TRE it was generated.
      * 
-     * @throws InterruptedException DOCUMENT ME!
-     * @throws ThomasRuleEngineException 
+     * @throws Exception if problems occur.
      */
     @Test
-    synchronized public void testGetTimestamp() throws InterruptedException, ThomasRuleEngineException
+    public synchronized void testGetTimestamp() throws Exception
     {
-        ThomasRuleEngine tre1 = new ThomasRuleEngine(1, WORKINGDIR);
-        ThomasRuleEngine tre2 = new ThomasRuleEngine(2022222220, WORKINGDIR);
         Timestamp t1 = tre1.getTimestamp();
         Timestamp t2 = tre2.getTimestamp();
+
         this.wait(10);
 
         Timestamp t3 = tre1.getTimestamp();

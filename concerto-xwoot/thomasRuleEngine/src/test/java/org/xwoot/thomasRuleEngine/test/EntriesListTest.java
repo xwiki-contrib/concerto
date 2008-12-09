@@ -50,184 +50,219 @@ import org.junit.Test;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngineException;
 import org.xwoot.thomasRuleEngine.core.EntriesList;
 import org.xwoot.thomasRuleEngine.core.Entry;
+import org.xwoot.thomasRuleEngine.core.Identifier;
+import org.xwoot.thomasRuleEngine.core.Value;
 import org.xwoot.thomasRuleEngine.mock.MockIdentifier;
 import org.xwoot.thomasRuleEngine.mock.MockValue;
+import org.xwoot.xwootUtil.FileUtil;
 
 import java.io.File;
-import java.io.IOException;
-import java.security.InvalidParameterException;
 
 import junit.framework.Assert;
 
 /**
  * Tests for the EntriesList.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class EntriesListTest
 {
-    private final static String FILENAME = "TREFile";
+    /** Test file name where to store the entries. */
+    private static final String FILENAME = "TREFile";
 
-    private final static String WORKINGDIR = "/tmp/testsThomasRuleEngine";
+    /** Test working dir where to store the entries. */
+    private static final String WORKING_DIR_PATH = FileUtil.getTestsWorkingDirectoryPathForModule("thomasRuleEngine");
 
+    /** EntriesList instace to test. */
+    private EntriesList entriesList;
+
+    /** Test ID. */
+    private Identifier id1;
+
+    /** Test ID. */
+    private Identifier id2;
+
+    /** Test ID. */
+    private Identifier id3;
+
+    /** Test Value. */
+    private Value value1;
+
+    /** Test Value. */
+    private Value value2;
+
+    /** Test Value. */
+    private Value value3;
+
+    /**
+     * Init the workingDirectory.
+     * 
+     * @throws Exception if the working dir is not usable.
+     */
     @BeforeClass
-    public static void initFile()
+    public static void initFile() throws Exception
     {
-        if (!new File(WORKINGDIR).exists()) {
-            new File(WORKINGDIR).mkdirs();
-        }
-    }
-
-    @Before
-    public void removeFile() throws Exception
-    {
-        File f1 = new File(WORKINGDIR + File.separatorChar + FILENAME);
-        if (f1.exists())
-            f1.delete();
+        FileUtil.checkDirectoryPath(WORKING_DIR_PATH);
     }
 
     /**
-     * DOCUMENT ME!
+     * Init the test object and clear its working directory.
      * 
-     * @throws Exception
+     * @throws Exception if problems occur.
+     */
+    @Before
+    public void initTest() throws Exception
+    {
+        this.entriesList = new EntriesList(WORKING_DIR_PATH, FILENAME);
+        this.entriesList.clearWorkingDir();
+
+        String pageName1 = "page1";
+        String pageName2 = "page2";
+
+        this.id1 = new MockIdentifier(pageName1, "Id1");
+        this.id2 = new MockIdentifier(pageName1, "Id2");
+        this.id3 = new MockIdentifier(pageName2, "Id3");
+        this.value1 = new MockValue("value1");
+        this.value2 = new MockValue("value2");
+        this.value3 = new MockValue("value3");
+    }
+
+    /**
+     * Check if the working directory is properly created.
+     * 
+     * @throws Exception if wirking dir path is null.
      */
     @Test
     public void testInit() throws Exception
     {
-        Assert.assertTrue(new File(WORKINGDIR).exists());
+        Assert.assertTrue(new File(WORKING_DIR_PATH).exists());
     }
 
     /**
-     * DOCUMENT ME!
-     * @throws ThomasRuleEngineException 
+     * Tests the behavior of the EntriesList constructor.
+     * <p>
+     * Result: If a non existing directory is passed, an exception will be caught and the object will be null. If an
+     * existing directory is passed, the object is properly initialized.
      * 
+     * @throws Exception if problems occur.
+     */
+    @Test
+    public void testConstructor() throws Exception
+    {
+        String fakeDirectory = "/this/directory/does/not/exist";
+
+        // Constructor must send an exception if the given working dir don't
+        // exist
+        this.entriesList = null;
+
+        try {
+            this.entriesList = new EntriesList(fakeDirectory, FILENAME);
+        } catch (ThomasRuleEngineException e) {
+            // nothing.
+        }
+        Assert.assertNull(this.entriesList);
+
+        // Constructor must make the wanted object
+        this.entriesList = new EntriesList(WORKING_DIR_PATH, FILENAME);
+        Assert.assertNotNull(this.entriesList);
+
+        /*
+         * // Constructor must delete the file corresponding to the given if it // exist in file system File f = new
+         * File(WORKINGDIR + File.separator + FILENAME); Assert.assertEquals(true, f.createNewFile());
+         * Assert.assertEquals(true, f.exists()); el = new EntriesList(WORKINGDIR, FILENAME); Assert.assertEquals(false,
+         * f.exists());
+         */
+    }
+
+    /**
+     * Tests the functionality and unicity of the addEntry method. Also tests that the entry is stored. The size,
+     * getEntry and getEntries methods are also tested.
+     * <p>
+     * Result: After adding an entry twice, it is stored in a file, and only one entry will be kept.
+     * 
+     * @throws ThomasRuleEngineException if problems occur.
      */
     @Test
     public void testAddEntry() throws ThomasRuleEngineException
     {
-        // create new List
-        EntriesList el = new EntriesList(WORKINGDIR, FILENAME);
-        MockIdentifier id1 = new MockIdentifier("page1","Id1");
-        MockValue val1 = new MockValue("value1");
-        Entry entry1 = new Entry(id1, val1, false, null, null);
-        // add one entry
-        el.addEntry(entry1);
+        Entry entry1 = new Entry(this.id1, this.value1, false, null, null);
 
-        File f = new File(WORKINGDIR + File.separator + FILENAME);
+        // add one entry
+        this.entriesList.addEntry(entry1);
+
+        File f = new File(WORKING_DIR_PATH + File.separator + FILENAME);
         // verify the creation of the file resulting of the list serialisation
         Assert.assertEquals(true, f.exists());
+
         // test the getEntry function
-        Assert.assertEquals(entry1, el.getEntry(id1));
+        Assert.assertEquals(entry1, this.entriesList.getEntry(id1));
 
         // test unicity of the add
-        el.addEntry(entry1);
-        Assert.assertEquals(entry1, el.getEntry(id1));
-        Assert.assertEquals(el.size(), 1);
+        this.entriesList.addEntry(entry1);
+        Assert.assertEquals(entry1, this.entriesList.getEntry(id1));
+        Assert.assertEquals(this.entriesList.size(), 1);
 
         // test a second entry
-        MockIdentifier id2 = new MockIdentifier("page1","Id2");
-        val1.set("value2");
+        Entry entry2 = new Entry(this.id2, this.value2, false, null, null);
+        this.entriesList.addEntry(entry2);
+        Assert.assertEquals(2, this.entriesList.size());
+        Assert.assertEquals(2, this.entriesList.getEntries(this.id1.getPageName()).size());
+        Assert.assertEquals(entry2, this.entriesList.getEntry(id2));
 
-        Entry entry2 = new Entry(id2, val1, false, null, null);
-        el.addEntry(entry2);
-        Assert.assertEquals(2, el.size());
-        Assert.assertEquals(2, el.getEntries("page1").size());
-        Assert.assertEquals(entry2, el.getEntry(id2));
-        
         // test a third in a different page entry
-        MockIdentifier id3 = new MockIdentifier("page2","Id3");
-        val1.set("value3");
-
-        Entry entry3 = new Entry(id3, val1, false, null, null);
-        el.addEntry(entry3);
-        Assert.assertEquals(3, el.size());
-        Assert.assertEquals(2, el.getEntries("page1").size());
-        Assert.assertEquals(1, el.getEntries("page2").size());
-        Assert.assertEquals(entry3, el.getEntry(id3));
-        
-        
+        Entry entry3 = new Entry(this.id3, this.value3, false, null, null);
+        this.entriesList.addEntry(entry3);
+        Assert.assertEquals(3, this.entriesList.size());
+        Assert.assertEquals(2, this.entriesList.getEntries(this.id1.getPageName()).size());
+        Assert.assertEquals(1, this.entriesList.getEntries(this.id3.getPageName()).size());
+        Assert.assertEquals(entry3, this.entriesList.getEntry(id3));
     }
 
     /**
-     * DOCUMENT ME!
+     * Tests the functionality and unicity of the removeEntry method and also the serialization of an empty entriesList.
+     * <p>
+     * Result: After adding deleting the only entry, even twice, no more entries must exist in the entriesList. Also,
+     * the serialized file will be deleted when no entries are managed.
      * 
-     * @throws IOException DOCUMENT ME!
-     * @throws ThomasRuleEngineException 
+     * @throws ThomasRuleEngineException if problems occur.
      */
     @Test
-    public void testConstructor() throws IOException, ThomasRuleEngineException
+    public void testRemoveEntry() throws ThomasRuleEngineException
     {
-        String fakeDirectory = "/this/directory/does/not/exist";
-        EntriesList el = null;
-
-        // Constructor must send an exception if the given working dir don't
-        // exist
-        try {
-            el = new EntriesList(fakeDirectory, FILENAME);
-        } catch (ThomasRuleEngineException e) {
-            Assert.assertNull(el);
-        }
-        
-        // Constructor must make the wanted object
-        el = new EntriesList(WORKINGDIR, FILENAME);
-        Assert.assertNotNull(el);
-
-        /*// Constructor must delete the file corresponding to the given if it
-        // exist in file system
-        File f = new File(WORKINGDIR + File.separator + FILENAME);
-        Assert.assertEquals(true, f.createNewFile());
-        Assert.assertEquals(true, f.exists());
-        el = new EntriesList(WORKINGDIR, FILENAME);
-        Assert.assertEquals(false, f.exists());
-        */
-    }
-
-    /**
-     * DOCUMENT ME!
-     * @throws ThomasRuleEngineException 
-     * 
-     */
-    @Test
-    public void testRemoveEntry() throws ThomasRuleEngineException 
-    {
-        // create new List
-        EntriesList el = new EntriesList(WORKINGDIR, FILENAME);
-        MockIdentifier id1 = new MockIdentifier("page1","Id1");
-        MockValue val1 = new MockValue("value1");
         // add one entry
-        el.addEntry(new Entry(id1, val1, false, null, null));
+        this.entriesList.addEntry(new Entry(this.id1, this.value1, false, null, null));
+
         // test the removeEntry function
-        el.removeEntry(id1);
-        Assert.assertEquals(el.size(), 0);
+        this.entriesList.removeEntry(this.id1);
+        Assert.assertEquals(this.entriesList.size(), 0);
+
         // test unicity of the remove
-        el.removeEntry(id1);
-        Assert.assertEquals(el.size(), 0);
+        this.entriesList.removeEntry(this.id1);
+        Assert.assertEquals(this.entriesList.size(), 0);
 
         // no file when list size is 0
-        File f = new File(WORKINGDIR + File.separator + FILENAME);
+        File f = new File(WORKING_DIR_PATH + File.separator + FILENAME);
         Assert.assertEquals(false, f.exists());
     }
 
     /**
-     * DOCUMENT ME!
-     * @throws ThomasRuleEngineException 
+     * Tests the assignment property of the entriesList.
+     * <p>
+     * Result: If 2 entries with the same ID are added, the result will contain only the last entry.
      * 
+     * @throws ThomasRuleEngineException if problems occur.
      */
     @Test
-    public void testSetEntry() throws ThomasRuleEngineException 
+    public void testSetEntry() throws ThomasRuleEngineException
     {
-        // create new List
-        EntriesList el = new EntriesList(WORKINGDIR, FILENAME);
-        MockIdentifier id1 = new MockIdentifier("page1","Id1");
-        MockValue val1 = new MockValue("value1");
         // add one entry
-        el.addEntry(new Entry(id1, val1, false, null, null));
-        Assert.assertEquals(el.size(), 1);
+        this.entriesList.addEntry(new Entry(this.id1, this.value1, false, null, null));
+        Assert.assertEquals(this.entriesList.size(), 1);
 
-        MockValue val2 = new MockValue("value2");
-        Entry e2 = new Entry(id1, val2, false, null, null);
-        el.addEntry(e2);
-        Assert.assertEquals(el.size(), 1);
-        Assert.assertEquals(e2, el.getEntry(id1));
+        // add another entry with the same id but different value.
+        Entry entry2 = new Entry(this.id1, this.value2, false, null, null);
+        this.entriesList.addEntry(entry2);
+        Assert.assertEquals(this.entriesList.size(), 1);
+        Assert.assertEquals(entry2, this.entriesList.getEntry(id1));
     }
 }
