@@ -208,12 +208,12 @@ public class XWootContentProvider
             while (true) {
                 List<XWikiPageHistorySummary> xphsList =
                     rpc.getModifiedPagesHistory(new Date(maxTimestamp), MODIFICATION_RESULTS_PER_CALL, start, true);
-
-                for (XWikiPageHistorySummary xphs : xphsList) {
+                
+                for (XWikiPageHistorySummary xphs : xphsList) {                    
                     ps.setString(1, xphs.getId());
                     ps.setLong(2, xphs.getModified().getTime());
                     ps.setInt(3, xphs.getVersion());
-                    ps.setInt(4, xphs.getMinorVersion());
+                    ps.setInt(4, xphs.getMinorVersion());                    
 
                     try {
                         ps.executeUpdate();
@@ -248,7 +248,7 @@ public class XWootContentProvider
 
     /**
      * Returns a list of references where each reference points to a different page at its oldest modification available
-     * that has not been cleared.
+     * in the modification list that has not been cleared.
      * 
      * @return A list of XWootIds.
      * @throws XWootContentProviderException
@@ -345,9 +345,9 @@ public class XWootContentProvider
     {
         Statement s = connection.createStatement();
         ResultSet rs = s.executeQuery(String.format("SELECT * FROM modifications ORDER BY %s ASC", orderBy));
-
+        
         while (rs.next()) {
-            System.out.format("%s %s (%d) %d %d %b\n", rs.getString(1), new Date(rs.getLong(2)), rs.getLong(2), rs
+            System.out.format("%35s | %s (%d) | %d.%d | %b\n", rs.getString(1), new Date(rs.getLong(2)), rs.getLong(2), rs
                 .getInt(3), rs.getInt(4), rs.getBoolean(5));
         }
     }
@@ -369,7 +369,7 @@ public class XWootContentProvider
         ResultSet rs = ps.executeQuery();
 
         while (rs.next()) {
-            System.out.format("%s %s (%d) %d %d %b\n", rs.getString(1), new Date(rs.getLong(2)), rs.getLong(2), rs
+            System.out.format("%35s | %s (%d) | %d.%d | %b\n", rs.getString(1), new Date(rs.getLong(2)), rs.getLong(2), rs
                 .getInt(3), rs.getInt(4), rs.getBoolean(5));
         }
     }
