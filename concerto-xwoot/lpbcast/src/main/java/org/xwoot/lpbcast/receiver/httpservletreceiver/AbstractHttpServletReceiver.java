@@ -93,7 +93,7 @@ public abstract class AbstractHttpServletReceiver extends HttpServlet implements
      */
     public AbstractHttpServletReceiver()
     {
-        log = LogFactory.getLog(this.getClass());
+        this.log = LogFactory.getLog(this.getClass());
     }
 
     /**
@@ -107,10 +107,10 @@ public abstract class AbstractHttpServletReceiver extends HttpServlet implements
         throws ReceiverException
     {
         if (this.isReceiverConnected()) {
-            log.info("Site " + this.getPeerId() + " : Receive message -");
+            this.log.info("Site " + this.getPeerId() + " : Receive message -");
 
             if (request.getParameter(NEIGHBOR_TEST_REQUEST_PARAMETER) != null) {
-                log.info("It's a neighbor test... ");
+                this.log.info("It's a neighbor test... ");
             } else {
                 Message message = null;
                 ObjectInputStream ois = null;
@@ -127,7 +127,7 @@ public abstract class AbstractHttpServletReceiver extends HttpServlet implements
                             ois.close();
                         }
                     } catch (Exception e) {
-                        log.error("Failed to close the request input stream.");
+                        this.log.error("Failed to close the request input stream.");
                     }
                 }
 

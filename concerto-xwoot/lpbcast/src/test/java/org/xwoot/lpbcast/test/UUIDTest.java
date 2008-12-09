@@ -36,7 +36,7 @@ import org.junit.Test;
  * Although 2<sup>128</sup> is a more than enough domain of values, these tests are provided to prove the usability of
  * this class.
  * 
- * @version $Id:$
+ * @version $Id$
  * @see UUID
  */
 public class UUIDTest
@@ -62,17 +62,17 @@ public class UUIDTest
         this.startTimestamp = System.currentTimeMillis();
         UUID.randomUUID();
         this.endTimestamp = System.currentTimeMillis();
-        this.log.info("First run: " + (endTimestamp - startTimestamp) + "ms passed. ");
+        this.log.info("First run: " + (this.endTimestamp - this.startTimestamp) + "ms passed. ");
 
         this.startTimestamp = System.currentTimeMillis();
         UUID.randomUUID();
         this.endTimestamp = System.currentTimeMillis();
-        this.log.info("Second run: " + (endTimestamp - startTimestamp) + "ms passed.  ");
+        this.log.info("Second run: " + (this.endTimestamp - this.startTimestamp) + "ms passed.  ");
 
         this.startTimestamp = System.currentTimeMillis();
         UUID.randomUUID();
         this.endTimestamp = System.currentTimeMillis();
-        this.log.info("Third run: " + (endTimestamp - startTimestamp) + "ms passed.");
+        this.log.info("Third run: " + (this.endTimestamp - this.startTimestamp) + "ms passed.");
     }
 
     /**
@@ -90,7 +90,7 @@ public class UUIDTest
             list.add(UUID.randomUUID().toString());
         }
         this.endTimestamp = System.currentTimeMillis();
-        this.log.info("Generated and added in: " + (endTimestamp - startTimestamp) + "ms. ");
+        this.log.info("Generated and added in: " + (this.endTimestamp - this.startTimestamp) + "ms. ");
 
         this.startTimestamp = System.currentTimeMillis();
         for (int i = 0; i < UNICITY_NUMBER_OF_RUNS; i++) {
@@ -99,6 +99,6 @@ public class UUIDTest
             Assert.assertFalse(list.contains(random));
         }
         this.endTimestamp = System.currentTimeMillis();
-        this.log.info("Tested in: " + (endTimestamp - startTimestamp) + "ms.");
+        this.log.info("Tested in: " + (this.endTimestamp - this.startTimestamp) + "ms.");
     }
 }

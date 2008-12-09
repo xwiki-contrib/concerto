@@ -67,7 +67,7 @@ import junit.framework.Assert;
 /**
  * Tests for the ThomasRuleEngine class.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class ThomasRuleEngineTest
 {
@@ -190,7 +190,7 @@ public class ThomasRuleEngineTest
         Assert.assertNull(op0del);
 
         // /////////////////////////
-        // (existInBase,BaseTc>opTc) => Nothing (local value is last writter)
+        // (existInBase,BaseTc>opTc) => Nothing (local value is last writer)
         // /////////////////////////
         // new id3 with val=val1 on tre1 and tre2
         ThomasRuleOp op1greater = tre1.getOp(id3, val1);
@@ -297,8 +297,8 @@ public class ThomasRuleEngineTest
         Assert.assertNull(tre2.getValue(id3));
 
         // ///////////////////////////////////////
-        // (existInBase,BaseTc==opTc,BaseTm>=opTm) => Nothin (local value is
-        // last writter)
+        // (existInBase,BaseTc==opTc,BaseTm>=opTm) => Nothing (local value is
+        // last writer)
         // ///////////////////////////////////////
         tre1.applyOp(tre1.getOp(id1, null));
         tre1.applyOp(tre1.getOp(id1, val1));
@@ -337,7 +337,7 @@ public class ThomasRuleEngineTest
         // Thread.sleep(50);
 
         // /////////////////////////
-        // (!existInBase,!givenVal) => del on unknow value == return null
+        // (!existInBase,!givenVal) => del on unknown value == return null
         // /////////////////////////
         ThomasRuleOp op00 = tre1.getOp(id2, null);
         Assert.assertNull(op00);
@@ -398,13 +398,13 @@ public class ThomasRuleEngineTest
         // Thread.sleep(50);
 
         // tre1 must not apply the new op (same timestamp of creation and
-        // timestamp modif of op new is older than the lattest modif)
+        // timestamp modif of op new is older than the latest modif)
         tre1.applyOp(op01);
         Assert.assertNull(tre1.getValue(id1));
         // Thread.sleep(50);
 
         // tre1 must not apply the new op (same timestamp of creation and
-        // timestamp modif of op set is older than the lattest modif)
+        // timestamp modif of op set is older than the latest modif)
         tre1.applyOp(op101);
         Assert.assertNull(tre1.getValue(id1));
         // Thread.sleep(50);

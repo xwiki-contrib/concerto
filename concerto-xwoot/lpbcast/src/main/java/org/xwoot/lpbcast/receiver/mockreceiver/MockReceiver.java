@@ -16,11 +16,13 @@ public class MockReceiver implements ReceiverApi
     /** {@inheritDoc} */
     public void connectReceiver()
     {
+        //void
     }
 
     /** {@inheritDoc} */
     public void disconnectReceiver()
     {
+      //void
     }
 
     /** {@inheritDoc} */
@@ -38,6 +40,7 @@ public class MockReceiver implements ReceiverApi
     /** {@inheritDoc} */
     public void receive(Message message)
     {
+      //void
     }
 
     /** {@inheritDoc} */

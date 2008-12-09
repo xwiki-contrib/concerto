@@ -243,7 +243,7 @@ public abstract class AbstractNeighbors implements Neighbors
         }
 
         try {
-            this.neighbors = (HashSet<Object>) FileUtil.loadObjectFromFile(neighborsFilePath);
+            this.neighbors = (HashSet<Object>) FileUtil.loadObjectFromFile(this.neighborsFilePath);
         } catch (Exception e) {
             throw new NeighborsException(this.siteId + " - problems loading neighbors.\n", e);
         }

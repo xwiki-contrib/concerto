@@ -402,15 +402,15 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         data.add(op2);
         Patch patch = new Patch(data, null, this.pageName);
 
-        site1.deliverPatch(patch);
-        Assert.assertEquals(this.emptyPageContent, site1.getPageManager().getPageInternal(this.pageName));
+        this.site1.deliverPatch(patch);
+        Assert.assertEquals(this.emptyPageContent, this.site1.getPageManager().getPageInternal(this.pageName));
 
         data.clear();
         data.add(op1);
         patch.setData(data);
 
-        site1.deliverPatch(patch);
-        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), site1.getPageManager()
+        this.site1.deliverPatch(patch);
+        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), this.site1.getPageManager()
             .getPageInternal(this.pageName));
     }
 
@@ -425,13 +425,13 @@ public class MolliUrsoTest extends AbstractWootEngineTest
     @Test
     public void testWaitingQueue2() throws Exception
     {
-        WootPage wp = site0.getPageManager().loadPage(this.pageName);
-        WootOp op1 = site0.insert(wp, this.line1, 0);
-        WootOp op2 = site0.insert(wp, this.line2, 1);
-        WootOp op3 = site0.insert(wp, this.line3, 2);
-        site0.getPageManager().unloadPage(wp);
+        WootPage wp = this.site0.getPageManager().loadPage(this.pageName);
+        WootOp op1 = this.site0.insert(wp, this.line1, 0);
+        WootOp op2 = this.site0.insert(wp, this.line2, 1);
+        WootOp op3 = this.site0.insert(wp, this.line3, 2);
+        this.site0.getPageManager().unloadPage(wp);
 
-        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), site0.getPageManager()
+        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), this.site0.getPageManager()
             .getPageInternal(this.pageName));
 
         // real test : send 2 last op without the first
@@ -443,23 +443,23 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         data.add(op2);
         data.add(op2);
         Patch patch = new Patch(data, null, this.pageName);
-        site1.deliverPatch(patch);
+        this.site1.deliverPatch(patch);
 
-        Assert.assertEquals(this.emptyPageContent, site1.getPageManager().getPageInternal(this.pageName));
+        Assert.assertEquals(this.emptyPageContent, this.site1.getPageManager().getPageInternal(this.pageName));
 
         data.clear();
         data.add(op1);
         patch.setData(data);
 
-        site1.deliverPatch(patch);
-        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), site1.getPageManager()
+        this.site1.deliverPatch(patch);
+        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), this.site1.getPageManager()
             .getPageInternal(this.pageName));
 
         data.add(op2);
         patch.setData(data);
-        site1.deliverPatch(patch);
+        this.site1.deliverPatch(patch);
 
-        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), site1.getPageManager()
+        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), this.site1.getPageManager()
             .getPageInternal(this.pageName));
     }
 }

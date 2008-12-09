@@ -85,6 +85,7 @@ public final class NetUtil
      */
     private NetUtil()
     {
+        //void
     }
 
     /**
@@ -200,7 +201,9 @@ public final class NetUtil
             init.getResponseCode();
         } catch (SocketTimeoutException s) {
             // Read timed out - try another time...
-            init.getResponseCode();
+            if (init!=null){
+                init.getResponseCode();
+            }
         } catch (Exception e) {
             throw new IOException("Problems while sending the object " + object + " via HTTP at url " + url + "\n"
                 + e.getMessage());

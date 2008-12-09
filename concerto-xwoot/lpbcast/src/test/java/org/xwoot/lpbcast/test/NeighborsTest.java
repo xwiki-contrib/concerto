@@ -59,7 +59,7 @@ import junit.framework.Assert;
 /**
  * Tests for the neighbors manager.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class NeighborsTest
 {
@@ -229,7 +229,7 @@ public class NeighborsTest
         this.neighbors.addNeighbor(this.testNeighbor);
         Assert.assertEquals(this.neighbors.getNeighborsListSize(), 1);
 
-        this.neighbors.removeNeighbor(testNeighbor);
+        this.neighbors.removeNeighbor(this.testNeighbor);
         Assert.assertEquals(this.neighbors.getNeighborsListSize(), 0);
     }
 
