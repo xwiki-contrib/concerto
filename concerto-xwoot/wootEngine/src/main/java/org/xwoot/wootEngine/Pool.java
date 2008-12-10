@@ -52,6 +52,7 @@ import java.util.List;
 
 import org.xwoot.wootEngine.op.WootOp;
 import org.xwoot.xwootUtil.FileUtil;
+import org.xwoot.xwootUtil.PersistencyUtil;
 
 /**
  * Implements a pooling mechanism or a waiting queue for {@link WootOp} elements. The WootOp elements are serialized to
@@ -183,7 +184,7 @@ public class Pool implements Serializable
         if (!this.getPoolFile().exists()) {
             try {
                 List<WootOp> newElements = new ArrayList<WootOp>();
-                FileUtil.saveObjectToFile(newElements, this.getPoolFile().toString());
+                PersistencyUtil.saveObjectToFile(newElements, this.getPoolFile().toString());
             } catch (Exception e) {
                 throw new WootEngineException("Problems while initializing pool: ", e);
             }
@@ -199,7 +200,7 @@ public class Pool implements Serializable
     public final synchronized void storePool() throws WootEngineException
     {
         try {
-            FileUtil.saveObjectToFile(this.getContent(), this.getPoolFile().toString());
+            PersistencyUtil.saveObjectToFile(this.getContent(), this.getPoolFile().toString());
         } catch (Exception e) {
             throw new WootEngineException("Problems while storing the pool: ", e);
         }
@@ -215,7 +216,7 @@ public class Pool implements Serializable
     public synchronized void loadPool() throws WootEngineException
     {
         try {
-            this.content = (ArrayList<WootOp>) FileUtil.loadObjectFromFile(this.getPoolFile().toString());
+            this.content = (ArrayList<WootOp>) PersistencyUtil.loadObjectFromFile(this.getPoolFile().toString());
         } catch (Exception e) {
             throw new WootEngineException("Problems loading the pool: ", e);
         }

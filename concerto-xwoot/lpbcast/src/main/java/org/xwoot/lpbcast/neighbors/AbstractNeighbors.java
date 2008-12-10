@@ -52,6 +52,7 @@ import java.util.Random;
 import java.util.Set;
 
 import org.xwoot.xwootUtil.FileUtil;
+import org.xwoot.xwootUtil.PersistencyUtil;
 
 /**
  * Abstract implementation for the Neighbors interface. The neighbors are serialized and deserialized when needed.
@@ -219,7 +220,7 @@ public abstract class AbstractNeighbors implements Neighbors
     private void storeNeighbors() throws NeighborsException
     {
         try {
-            FileUtil.saveCollectionToFile(this.neighbors, this.neighborsFilePath);
+            PersistencyUtil.saveCollectionToFile(this.neighbors, this.neighborsFilePath);
         } catch (Exception e) {
             throw new NeighborsException(this.siteId + " - Problems while storing the neighbors.\n", e);
         }
@@ -243,7 +244,7 @@ public abstract class AbstractNeighbors implements Neighbors
         }
 
         try {
-            this.neighbors = (HashSet<Object>) FileUtil.loadObjectFromFile(this.neighborsFilePath);
+            this.neighbors = (HashSet<Object>) PersistencyUtil.loadObjectFromFile(this.neighborsFilePath);
         } catch (Exception e) {
             throw new NeighborsException(this.siteId + " - problems loading neighbors.\n", e);
         }

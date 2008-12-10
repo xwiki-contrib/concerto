@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.xwoot.wootEngine.core.WootPage;
 import org.xwoot.wootEngine.core.WootRow;
 import org.xwoot.xwootUtil.FileUtil;
+import org.xwoot.xwootUtil.PersistencyUtil;
 
 /**
  * Handles WootPages for the internal WootEngine model.
@@ -138,7 +139,7 @@ public class PageManager extends LoggedWootExceptionThrower
         String pageName = wootPage.getPageName();
 
         try {
-            FileUtil.saveObjectToXml(wootPage, pageFilePath);
+            PersistencyUtil.saveObjectToXml(wootPage, pageFilePath);
         } catch (Exception e) {
             this.throwLoggedException("Problems storing page " + pageName);
         }
@@ -198,7 +199,7 @@ public class PageManager extends LoggedWootExceptionThrower
         String filePath = this.getPagesDirPath() + File.separator + filename;
 
         try {
-            return (WootPage) FileUtil.loadObjectFromXml(filePath);
+            return (WootPage) PersistencyUtil.loadObjectFromXml(filePath);
         } catch (Exception e) {
             this.throwLoggedException("Problems while loading page " + pageName, e);
         }

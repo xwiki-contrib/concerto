@@ -52,6 +52,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.xwoot.xwootUtil.FileUtil;
+import org.xwoot.xwootUtil.PersistencyUtil;
 
 /**
  * This class embeds a {@link Hashtable} used to store messages having ids as keys. The embedded hashtable is serialized
@@ -209,7 +210,7 @@ public class Log implements Serializable
     private void storeLog() throws LogException
     {
         try {
-            FileUtil.saveObjectToFile(this.log, this.logFilePath);
+            PersistencyUtil.saveObjectToFile(this.log, this.logFilePath);
         } catch (Exception e) {
             throw new LogException("Problems while storing the Log: ", e);
         }
@@ -232,7 +233,7 @@ public class Log implements Serializable
         }
 
         try {
-            this.log = (Map<Object, Object>) FileUtil.loadObjectFromFile(this.logFilePath);
+            this.log = (Map<Object, Object>) PersistencyUtil.loadObjectFromFile(this.logFilePath);
         } catch (Exception e) {
             throw new LogException("Problems loading the Log: ", e);
         }

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Vector;
 
 import org.apache.commons.logging.LogFactory;
-import org.xwoot.xwootUtil.FileUtil;
+import org.xwoot.xwootUtil.PersistencyUtil;
 
 /**
  * Manages a page name list, gets pagename list, adds pagename or removes a given number of occurrences of a pagename.
@@ -46,7 +46,7 @@ public class LastModifiedPageNameList extends LoggedWootExceptionThrower
     private void storePageNameList() throws WootEngineException
     {
         try {
-            FileUtil.saveCollectionToXml(this.pageNameList, this.getPagenameListFilePath());
+            PersistencyUtil.saveCollectionToXml(this.pageNameList, this.getPagenameListFilePath());
         } catch (Exception e) {
             this.throwLoggedException("Problems storing the modified pages name list.", e);
         }
@@ -60,16 +60,12 @@ public class LastModifiedPageNameList extends LoggedWootExceptionThrower
     @SuppressWarnings("unchecked")
     private void loadPageNameList() throws WootEngineException
     {
-        String filePath = this.getPagenameListFilePath();
-
-        if (!new File(filePath).exists()) {
-            this.setPageNameList(new Vector<String>());
-        } else {
-            try {
-                this.setPageNameList((Vector<String>) FileUtil.loadObjectFromXml(filePath));
-            } catch (Exception e) {
-                this.throwLoggedException("Problems loading the modified pages name list.", e);
-            }
+        Object fallback = new Vector<String>();
+        try {
+            this.setPageNameList((Vector<String>) PersistencyUtil.loadObjectFromXml(this.getPagenameListFilePath(),
+                fallback));
+        } catch (Exception e) {
+            this.throwLoggedException("Problems loading the modified pages name list.\n", e);
         }
     }
 

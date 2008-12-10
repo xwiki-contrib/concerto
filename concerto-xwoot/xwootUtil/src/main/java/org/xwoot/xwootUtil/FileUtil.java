@@ -51,83 +51,96 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
 
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.codec.binary.Base64;
 
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.xml.DomDriver;
-
 /**
- * DOCUMENT ME!
+ * Utility class for file operatios.
  * 
- * @author nabil
+ * @version $Id:$
  */
-public class FileUtil
+public final class FileUtil
 {
-    /** DOCUMENT ME! */
+    /** Buffer size for buffered file operations. */
     public static final int BUFFER = 2048;
 
+    /** Default filename encoding to used. */
+    public static final String DEFAULT_ENCODING = "UTF-8";
+
+    /** Directory name where to store tests data. */
     public static final String TESTS_DIRECTORY_NAME = "xwootTests";
 
+    /** Disable utility class instantiation. */
     private FileUtil()
     {
         // void
     }
 
     /**
-     * DOCUMENT ME!
+     * Copy a file from one location to another.
      * 
-     * @param fileName DOCUMENT ME!
-     * @param dstPath DOCUMENT ME!
-     * @throws IOException DOCUMENT ME!
+     * @param sourceFilePath the location of the file to copy from.
+     * @param destinationFilePath the location of the file to copy to.
+     * @throws IOException if the sourceFilePath is not found or other IO problems occur.
      */
-    public static void copyFile(String fileName, String dstPath) throws IOException
+    public static void copyFile(String sourceFilePath, String destinationFilePath) throws IOException
     {
-        FileChannel sourceChannel = new FileInputStream(fileName).getChannel();
-        FileChannel destinationChannel = new FileOutputStream(dstPath).getChannel();
-        sourceChannel.transferTo(0, sourceChannel.size(), destinationChannel);
-        sourceChannel.close();
-        destinationChannel.close();
+        FileChannel sourceChannel = null;
+        FileChannel destinationChannel = null;
+        try {
+            sourceChannel = new FileInputStream(sourceFilePath).getChannel();
+            destinationChannel = new FileOutputStream(destinationFilePath).getChannel();
+
+            sourceChannel.transferTo(0, sourceChannel.size(), destinationChannel);
+        } catch (IOException e) {
+            throw e;
+        } finally {
+            try {
+                if (sourceChannel != null) {
+                    sourceChannel.close();
+                }
+                if (destinationChannel != null) {
+                    destinationChannel.close();
+                }
+            } catch (IOException e) {
+                throw e;
+            }
+        }
     }
 
     /**
-     * DOCUMENT ME!
+     * Copies the first level readable files of one directory to another.
      * 
-     * @param strPath DOCUMENT ME!
-     * @param dstPath DOCUMENT ME!
-     * @throws IOException DOCUMENT ME!
+     * @param sourceDirectoryPath the location of the directory to copy from.
+     * @param destinationDirectoryPath the location of the directory to copy to.
+     * @throws IOException if problems occur while copying the contents.
+     * @throws NullPointerException if at least one of the parameters are null.
+     * @see #copyFile(String, String)
      */
-    public static void copyFiles(String strPath, String dstPath) throws IOException
+    public static void copyFiles(String sourceDirectoryPath, String destinationDirectoryPath) throws IOException
     {
-        File sourceDir = new File(strPath);
+        if (sourceDirectoryPath == null || destinationDirectoryPath == null) {
+            throw new NullPointerException("Null values provided as parameters.");
+        }
+
+        File sourceDir = new File(sourceDirectoryPath);
 
         for (File file : sourceDir.listFiles()) {
             if (file.isFile() && file.canRead()) {
-                FileUtil.copyFile(file.toString(), dstPath + File.separator + file.getName());
+                FileUtil.copyFile(file.toString(), destinationDirectoryPath + File.separator + file.getName());
             }
         }
     }
@@ -152,21 +165,21 @@ public class FileUtil
     }
 
     /**
-     * DOCUMENT ME!
+     * Recursively deletes a directory and all its contents.
      * 
-     * @param dir DOCUMENT ME!
+     * @param directory the directory to delete.
      */
-    public static void deleteDirectory(File dir)
+    public static void deleteDirectory(File directory)
     {
-        if (dir == null) {
+        if (directory == null) {
             throw new NullPointerException("A null value was provided instead of a File object.");
         }
 
-        if (dir.exists()) {
-            String[] children = dir.list();
+        if (directory.exists()) {
+            String[] children = directory.list();
 
             for (String element : children) {
-                File f = new File(dir, element);
+                File f = new File(directory, element);
                 if (f.isDirectory()) {
                     deleteDirectory(f);
                 } else {
@@ -174,10 +187,16 @@ public class FileUtil
                 }
             }
 
-            dir.delete();
+            directory.delete();
         }
     }
 
+    /**
+     * Convenience method.
+     * 
+     * @param directoryPath the path of the directory to delete.
+     * @see #deleteDirectory(File)
+     */
     public static void deleteDirectory(String directoryPath)
     {
         if (directoryPath == null || directoryPath.length() == 0) {
@@ -188,130 +207,32 @@ public class FileUtil
     }
 
     /**
-     * DOCUMENT ME!
-     * 
-     * @param filename DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws UnsupportedEncodingException DOCUMENT ME!
-     */
-    public static String getDecodedFileName(String filename) throws UnsupportedEncodingException
-    {
-        String result = new String(Base64.decodeBase64(filename.getBytes("UTF-8")), "UTF-8");
-        return result;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param pageId DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws UnsupportedEncodingException DOCUMENT ME!
+     * @param pageId the pageId that needs to be encoded.
+     * @return the Base64 encoded filename corresponding to the provided pageId using the {@link #DEFAULT_ENCODING}.
+     * @throws UnsupportedEncodingException if the {@link #DEFAULT_ENCODING} is not supported.
      */
     public static String getEncodedFileName(String pageId) throws UnsupportedEncodingException
     {
-        // System.out.println("encoded "+pageId+" =>"+Base64.encode(pageId.
-        // getBytes("UTF-8")).trim()+"<=");
-        return new String(Base64.encodeBase64(pageId.getBytes("UTF-8")), "UTF-8");
+        return new String(Base64.encodeBase64(pageId.getBytes(DEFAULT_ENCODING)), DEFAULT_ENCODING);
     }
 
-    // load xwoot properties
-    public static Properties loadXWootPropertiesFile(String xwootInitFile) throws Exception
+    /**
+     * @param filename the filename that needs to be decoded.
+     * @return the Base64 decoded filename using the {@link #DEFAULT_ENCODING}.
+     * @throws UnsupportedEncodingException if the {@link #DEFAULT_ENCODING} is not supported.
+     */
+    public static String getDecodedFileName(String filename) throws UnsupportedEncodingException
     {
-        // try to read properties from working dir value
-        Properties xwootProps = new Properties();
-        xwootProps.load(new FileInputStream(xwootInitFile));
-
-        String workingDir = xwootProps.getProperty("xwoot.working.dir");
-
-        if (workingDir == null) {
-            throw new RuntimeException("Please specify a working directory.");
-        }
-
-        try {
-            SecurityManager security = System.getSecurityManager();
-
-            if (security != null) {
-                security.checkWrite(workingDir);
-            }
-        } catch (SecurityException e) {
-            throw new RuntimeException("The specified directory \"" + workingDir + "\" is not writable !", e);
-        }
-
-        // check delay
-        String siteIdString = xwootProps.getProperty("xwoot.site.id");
-        int siteId = -1;
-
-        try {
-            siteId = Integer.parseInt(siteIdString);
-        } catch (NumberFormatException e) {
-            throw new RuntimeException("Invalid site id value ! [unable to read an integer]", e);
-        }
-
-        if (!(siteId > 0)) {
-            throw new RuntimeException("Invalid site id value ! [must be > 0]");
-        }
-
-        // check server url
-        String serverUrlString = xwootProps.getProperty("xwoot.server.url");
-
-        try {
-            new URL(serverUrlString);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException("Invalid server url !", e);
-        }
-
-        // check delay
-        String delayString = xwootProps.getProperty("xwoot.refresh.log.delay");
-        int delay = -1;
-
-        try {
-            delay = Integer.parseInt(delayString);
-        } catch (NumberFormatException e) {
-            throw new RuntimeException("Invalid delay value ! [unable to read an integer]", e);
-        }
-
-        if (!(delay > 0)) {
-            throw new RuntimeException("Invalid delay value ! [must be > 0]");
-        }
-
-        // check neighbors number
-        String neighborsNumbersString = xwootProps.getProperty("xwoot.neighbors.list.size");
-        int neighborsNumber = -1;
-
-        try {
-            neighborsNumber = Integer.parseInt(neighborsNumbersString);
-        } catch (NumberFormatException e) {
-            throw new RuntimeException("Invalid neighbors number value ! [unable to read an integer]", e);
-        }
-
-        if (!(neighborsNumber > 0)) {
-            throw new RuntimeException("Invalid neighborsNumber value ! [must be > 0]");
-        }
-
-        // check neighbors number
-        String roundString = xwootProps.getProperty("xwoot.pbcast.round");
-        int round = -1;
-
-        try {
-            round = Integer.parseInt(roundString);
-        } catch (NumberFormatException e) {
-            throw new RuntimeException("Invalid round value ! [unable to read an integer]", e);
-        }
-
-        if (!(round > 0)) {
-            throw new RuntimeException("Invalid round value ! [must be > 0]");
-        }
-
-        String serverName = xwootProps.getProperty("xwoot.server.name");
-
-        if (serverName == null) {
-            serverName = "Chewbacca";
-        }
-
-        return xwootProps;
+        return new String(Base64.decodeBase64(filename.getBytes(DEFAULT_ENCODING)), DEFAULT_ENCODING);
     }
 
-    // private
+    /**
+     * Normalize a string by replacing accents with ASCII equivalents and removing and non-ASCII characters.
+     * 
+     * @param string the string to normalize.
+     * @return the normalized string.
+     * @see #removeAccents(String)
+     */
     private static String normalizeName(String string)
     {
         String temp = FileUtil.removeAccents(string);
@@ -320,14 +241,14 @@ public class FileUtil
     }
 
     /**
-     * DOCUMENT ME!
+     * Flattens accentuated characters to their basic ASCII form.
      * 
-     * @param s DOCUMENT ME!
-     * @return DOCUMENT ME!
+     * @param string the string to remove accents from.
+     * @return a copy of the provided string, having it's accents removed.
      */
-    public static String removeAccents(String s)
+    public static String removeAccents(String string)
     {
-        String sSemAcento = s;
+        String sSemAcento = string + "";
         sSemAcento = sSemAcento.replaceAll("[áàâãä]", "a");
         sSemAcento = sSemAcento.replaceAll("[ÁÀÂÃÄ]", "A");
         sSemAcento = sSemAcento.replaceAll("[éèêë]", "e");
@@ -346,79 +267,14 @@ public class FileUtil
         return sSemAcento;
     }
 
-    /*
-     * public static String zipDirectory(String dirPath) throws Exception { File dir = new File(dirPath); File file =
-     * File.createTempFile(dir.getName(), "zip"); FileOutputStream fos = new FileOutputStream(file);
-     * BufferedOutputStream bos = new BufferedOutputStream(fos); ZipOutputStream zos = new ZipOutputStream(bos);
-     * zos.setMethod(ZipOutputStream.DEFLATED); zos.setLevel(Deflater.BEST_COMPRESSION); byte data[] = new byte[BUFFER];
-     * String files[] = dir.list(); for (int i = 0; i < files.length; i++) { FileInputStream fi = new
-     * FileInputStream(dirPath + File.separator + files[i]); BufferedInputStream buffer = new BufferedInputStream(fi,
-     * BUFFER); ZipEntry entry = new ZipEntry(normalizeName(files[i])); zos.putNextEntry(entry); int count; while
-     * ((count = buffer.read(data, 0, BUFFER)) != -1) { zos.write(data, 0, count); } zos.closeEntry(); buffer.close(); }
-     * zos.close(); bos.close(); fos.close(); return file.getAbsolutePath(); }
-     */
     /**
-     * Extracts a a zip file file to a directory.
+     * Compresses a directory's first level files using the ZIP format.
      * 
-     * @param zippedFilePath the location of the zip file.
-     * @param dirPath the directory where to extract the zip file.
-     * @throws IOException if I/O problems occur.
-     * @throws ZipException if zip format errors occur.
-     * @see ZipFile
-     */
-    public static List<String> unzipInDirectory(String zippedFilePath, String dirPath) throws IOException, ZipException
-    {
-        List<String> result = new ArrayList<String>();
-        ZipFile zippedFile = null;
-
-        try {
-            zippedFile = new ZipFile(zippedFilePath);
-
-            Enumeration< ? extends ZipEntry> entries = zippedFile.entries();
-            while (entries.hasMoreElements()) {
-                ZipEntry entry = entries.nextElement();
-                String currentDestinationFilePath = dirPath + File.separator + entry.getName();
-
-                InputStream currentZipEntryInputStream = zippedFile.getInputStream(entry);
-                BufferedOutputStream bosToFile =
-                    new BufferedOutputStream(new FileOutputStream(currentDestinationFilePath));
-
-                try {
-                    FileUtil.copyInputStream(currentZipEntryInputStream, bosToFile);
-                } catch (IOException ioe) {
-                    throw new IOException("Error unzipping entry " + entry.getName()
-                        + ". Check disk space or write access.");
-                } finally {
-                    try {
-                        currentZipEntryInputStream.close();
-                        bosToFile.close();
-                    } catch (Exception e) {
-                        throw new IOException("Unable to close file " + currentDestinationFilePath);
-                    }
-                }
-
-                result.add(entry.getName());
-            }
-        } finally {
-            try {
-                if (zippedFile != null) {
-                    zippedFile.close();
-                }
-            } catch (Exception e) {
-                throw new IOException("Unable to close zip file ");
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param dirPath DOCUMENT ME!
-     * @return DOCUMENT ME!
-     * @throws IOException
-     * @throws Exception DOCUMENT ME!
+     * @param dirPath the path of the directory to zip.
+     * @param resultFilePath the destination zip file.
+     * @return the location of the resulting zip archive or null if the directory contains no files to zip.
+     * @throws IOException if problems occur with file operations.
+     * @see ZipOutputStream
      */
     public static String zipDirectory(String dirPath, String resultFilePath) throws IOException
     {
@@ -430,50 +286,160 @@ public class FileUtil
         }
 
         File file = new File(resultFilePath);
-        FileOutputStream fos = new FileOutputStream(file);
-        BufferedOutputStream bos = new BufferedOutputStream(fos);
-        ZipOutputStream zos = new ZipOutputStream(bos);
-        zos.setMethod(ZipOutputStream.DEFLATED);
-        zos.setLevel(Deflater.BEST_COMPRESSION);
+        FileOutputStream fos = null;
+        BufferedOutputStream bos = null;
+        ZipOutputStream zos = null;
 
-        byte[] data = new byte[FileUtil.BUFFER];
+        try {
+            fos = new FileOutputStream(file);
+            bos = new BufferedOutputStream(fos);
+            zos = new ZipOutputStream(bos);
 
-        for (String file2 : files) {
-            FileInputStream fi = new FileInputStream(dirPath + File.separator + file2);
-            BufferedInputStream buffer = new BufferedInputStream(fi, FileUtil.BUFFER);
-            ZipEntry entry = new ZipEntry(FileUtil.normalizeName(file2));
-            zos.putNextEntry(entry);
+            zos.setMethod(ZipOutputStream.DEFLATED);
+            zos.setLevel(Deflater.BEST_COMPRESSION);
 
-            int count;
-
-            while ((count = buffer.read(data, 0, FileUtil.BUFFER)) != -1) {
-                zos.write(data, 0, count);
+            for (String aFile : files) {
+                zipFiletoZipOutputStream(dir, aFile, zos);
             }
 
-            zos.closeEntry();
-            buffer.close();
+        } catch (IOException ioe) {
+            throw new IOException("IO problems: " + ioe.getMessage());
+        } finally {
+            try {
+                if (zos != null) {
+                    zos.close();
+                }
+                if (bos != null) {
+                    bos.close();
+                }
+                if (fos != null) {
+                    fos.close();
+                }
+            } catch (Exception e) {
+                throw new IOException("Problem closing streams. Reason: " + e.getMessage());
+            }
         }
-
-        zos.close();
-        bos.close();
-        fos.close();
 
         return file.getAbsolutePath();
     }
 
     /**
-     * Zips a directory and saves the resulting file in the temporary directory. The file will be named
-     * "&lt;directory_name&gt;.zip".
+     * Zips a file as a {@link ZipEntry} in a ZipOutputStream.
+     * 
+     * @param dir the directory that contains the file to zip.
+     * @param fileName the name of the file to zip.
+     * @param zos the ZipOutputStream to write the ZipEntry to.
+     * @return true if the file has been zipped and written successfully; false if the combination dir/fileName is a
+     *         directory instead of a file.
+     * @throws IOException if problems occur.
+     */
+    public static boolean zipFiletoZipOutputStream(File dir, String fileName, ZipOutputStream zos) throws IOException
+    {
+        if (dir == null || fileName == null || fileName.length() == 0 || zos == null) {
+            throw new NullPointerException("Null or empty values not allowed.");
+        }
+
+        // skip directories.
+        File fileToZip = new File(dir, fileName);
+        if (fileToZip.isDirectory()) {
+            return false;
+        }
+
+        byte[] data = new byte[FileUtil.BUFFER];
+
+        FileInputStream fis = new FileInputStream(fileToZip);
+        BufferedInputStream buffer = new BufferedInputStream(fis, FileUtil.BUFFER);
+        ZipEntry entry = new ZipEntry(FileUtil.normalizeName(fileName));
+
+        zos.putNextEntry(entry);
+
+        int count;
+
+        while ((count = buffer.read(data, 0, FileUtil.BUFFER)) != -1) {
+            zos.write(data, 0, count);
+        }
+
+        zos.closeEntry();
+        buffer.close();
+
+        return true;
+    }
+
+    /**
+     * Zips a directory's first level files and saves the resulting file in the temporary directory. The file will be
+     * named "&lt;directory_name&gt;.zip".
      * 
      * @param directoryPath the directory to zip.
      * @return the actual location of the resulting temporary zip file.
      * @throws IOException if problems occur.
+     * @see ZipOutputStream
      */
     public static String zipDirectory(String directoryPath) throws IOException
     {
         File tempFile = File.createTempFile(new File(directoryPath).getName(), ".zip");
 
         return zipDirectory(directoryPath, tempFile.toString());
+    }
+
+    /**
+     * Extracts a zip file file to a directory.
+     * 
+     * @param zippedFilePath the location of the zip file.
+     * @param dirPath the directory where to extract the zip file.
+     * @return a list of extracted file names.
+     * @throws IOException if I/O or zip problems occur.
+     * @see ZipFile
+     */
+    public static List<String> unzipInDirectory(String zippedFilePath, String dirPath) throws IOException
+    {
+        List<String> result = new ArrayList<String>();
+        ZipFile zippedFile = null;
+
+        InputStream currentZipEntryInputStream = null;
+        BufferedOutputStream bosToFile = null;
+
+        try {
+            zippedFile = new ZipFile(zippedFilePath);
+
+            Enumeration< ? extends ZipEntry> entries = zippedFile.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = entries.nextElement();
+                String currentDestinationFilePath = dirPath + File.separator + entry.getName();
+
+                currentZipEntryInputStream = zippedFile.getInputStream(entry);
+                bosToFile = new BufferedOutputStream(new FileOutputStream(currentDestinationFilePath));
+
+                try {
+                    FileUtil.copyInputStream(currentZipEntryInputStream, bosToFile);
+                } catch (IOException ioe) {
+                    throw new IOException("Error unzipping entry " + entry.getName()
+                        + ". Check disk space or write access.");
+                }
+
+                currentZipEntryInputStream.close();
+                bosToFile.close();
+
+                result.add(entry.getName());
+            }
+        } finally {
+            try {
+                if (currentZipEntryInputStream != null) {
+                    currentZipEntryInputStream.close();
+                }
+
+                if (bosToFile != null) {
+                    bosToFile.close();
+                }
+
+                if (zippedFile != null) {
+                    zippedFile.close();
+                }
+            } catch (Exception e) {
+                throw new IOException("Unable to close zip file " + e.getMessage());
+            }
+        }
+
+        return result;
     }
 
     /**
@@ -492,7 +458,7 @@ public class FileUtil
         if (directoryPath == null) {
             throw new NullPointerException("The provided directoryPath is null.");
         }
-        
+
         File directory = new File(directoryPath);
 
         if (!directory.exists()) {
@@ -504,230 +470,6 @@ public class FileUtil
         } else if (!directory.canWrite()) {
             throw new IOException(directoryPath + " -- isn't writable");
         }
-    }
-
-    /**
-     * Serializes an object to file using the {@link ObjectOutputStream#writeObject(Object)} method.
-     * 
-     * @param object the object to save.
-     * @param filePath the path of the file where to save the object.
-     * @throws Exception if problems occur saving the object.
-     * @see {@link #loadObjectFromFile(String)}
-     */
-    public static void saveObjectToFile(Object object, String filePath) throws Exception
-    {
-        FileOutputStream fout = null;
-        ObjectOutputStream oos = null;
-
-        try {
-            fout = new FileOutputStream(filePath);
-            oos = new ObjectOutputStream(fout);
-
-            oos.writeObject(object);
-            oos.flush();
-        } catch (Exception e) {
-            throw new Exception("Problems while storing an object in the file: " + filePath, e);
-        } finally {
-            try {
-                if (oos != null) {
-                    oos.close();
-                }
-                if (fout != null) {
-                    fout.close();
-                }
-            } catch (Exception e) {
-                throw new Exception("Problems closing the file " + filePath + " after storing an object to it: ", e);
-            }
-        }
-    }
-
-    /**
-     * Serializes a Collection to file using the {@link ObjectOutputStream#writeObject(Object)} method.
-     * 
-     * @param collection the collection to save.
-     * @param filePath the path of the file where to save the collection.
-     * @throws Exception if problems occur saving the object.
-     * @see {@link #saveObjectToFile(Object, String)}
-     * @see {@link #loadObjectFromFile(String)}
-     */
-    @SuppressWarnings("unchecked")
-    public static void saveCollectionToFile(Collection collection, String filePath) throws Exception
-    {
-        if (collection == null) {
-            throw new NullPointerException("A null value was provided instead of a valid collection.");
-        }
-
-        if (collection.isEmpty()) {
-            File file = new File(filePath);
-
-            if (file.exists()) {
-                file.delete();
-            }
-
-            return;
-        }
-
-        saveObjectToFile(collection, filePath);
-    }
-    
-    /**
-     * Serializes a Map to file using the {@link ObjectOutputStream#writeObject(Object)} method.
-     * 
-     * @param map the map to save.
-     * @param filePath the path of the file where to save the object.
-     * @throws Exception if problems occur saving the object.
-     * @throws NullPointerException if the map is null.
-     * @see {@link #saveObjectToFile(Object, String)}
-     * @see {@link #loadObjectFromFile(String)}
-     */
-    @SuppressWarnings("unchecked")
-    public static void saveMapToFile(Map map, String filePath) throws Exception
-    {
-        if (map == null) {
-            throw new NullPointerException("A null value was provided instead of a valid map.");
-        }
-
-        if (map.isEmpty()) {
-            File file = new File(filePath);
-
-            if (file.exists()) {
-                file.delete();
-            }
-
-            return;
-        }
-
-        saveObjectToFile(map, filePath);
-    }
-
-    /**
-     * Loads an object from file. The object must have been previously serialized using the
-     * {@link ObjectOutputStream#writeObject(Object)} method.
-     * 
-     * @param filePath the file to load from.
-     * @return the read object.
-     * @throws Exception if the file was not found or problems reading the object occurred.
-     * @throws NullPointerException if the provided filePath is null.
-     * @see #saveObjectToFile(Object, String)
-     */
-    public static Object loadObjectFromFile(String filePath) throws Exception
-    {
-        if (filePath == null) {
-            throw new NullPointerException("Null value provided as filePath.");
-        }
-        
-        FileInputStream fis = null;
-        ObjectInputStream ois = null;
-        try {
-            fis = new FileInputStream(filePath);
-            ois = new ObjectInputStream(fis);
-
-            return ois.readObject();
-        } catch (Exception e) {
-            throw new Exception("Problems while loading an object from the file: " + filePath, e);
-        } finally {
-            try {
-                if (ois != null) {
-                    ois.close();
-                }
-                if (fis != null) {
-                    fis.close();
-                }
-            } catch (IOException e) {
-                throw new Exception("Problems closing the file " + filePath + " after loading an object from it: ", e);
-            }
-        }
-    }
-    
-    /**
-     * Convenience method.
-     * <p>
-     * If the specified file location does not exist, the provided fallback object will be returned. Null value is allowed for fallback object, this being subject to the user's logic. 
-     * 
-     * @param filePath the file to load from.
-     * @return the read object or the fallback object if the file does not exist.
-     * @throws Exception if problems reading the object occurred.
-     * @throws NullPointerException if the filePath is null.
-     * @see #saveObjectToFile(Object, String)
-     * @see #loadObjectFromFile(String)
-     */
-    public static Object loadObjectFromFile(String filePath, Object fallBackIfFileNotFound) throws Exception
-    {
-        if (!new File(filePath).exists()) {
-            return fallBackIfFileNotFound;
-        } else {
-            return loadObjectFromFile(filePath);
-        }
-    }
-
-    public static void saveObjectToXml(Object object, String xmlFilePath) throws Exception
-    {
-        XStream xstream = new XStream(new DomDriver());
-        Charset fileEncodingCharset = Charset.forName(System.getProperty("file.encoding"));
-
-        OutputStreamWriter osw = null;
-        PrintWriter output = null;
-
-        try {
-            osw = new OutputStreamWriter(new FileOutputStream(xmlFilePath), fileEncodingCharset);
-            output = new PrintWriter(osw);
-            output.print(xstream.toXML(object));
-            output.flush();
-        } catch (Exception e) {
-            throw new Exception("Problems saving an object to xml file " + xmlFilePath, e);
-        } finally {
-            try {
-                if (osw != null) {
-                    osw.close();
-                }
-                if (output != null) {
-                    output.close();
-                }
-            } catch (Exception e) {
-                throw new Exception("Problems closing file " + xmlFilePath + " after saving an object in it.", e);
-            }
-        }
-    }
-
-    public static void saveCollectionToXml(Collection collection, String xmlFilePath) throws Exception
-    {
-        if (collection == null) {
-            throw new NullPointerException("A null value was provided instead of a valid collection.");
-        }
-
-        if (collection.isEmpty()) {
-            File file = new File(xmlFilePath);
-
-            if (file.exists()) {
-                file.delete();
-            }
-
-            return;
-        }
-
-        saveObjectToXml(collection, xmlFilePath);
-    }
-
-    public static Object loadObjectFromXml(String xmlFilePath) throws Exception
-    {
-        XStream xstream = new XStream(new DomDriver());
-
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(xmlFilePath);
-            return xstream.fromXML(fis);
-        } catch (Exception e) {
-            throw new Exception("Problems loading object from file " + xmlFilePath, e);
-        } finally {
-            try {
-                if (fis != null) {
-                    fis.close();
-                }
-            } catch (Exception e) {
-                throw new Exception("Problems closing file " + xmlFilePath, e);
-            }
-        }
-
     }
 
     /**

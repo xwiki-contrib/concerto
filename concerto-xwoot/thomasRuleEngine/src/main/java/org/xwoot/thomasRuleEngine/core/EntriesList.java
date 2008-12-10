@@ -54,6 +54,7 @@ import java.util.Map;
 
 import org.xwoot.thomasRuleEngine.ThomasRuleEngineException;
 import org.xwoot.xwootUtil.FileUtil;
+import org.xwoot.xwootUtil.PersistencyUtil;
 
 /**
  * A persistent collection (database) of entries that will be synchronized.
@@ -81,7 +82,7 @@ public class EntriesList
      * 
      * @param workingDir DOCUMENT ME!
      * @param filename DOCUMENT ME!
-     * @throws ThomasRuleEngineException if the workingDir is not usable or the fileName is null. 
+     * @throws ThomasRuleEngineException if the workingDir is not usable or the fileName is null.
      */
     public EntriesList(String workingDir, String filename) throws ThomasRuleEngineException
     {
@@ -211,7 +212,7 @@ public class EntriesList
     private void store() throws ThomasRuleEngineException
     {
         try {
-            FileUtil.saveMapToFile(this.entriesList, this.filePath);
+            PersistencyUtil.saveMapToFile(this.entriesList, this.filePath);
         } catch (Exception e) {
             throw new ThomasRuleEngineException("Problems storing the entries list.\n", e);
         }
@@ -228,7 +229,8 @@ public class EntriesList
     {
         Object fallback = new Hashtable<Identifier, Entry>();
         try {
-            this.entriesList = (Hashtable<Identifier, Entry>) FileUtil.loadObjectFromFile(this.filePath, fallback);
+            this.entriesList =
+                (Hashtable<Identifier, Entry>) PersistencyUtil.loadObjectFromFile(this.filePath, fallback);
         } catch (Exception e) {
             throw new ThomasRuleEngineException("Problems loading the entris list.\n", e);
         }

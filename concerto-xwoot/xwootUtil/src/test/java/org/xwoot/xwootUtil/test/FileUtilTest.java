@@ -44,21 +44,29 @@
 
 package org.xwoot.xwootUtil.test;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.xwoot.xwootUtil.FileUtil;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.util.Arrays;
 import java.util.Random;
 
 import junit.framework.Assert;
 
 /**
- * DOCUMENT ME!
+ * Tests for the utility class FileUtil.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
 public class FileUtilTest
 {
+    /** Working directory for tests. */
+    private static final String WORKING_DIR = FileUtil.getTestsWorkingDirectoryPathForModule("xwootUtil");
+
     /**
      * Creates a new FileUtilTests object.
      */
@@ -68,9 +76,22 @@ public class FileUtilTest
     }
 
     /**
-     * DOCUMENT ME!
+     * Initializes the working directory.
      * 
-     * @throws Exception DOCUMENT ME!
+     * @throws Exception if problems occur.
+     */
+    @Before
+    public void initWorkingDir() throws Exception
+    {
+        FileUtil.checkDirectoryPath(WORKING_DIR);
+    }
+
+    /**
+     * Exhaustively test the getEncodedFileName and getDecodedFileName methods by generating random strings.
+     * <p>
+     * Result: The result of decoding a previously encoded string must be equal with the original string.
+     * 
+     * @throws Exception if problems occur.
      */
     @Test
     public void testBrutForceFileName() throws Exception
@@ -85,23 +106,59 @@ public class FileUtilTest
             String encodedFilename = FileUtil.getEncodedFileName(filename);
             String decodedFileName = FileUtil.getDecodedFileName(encodedFilename);
 
-            for (int k = 0; k < filename.length(); k++) {
-                Assert.assertEquals(filename.getBytes()[k], decodedFileName.getBytes()[k]);
-            }
+            Assert.assertTrue(Arrays.equals(filename.getBytes(), decodedFileName.getBytes()));
         }
     }
 
     /**
-     * DOCUMENT ME!
+     * Test decoding an encoded string and checking it with the original.
      * 
      * @throws Exception DOCUMENT ME!
      */
     @Test
     public void testFileName() throws Exception
     {
-        String filename = "Essai";
+        String filename = "Test file name";
         String encodedFilename = FileUtil.getEncodedFileName(filename);
         String decodedFileName = FileUtil.getDecodedFileName(encodedFilename);
         Assert.assertEquals(filename, decodedFileName);
+    }
+
+    /**
+     * Test copying a file from a location to another.
+     * <p>
+     * Result: The two files will be identical.
+     * 
+     * @throws Exception if problems occur.
+     */
+    @Test
+    public void testCopyFile() throws Exception
+    {
+        String sourceFileName = "source";
+        String destinationFileName = "destination";
+
+        String sourceFileContent = "first line\nsecond line\nthird line\n";
+
+        File sourceFile = new File(WORKING_DIR, sourceFileName);
+        // sourceFile.createNewFile();
+        File destinationFile = new File(WORKING_DIR, destinationFileName);
+        // destinationFile.createNewFile();
+
+        FileOutputStream fos = new FileOutputStream(sourceFile);
+
+        fos.write(sourceFileContent.getBytes());
+        fos.close();
+
+        FileUtil.copyFile(sourceFile.getAbsolutePath(), destinationFile.getAbsolutePath());
+
+        BufferedReader br = new BufferedReader(new FileReader(destinationFile));
+
+        String destinationFileContent = "";
+        String line = null;
+        while ((line = br.readLine()) != null) {
+            destinationFileContent = destinationFileContent + line + "\n";
+        }
+
+        Assert.assertEquals(sourceFileContent, destinationFileContent);
     }
 }

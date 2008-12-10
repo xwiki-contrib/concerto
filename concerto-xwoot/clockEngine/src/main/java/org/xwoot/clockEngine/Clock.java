@@ -48,6 +48,7 @@ import java.io.File;
 import java.io.Serializable;
 
 import org.xwoot.xwootUtil.FileUtil;
+import org.xwoot.xwootUtil.PersistencyUtil;
 
 /**
  * Provides the clock service. It is used to associate a private clock to an object. The clock is stored in a file.
@@ -166,7 +167,7 @@ public class Clock implements Serializable
     public synchronized void store() throws ClockException
     {
         try {
-            FileUtil.saveObjectToFile(Integer.valueOf(this.clock), this.clockFilePath);
+            PersistencyUtil.saveObjectToFile(Integer.valueOf(this.clock), this.clockFilePath);
         } catch (Exception e) {
             throw new ClockException("Problems while storing the Clock: ", e);
         }
@@ -188,7 +189,7 @@ public class Clock implements Serializable
         } else {
 
             try {
-                this.clock = ((Integer) FileUtil.loadObjectFromFile(this.clockFilePath)).intValue();
+                this.clock = ((Integer) PersistencyUtil.loadObjectFromFile(this.clockFilePath)).intValue();
             } catch (Exception e) {
                 throw new ClockException("Problems loading the Clock: ", e);
             }
