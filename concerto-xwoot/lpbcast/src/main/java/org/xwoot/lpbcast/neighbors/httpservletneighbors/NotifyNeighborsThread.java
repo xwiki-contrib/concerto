@@ -85,16 +85,16 @@ public class NotifyNeighborsThread extends Thread
     /**
      * Send the message to a neighbor.
      * 
-     * @param target_neighbor the neighbor to whom to send the message.
+     * @param targetNeighbor the neighbor to whom to send the message.
      * @throws ServletNeighborsException if problems occur while sending the message.
      * @see {@link NetUtil#sendObjectViaHTTPRequest(URL, Object)}
      * @see {@link #NOTIFY_SERVLET_PATH}
      */
-    protected void call(Object target_neighbor) throws ServletNeighborsException
+    protected void call(Object targetNeighbor) throws ServletNeighborsException
     {
-        this.log.debug("Send message to : " + target_neighbor);
+        this.log.debug("Send message to : " + targetNeighbor);
 
-        String neighborAddress = target_neighbor + HttpServletNeighbors.NOTIFY_SERVLET_PATH;
+        String neighborAddress = targetNeighbor + HttpServletNeighbors.NOTIFY_SERVLET_PATH;
         URL neighborUrl = null;
         try {
             neighborUrl = new URL(neighborAddress);

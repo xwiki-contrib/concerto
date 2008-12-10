@@ -201,7 +201,7 @@ public final class NetUtil
             init.getResponseCode();
         } catch (SocketTimeoutException s) {
             // Read timed out - try another time...
-            if (init!=null){
+            if (init != null) {
                 init.getResponseCode();
             }
         } catch (Exception e) {
