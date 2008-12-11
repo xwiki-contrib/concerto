@@ -11,10 +11,16 @@ public class XWootId
 
     private long timestamp;
 
-    public XWootId(String pageId, long timestamp)
+    private int version;
+
+    private int minorVersion;
+
+    public XWootId(String pageId, long timestamp, int version, int minorVersion)
     {
         this.pageId = pageId;
         this.timestamp = timestamp;
+        this.version = version;
+        this.minorVersion = minorVersion;
     }
 
     public String getPageId()
@@ -27,13 +33,25 @@ public class XWootId
         return timestamp;
     }
 
+    public int getVersion()
+    {
+        return version;
+    }
+
+    public int getMinorVersion()
+    {
+        return minorVersion;
+    }
+
     @Override
     public int hashCode()
     {
         final int prime = 31;
         int result = 1;
+        result = prime * result + minorVersion;
         result = prime * result + ((pageId == null) ? 0 : pageId.hashCode());
         result = prime * result + (int) (timestamp ^ (timestamp >>> 32));
+        result = prime * result + version;
         return result;
     }
 
@@ -47,12 +65,16 @@ public class XWootId
         if (getClass() != obj.getClass())
             return false;
         XWootId other = (XWootId) obj;
+        if (minorVersion != other.minorVersion)
+            return false;
         if (pageId == null) {
             if (other.pageId != null)
                 return false;
         } else if (!pageId.equals(other.pageId))
             return false;
         if (timestamp != other.timestamp)
+            return false;
+        if (version != other.version)
             return false;
         return true;
     }

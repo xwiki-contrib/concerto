@@ -15,6 +15,7 @@ import org.apache.xmlrpc.XmlRpcException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xwiki.xmlrpc.XWikiXmlRpcClient;
+import org.xwiki.xmlrpc.model.XWikiPage;
 import org.xwiki.xmlrpc.model.XWikiPageHistorySummary;
 
 /**
@@ -105,7 +106,7 @@ public class XWootContentProvider
 
         try {
             s
-                .execute("CREATE TABLE modifications (pageId VARCHAR(512), timestamp BIGINT, version INT, minor_version INT, cleared SMALLINT DEFAULT 0, PRIMARY KEY(pageId, timestamp, version, minor_version), UNIQUE(pageId, timestamp))");
+                .execute("CREATE TABLE modifications (pageId VARCHAR(64), timestamp BIGINT, version INT, minorVersion INT, cleared SMALLINT DEFAULT 0, PRIMARY KEY(pageId, timestamp, version, minorVersion), UNIQUE(pageId, timestamp))");
 
             logger.info("Modifications table created.");
         } catch (SQLException e) {
@@ -208,12 +209,12 @@ public class XWootContentProvider
             while (true) {
                 List<XWikiPageHistorySummary> xphsList =
                     rpc.getModifiedPagesHistory(new Date(maxTimestamp), MODIFICATION_RESULTS_PER_CALL, start, true);
-                
-                for (XWikiPageHistorySummary xphs : xphsList) {                    
+
+                for (XWikiPageHistorySummary xphs : xphsList) {
                     ps.setString(1, xphs.getId());
                     ps.setLong(2, xphs.getModified().getTime());
                     ps.setInt(3, xphs.getVersion());
-                    ps.setInt(4, xphs.getMinorVersion());                    
+                    ps.setInt(4, xphs.getMinorVersion());
 
                     try {
                         ps.executeUpdate();
@@ -268,17 +269,42 @@ public class XWootContentProvider
             PreparedStatement ps =
                 connection
                     .prepareStatement("SELECT pageId, MIN(timestamp) FROM modifications WHERE cleared=? GROUP BY pageId");
-            ps.setBoolean(1, false);
+            ps.setInt(1, 0);
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                XWootId xwootId = new XWootId(rs.getString(1), rs.getLong(2));
-                result.add(xwootId);
+                XWootId xwootId = getXWootId(rs.getString(1), rs.getLong(2));
+                if (xwootId != null) {
+                    result.add(xwootId);
+                } else {
+                    logger.warn(String
+                        .format("Unable to retrieve XWootId for (%s, %d)", rs.getString(1), rs.getLong(2)));
+                }
             }
 
             ps.close();
         } catch (Exception e) {
             throw new XWootContentProviderException(e);
+        }
+
+        return result;
+    }
+
+    private XWootId getXWootId(String pageId, long timestamp)
+    {
+        XWootId result = null;
+        try {
+            PreparedStatement ps =
+                connection.prepareStatement("SELECT * FROM modifications WHERE pageId=? AND timestamp=?");
+            ps.setString(1, pageId);
+            ps.setLong(2, timestamp);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                result = new XWootId(rs.getString(1), rs.getLong(2), rs.getInt(3), rs.getInt(4));
+            }
+
+            ps.close();
+        } catch (SQLException e) {
         }
 
         return result;
@@ -301,7 +327,7 @@ public class XWootContentProvider
 
             int rowsUpdated = ps.executeUpdate();
 
-            logger.info(String.format("%s at %s (%d) cleared. %d rows cleared", xwootId.getPageId(), new Date(xwootId
+            logger.info(String.format("%s at %s (%d) cleared. %d rows updated", xwootId.getPageId(), new Date(xwootId
                 .getTimestamp()), xwootId.getTimestamp(), rowsUpdated));
 
             ps.close();
@@ -326,8 +352,8 @@ public class XWootContentProvider
 
             int rowsUpdated = ps.executeUpdate();
 
-            logger.info(String.format("%s at %s (%d) cleared. %d rows cleared", xwootId.getPageId(), new Date(xwootId
-                .getTimestamp()), xwootId.getTimestamp(), rowsUpdated));
+            logger.info(String.format("%s at %s (%d) and before cleared. %d rows updated", xwootId.getPageId(),
+                new Date(xwootId.getTimestamp()), xwootId.getTimestamp(), rowsUpdated));
 
             ps.close();
         } catch (Exception e) {
@@ -336,42 +362,74 @@ public class XWootContentProvider
     }
 
     /**
-     * Debugging method. Dump the internal table for debugging purposes. Remove this when it will be no more needed.
+     * Find the previous modification with respect to the one identified by the XWootId passed as parameters.
      * 
-     * @param orderBy The field to be sorted by. Can be 'pageId' or 'timestamp'.
-     * @throws SQLException
+     * @param xwootId
+     * @return The XWootId of the previous modification in temporal order. null if it doesn't exist.
+     * @throws XWootContentProviderException
      */
-    public void dumpTable(String orderBy) throws SQLException
+    private XWootId getPreviousModification(XWootId xwootId) throws XWootContentProviderException
     {
-        Statement s = connection.createStatement();
-        ResultSet rs = s.executeQuery(String.format("SELECT * FROM modifications ORDER BY %s ASC", orderBy));
-        
-        while (rs.next()) {
-            System.out.format("%35s | %s (%d) | %d.%d | %b\n", rs.getString(1), new Date(rs.getLong(2)), rs.getLong(2), rs
-                .getInt(3), rs.getInt(4), rs.getBoolean(5));
+        try {
+            XWootId result = null;
+            PreparedStatement ps =
+                connection
+                    .prepareStatement("SELECT * FROM modifications WHERE pageId=? AND timestamp < ? ORDER BY timestamp ASC");
+            ps.setString(1, xwootId.getPageId());
+            ps.setLong(2, xwootId.getTimestamp());
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                result = new XWootId(rs.getString(1), rs.getLong(2), rs.getInt(3), rs.getInt(4));
+            }
+
+            return result;
+        } catch (Exception e) {
+            throw new XWootContentProviderException(e);
         }
     }
 
     /**
-     * Debugging method. Dump the internal table for debugging purposes. Shows only the rows concerning a given pageId.
-     * Remove this when it will be no more needed.
+     * Returns a list of XWootObjects that contains all the entities that have been modified in the page identified by
+     * the the XWootId (i.e., at a given timestamp). The contract here is that each XWootObject in the list will contain
+     * only the fields that have been modified (i.e., a subset of the fields that actually make up the underlying
+     * object). If the entity didn't exist in the previous version, then all the fields are present in the corresponding
+     * XWootObject. Here we return only XWootObjects since we decided to process in a uniform way XWikiPages and
+     * XWikiObjects, since they both can be seen as a collection of pairs name=value.
      * 
-     * @param pageId The pageId to be selected.
-     * @param orderBy The field to be sorted by. Can be 'pageId' or 'timestamp'.
-     * @throws SQLException
+     * @param xwootId
+     * @return
+     * @throws XWootContentProviderException
      */
-    public void dumpTable(String pageId, String orderBy) throws SQLException
+    public List<XWootObject> getModifiedEntities(XWootId xwootId) throws XWootContentProviderException
     {
-        PreparedStatement ps =
-            connection.prepareStatement(String.format("SELECT * FROM modifications WHERE pageId=? ORDER BY %s ASC",
-                orderBy));
-        ps.setString(1, pageId);
-        ResultSet rs = ps.executeQuery();
+        try {
+            List<XWootObject> result = new ArrayList<XWootObject>();
 
-        while (rs.next()) {
-            System.out.format("%35s | %s (%d) | %d.%d | %b\n", rs.getString(1), new Date(rs.getLong(2)), rs.getLong(2), rs
-                .getInt(3), rs.getInt(4), rs.getBoolean(5));
+            XWootId previousModification = getPreviousModification(xwootId);
+
+            if (previousModification == null) {
+                XWikiPage page = rpc.getPage(xwootId.getPageId(), xwootId.getVersion(), xwootId.getMinorVersion());
+                XWootObject object = Utils.xwikiPageToXWootObject(page, true);
+                result.add(object);
+            } else {
+                XWikiPage page = rpc.getPage(xwootId.getPageId(), xwootId.getVersion(), xwootId.getMinorVersion());
+                XWikiPage previousPage =
+                    rpc.getPage(previousModification.getPageId(), previousModification.getVersion(),
+                        previousModification.getMinorVersion());
+
+                XWootObject currentPageObject = Utils.xwikiPageToXWootObject(page, false);
+                XWootObject previousPageObject = Utils.xwikiPageToXWootObject(previousPage, false);
+
+                result.add(Utils.removeUnchangedFields(currentPageObject, previousPageObject));
+            }
+
+            return result;
+        } catch (Exception e) {
+            throw new XWootContentProviderException(e);
         }
+
     }
 
 }

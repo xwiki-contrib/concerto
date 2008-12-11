@@ -17,7 +17,7 @@ import java.util.List;
 public class XWootObject
 {
     /**
-     * The pageId this XWootObject is built from.
+     * The pageId of the page this XWootObject is built from.
      */
     private String pageId;
 
@@ -67,6 +67,11 @@ public class XWootObject
         return result;
     }
 
+    public List<XWootObjectField> getFields()
+    {
+        return fields;
+    }
+
     public Serializable getFieldValue(String name)
     {
         XWootObjectField field = lookupField(name);
@@ -100,6 +105,17 @@ public class XWootObject
     public boolean isNewlyCreated()
     {
         return newlyCreated;
+    }
+
+    public boolean hasWootableFields()
+    {
+        for (XWootObjectField field : fields) {
+            if (field.isWootable()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private XWootObjectField lookupField(String name)
