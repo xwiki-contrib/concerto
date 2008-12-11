@@ -182,12 +182,8 @@ public class Pool implements Serializable
         }
 
         if (!this.getPoolFile().exists()) {
-            try {
-                List<WootOp> newElements = new ArrayList<WootOp>();
-                PersistencyUtil.saveObjectToFile(newElements, this.getPoolFile().toString());
-            } catch (Exception e) {
-                throw new WootEngineException("Problems while initializing pool: ", e);
-            }
+            this.content = new ArrayList<WootOp>();
+            this.storePool();
         }
     }
 
@@ -200,7 +196,7 @@ public class Pool implements Serializable
     public final synchronized void storePool() throws WootEngineException
     {
         try {
-            PersistencyUtil.saveObjectToFile(this.getContent(), this.getPoolFile().toString());
+            PersistencyUtil.saveCollectionToFile(this.getContent(), this.getPoolFile().toString());
         } catch (Exception e) {
             throw new WootEngineException("Problems while storing the pool: ", e);
         }
@@ -215,8 +211,10 @@ public class Pool implements Serializable
     @SuppressWarnings("unchecked")
     public synchronized void loadPool() throws WootEngineException
     {
+        Object fallback = new ArrayList<WootOp>();
         try {
-            this.content = (ArrayList<WootOp>) PersistencyUtil.loadObjectFromFile(this.getPoolFile().toString());
+            this.content =
+                (ArrayList<WootOp>) PersistencyUtil.loadObjectFromFile(this.getPoolFile().toString(), fallback);
         } catch (Exception e) {
             throw new WootEngineException("Problems loading the pool: ", e);
         }

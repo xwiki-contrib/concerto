@@ -44,14 +44,17 @@
 
 package org.xwoot.xwootUtil.test;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.xwoot.xwootUtil.FileUtil;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.IOException;
+import java.security.InvalidParameterException;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -62,29 +65,25 @@ import junit.framework.Assert;
  * 
  * @version $Id:$
  */
-public class FileUtilTest
+public class FileUtilTest extends AbstractXwootUtilTestBase
 {
-    /** Working directory for tests. */
-    private static final String WORKING_DIR = FileUtil.getTestsWorkingDirectoryPathForModule("xwootUtil");
+    /** Test file name. */
+    private static final String FILE_NAME = "tempFile";
 
-    /**
-     * Creates a new FileUtilTests object.
-     */
-    public FileUtilTest()
-    {
-        super();
-    }
+    /** Test dir name. */
+    private static final String DIR_NAME = "tempDir";
 
-    /**
-     * Initializes the working directory.
-     * 
-     * @throws Exception if problems occur.
-     */
-    @Before
-    public void initWorkingDir() throws Exception
-    {
-        FileUtil.checkDirectoryPath(WORKING_DIR);
-    }
+    /** Content to use for tests as source. */
+    private static final String SOURCE_CONTENT = "first line\nsecond line\nthird line\n";
+
+    /** Test string containing characters with accents. */
+    private static final String ACCENTUATED_STRING = "áàâãäăÁÀÂÃÄéèêëÉÈÊËíìîïÍÌÎÏóòôõöÓÒÔÕÖúùûüÚÙÛÜçÇñÑşŞţŢ";
+
+    /** Test string containing the accentuatedString and some extra non-ASCII chars. */
+    private static final String DIRTY_STRING = "قذر" + ACCENTUATED_STRING + "أشياء";
+
+    /** The clean version of the accentuatedString containing only ASCII characters. */
+    private static final String CLEAN_STRING = "aaaaaaAAAAAeeeeEEEEiiiiIIIIoooooOOOOOuuuuUUUUcCnNsStT";
 
     /**
      * Exhaustively test the getEncodedFileName and getDecodedFileName methods by generating random strings.
@@ -137,16 +136,12 @@ public class FileUtilTest
         String sourceFileName = "source";
         String destinationFileName = "destination";
 
-        String sourceFileContent = "first line\nsecond line\nthird line\n";
-
-        File sourceFile = new File(WORKING_DIR, sourceFileName);
-        // sourceFile.createNewFile();
-        File destinationFile = new File(WORKING_DIR, destinationFileName);
-        // destinationFile.createNewFile();
+        File sourceFile = new File(this.workingDir, sourceFileName);
+        File destinationFile = new File(this.workingDir, destinationFileName);
 
         FileOutputStream fos = new FileOutputStream(sourceFile);
 
-        fos.write(sourceFileContent.getBytes());
+        fos.write(SOURCE_CONTENT.getBytes());
         fos.close();
 
         FileUtil.copyFile(sourceFile.getAbsolutePath(), destinationFile.getAbsolutePath());
@@ -159,6 +154,194 @@ public class FileUtilTest
             destinationFileContent = destinationFileContent + line + "\n";
         }
 
-        Assert.assertEquals(sourceFileContent, destinationFileContent);
+        Assert.assertEquals(SOURCE_CONTENT, destinationFileContent);
+    }
+
+    /**
+     * Test for the copyInputStream method.
+     * <p>
+     * Result: the content of the output stream is equal to the source content.
+     * 
+     * @throws Exception if problems occur.
+     */
+    @Test
+    public void testCopyInputStream() throws Exception
+    {
+        ByteArrayInputStream bais = new ByteArrayInputStream(SOURCE_CONTENT.getBytes());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        FileUtil.copyInputStream(bais, baos);
+
+        baos.flush();
+        baos.close();
+
+        Assert.assertEquals(SOURCE_CONTENT, baos.toString());
+    }
+
+    /**
+     * Test the deleteDirectory method.
+     * <p>
+     * Result: A directory's content will be recursively deleted.
+     * 
+     * @throws Exception if problems occur.
+     */
+    @Test
+    public void testDeleteDirectory() throws Exception
+    {
+        File directoryToDelete = new File(this.workingDir, DIR_NAME);
+
+        // create empty dir
+        directoryToDelete.mkdir();
+        Assert.assertTrue(directoryToDelete.exists() && directoryToDelete.isDirectory());
+
+        // delete empty dir.
+        FileUtil.deleteDirectory(directoryToDelete);
+        Assert.assertFalse(directoryToDelete.exists());
+
+        // create non-empty directory with files and non-empty subdirs.
+        directoryToDelete.mkdir();
+        int numberOfFilesOrDirs = 10;
+        // create dir with files and subdirs containing subdir-files.
+        for (int i = 0; i < numberOfFilesOrDirs; i++) {
+            File tempFile = new File(directoryToDelete, FILE_NAME + i);
+            tempFile.createNewFile();
+
+            File tempSubDir = new File(directoryToDelete, DIR_NAME + i);
+            tempSubDir.mkdir();
+
+            File tempSubDirFile = new File(tempSubDir, FILE_NAME + i);
+            tempSubDirFile.createNewFile();
+        }
+
+        // dir now contains numberOfFilesOrDirs files and numberOfFilesOrDirs subdirs.
+        Assert.assertEquals(numberOfFilesOrDirs * 2, directoryToDelete.list().length);
+
+        // recursively delete non-empty dir.
+        FileUtil.deleteDirectory(directoryToDelete);
+        Assert.assertFalse(directoryToDelete.exists());
+
+        // delete non-existing directory.
+        FileUtil.deleteDirectory(directoryToDelete);
+        Assert.assertFalse(directoryToDelete.exists());
+    }
+
+    /**
+     * Test the removeAccents and nomalizeName metods.
+     * <p>
+     * Result: the resulting as described in {@link FileUtil#removeAccents(String)} and
+     * {@link FileUtil#normalizeName(String)}.
+     * 
+     * @throws Exception if problems occur.
+     */
+    @Test
+    public void testCleanFileName() throws Exception
+    {
+        Assert.assertEquals(CLEAN_STRING, FileUtil.removeAccents(ACCENTUATED_STRING));
+        Assert.assertEquals(CLEAN_STRING, FileUtil.normalizeName(DIRTY_STRING));
+    }
+
+    /**
+     * Test the zipDirectory and the unzipDirectory methods.
+     * <p>
+     * Result: after zipping a directory, the unzipped content of the resulting zip file will be identical to the
+     * original directory's content.
+     * 
+     * @throws Exception if problems occur.
+     */
+    @Test
+    public void testZipUnzipDirectory() throws Exception
+    {
+        File directoryToZip = new File(this.workingDir, DIR_NAME);
+
+        // create directory with files.
+        directoryToZip.mkdir();
+        int numberOfFiles = 10;
+        for (int i = 0; i < numberOfFiles; i++) {
+            File tempFile = new File(directoryToZip, FILE_NAME + i);
+            tempFile.createNewFile();
+        }
+
+        // check the directory's content.
+        Assert.assertEquals(numberOfFiles, directoryToZip.list().length);
+
+        // zip the directory and check that the file was created and it's not emtpy.
+        File zippedFile = new File(FileUtil.zipDirectory(directoryToZip.getPath()));
+        Assert.assertTrue(zippedFile.length() > 0);
+
+        // check if the output directory does not already exist.
+        File directoryToUnzipTo = new File(this.workingDir, DIR_NAME + "Unzipped");
+        Assert.assertFalse(directoryToUnzipTo.exists());
+
+        // unzip the file and check if the output dir was created.
+        FileUtil.unzipInDirectory(zippedFile.getPath(), directoryToUnzipTo.getPath());
+        Assert.assertTrue(directoryToUnzipTo.exists());
+
+        // check if the zip was propperly deflated in the output directory.
+        Assert.assertEquals(numberOfFiles, directoryToUnzipTo.list().length);
+    }
+
+    /**
+     * Test the checkDirectoryPath method.
+     * <p>
+     * Restul: as described by {@link FileUtil#checkDirectoryPath(String)}.
+     * 
+     * @throws Exception if problems occur.
+     */
+    @Test
+    public void testCheckDirectoryPath() throws Exception
+    {
+        File testDir = new File(this.workingDir, DIR_NAME);
+
+        // the directory does not yet exist.
+        Assert.assertFalse(testDir.exists());
+
+        // so it will be created.
+        FileUtil.checkDirectoryPath(testDir.getPath());
+        Assert.assertTrue(testDir.exists());
+
+        // delete the dir
+        FileUtil.deleteDirectory(testDir);
+        Assert.assertFalse(testDir.exists());
+
+        // set write permission on root dir to false;
+        File testDirRoot = new File(this.workingDir);
+        testDirRoot.setWritable(false);
+
+        IOException mustHappen = null;
+        try {
+            FileUtil.checkDirectoryPath(testDir.getPath());
+        } catch (IOException e) {
+            mustHappen = e;
+        }
+
+        // if all went well, the dir must have not been able to be created and an exception should have been thrown.
+        Assert.assertFalse(mustHappen == null && testDir.exists());
+
+        // reset the root directory to writable and create the test dir but make it not writable.
+        testDirRoot.setWritable(true);
+        testDir.mkdirs();
+        testDir.setWritable(false);
+
+        // check the direcotry and throw an exception because it is exists byt it's not usable.
+        IOException mustHappenToo = null;
+        try {
+            FileUtil.checkDirectoryPath(testDir.getPath());
+        } catch (IOException e) {
+            mustHappenToo = e;
+        }
+        Assert.assertNotNull(mustHappenToo);
+
+        // create a file and pass it as argument, instead of a directory.
+        File testFile = new File(this.workingDir, FILE_NAME);
+        testFile.createNewFile();
+
+        // Check and throw an InvalidParameterException exception.
+        InvalidParameterException fileInsteadOfDirectory = null;
+        try {
+            FileUtil.checkDirectoryPath(testFile.getPath());
+        } catch (InvalidParameterException e) {
+            fileInsteadOfDirectory = e;
+        }
+        Assert.assertNotNull(fileInsteadOfDirectory);
     }
 }

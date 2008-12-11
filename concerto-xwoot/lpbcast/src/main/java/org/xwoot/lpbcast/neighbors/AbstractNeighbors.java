@@ -235,16 +235,9 @@ public abstract class AbstractNeighbors implements Neighbors
     @SuppressWarnings("unchecked")
     private void loadNeighbors() throws NeighborsException
     {
-        File neighborsFile = new File(this.neighborsFilePath);
-
-        if (!neighborsFile.exists()) {
-            this.neighbors = new HashSet<Object>();
-
-            return;
-        }
-
+        Object fallBack = new HashSet<Object>();
         try {
-            this.neighbors = (HashSet<Object>) PersistencyUtil.loadObjectFromFile(this.neighborsFilePath);
+            this.neighbors = (HashSet<Object>) PersistencyUtil.loadObjectFromFile(this.neighborsFilePath, fallBack);
         } catch (Exception e) {
             throw new NeighborsException(this.siteId + " - problems loading neighbors.\n", e);
         }

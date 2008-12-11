@@ -211,10 +211,10 @@ public class ThomasRuleEngineTest
      * Result: No operation older than the last modification done on an entry is performed, as described in
      * {@link ThomasRuleEngine#applyOp(ThomasRuleOp)}.
      * 
-     * @throws ThomasRuleEngineException if problems occur.
+     * @throws Exception if problems occur.
      */
     @Test
-    public void testApplyOpBasedOnTimestamps() throws ThomasRuleEngineException
+    public void testApplyOpBasedOnTimestamps() throws Exception
     {
         // /////////////////////////
         // Don't apply an operation that is older than the last operation applied on the entry.
@@ -223,6 +223,7 @@ public class ThomasRuleEngineTest
         // set id3 to val2 on tre2
         ThomasRuleOp op1greaterQ = tre2.getOp(id3, val2);
         tre2.applyOp(op1greaterQ);
+        Thread.sleep(10);
 
         // create id3 with val3 on tre1
         ThomasRuleOp op1greaterTer = tre1.getOp(id3, val3);

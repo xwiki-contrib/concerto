@@ -38,7 +38,7 @@ import com.thoughtworks.xstream.io.xml.DomDriver;
 /**
  * Utility class for providing object persistence methods.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public final class PersistencyUtil
 {

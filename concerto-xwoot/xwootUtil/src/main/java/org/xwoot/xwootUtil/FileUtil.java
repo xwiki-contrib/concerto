@@ -70,7 +70,7 @@ import org.apache.commons.codec.binary.Base64;
 /**
  * Utility class for file operatios.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public final class FileUtil
 {
@@ -154,7 +154,7 @@ public final class FileUtil
      * @param out the destination Stream.
      * @throws IOException if transfer problems occur.
      */
-    private static void copyInputStream(InputStream in, OutputStream out) throws IOException
+    public static void copyInputStream(InputStream in, OutputStream out) throws IOException
     {
         byte[] buffer = new byte[BUFFER];
         int len;
@@ -233,7 +233,7 @@ public final class FileUtil
      * @return the normalized string.
      * @see #removeAccents(String)
      */
-    private static String normalizeName(String string)
+    public static String normalizeName(String string)
     {
         String temp = FileUtil.removeAccents(string);
 
@@ -249,7 +249,7 @@ public final class FileUtil
     public static String removeAccents(String string)
     {
         String sSemAcento = string + "";
-        sSemAcento = sSemAcento.replaceAll("[áàâãä]", "a");
+        sSemAcento = sSemAcento.replaceAll("[áàâãäă]", "a");
         sSemAcento = sSemAcento.replaceAll("[ÁÀÂÃÄ]", "A");
         sSemAcento = sSemAcento.replaceAll("[éèêë]", "e");
         sSemAcento = sSemAcento.replaceAll("[ÉÈÊË]", "E");
@@ -263,6 +263,10 @@ public final class FileUtil
         sSemAcento = sSemAcento.replaceAll("Ç", "C");
         sSemAcento = sSemAcento.replaceAll("ñ", "n");
         sSemAcento = sSemAcento.replaceAll("Ñ", "N");
+        sSemAcento = sSemAcento.replaceAll("[ş]", "s");
+        sSemAcento = sSemAcento.replaceAll("[Ş]", "S");
+        sSemAcento = sSemAcento.replaceAll("[ţ]", "t");
+        sSemAcento = sSemAcento.replaceAll("[Ţ]", "T");
 
         return sSemAcento;
     }
@@ -382,31 +386,52 @@ public final class FileUtil
     }
 
     /**
-     * Extracts a zip file file to a directory.
+     * Convenience method.
      * 
      * @param zippedFilePath the location of the zip file.
-     * @param dirPath the directory where to extract the zip file.
+     * @param destinationDirPath the directory where to extract the zip file. If it does not exist, it will be created.
      * @return a list of extracted file names.
-     * @throws IOException if I/O or zip problems occur.
+     * @throws IOException if the destinationDirPath is not usable or other I/O or zip problems occur.
+     * @see #unzipInDirectory(ZipFile, String)
      * @see ZipFile
+     * @see #checkDirectoryPath(String)
      */
-    public static List<String> unzipInDirectory(String zippedFilePath, String dirPath) throws IOException
+    public static List<String> unzipInDirectory(String zippedFilePath, String destinationDirPath) throws IOException
     {
+        FileUtil.checkDirectoryPath(destinationDirPath);
+        
+        return FileUtil.unzipInDirectory(new ZipFile(zippedFilePath), destinationDirPath);
+    }
+    
+    /**
+     * Extracts a zip file file to a directory.
+     * <p>
+     * Note: The zipFile object will be closed when this method returns.
+     * 
+     * @param zipFile a valid ZipFile object.
+     * @param destinationDirPath the directory where to extract the zip file. If it does not exist, it will be created.
+     * @return a list of extracted file names.
+     * @throws IOException if the destinationDirPath is not usable or other I/O or zip problems occur.
+     * @see ZipFile
+     * @see ZipFile#close()
+     * @see #checkDirectoryPath(String)
+     */
+    public static List<String> unzipInDirectory(ZipFile zipFile, String destinationDirPath) throws IOException
+    {
+        FileUtil.checkDirectoryPath(destinationDirPath);
+        
         List<String> result = new ArrayList<String>();
-        ZipFile zippedFile = null;
 
         InputStream currentZipEntryInputStream = null;
         BufferedOutputStream bosToFile = null;
 
         try {
-            zippedFile = new ZipFile(zippedFilePath);
-
-            Enumeration< ? extends ZipEntry> entries = zippedFile.entries();
+            Enumeration< ? extends ZipEntry> entries = zipFile.entries();
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
-                String currentDestinationFilePath = dirPath + File.separator + entry.getName();
+                String currentDestinationFilePath = destinationDirPath + File.separator + entry.getName();
 
-                currentZipEntryInputStream = zippedFile.getInputStream(entry);
+                currentZipEntryInputStream = zipFile.getInputStream(entry);
                 bosToFile = new BufferedOutputStream(new FileOutputStream(currentDestinationFilePath));
 
                 try {
@@ -431,8 +456,8 @@ public final class FileUtil
                     bosToFile.close();
                 }
 
-                if (zippedFile != null) {
-                    zippedFile.close();
+                if (zipFile != null) {
+                    zipFile.close();
                 }
             } catch (Exception e) {
                 throw new IOException("Unable to close zip file " + e.getMessage());

@@ -100,6 +100,7 @@ import org.xwoot.xwootApp.core.XWootPage;
 import org.xwoot.xwootApp.core.tre.CommentValue;
 import org.xwoot.xwootApp.core.tre.MDIdentifier;
 import org.xwoot.xwootApp.core.tre.PageFieldValue;
+import org.xwoot.xwootUtil.FileUtil;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
