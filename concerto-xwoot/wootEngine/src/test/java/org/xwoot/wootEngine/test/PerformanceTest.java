@@ -48,6 +48,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 import org.xwoot.wootEngine.Patch;
+import org.xwoot.wootEngine.core.ContentId;
 import org.xwoot.wootEngine.core.WootId;
 import org.xwoot.wootEngine.core.WootRow;
 import org.xwoot.wootEngine.op.WootIns;
@@ -67,7 +68,9 @@ public class PerformanceTest extends AbstractWootEngineTest
      * Do 1000 insert operations between the default first row and the previous row inserted by the previous operation.
      * Basically, you will always be inserting on the first position.
      * <p>
-     * Normally this takes about 2.4-2.5 seconds but 4 seconds should be enough on other machines too.
+     * Normally this takes about 2.4-2.5 seconds but 4 seconds should be enough on other machines too. 1.4 seconds :
+     * Processor 2x Intel(R) Core(TM)2 CPU 6600 @ 2.40GHz Memory 3369MB Operating System Ubuntu 8.10 Linux
+     * 2.6.27-10-generic (i686)
      * 
      * @throws Exception if problems loading/unloading pages occur.
      */
@@ -81,7 +84,7 @@ public class PerformanceTest extends AbstractWootEngineTest
         // Add a first line between the default first and last woot row.
         WootId firstRowId = new WootId(this.site0.getWootEngineId(), 0);
         WootIns op0 = new WootIns(new WootRow(firstRowId, line), WootId.FIRST_WOOT_ID, WootId.LAST_WOOT_ID);
-        op0.setPageName(this.pageName);
+        op0.setContentId(new ContentId(this.pageName, this.objectId, this.fieldId, false));
         op0.setOpId(firstRowId);
 
         List<WootOp> data = new Vector<WootOp>();
@@ -92,13 +95,13 @@ public class PerformanceTest extends AbstractWootEngineTest
             WootId previouslyAddedRowId = new WootId(this.site0.getWootEngineId(), i);
             WootId newRowId = new WootId(this.site0.getWootEngineId(), i + 1);
             WootIns op = new WootIns(new WootRow(newRowId, line), WootId.FIRST_WOOT_ID, previouslyAddedRowId);
-            op.setPageName(this.pageName);
+            op.setContentId(new ContentId(this.pageName, this.objectId, this.fieldId, false));
             op.setOpId(newRowId);
             // woot.ins("index", line, 0).toString();
             data.add(op);
         }
 
-        Patch patch = new Patch(data, null, this.pageName);
+        Patch patch = new Patch(data, null, this.pageName, this.objectId, 0, 0, 0);
 
         Log log = LogFactory.getLog(this.getClass());
         log.debug("Started time-consuming operation...");

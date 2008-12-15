@@ -45,22 +45,22 @@
 package org.xwoot.wootEngine.op;
 
 import org.xwoot.wootEngine.core.WootId;
-import org.xwoot.wootEngine.core.WootPage;
+import org.xwoot.wootEngine.core.WootContent;
 import org.xwoot.wootEngine.core.WootRow;
 
 import java.io.Serializable;
 
 /**
- * Provides the Woot operation "Insert". It is able to insert a WootRow in a page between two other rows.
+ * Provides the Woot operation "Insert". It is able to insert a WootRow in a content between two other rows.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class WootIns extends AbstractWootOp implements Serializable
 {
     /** Unique ID used for serialization. */
     private static final long serialVersionUID = -4385801023236126147L;
 
-    /** The new row that will be inserted in the page. */
+    /** The new row that will be inserted in the content. */
     private WootRow rowToInsert;
 
     /** The id of the row located before the position where the new row will be inserted. */
@@ -72,7 +72,7 @@ public class WootIns extends AbstractWootOp implements Serializable
     /**
      * Creates a new WootIns object.
      * 
-     * @param rowToInsert the new row that will be inserted in the page.
+     * @param rowToInsert the new row that will be inserted in the content.
      * @param idOfPreviousRow the id of the row positioned before the newly inserted row.
      * @param idOfNextRow the id of the row positioned after the newly inserted row.
      */
@@ -85,18 +85,18 @@ public class WootIns extends AbstractWootOp implements Serializable
 
     /** {@inheritDoc} */
     @Override
-    public void execute(WootPage page)
+    public void execute(WootContent content)
     {
-        int indexOfPreviousRow = page.indexOfId(this.idOfPreviousRow);
-        int indexOfNextRow = page.indexOfIdAfter(indexOfPreviousRow, this.idOfNextRow);
+        int indexOfPreviousRow = content.indexOfId(this.idOfPreviousRow);
+        int indexOfNextRow = content.indexOfIdAfter(indexOfPreviousRow, this.idOfNextRow);
 
         WootId idOfRowToInsert = this.rowToInsert.getWootId();
 
         while (indexOfPreviousRow < (indexOfNextRow - 1)) {
-            int degree = page.elementAt(indexOfPreviousRow + 1).getDegree();
+            int degree = content.elementAt(indexOfPreviousRow + 1).getDegree();
 
             for (int i = indexOfPreviousRow + 2; i < indexOfNextRow; ++i) {
-                int d = page.elementAt(i).getDegree();
+                int d = content.elementAt(i).getDegree();
 
                 if (d < degree) {
                     degree = d;
@@ -104,8 +104,8 @@ public class WootIns extends AbstractWootOp implements Serializable
             }
 
             for (int i = indexOfPreviousRow + 1; i < indexOfNextRow; ++i) {
-                if (page.elementAt(i).getDegree() == degree) {
-                    int comparisonResult = page.elementAt(i).getWootId().compareTo(idOfRowToInsert);
+                if (content.elementAt(i).getDegree() == degree) {
+                    int comparisonResult = content.elementAt(i).getWootId().compareTo(idOfRowToInsert);
 
                     if (comparisonResult < 0) {
                         indexOfPreviousRow = i;
@@ -116,11 +116,11 @@ public class WootIns extends AbstractWootOp implements Serializable
             }
         }
 
-        page.insert(this.rowToInsert, indexOfPreviousRow);
+        content.insert(this.rowToInsert, indexOfPreviousRow);
     }
 
     /**
-     * @return the new row that will be inserted in the page.
+     * @return the new row that will be inserted in the content.
      */
     public WootRow getRowToInsert()
     {
@@ -138,27 +138,27 @@ public class WootIns extends AbstractWootOp implements Serializable
 
     /** {@inheritDoc} */
     @Override
-    public boolean canExecute(WootPage page)
+    public boolean canExecute(WootContent content)
     {
-        return (page.containsById(this.idOfPreviousRow) && page.containsById(this.idOfNextRow) && !(page
+        return (content.containsById(this.idOfPreviousRow) && content.containsById(this.idOfNextRow) && !(content
             .containsById(this.rowToInsert.getWootId())));
     }
 
     /**
-     * @param page the page affected by this operation.
+     * @param content the content affected by this operation.
      * @return an array containing on the first position the index of the previous row and on the second position the
      *         index of the next row, relative to the position of the newly inserted row.
-     * @see WootOp#getAffectedRowIndexes(WootPage)
+     * @see WootOp#getAffectedRowIndexes(WootContent)
      */
-    public int[] getAffectedRowIndexes(WootPage page)
+    public int[] getAffectedRowIndexes(WootContent content)
     {
-        int indexOfPreviousRow = page.indexOfId(this.getIdOfPreviousRow());
+        int indexOfPreviousRow = content.indexOfId(this.getIdOfPreviousRow());
 
         if (indexOfPreviousRow < 0) {
             return null;
         }
 
-        int indexOfNextRow = page.indexOfIdAfter(indexOfPreviousRow, this.getIdOfNextRow());
+        int indexOfNextRow = content.indexOfIdAfter(indexOfPreviousRow, this.getIdOfNextRow());
 
         if (indexOfNextRow < 0) {
             return null;

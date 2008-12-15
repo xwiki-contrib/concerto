@@ -44,45 +44,36 @@
 
 package org.xwoot.wootEngine.core;
 
-import org.xwoot.xwootUtil.FileUtil;
-
-import org.xwoot.wootEngine.WootEngineException;
-
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 /**
- * Handles a list of WootRow elements describing a page.
+ * Handles a list of WootRow elements describing a content.
  * 
  * @version $Id$
  */
-public class WootPage implements Serializable
+public class WootContent implements Serializable
 {
-    /** The extension of the file when this page is saved as a copy of a page. */
-    public static final String SAVED_FILE_EXTENSION = ".sav";
 
     /** Unique ID used for serialization. */
     private static final long serialVersionUID = -7726342430092268721L;
 
-    /** List of all the rows contained by this page. */
+    /** List of all the rows contained by this content. */
     private List<WootRow> rows = new ArrayList<WootRow>();
 
-    /** The name of the page. */
-    private String pageName;
-
-    /** Marks this page as being a copy of another. */
-    private boolean isSavedPage;
+    /** id of the described content. */
+    private ContentId contentId;
 
     /**
-     * Creates a new WootPage object.
+     * Creates a new WootContent object. A wootContent is a sub content of a {@link WootFile}. A {@link WootFile} is
+     * represented by a pageName.
      * 
      * @param addStartEndMakers whether to add or not the default first and last WootRow.
      */
-    public WootPage(boolean addStartEndMakers)
+    public WootContent(boolean addStartEndMakers)
     {
         if (addStartEndMakers) {
             this.getRows().add(WootRow.FIRST_WOOT_ROW);
@@ -91,44 +82,21 @@ public class WootPage implements Serializable
     }
 
     /**
-     * Creates a new WootPage instance, adding the default start and end WootRows.
+     * Creates a new WootContent instance, adding the default start and end WootRows.
      * 
-     * @param pageName the name of this newly created page.
+     * @param contentId the id of the newly content.
      * @throws IllegalArgumentException if the name is not valid.
-     * @see #WootPage(boolean)
-     * @see #setPageName(String)
+     * @see #WootContent(boolean)
      */
-    public WootPage(String pageName) throws IllegalArgumentException
+    public WootContent(ContentId contentId) throws IllegalArgumentException
     {
         this(true);
-        setPageName(pageName);
-    }
-
-    /**
-     * @return the name of the file where this page's contents are being stored.
-     * @throws WootEngineException if encoding problems are caused by the page's name.
-     * @see FileUtil#getEncodedFileName(String)
-     */
-    public String getFileName() throws WootEngineException
-    {
-        String filename = "";
-
-        try {
-            if (this.isSavedPage) {
-                filename = FileUtil.getEncodedFileName(this.getPageName() + WootPage.SAVED_FILE_EXTENSION);
-            } else {
-                filename = FileUtil.getEncodedFileName(this.getPageName());
-            }
-        } catch (UnsupportedEncodingException e) {
-            throw new WootEngineException("Problem with filename encoding", e);
-        }
-
-        return filename;
+        this.setContentId(contentId);
     }
 
     /**
      * @param wootRow the row to check for.
-     * @return true if the page contains the row.
+     * @return true if the content contains the row.
      */
     public boolean contains(WootRow wootRow)
     {
@@ -137,7 +105,7 @@ public class WootPage implements Serializable
 
     /**
      * @param id the ID of the row to check for.
-     * @return true if the page contains the WootRow identified by the specified ID.
+     * @return true if the content contains the WootRow identified by the specified ID.
      */
     public boolean containsById(WootId id)
     {
@@ -145,7 +113,7 @@ public class WootPage implements Serializable
     }
 
     /**
-     * @param index the index to check for relative to all the rows in the page, visible or not.
+     * @param index the index to check for relative to all the rows in the content, visible or not.
      * @return the wootRow at the specified index.
      */
     public WootRow elementAt(int index)
@@ -164,7 +132,7 @@ public class WootPage implements Serializable
 
     /**
      * @param wootRow the wootRow to check.
-     * @return the index of the wootRow relative to all the rows in the page or -1 if the row is not found.
+     * @return the index of the wootRow relative to all the rows in the content or -1 if the row is not found.
      */
     public int indexOf(WootRow wootRow)
     {
@@ -176,7 +144,7 @@ public class WootPage implements Serializable
      * 
      * @param id the id to look for.
      * @return the index, relative to all the rows, of the WootRow object having the specified id, relative to all the
-     *         rows in the page, or -1 if it does not exist.
+     *         rows in the content, or -1 if it does not exist.
      */
     public int indexOfId(WootId id)
     {
@@ -258,7 +226,7 @@ public class WootPage implements Serializable
     }
 
     /**
-     * @return true if there are no rows, except from the default ones, in the page.
+     * @return true if there are no rows, except from the default ones, in the content.
      */
     public boolean isEmpty()
     {
@@ -266,7 +234,7 @@ public class WootPage implements Serializable
     }
 
     /**
-     * @return the number of rows in the page, excluding the default ones.
+     * @return the number of rows in the content, excluding the default ones.
      */
     public int size()
     {
@@ -274,7 +242,7 @@ public class WootPage implements Serializable
     }
 
     /**
-     * @return the number of visible rows in the page, excluding the default ones.
+     * @return the number of visible rows in the content, excluding the default ones.
      */
     public int sizeOfVisible()
     {
@@ -289,44 +257,7 @@ public class WootPage implements Serializable
     }
 
     /**
-     * @return true if this page is a copy.
-     */
-    public boolean isSavedPage()
-    {
-        return this.isSavedPage;
-    }
-
-    /**
-     * @param isSavedPage whether this page is a copy.
-     */
-    public void setSavedPage(boolean isSavedPage)
-    {
-        this.isSavedPage = isSavedPage;
-    }
-
-    /**
-     * @return the name of the page.
-     */
-    public String getPageName()
-    {
-        return this.pageName;
-    }
-
-    /**
-     * @param pageName the pageName to set.
-     * @throws IllegalArgumentException if pageName is a null or empty String.
-     */
-    public void setPageName(String pageName) throws IllegalArgumentException
-    {
-        if (pageName == null || pageName.length() == 0) {
-            throw new IllegalArgumentException("Empty page names are not allowed.");
-        }
-
-        this.pageName = pageName;
-    }
-
-    /**
-     * @return a list of all the rows contained by this page.
+     * @return a list of all the rows contained by this content.
      */
     public List<WootRow> getRows()
     {
@@ -367,7 +298,7 @@ public class WootPage implements Serializable
     }
 
     /**
-     * @return the content of all the rows on this page.
+     * @return the content of all the rows on this content.
      */
     @Override
     public String toString()
@@ -384,7 +315,7 @@ public class WootPage implements Serializable
     }
 
     /**
-     * @return the content of all the visible rows in this page, including the default rows.
+     * @return the content of all the visible rows in this content, including the default rows.
      */
     public String toVisibleString()
     {
@@ -411,9 +342,9 @@ public class WootPage implements Serializable
             return false;
         }
 
-        WootPage other = (WootPage) o;
+        WootContent other = (WootContent) o;
 
-        return (this.pageName.equals(other.getPageName()) && this.rows.equals(other.getRows()));
+        return (this.contentId.equals(other.getContentId()) && this.rows.equals(other.getRows()));
     }
 
     /** {@inheritDoc} */
@@ -421,8 +352,24 @@ public class WootPage implements Serializable
     public int hashCode()
     {
         int hash = 7;
-        hash = 31 * hash + (this.pageName == null ? 0 : this.pageName.hashCode());
+        hash = 31 * hash + (this.contentId == null ? 0 : this.contentId.hashCode());
         hash = 31 * hash + (this.rows == null ? 0 : this.rows.hashCode());
         return hash;
+    }
+
+    /**
+     * @return the content Id.
+     */
+    public ContentId getContentId()
+    {
+        return this.contentId;
+    }
+
+    /**
+     * @param contentId the content Id to set.
+     */
+    public void setContentId(ContentId contentId)
+    {
+        this.contentId = contentId;
     }
 }

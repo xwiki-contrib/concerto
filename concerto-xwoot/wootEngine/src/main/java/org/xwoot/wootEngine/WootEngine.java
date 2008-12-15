@@ -49,8 +49,9 @@ import org.apache.commons.logging.LogFactory;
 import org.xwoot.clockEngine.Clock;
 import org.xwoot.clockEngine.ClockException;
 
+import org.xwoot.wootEngine.core.ContentId;
 import org.xwoot.wootEngine.core.WootId;
-import org.xwoot.wootEngine.core.WootPage;
+import org.xwoot.wootEngine.core.WootContent;
 import org.xwoot.wootEngine.core.WootRow;
 import org.xwoot.wootEngine.op.WootDel;
 import org.xwoot.wootEngine.op.WootIns;
@@ -77,13 +78,13 @@ public class WootEngine extends LoggedWootExceptionThrower
     private Clock opLocalClock;
 
     /**
-     * A waiting queue for WootOp elements originating from patches and that were destined for another page than the
-     * page of the patch.
+     * A waiting queue for WootOp elements originating from patches and that were destined for another content id than
+     * the content id of the patch.
      */
     private Pool waitingQueue;
 
-    /** Handles WootPages for the internal WootEngine model. */
-    private PageManager pageManager;
+    /** Handles WootContents for the internal WootEngine model. */
+    private ContentManager contentManager;
 
     /**
      * Creates a new WootEngine object.
@@ -103,13 +104,13 @@ public class WootEngine extends LoggedWootExceptionThrower
 
         this.setOpLocalClock(opClock);
         this.setWaitingQueue(new Pool(workingDir));
-        this.setPageManager(new PageManager(siteId, workingDir));
+        this.setContentManager(new ContentManager(siteId, workingDir));
 
         this.logger.info(this.wootEngineId + " - WootEngine created.");
     }
 
     /**
-     * Create the working directories and init the pagesDir field.
+     * Create the working directories and init the contentsDir field.
      * 
      * @throws WootEngineException if file access problems occur.
      * @see FileUtil#checkDirectoryPath(String)
@@ -138,23 +139,23 @@ public class WootEngine extends LoggedWootExceptionThrower
 
         this.createWorkingDir();
 
-        this.getPageManager().clearWorkingDir();
+        this.getContentManager().clearWorkingDir();
         this.getWaitingQueue().initializePool(true);
     }
 
     /**
-     * Delete from the WootPage an atomic value ({@link WootRow}) at a given visible position.
+     * Delete from the WootContent an atomic value ({@link WootRow}) at a given visible position.
      * 
-     * @param page the page from which to delete.
+     * @param content the content from which to delete.
      * @param position the position (of the WootRow) to delete relative to the visible WootRows. (starting from 0)
      * @return the corresponding Woot operation that has been applied.
      * @throws WootEngineException if the given position is invalid or if problems occurred with the operations Clock.
      */
-    public WootDel delete(WootPage page, int position) throws WootEngineException
+    public WootDel delete(WootContent content, int position) throws WootEngineException
     {
-        if ((position >= 0) && (position < page.sizeOfVisible())) {
+        if ((position >= 0) && (position < content.sizeOfVisible())) {
             // skip the default first row.
-            WootRow deleteRow = page.visibleElementAt(position + 1);
+            WootRow deleteRow = content.visibleElementAt(position + 1);
 
             if (!deleteRow.equals(WootRow.LAST_WOOT_ROW)) {
                 WootDel deleteOperation = new WootDel(deleteRow.getWootId());
@@ -165,44 +166,54 @@ public class WootEngine extends LoggedWootExceptionThrower
                     this.throwLoggedException("Problem with the clock.", e);
                 }
 
-                deleteOperation.setPageName(page.getPageName());
-                deleteOperation.execute(page);
+                deleteOperation.setContentId(content.getContentId());
+                deleteOperation.execute(content);
 
                 this.logger.debug(this.wootEngineId + " Operation executed : " + deleteOperation.toString());
+
+                // in copy returned operation must be in the corresponding main content
+                // FIXME more cleaner copy management
+                if (deleteOperation.getContentId().isCopy()) {
+                    ContentId cid =
+                        new ContentId(deleteOperation.getContentId().getPageName(), deleteOperation.getContentId()
+                            .getObjectName(), deleteOperation.getContentId().getFieldName(), false);
+                    deleteOperation.setContentId(cid);
+                }
 
                 return deleteOperation;
             }
         }
 
-        this.throwLoggedException("Invalid delete position " + position + " for the page " + page.getPageName());
+        this.throwLoggedException("Invalid delete position " + position + " for the content " + content.getContentId());
 
         // never reachable
         return null;
     }
 
     /**
-     * Inserts in the WootPage a String value at a given position.
+     * Inserts in the WootContent a String value at a given position.
      * 
-     * @param page the page in which to insert.
+     * @param content the content in which to insert.
      * @param value the value to insert.
      * @param position the position (WootRow) where to insert. (starting from 0)
      * @return the corresponding Woot operation that has been applied.
      * @throws WootEngineException if the given position is invalid or if problems occurred with the operations Clock.
      */
-    public WootIns insert(WootPage page, String value, int position) throws WootEngineException
+    public WootIns insert(WootContent content, String value, int position) throws WootEngineException
     {
-        this.logger.debug(this.wootEngineId + " - Direct insertion in " + page.getPageName() + ", value : " + value
+        this.logger.debug(this.wootEngineId + " - Direct insertion in " + content.getContentId() + ", value : " + value
             + ", position : " + position);
 
-        if ((position >= 0) && (position <= page.size())) {
-            int insertIndex = page.indexOfVisible(position);
-            WootRow rowBeforeInsert = (insertIndex != -1) ? page.elementAt(insertIndex) : page.elementAt(0);
+        if ((position >= 0) && (position <= content.size())) {
+            int insertIndex = content.indexOfVisible(position);
+            WootRow rowBeforeInsert = (insertIndex != -1) ? content.elementAt(insertIndex) : content.elementAt(0);
 
             if (!rowBeforeInsert.equals(WootRow.LAST_WOOT_ROW)) {
-                int indexAfterInsert = page.indexOfVisibleNext(insertIndex);
-                
+                int indexAfterInsert = content.indexOfVisibleNext(insertIndex);
+
                 WootRow rowAfterInsert =
-                    (indexAfterInsert != -1) ? page.elementAt(indexAfterInsert) : page.elementAt(page.size() + 1);
+                    (indexAfterInsert != -1) ? content.elementAt(indexAfterInsert) : content
+                        .elementAt(content.size() + 1);
 
                 int degreeC = 1;
                 degreeC +=
@@ -211,17 +222,25 @@ public class WootEngine extends LoggedWootExceptionThrower
 
                 try {
                     WootId insertionId = new WootId(this.wootEngineId, this.getOpLocalClock().tick());
-                    
+
                     WootRow newRowToInsert = new WootRow(insertionId, value, degreeC);
 
                     WootIns insertOperation =
                         new WootIns(newRowToInsert, rowBeforeInsert.getWootId(), rowAfterInsert.getWootId());
                     insertOperation.setOpId(insertionId);
-                    insertOperation.setPageName(page.getPageName());
+                    insertOperation.setContentId(content.getContentId());
 
-                    insertOperation.execute(page);
+                    insertOperation.execute(content);
                     this.logger.debug(this.wootEngineId + " - Operation executed :   " + insertOperation.toString());
 
+                    // in copy returned operation must be in the corresponding main content
+                    // FIXME more cleaner copy management
+                    if (insertOperation.getContentId().isCopy()) {
+                        ContentId cid =
+                            new ContentId(insertOperation.getContentId().getPageName(), insertOperation.getContentId()
+                                .getObjectName(), insertOperation.getContentId().getFieldName(), false);
+                        insertOperation.setContentId(cid);
+                    }
                     return insertOperation;
                 } catch (ClockException e) {
                     this.throwLoggedException("Problems with the clock.", e);
@@ -229,38 +248,38 @@ public class WootEngine extends LoggedWootExceptionThrower
             }
         }
 
-        this.throwLoggedException("Invalid insert position " + position + " for page " + page.getPageName());
+        this.throwLoggedException("Invalid insert position " + position + " for content " + content.getContentId());
 
         // never reachable.
         return null;
     }
 
     /**
-     * Applies a given Woot Operation on a page.
+     * Applies a given Woot Operation on a content.
      * 
      * @param operation the operation to apply.
-     * @param page the page on which to apply the operation.
+     * @param content the content on which to apply the operation.
      * @return true if the operation has been applied, false otherwise or if the operation was not indented for the
-     *         specified page or this operation is not yet applicable for this page.
+     *         specified content or this operation is not yet applicable for this content.
      */
-    private boolean executeOp(WootOp operation, WootPage page)
+    private boolean executeOp(WootOp operation, WootContent content)
     {
-        if (!operation.getPageName().equals(page.getPageName())) {
+        if (!operation.getContentId().equals(content.getContentId())) {
             return false;
         }
 
-        synchronized (page) {
+        synchronized (content) {
             // If the operation can not yet be applied because the targeted content does not exist.
-            if (operation.getAffectedRowIndexes(page) == null) {
+            if (operation.getAffectedRowIndexes(content) == null) {
                 return false;
             }
-            
+
             if (operation instanceof WootIns) {
 
                 WootIns insertOperation = (WootIns) operation;
 
                 // In case of an op reception after a setState containing this op
-                if (page.indexOfId(insertOperation.getRowToInsert().getWootId()) >= 0) {
+                if (content.indexOfId(insertOperation.getRowToInsert().getWootId()) >= 0) {
 
                     this.logger.debug(this.wootEngineId
                         + " - Operation not executed because it was already executed during a state transfert. -- "
@@ -270,96 +289,72 @@ public class WootEngine extends LoggedWootExceptionThrower
                 }
             }
 
-            operation.execute(page);
+            operation.execute(content);
 
             this.logger.debug(this.wootEngineId + " - Operation executed :  " + operation.toString());
 
         }
         /*
-        synchronized (page) {
-            if (operation instanceof WootIns) {
-
-                WootIns insertOperation = (WootIns) operation;
-                int[] indexs = new int[2];
-                indexs = insertOperation.getAffectedRowIndexes(page);
-
-                // In case of an op reception after a setState containing this op
-                if (page.indexOfId(insertOperation.getNewRow().getWootId()) >= 0) {
-
-                    this.logger.debug(this.wootEngineId
-                        + " - Operation not executed because it was already executed during a state transfert. -- "
-                        + insertOperation.getNewRow().getWootId());
-
-                    return true;
-                } else if (indexs != null) {
-                    // execute the operation
-                    insertOperation.execute(indexs[0], indexs[1], page);
-
-                    this.logger.debug(this.wootEngineId + " - Operation executed  (" + operation.getPageName()
-                        + "  -  " + page.getPageName() + ")  : " + operation.toString());
-
-                    return true;
-                }
-            } else if (operation instanceof WootDel) {
-
-                WootDel deleteOperation = (WootDel) operation;
-                int deleteRowIndex = deleteOperation.getAffectedRowIndexes(page);
-
-                if (deleteRowIndex >= 0) {
-                    
-                    deleteOperation.execute(page);
-
-                    this.logger.debug(this.wootEngineId + " - Operation executed (" + operation.getPageName() + " - "
-                        + page.getPageName() + ") : " + operation.toString());
-
-                    return true;
-                }
-            }
-        }
-        return false;
-        */
+         * synchronized (page) { if (operation instanceof WootIns) { WootIns insertOperation = (WootIns) operation;
+         * int[] indexs = new int[2]; indexs = insertOperation.getAffectedRowIndexes(page); // In case of an op
+         * reception after a setState containing this op if (page.indexOfId(insertOperation.getNewRow().getWootId()) >=
+         * 0) { this.logger.debug(this.wootEngineId +
+         * " - Operation not executed because it was already executed during a state transfert. -- " +
+         * insertOperation.getNewRow().getWootId()); return true; } else if (indexs != null) { // execute the operation
+         * insertOperation.execute(indexs[0], indexs[1], page); this.logger.debug(this.wootEngineId +
+         * " - Operation executed  (" + operation.getPageName() + "  -  " + page.getPageName() + ")  : " +
+         * operation.toString()); return true; } } else if (operation instanceof WootDel) { WootDel deleteOperation =
+         * (WootDel) operation; int deleteRowIndex = deleteOperation.getAffectedRowIndexes(page); if (deleteRowIndex >=
+         * 0) { deleteOperation.execute(page); this.logger.debug(this.wootEngineId + " - Operation executed (" +
+         * operation.getPageName() + " - " + page.getPageName() + ") : " + operation.toString()); return true; } } }
+         * return false;
+         */
         return true;
     }
 
     /**
      * Applies a received patch.
      * <p>
-     * If the page this patch for does not exist in the model, it will be created and added.
+     * If the content this patch for does not exist in the model, it will be created and added.
      * <p>
      * If operations in this patch can not be applied, they will be added to a waiting queue.
      * 
      * @param patch the patch to apply.
-     * @throws WootEngineException if problems accessing or creating the page or working with the waiting queue occur.
+     * @throws WootEngineException if problems accessing or creating the content or working with the waiting queue
+     *             occur.
      */
     public synchronized void deliverPatch(Patch patch) throws WootEngineException
     {
-        this.logger.info(this.wootEngineId + " - Reception of a new patch for page : " + patch.getPageName());
+        this.logger.info(this.wootEngineId + " - Reception of a new patch for content : " + patch.getPageId() + " - "
+            + patch.globalId());
         this.logger.debug(this.wootEngineId + " - Patch contents : " + patch.toString());
 
-        String pageName = patch.getPageName();
+        // if (!this.getPageManager().fileExists(pageName)) {
+        // page = this.getPageManager().createPage(pageName);
+        // } else {
+        // page = this.getPageManager().loadPage(pageName);
+        // }
 
-        WootPage page = null;
-
-        if (!this.getPageManager().pageExists(pageName)) {
-            page = this.getPageManager().createPage(pageName);
-        } else {
-            page = this.getPageManager().loadPage(pageName);
-        }
-
+        WootContent content = null;
         this.logger.debug(this.wootEngineId + " - Execution of patch operations...");
+
+        if (patch.getData() != null && patch.getData().iterator().hasNext()) {
+            ContentId cid = ((WootOp) patch.getData().iterator().next()).getContentId();
+            content = this.contentManager.loadWootContent(cid);
+        }
 
         this.getWaitingQueue().loadPool();
         for (Object obj : patch.getData()) {
             WootOp op = (WootOp) obj;
 
-            if (!this.executeOp(op, page)) {
+            if (!this.executeOp(op, content)) {
                 this.logger.debug(this.wootEngineId + " - apending to waiting queue : " + op.toString());
                 this.getWaitingQueue().getContent().add(op);
             }
         }
-        this.waitingQueueExec(page);
+        this.waitingQueueExec(content);
         this.getWaitingQueue().unLoadPool();
-        this.getPageManager().unloadPage(page);
+        this.getContentManager().unloadWootContent(content);
     }
 
     /**
@@ -367,10 +362,10 @@ public class WootEngine extends LoggedWootExceptionThrower
      * <p>
      * The operations that do get executed will get removed from the waiting queue.
      * 
-     * @param page the page name on which the operations have to be applied.
+     * @param content the WootContent on which the operations have to be applied.
      * @throws WootEngineException if problems saving the pool's state occur.
      */
-    private void waitingQueueExec(WootPage page) throws WootEngineException
+    private void waitingQueueExec(WootContent content) throws WootEngineException
     {
         this.logger.debug(this.wootEngineId + " - Waiting queue execution.");
 
@@ -379,7 +374,7 @@ public class WootEngine extends LoggedWootExceptionThrower
         while (i < this.getWaitingQueue().getContent().size()) {
             WootOp operation = this.getWaitingQueue().get(i);
 
-            if (this.executeOp(operation, page)) {
+            if (this.executeOp(operation, content)) {
                 this.getWaitingQueue().remove(i);
                 // rewind
                 i = 0;
@@ -395,7 +390,7 @@ public class WootEngine extends LoggedWootExceptionThrower
     }
 
     /**
-     * Computes the current state of the WootEngine as a zip archieve containing WootPages.
+     * Computes the current state of the WootEngine as a zip archieve containing WootContents.
      * 
      * @return the location of the zip file generated. Note: The file is temporary and it is stored in the temporary
      *         directory.
@@ -404,11 +399,11 @@ public class WootEngine extends LoggedWootExceptionThrower
      */
     public synchronized File getState() throws WootEngineException
     {
-        File pagesDir = new File(this.getPageManager().getPagesDirPath());
+        File contentsDir = new File(this.getContentManager().getContentsDirPath());
 
         String stateFilePath = null;
         try {
-            stateFilePath = FileUtil.zipDirectory(pagesDir.getAbsolutePath());
+            stateFilePath = FileUtil.zipDirectory(contentsDir.getAbsolutePath());
         } catch (IOException e) {
             this.throwLoggedException("Problems zipping the current state.", e);
         }
@@ -436,13 +431,13 @@ public class WootEngine extends LoggedWootExceptionThrower
 
             try {
                 // delete all existing pages
-                File pagesDir = new File(this.getPageManager().getPagesDirPath());
+                File contentsDir = new File(this.getContentManager().getContentsDirPath());
                 /*
                  * FIXME: actually remove current content and remake directory structure.
                  * FileUtil.deleteDirectory(pagesDir); createWorkingDir();
                  */
 
-                FileUtil.unzipInDirectory(zippedStateFile.toString(), pagesDir.getAbsolutePath());
+                FileUtil.unzipInDirectory(zippedStateFile.toString(), contentsDir.getAbsolutePath());
 
                 this.logger.info(this.getWootEngineId() + " - Received WootEngine state.");
 
@@ -456,8 +451,8 @@ public class WootEngine extends LoggedWootExceptionThrower
     }
 
     /**
-     * @return a waiting queue for WootOp elements originating from patches and that were destined for another page than
-     *         the page of the patch.
+     * @return a waiting queue for WootOp elements originating from patches and that were destined for another content
+     *         id than the content id of the patch.
      */
     private Pool getWaitingQueue()
     {
@@ -528,20 +523,20 @@ public class WootEngine extends LoggedWootExceptionThrower
     }
 
     /**
-     * @return the PageManager instance responsible for WootPages handling.
-     * @see WootPage
+     * @return the contentManager instance responsible for WootContents handling.
+     * @see WootContent
      */
-    public PageManager getPageManager()
+    public ContentManager getContentManager()
     {
-        return this.pageManager;
+        return this.contentManager;
     }
 
     /**
-     * @param pageManager the pageManager to set
+     * @param contentManager the contentManager to set
      */
-    public void setPageManager(PageManager pageManager)
+    public void setContentManager(ContentManager contentManager)
     {
-        this.pageManager = pageManager;
+        this.contentManager = contentManager;
     }
 
 }

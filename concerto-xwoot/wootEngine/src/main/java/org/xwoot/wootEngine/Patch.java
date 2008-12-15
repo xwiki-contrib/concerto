@@ -70,8 +70,20 @@ public class Patch implements Serializable
      */
     private List<Object> mDelements;
 
-    /** The name (XWiki page id) of the page that this patch applies to. */
-    private String pageName;
+    /** Id of the concerned page. */
+    private String pageId;
+
+    /** Id of the concerned object in the page. */
+    private String objectId;
+
+    /** Timestamp of the concerned page modification. */
+    private long timestamp;
+
+    /** Version of the concerned page modification. */
+    private int version;
+
+    /** Minor version of the concerned page modification. */
+    private int minorVersion;
 
     /**
      * Creates a new Patch instance.
@@ -81,13 +93,22 @@ public class Patch implements Serializable
      * @param metaData List of {@link org.xwoot.thomasRuleEngine.op.ThomasRuleOp ThomasRuleOp} elements representing
      *            changes in a page's metadata.
      * @param pageId the name (XWiki page id) of the page that this patch applies to.
+     * @param objectId the content id that this patch applies to.
+     * @param timestamp the timestamp of the modification
+     * @param version the version of the page
+     * @param minorVersion the minor version of the page
      */
     @SuppressWarnings("unchecked")
-    public Patch(List data, List metaData, String pageId)
+    public Patch(List data, List metaData, String pageId, String objectId, long timestamp, int version, 
+        int minorVersion)
     {
         this.elements = data;
         this.mDelements = metaData;
-        this.pageName = pageId;
+        this.setData(data);
+        this.setMDelements(metaData);
+        this.setObjectId(objectId);
+        this.setPageId(pageId);
+
     }
 
     /**
@@ -95,7 +116,7 @@ public class Patch implements Serializable
      */
     public Patch()
     {
-        //void
+        // void
     }
 
     /**
@@ -138,17 +159,89 @@ public class Patch implements Serializable
     /**
      * @return the name (XWiki page id) of the page that this patch applies to.
      */
-    public String getPageName()
+    public String getPageId()
     {
-        return this.pageName;
+        return this.pageId;
     }
 
     /**
      * @param pageName the name (XWiki page id) of the page on which to apply this patch.
      */
-    public void setPageName(String pageName)
+    public void setPageId(String pageName)
     {
-        this.pageName = pageName;
+        this.pageId = pageName;
+    }
+
+    /**
+     * @return the id of the concerned object in the concerned page.
+     */
+    public String getObjectId()
+    {
+        return this.objectId;
+    }
+
+    /**
+     * @param objectId the id to set.
+     */
+    public void setObjectId(String objectId)
+    {
+        this.objectId = objectId;
+    }
+
+    /**
+     * @return a String representation of the global id (pageId+"."+objectId)
+     */
+    public String globalId()
+    {
+        return this.pageId + "." + this.objectId;
+    }
+
+    /**
+     * @param timestamp the timestamp to set.
+     */
+    public void setTimestamp(long timestamp)
+    {
+        this.timestamp = timestamp;
+    }
+
+    /**
+     * @param version the version to set.
+     */
+    public void setVersion(int version)
+    {
+        this.version = version;
+    }
+
+    /**
+     * @param minorVersion the minor version to set.
+     */
+    public void setMinorVersion(int minorVersion)
+    {
+        this.minorVersion = minorVersion;
+    }
+
+    /**
+     * @return the timestamp of the concerned page modification.
+     */
+    public long getTimestamp()
+    {
+        return this.timestamp;
+    }
+
+    /**
+     * @return the version of the concerned page modification.
+     */
+    public int getVersion()
+    {
+        return this.version;
+    }
+
+    /**
+     * @return the minor version of the concerned page modification.
+     */
+    public int getMinorVersion()
+    {
+        return this.minorVersion;
     }
 
 }

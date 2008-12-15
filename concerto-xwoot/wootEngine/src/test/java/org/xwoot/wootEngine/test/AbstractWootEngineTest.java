@@ -86,6 +86,12 @@ public abstract class AbstractWootEngineTest
     /** Name of page used for testing. */
     protected String pageName = "testPage";
 
+    /** Id of object in page used for testing. */
+    protected String objectId = "page";
+
+    /** Id of object's field in page used for testing. */
+    protected String fieldId = "content";
+
     /** Test WootEngine. */
     protected WootEngine site0;
 

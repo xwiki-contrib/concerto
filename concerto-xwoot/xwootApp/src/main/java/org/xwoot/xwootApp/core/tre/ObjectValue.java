@@ -44,9 +44,11 @@
 
 package org.xwoot.xwootApp.core.tre;
 
-import java.io.Serializable;
-
+import org.xwoot.XWootObject;
+import org.xwoot.XWootObjectField;
 import org.xwoot.thomasRuleEngine.core.Value;
+
+import java.io.Serializable;
 
 /**
  * DOCUMENT ME!
@@ -54,21 +56,33 @@ import org.xwoot.thomasRuleEngine.core.Value;
  * @author $author$
  * @version $Revision$
  */
-public class PageFieldValue implements Value
+public class ObjectValue implements Value
 {
     /**  */
     private static final long serialVersionUID = 3460912988689095045L;
 
-    String value;
-
+    private XWootObject value;
+    
     /**
-     * Creates a new MDValue object.
+     * Creates a new TagValue object.
      * 
      * @param value DOCUMENT ME!
      */
-    public PageFieldValue(String value)
+    public ObjectValue()
     {
-        this.value = value;
+        //void
+    }
+    
+    public void setObject(XWootObject value){
+        this.value=value;
+    }
+    
+    public boolean setValue(XWootObjectField value){
+       if (this.value.getFieldValue(value.getName())==null){
+           return false;
+       }
+       this.value.setFieldValue(value.getName(), value.getValue());
+       return true;
     }
 
     /**
@@ -92,27 +106,17 @@ public class PageFieldValue implements Value
             return false;
         }
 
-        final PageFieldValue other = (PageFieldValue) obj;
+        final ObjectValue other = (ObjectValue) obj;
 
         if (this.value == null) {
             if (other.value != null) {
                 return false;
             }
-        } else if ((other.value != null) && !(this.value.compareTo(other.value) == 0)) {
+        } else if (!(this.value.equals(other.value))) {
             return false;
         }
 
         return true;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public Serializable get()
-    {
-        return this.value;
     }
 
     /**
@@ -138,6 +142,11 @@ public class PageFieldValue implements Value
     @Override
     public String toString()
     {
-        return this.value;
+        return this.value.toString();
+    }
+
+    public Serializable get()
+    {
+        return (Serializable) this.value;
     }
 }

@@ -49,17 +49,17 @@ import java.io.Serializable;
 /**
  * Handles the content of a row of text.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 @SuppressWarnings("unchecked")
-public class WootRow implements Comparable, Serializable
+public class WootRow implements Comparable, Serializable, Cloneable
 {
-    /** The first row in a page's content. */
+    /** The first row in a content. */
     public static final WootRow FIRST_WOOT_ROW = new WootRow(WootId.FIRST_WOOT_ID, "[", 0);
 
-    /** The last row in a page's content. */
+    /** The last row in a content. */
     public static final WootRow LAST_WOOT_ROW = new WootRow(WootId.LAST_WOOT_ID, "]", 0);
-    
+
     /** Unique ID used for serialization. */
     private static final long serialVersionUID = 4769231469557831085L;
 
@@ -108,7 +108,7 @@ public class WootRow implements Comparable, Serializable
         this.wootId = wootId;
         this.content = value;
         this.degree = degree;
-        
+
         this.visible = true;
     }
 

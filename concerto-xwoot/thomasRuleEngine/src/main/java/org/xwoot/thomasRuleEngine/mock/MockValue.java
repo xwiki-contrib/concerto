@@ -44,6 +44,8 @@
 
 package org.xwoot.thomasRuleEngine.mock;
 
+import java.io.Serializable;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.xwoot.thomasRuleEngine.core.Value;
@@ -51,7 +53,7 @@ import org.xwoot.thomasRuleEngine.core.Value;
 /**
  * Mockup for the Value interface.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class MockValue implements Value
 {
@@ -74,7 +76,7 @@ public class MockValue implements Value
     }
 
     /** {@inheritDoc} */
-    public Object get()
+    public Serializable get()
     {
         return this.value;
     }

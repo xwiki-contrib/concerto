@@ -45,13 +45,13 @@
 package org.xwoot.wootEngine.op;
 
 import org.xwoot.wootEngine.core.WootId;
-import org.xwoot.wootEngine.core.WootPage;
+import org.xwoot.wootEngine.core.WootContent;
 
 import java.io.Serializable;
 
 /**
- * Provides the Woot operation "Delete". It is able to delete a {@link WootRow} from a {@link WootPage} by setting the
- * {@link WootRow#visible} field to false.
+ * Provides the Woot operation "Delete". It is able to delete a {@link WootRow} from a {@link WootContent} by setting
+ * the {@link WootRow#visible} field to false.
  * 
  * @version $Id$
  */
@@ -75,25 +75,25 @@ public class WootDel extends AbstractWootOp implements Serializable
 
     /** {@inheritDoc} */
     @Override
-    public void execute(WootPage page)
+    public void execute(WootContent content)
     {
-        int indexOfRowToDelete = page.indexOfId(this.idOfRowToDelete);
+        int indexOfRowToDelete = content.indexOfId(this.idOfRowToDelete);
         if (indexOfRowToDelete >= 1) {
-            page.elementAt(indexOfRowToDelete).setVisible(false);
+            content.elementAt(indexOfRowToDelete).setVisible(false);
         }
     }
 
     /** {@inheritDoc} */
     @Override
-    public boolean canExecute(WootPage page)
+    public boolean canExecute(WootContent content)
     {
-        return page.containsById(this.idOfRowToDelete);
+        return content.containsById(this.idOfRowToDelete);
     }
 
     /** {@inheritDoc} */
-    public Integer getAffectedRowIndexes(WootPage page)
+    public Integer getAffectedRowIndexes(WootContent content)
     {
-        int affectedRowIndex = page.indexOfId(this.idOfRowToDelete);
+        int affectedRowIndex = content.indexOfId(this.idOfRowToDelete);
         return (affectedRowIndex < 0 ? null : new Integer(affectedRowIndex));
     }
 

@@ -46,7 +46,7 @@ package org.xwoot.xwootApp.core.tre;
 
 import org.xwoot.thomasRuleEngine.core.Value;
 
-import java.util.Map;
+import java.io.Serializable;
 
 /**
  * DOCUMENT ME!
@@ -59,14 +59,14 @@ public class CommentValue implements Value
     /**  */
     private static final long serialVersionUID = 3460912988689095045L;
 
-    private Map value;
+    private Serializable value;
 
     /**
      * Creates a new CommentsValue object.
      * 
      * @param value DOCUMENT ME!
      */
-    public CommentValue(Map value)
+    public CommentValue(Serializable value)
     {
         this.value = value;
     }
@@ -110,7 +110,7 @@ public class CommentValue implements Value
      * 
      * @return DOCUMENT ME!
      */
-    public Object get()
+    public Serializable get()
     {
         return this.value;
     }

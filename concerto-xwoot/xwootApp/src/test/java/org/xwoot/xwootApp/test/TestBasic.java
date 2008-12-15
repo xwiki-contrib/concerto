@@ -49,19 +49,17 @@ import org.junit.Test;
 import org.xwoot.lpbcast.message.Message;
 import org.xwoot.lpbcast.sender.LpbCastAPI;
 
-import org.xwoot.wikiContentManager.WikiContentManager;
-
 import org.xwoot.wootEngine.Patch;
+import org.xwoot.wootEngine.core.ContentId;
 import org.xwoot.wootEngine.core.WootId;
 import org.xwoot.wootEngine.core.WootRow;
 import org.xwoot.wootEngine.op.WootIns;
 import org.xwoot.wootEngine.op.WootOp;
 
+import org.xwoot.xwootApp.XWoot;
 import org.xwoot.xwootApp.core.XWootPage;
-import org.xwoot.xwootApp.core.tre.MDIdentifier;
 
 import java.io.File;
-import java.util.Map;
 import java.util.Vector;
 
 import junit.framework.Assert;
@@ -101,8 +99,7 @@ public class TestBasic extends AbstractXWootTest
 
         // Launch the synch without connection
         this.xwoot1.synchronizePages();
-        Assert.assertEquals("", this.wootEngine1.getPageManager().getPage("test.1"));
-
+        Assert.assertEquals("", this.wootEngine1.getContentManager().getContent("test.1", XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         // connect XWoot
         this.xwoot1.reconnectToP2PNetwork();
         this.xwoot1.connectToContentManager();
@@ -110,12 +107,12 @@ public class TestBasic extends AbstractXWootTest
         // Launch the synch...
         this.xwoot1.synchronizePages();
 
-        Assert.assertEquals("toto\n", this.wootEngine1.getPageManager().getPage("test.1"));
+        Assert.assertEquals("toto\n", this.wootEngine1.getContentManager().getContent("test.1", XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         Assert.assertEquals("toto\n", this.xwiki1.getPageContent("test.1"));
         this.xwiki1.overwritePageContent("test.1", "t\n");
         // Launch the synch...
         this.xwoot1.synchronizePages();
-        Assert.assertEquals("t\n", this.wootEngine1.getPageManager().getPage("test.1"));
+        Assert.assertEquals("t\n", this.wootEngine1.getContentManager().getContent("test.1", XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         Assert.assertEquals("t\n", this.xwiki1.getPageContent("test.1"));
 
     }
@@ -132,7 +129,7 @@ public class TestBasic extends AbstractXWootTest
         // create a test page
         XWootPage page = new XWootPage("test.1", "");
 
-        Assert.assertEquals("", this.wootEngine1.getPageManager().getPage(page.getPageName()));
+        Assert.assertEquals("", this.wootEngine1.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
 
         // connect XWoot
         this.xwoot1.reconnectToP2PNetwork();
@@ -165,9 +162,9 @@ public class TestBasic extends AbstractXWootTest
         this.xwoot1.synchronizePages();
 
         // xwoot1 & this.xwoot2 : verify the propagation
-        Assert.assertEquals("toto\n", this.wootEngine1.getPageManager().getPage(page.getPageName()));
+        Assert.assertEquals("toto\n", this.wootEngine1.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         Assert.assertEquals("toto\n", this.xwiki1.getPageContent(page.getPageName()));
-        Assert.assertEquals("toto\n", this.wootEngine2.getPageManager().getPage(page.getPageName()));
+        Assert.assertEquals("toto\n", this.wootEngine2.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         Assert.assertEquals("toto\n", this.xwiki2.getPageContent(page.getPageName()));
 
     }
@@ -222,8 +219,8 @@ public class TestBasic extends AbstractXWootTest
         Assert.assertEquals(true, this.xwoot2.isPageManaged(page2));
         Assert.assertEquals(true, this.xwoot2.isPageManaged(page));
         this.xwoot2.reconnectToP2PNetwork();
-        Assert.assertEquals("Content Page 1 \n", this.wootEngine2.getPageManager().getPage(page.getPageName()));
-        Assert.assertEquals("Yoplaboom 2 \n", this.wootEngine2.getPageManager().getPage(page2.getPageName()));
+        Assert.assertEquals("Content Page 1 \n", this.wootEngine2.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
+        Assert.assertEquals("Yoplaboom 2 \n", this.wootEngine2.getContentManager().getContent(page2.getPageName(),XWoot.PAGEOBJECTID,XWoot.PAGECONTENTFIELDID));
     }
 
     /**
@@ -260,14 +257,14 @@ public class TestBasic extends AbstractXWootTest
         Patch patch = new Patch();
         Vector<WootOp> vector = new Vector<WootOp>();
         WootIns op0 = new WootIns(new WootRow(new WootId(0, 0), "titi"), new WootId(-1, -1), new WootId(-2, -2));
-        op0.setPageName(page.getPageName());
+        op0.setContentId(new ContentId(page.getPageName(),XWoot.PAGEOBJECTID,XWoot.PAGECONTENTFIELDID,false));
         op0.setOpId(new WootId(0, 0));
         vector.add(op0);
         patch.setData(vector);
-        patch.setPageName(page.getPageName());
+        patch.setPageId(page.getPageName());
 
         Assert.assertEquals("toto\n", this.xwiki1.getPageContent(page.getPageName()));
-        Assert.assertEquals("", this.wootEngine1.getPageManager().getPage(page.getPageName()));
+        Assert.assertEquals("", this.wootEngine1.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
 
         Message mess = new Message();
         mess.setAction(LpbCastAPI.LOG_AND_GOSSIP_OBJECT);
@@ -277,181 +274,181 @@ public class TestBasic extends AbstractXWootTest
        
         this.xwoot1.receivePatch(mess);
 
-        Assert.assertEquals("titi\ntoto\n", this.wootEngine1.getPageManager().getPage(page.getPageName()));
+        Assert.assertEquals("titi\ntoto\n", this.wootEngine1.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         Assert.assertEquals("titi\ntoto\n", this.xwiki1.getPageContent(page.getPageName()));
 
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @throws Exception DOCUMENT ME!
-     */
-    @Test
-    public void testMDWithThreeConcurrentXWiki() throws Exception
-    {
-
-        // configure neighbors
-        this.lpbCast1.addNeighbor(this.xwoot1, this.xwoot2);
-        this.lpbCast1.addNeighbor(this.xwoot1, this.xwoot3);
-        this.lpbCast2.addNeighbor(this.xwoot2, this.xwoot1);
-        this.lpbCast2.addNeighbor(this.xwoot2, this.xwoot3);
-        this.lpbCast3.addNeighbor(this.xwoot3, this.xwoot1);
-        this.lpbCast3.addNeighbor(this.xwoot3, this.xwoot2);
-
-        // create a test page
-        XWootPage page = new XWootPage("test.1", "");
-
-        // connect XWoot
-        this.xwoot1.reconnectToP2PNetwork();
-        this.xwoot1.connectToContentManager();
-        this.xwoot2.reconnectToP2PNetwork();
-        this.xwoot2.connectToContentManager();
-        this.xwoot3.reconnectToP2PNetwork();
-        this.xwoot3.connectToContentManager();
-
-        // add pages managment
-        this.xwoot1.addPageManagement(page);
-        Assert.assertEquals(true, this.xwoot1.isPageManaged(page));
-
-        // /////////////////////
-        // Scenario execution
-        // /////////////////////
-        // simulate a change from wikiContentManager user...
-        this.xwiki1.removePage(page.getPageName());
-
-        this.xwiki1.overwritePageContent(page.getPageName(), "");
-        Map<String, String> fields = this.xwiki1.getFields(page.getPageName());
-        Assert.assertNotNull(fields);
-
-        // fields.put(WikiContentManager.CREATOR,"XWiki.terminator");
-        // fields.put(WikiContentManager.MODIFIER, "XWiki.terminator");
-        fields.put(WikiContentManager.PARENTID, "Terminator's dad");
-        fields.put(WikiContentManager.HOMEPAGE, "false");
-        fields.put(WikiContentManager.ID, "test.1");
-        fields.put(WikiContentManager.SPACE, "test");
-        fields.put(WikiContentManager.TITLE, "1");
-
-        this.xwiki1.setFields(page.getPageName(), fields);
-
-        // Launch the synch...
-        this.xwoot1.synchronizePages();
-
-        // Assert.assertEquals("XWiki.terminator",this.xwoot1.getTre().getValue(
-        // new
-        // MDIdentifier(page.getPageName(),WikiContentManager.CREATOR)).get());
-        // Assert.assertEquals("XWiki.terminator",
-        // this.xwoot1.getTre().getValue(
-        // new MDIdentifier(page.getPageName(),
-        // WikiContentManager.MODIFIER)).get());
-        Assert.assertEquals("Terminator's dad", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.PARENTID)).get());
-        Assert.assertEquals("false", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.HOMEPAGE)).get());
-        Assert.assertEquals("test.1", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.ID)).get());
-        Assert.assertEquals("test", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.SPACE)).get());
-        Assert.assertEquals("1", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.TITLE)).get());
-
-        // assertEquals("XWiki.terminator",this.xwoot1.getTre().getValue(new
-        // MDIdentifier(page.getPageName(),WikiContentManager.CREATOR)).get());
-        // Assert.assertEquals("XWiki.terminator",
-        // this.xwoot2.getTre().getValue(
-        // new MDIdentifier(page.getPageName(),
-        // WikiContentManager.MODIFIER)).get());
-        Assert.assertEquals("Terminator's dad", this.xwoot2.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.PARENTID)).get());
-        Assert.assertEquals("false", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.HOMEPAGE)).get());
-        Assert.assertEquals("test.1", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.ID)).get());
-        Assert.assertEquals("test", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.SPACE)).get());
-        Assert.assertEquals("1", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.TITLE)).get());
-
-        // assertEquals("XWiki.terminator",this.xwoot1.getTre().getValue(new
-        // MDIdentifier(page.getPageName(),WikiContentManager.CREATOR)).get());
-        // Assert.assertEquals("XWiki.terminator",
-        // this.xwoot3.getTre().getValue(
-        // new MDIdentifier(page.getPageName(),
-        // WikiContentManager.MODIFIER)).get());
-        Assert.assertEquals("Terminator's dad", this.xwoot3.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.PARENTID)).get());
-        Assert.assertEquals("false", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.HOMEPAGE)).get());
-        Assert.assertEquals("test.1", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.ID)).get());
-        Assert.assertEquals("test", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.SPACE)).get());
-        Assert.assertEquals("1", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.TITLE)).get());
-
-        Map<String, String> fields2 = this.xwiki2.getFields(page.getPageName());
-        fields2.put(WikiContentManager.MODIFIER, "XWiki.predator");
-        Map<String, String> fields3 = this.xwiki3.getFields(page.getPageName());
-        fields3.put(WikiContentManager.MODIFIER, "XWiki.alien");
-        fields3.put(WikiContentManager.PARENTID, "XWiki.alien's mother");
-        this.xwiki2.setFields(page.getPageName(), fields2);
-        this.xwiki3.setFields(page.getPageName(), fields3);
-        this.xwoot3.synchronizePages();
-        this.xwoot2.synchronizePages();
-        this.xwoot1.synchronizePages();
-
-        // WARNING : First synchronizer win ...
-
-        // assertEquals("XWiki.terminator",this.xwoot1.getTre().getValue(new
-        // MDIdentifier(page.getPageName(),WikiContentManager.CREATOR)).get());
-        // Assert.assertEquals("XWiki.alien", this.xwoot1.getTre().getValue(
-        // new MDIdentifier(page.getPageName(),
-        // WikiContentManager.MODIFIER)).get());
-        Assert.assertEquals("XWiki.alien's mother", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.PARENTID)).get());
-        Assert.assertEquals("false", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.HOMEPAGE)).get());
-        Assert.assertEquals("test.1", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.ID)).get());
-        Assert.assertEquals("test", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.SPACE)).get());
-        Assert.assertEquals("1", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.TITLE)).get());
-
-        // Assert.assertEquals("XWiki.terminator",this.xwoot1.getTre().getValue(
-        // new
-        // MDIdentifier(page.getPageName(),WikiContentManager.CREATOR)).get());
-        // Assert.assertEquals("XWiki.alien", this.xwoot2.getTre().getValue(
-        // new MDIdentifier(page.getPageName(),
-        // WikiContentManager.MODIFIER)).get());
-        Assert.assertEquals("XWiki.alien's mother", this.xwoot2.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.PARENTID)).get());
-        Assert.assertEquals("false", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.HOMEPAGE)).get());
-        Assert.assertEquals("test.1", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.ID)).get());
-        Assert.assertEquals("test", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.SPACE)).get());
-        Assert.assertEquals("1", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.TITLE)).get());
-
-        // assertEquals("XWiki.terminator",this.xwoot1.getTre().getValue(new
-        // MDIdentifier(page.getPageName(),WikiContentManager.CREATOR)).get());
-        // Assert.assertEquals("XWiki.alien", this.xwoot3.getTre().getValue(
-        // new MDIdentifier(page.getPageName(),
-        // WikiContentManager.MODIFIER)).get());
-        Assert.assertEquals("XWiki.alien's mother", this.xwoot3.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.PARENTID)).get());
-        Assert.assertEquals("false", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.HOMEPAGE)).get());
-        Assert.assertEquals("test.1", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.ID)).get());
-        Assert.assertEquals("test", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.SPACE)).get());
-        Assert.assertEquals("1", this.xwoot1.getTre().getValue(
-            new MDIdentifier(page.getPageName(), WikiContentManager.TITLE)).get());
-
-    }
+//    /**
+//     * DOCUMENT ME!
+//     * 
+//     * @throws Exception DOCUMENT ME!
+//     */
+//    @Test
+//    public void testMDWithThreeConcurrentXWiki() throws Exception
+//    {
+//
+//        // configure neighbors
+//        this.lpbCast1.addNeighbor(this.xwoot1, this.xwoot2);
+//        this.lpbCast1.addNeighbor(this.xwoot1, this.xwoot3);
+//        this.lpbCast2.addNeighbor(this.xwoot2, this.xwoot1);
+//        this.lpbCast2.addNeighbor(this.xwoot2, this.xwoot3);
+//        this.lpbCast3.addNeighbor(this.xwoot3, this.xwoot1);
+//        this.lpbCast3.addNeighbor(this.xwoot3, this.xwoot2);
+//
+//        // create a test page
+//        XWootPage page = new XWootPage("test.1", "");
+//
+//        // connect XWoot
+//        this.xwoot1.reconnectToP2PNetwork();
+//        this.xwoot1.connectToContentManager();
+//        this.xwoot2.reconnectToP2PNetwork();
+//        this.xwoot2.connectToContentManager();
+//        this.xwoot3.reconnectToP2PNetwork();
+//        this.xwoot3.connectToContentManager();
+//
+//        // add pages managment
+//        this.xwoot1.addPageManagement(page);
+//        Assert.assertEquals(true, this.xwoot1.isPageManaged(page));
+//
+//        // /////////////////////
+//        // Scenario execution
+//        // /////////////////////
+//        // simulate a change from wikiContentManager user...
+//        this.xwiki1.removePage(page.getPageName());
+//
+//        this.xwiki1.overwritePageContent(page.getPageName(), "");
+//        Map<String, String> fields = this.xwiki1.getFields(page.getPageName());
+//        Assert.assertNotNull(fields);
+//
+//        // fields.put(WikiContentManager.CREATOR,"XWiki.terminator");
+//        // fields.put(WikiContentManager.MODIFIER, "XWiki.terminator");
+//        fields.put(WikiContentManager.PARENTID, "Terminator's dad");
+//        fields.put(WikiContentManager.HOMEPAGE, "false");
+//        fields.put(WikiContentManager.ID, "test.1");
+//        fields.put(WikiContentManager.SPACE, "test");
+//        fields.put(WikiContentManager.TITLE, "1");
+//
+//        this.xwiki1.setFields(page.getPageName(), fields);
+//
+//        // Launch the synch...
+//        this.xwoot1.synchronizePages();
+//
+//        // Assert.assertEquals("XWiki.terminator",this.xwoot1.getTre().getValue(
+//        // new
+//        // MDIdentifier(page.getPageName(),WikiContentManager.CREATOR)).get());
+//        // Assert.assertEquals("XWiki.terminator",
+//        // this.xwoot1.getTre().getValue(
+//        // new MDIdentifier(page.getPageName(),
+//        // WikiContentManager.MODIFIER)).get());
+//        Assert.assertEquals("Terminator's dad", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.PARENTID)).get());
+//        Assert.assertEquals("false", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.HOMEPAGE)).get());
+//        Assert.assertEquals("test.1", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.ID)).get());
+//        Assert.assertEquals("test", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.SPACE)).get());
+//        Assert.assertEquals("1", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.TITLE)).get());
+//
+//        // assertEquals("XWiki.terminator",this.xwoot1.getTre().getValue(new
+//        // MDIdentifier(page.getPageName(),WikiContentManager.CREATOR)).get());
+//        // Assert.assertEquals("XWiki.terminator",
+//        // this.xwoot2.getTre().getValue(
+//        // new MDIdentifier(page.getPageName(),
+//        // WikiContentManager.MODIFIER)).get());
+//        Assert.assertEquals("Terminator's dad", this.xwoot2.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.PARENTID)).get());
+//        Assert.assertEquals("false", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.HOMEPAGE)).get());
+//        Assert.assertEquals("test.1", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.ID)).get());
+//        Assert.assertEquals("test", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.SPACE)).get());
+//        Assert.assertEquals("1", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.TITLE)).get());
+//
+//        // assertEquals("XWiki.terminator",this.xwoot1.getTre().getValue(new
+//        // MDIdentifier(page.getPageName(),WikiContentManager.CREATOR)).get());
+//        // Assert.assertEquals("XWiki.terminator",
+//        // this.xwoot3.getTre().getValue(
+//        // new MDIdentifier(page.getPageName(),
+//        // WikiContentManager.MODIFIER)).get());
+//        Assert.assertEquals("Terminator's dad", this.xwoot3.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.PARENTID)).get());
+//        Assert.assertEquals("false", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.HOMEPAGE)).get());
+//        Assert.assertEquals("test.1", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.ID)).get());
+//        Assert.assertEquals("test", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.SPACE)).get());
+//        Assert.assertEquals("1", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.TITLE)).get());
+//
+//        Map<String, String> fields2 = this.xwiki2.getFields(page.getPageName());
+//        fields2.put(WikiContentManager.MODIFIER, "XWiki.predator");
+//        Map<String, String> fields3 = this.xwiki3.getFields(page.getPageName());
+//        fields3.put(WikiContentManager.MODIFIER, "XWiki.alien");
+//        fields3.put(WikiContentManager.PARENTID, "XWiki.alien's mother");
+//        this.xwiki2.setFields(page.getPageName(), fields2);
+//        this.xwiki3.setFields(page.getPageName(), fields3);
+//        this.xwoot3.synchronizePages();
+//        this.xwoot2.synchronizePages();
+//        this.xwoot1.synchronizePages();
+//
+//        // WARNING : First synchronizer win ...
+//
+//        // assertEquals("XWiki.terminator",this.xwoot1.getTre().getValue(new
+//        // MDIdentifier(page.getPageName(),WikiContentManager.CREATOR)).get());
+//        // Assert.assertEquals("XWiki.alien", this.xwoot1.getTre().getValue(
+//        // new MDIdentifier(page.getPageName(),
+//        // WikiContentManager.MODIFIER)).get());
+//        Assert.assertEquals("XWiki.alien's mother", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.PARENTID)).get());
+//        Assert.assertEquals("false", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.HOMEPAGE)).get());
+//        Assert.assertEquals("test.1", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.ID)).get());
+//        Assert.assertEquals("test", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.SPACE)).get());
+//        Assert.assertEquals("1", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.TITLE)).get());
+//
+//        // Assert.assertEquals("XWiki.terminator",this.xwoot1.getTre().getValue(
+//        // new
+//        // MDIdentifier(page.getPageName(),WikiContentManager.CREATOR)).get());
+//        // Assert.assertEquals("XWiki.alien", this.xwoot2.getTre().getValue(
+//        // new MDIdentifier(page.getPageName(),
+//        // WikiContentManager.MODIFIER)).get());
+//        Assert.assertEquals("XWiki.alien's mother", this.xwoot2.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.PARENTID)).get());
+//        Assert.assertEquals("false", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.HOMEPAGE)).get());
+//        Assert.assertEquals("test.1", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.ID)).get());
+//        Assert.assertEquals("test", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.SPACE)).get());
+//        Assert.assertEquals("1", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.TITLE)).get());
+//
+//        // assertEquals("XWiki.terminator",this.xwoot1.getTre().getValue(new
+//        // MDIdentifier(page.getPageName(),WikiContentManager.CREATOR)).get());
+//        // Assert.assertEquals("XWiki.alien", this.xwoot3.getTre().getValue(
+//        // new MDIdentifier(page.getPageName(),
+//        // WikiContentManager.MODIFIER)).get());
+//        Assert.assertEquals("XWiki.alien's mother", this.xwoot3.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.PARENTID)).get());
+//        Assert.assertEquals("false", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.HOMEPAGE)).get());
+//        Assert.assertEquals("test.1", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.ID)).get());
+//        Assert.assertEquals("test", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.SPACE)).get());
+//        Assert.assertEquals("1", this.xwoot1.getTre().getValue(
+//            new MDIdentifier(page.getPageName(), WikiContentManager.TITLE)).get());
+//
+//    }
 
     /**
      * DOCUMENT ME!
@@ -495,11 +492,11 @@ public class TestBasic extends AbstractXWootTest
         // Launch the synch...
         this.xwoot1.synchronizePages();
 
-        Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine1.getPageManager().getPage(page.getPageName()));
+        Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine1.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         Assert.assertEquals("Ligne 1 sur xwiki1\n", this.xwiki1.getPageContent(page.getPageName()));
-        Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine2.getPageManager().getPage(page.getPageName()));
+        Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine2.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         Assert.assertEquals("Ligne 1 sur xwiki1\n", this.xwiki2.getPageContent(page.getPageName()));
-        Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine3.getPageManager().getPage(page.getPageName()));
+        Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine3.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         Assert.assertEquals("Ligne 1 sur xwiki1\n", this.xwiki3.getPageContent(page.getPageName()));
 
         // simulate a change from wikiContentManager user...
@@ -517,26 +514,26 @@ public class TestBasic extends AbstractXWootTest
             .getPageContent(page.getPageName()));
         // Launch the synch...
         this.xwoot1.synchronizePages();
-        Assert.assertEquals(this.wootEngine1.getPageManager().getPage(page.getPageName()), this.wootEngine2.getPageManager().getPage(page.getPageName()));
-        Assert.assertEquals(this.wootEngine1.getPageManager().getPage(page.getPageName()), this.wootEngine3.getPageManager().getPage(page.getPageName()));
+        Assert.assertEquals(this.wootEngine1.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID), this.wootEngine2.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
+        Assert.assertEquals(this.wootEngine1.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID), this.wootEngine3.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         Assert.assertEquals(this.xwiki1.getPageContent(page.getPageName()), this.xwiki2.getPageContent(page
             .getPageName()));
         Assert.assertEquals(this.xwiki1.getPageContent(page.getPageName()), this.xwiki3.getPageContent(page
             .getPageName()));
-        Assert.assertEquals(this.wootEngine1.getPageManager().getPage(page.getPageName()), this.xwiki1
+        Assert.assertEquals(this.wootEngine1.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID), this.xwiki1
             .getPageContent(page.getPageName()));
 
         System.out.println("woot1 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine1.getPageManager().getPage(page.getPageName()));
+        System.out.println(this.wootEngine1.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         System.out.println("-------------------");
         System.out.println("woot2 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine2.getPageManager().getPage(page.getPageName()));
+        System.out.println(this.wootEngine2.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         System.out.println("-------------------");
         System.out.println("woot3 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine3.getPageManager().getPage(page.getPageName()));
+        System.out.println(this.wootEngine3.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         System.out.println("-------------------");
 
         System.out.println("xwiki1 : ");
@@ -613,18 +610,18 @@ public class TestBasic extends AbstractXWootTest
         Assert.assertEquals("titi\n", this.xwiki2.getPageContent(page.getPageName()));
         Assert.assertEquals("tata\n", this.xwiki3.getPageContent(page.getPageName()));
 
-        Assert.assertEquals("", this.wootEngine1.getPageManager().getPage(page.getPageName()));
-        Assert.assertEquals("", this.wootEngine2.getPageManager().getPage(page.getPageName()));
-        Assert.assertEquals("", this.wootEngine3.getPageManager().getPage(page.getPageName()));
+        Assert.assertEquals("", this.wootEngine1.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
+        Assert.assertEquals("", this.wootEngine2.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
+        Assert.assertEquals("", this.wootEngine3.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
 
         // synchronizes
         this.xwoot3.synchronizePages();
         this.xwoot2.synchronizePages();
         this.xwoot1.synchronizePages();
 
-        Assert.assertEquals("toto\ntiti\ntata\n", this.wootEngine1.getPageManager().getPage(page.getPageName()));
-        Assert.assertEquals("toto\ntiti\ntata\n", this.wootEngine2.getPageManager().getPage(page.getPageName()));
-        Assert.assertEquals("toto\ntiti\ntata\n", this.wootEngine3.getPageManager().getPage(page.getPageName()));
+        Assert.assertEquals("toto\ntiti\ntata\n", this.wootEngine1.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
+        Assert.assertEquals("toto\ntiti\ntata\n", this.wootEngine2.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
+        Assert.assertEquals("toto\ntiti\ntata\n", this.wootEngine3.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
 
         Assert.assertEquals("toto\ntiti\ntata\n", this.xwiki1.getPageContent(page.getPageName()));
         Assert.assertEquals("toto\ntiti\ntata\n", this.xwiki2.getPageContent(page.getPageName()));
@@ -632,15 +629,15 @@ public class TestBasic extends AbstractXWootTest
 
         System.out.println("woot1 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine1.getPageManager().getPage(page.getPageName()));
+        System.out.println(this.wootEngine1.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         System.out.println("-------------------");
         System.out.println("woot2 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine2.getPageManager().getPage(page.getPageName()));
+        System.out.println(this.wootEngine2.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         System.out.println("-------------------");
         System.out.println("woot3 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine3.getPageManager().getPage(page.getPageName()));
+        System.out.println(this.wootEngine3.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         System.out.println("-------------------");
 
         System.out.println("xwiki1 : ");
@@ -697,18 +694,18 @@ public class TestBasic extends AbstractXWootTest
         Vector<WootOp> vector = new Vector<WootOp>();
         WootIns op0 =
             new WootIns(new WootRow(new WootId(0, 0), "Ligne 1 sur xwiki1"), new WootId(-1, -1), new WootId(-2, -2));
-        op0.setPageName(page.getPageName());
+        op0.setContentId(new ContentId(page.getPageName(),XWoot.PAGEOBJECTID,XWoot.PAGECONTENTFIELDID,false));
         op0.setOpId(new WootId(0, 0));
         vector.add(op0);
         patch.setData(vector);
-        patch.setPageName("test.1");
+        patch.setPageId("test.1");
 
         this.xwoot1.getWootEngine().deliverPatch(patch);
         this.xwoot2.getWootEngine().deliverPatch(patch);
 
-        Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine1.getPageManager().getPage(page.getPageName()));
+        Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine1.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         Assert.assertEquals("Ligne 1 sur xwiki1\n", this.xwiki1.getPageContent(page.getPageName()));
-        Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine2.getPageManager().getPage(page.getPageName()));
+        Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine2.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         Assert.assertEquals("Ligne 1 sur xwiki1\n", this.xwiki2.getPageContent(page.getPageName()));
 
         // simulate a change from wikiContentManager user...
@@ -719,19 +716,19 @@ public class TestBasic extends AbstractXWootTest
         // Launch the synch...
         this.xwoot1.synchronizePages();
 
-        Assert.assertEquals(this.wootEngine1.getPageManager().getPage(page.getPageName()), this.wootEngine2.getPageManager().getPage(page.getPageName()));
+        Assert.assertEquals(this.wootEngine1.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID), this.wootEngine2.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         Assert.assertEquals(this.xwiki1.getPageContent(page.getPageName()), this.xwiki2.getPageContent(page
             .getPageName()));
-        Assert.assertEquals(this.wootEngine1.getPageManager().getPage(page.getPageName()), this.xwiki1
+        Assert.assertEquals(this.wootEngine1.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID), this.xwiki1
             .getPageContent(page.getPageName()));
 
         System.out.println("woot1 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine1.getPageManager().getPage(page.getPageName()));
+        System.out.println(this.wootEngine1.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         System.out.println("-------------------");
         System.out.println("woot2 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine2.getPageManager().getPage(page.getPageName()));
+        System.out.println(this.wootEngine2.getContentManager().getContent(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
         System.out.println("-------------------");
 
         System.out.println("xwiki1 : ");
@@ -773,10 +770,10 @@ public class TestBasic extends AbstractXWootTest
     // this.xwoot1.synchronize();
     //        
     // // xwoot1 & xwoot2 : verify the propagation
-    // assertEquals("toto\n", this.wootEngine1.getPage(page.getPageName()));
+    // assertEquals("toto\n", this.wootEngine1.getContent(page.getPageName()), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
     // assertEquals("toto\n", this.xwiki1.getPageContent(page.getPageName()));
     // assertEquals("toto\n", this.xwiki2.getPageContent(page.getPageName()));
-    // assertEquals("toto\n", this.wootEngine2.getPage(page.getPageName()));
+    // assertEquals("toto\n", this.wootEngine2.getContent(page.getPageName()), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
     //        
     // this.xwoot1.synchronize();
     //        
@@ -789,9 +786,9 @@ public class TestBasic extends AbstractXWootTest
     // ((XwikiSwizzleClient)this.xwiki1).setComment("test.1", c);
     //        
     // // xwoot1 & xwoot2 : verify the propagation
-    // assertEquals("toto\n", this.wootEngine1.getPage(page.getPageName()));
+    // assertEquals("toto\n", this.wootEngine1.getContent(page.getPageName()), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
     // assertEquals("toto\n", this.xwiki1.getPageContent(page.getPageName()));
     // assertEquals("toto\n", this.xwiki2.getPageContent(page.getPageName()));
-    // assertEquals("toto\n", this.wootEngine2.getPage(page.getPageName()));
+    // assertEquals("toto\n", this.wootEngine2.getContent(page.getPageName()), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));
     // }
 }

@@ -24,17 +24,17 @@ import org.apache.commons.logging.Log;
 
 /**
  * Contains methods to log an error event and throw a {@link WootEngineException} at the same time.
- *
+ * 
  * @version $Id$
  */
 public class LoggedWootExceptionThrower
 {
     /** Unique ID for the WootEngine. */
     protected int wootEngineId;
-    
+
     /** Object for logging and debugging events. */
     protected Log logger;
-    
+
     /**
      * Used to log exceptions as they are thrown.
      * 

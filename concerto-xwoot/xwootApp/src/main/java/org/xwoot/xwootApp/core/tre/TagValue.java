@@ -46,6 +46,7 @@ package org.xwoot.xwootApp.core.tre;
 
 import org.xwoot.thomasRuleEngine.core.Value;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -110,9 +111,9 @@ public class TagValue implements Value
      * 
      * @return DOCUMENT ME!
      */
-    public Object get()
+    public Serializable get()
     {
-        return this.value;
+        return (Serializable) this.value;
     }
 
     /**

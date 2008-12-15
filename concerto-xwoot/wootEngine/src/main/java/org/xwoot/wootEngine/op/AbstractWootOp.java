@@ -44,8 +44,9 @@
 
 package org.xwoot.wootEngine.op;
 
+import org.xwoot.wootEngine.core.ContentId;
 import org.xwoot.wootEngine.core.WootId;
-import org.xwoot.wootEngine.core.WootPage;
+import org.xwoot.wootEngine.core.WootContent;
 
 import java.io.Serializable;
 
@@ -62,17 +63,17 @@ public abstract class AbstractWootOp implements WootOp, Serializable
     /** The associated WootId of this operation. */
     private WootId opId;
 
-    /** The name of the page on which this operation will be applied. */
-    private String pageName;
+    /** The id of the content on which this operation will be applied. */
+    private ContentId contentId;
 
     /** {@inheritDoc} */
-    public abstract void execute(WootPage page);
+    public abstract void execute(WootContent content);
 
     /** {@inheritDoc} */
-    public abstract boolean canExecute(WootPage page);
+    public abstract boolean canExecute(WootContent content);
 
     /** {@inheritDoc} */
-    public abstract Object getAffectedRowIndexes(WootPage page);
+    public abstract Object getAffectedRowIndexes(WootContent content);
 
     /** {@inheritDoc} */
     public WootId getOpId()
@@ -87,15 +88,15 @@ public abstract class AbstractWootOp implements WootOp, Serializable
     }
 
     /** {@inheritDoc} */
-    public String getPageName()
+    public ContentId getContentId()
     {
-        return this.pageName;
+        return this.contentId;
     }
 
     /** {@inheritDoc} */
-    public void setPageName(String pageName)
+    public void setContentId(ContentId contentId)
     {
-        this.pageName = pageName;
+        this.contentId = contentId;
     }
 
     /**
@@ -104,8 +105,8 @@ public abstract class AbstractWootOp implements WootOp, Serializable
     @Override
     public String toString()
     {
-        return "siteId: " + (this.opId != null ? String.valueOf(this.opId.getSiteid()) : "null") + " opid: " + this.opId
-            + " pageName: " + this.pageName;
+        return "siteId: " + (this.opId != null ? String.valueOf(this.opId.getSiteid()) : "null") + " opid: "
+            + this.opId + " contentId: " + this.contentId;
     }
 
     /** {@inheritDoc} */
@@ -122,7 +123,7 @@ public abstract class AbstractWootOp implements WootOp, Serializable
 
         WootOp other = (WootOp) obj;
 
-        return (this.opId.equals(other.getOpId()) && this.pageName.equals(this.getPageName()));
+        return (this.opId.equals(other.getOpId()) && this.contentId.equals(this.getContentId()));
     }
 
     /** {@inheritDoc} */
@@ -131,16 +132,7 @@ public abstract class AbstractWootOp implements WootOp, Serializable
     {
         int hash = 7;
         hash = 31 * hash + (this.opId == null ? 0 : this.opId.hashCode());
-        hash = 31 * hash + (this.pageName == null ? 0 : this.pageName.hashCode());
+        hash = 31 * hash + (this.contentId == null ? 0 : this.contentId.hashCode());
         return hash;
     }
-
-    /*
-     * public int compareTo(Object o){ return opid.compareTo(((WootOp)o).getOpid()); }
-     */
-
-    /*
-     * public WootPage getWootPage() { return wootPage; } public void setWootPage(WootPage wootPage) { this.wootPage =
-     * wootPage; }
-     */
 }

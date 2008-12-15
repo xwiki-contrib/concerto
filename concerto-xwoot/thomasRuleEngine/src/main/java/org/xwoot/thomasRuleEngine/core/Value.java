@@ -49,12 +49,12 @@ import java.io.Serializable;
 /**
  * Defines the values stored in {@link Entry} objects.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public interface Value extends Serializable
 {
     /** @return the actual value of this instance. */
-    Object get();
+    Serializable get();
 
     /** {@inheritDoc} */
     @Override

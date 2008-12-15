@@ -20,8 +20,9 @@
 
 package org.xwoot.wootEngine.op;
 
+import org.xwoot.wootEngine.core.ContentId;
 import org.xwoot.wootEngine.core.WootId;
-import org.xwoot.wootEngine.core.WootPage;
+import org.xwoot.wootEngine.core.WootContent;
 
 /**
  * Describes the structure of a Woot operation that each class implementing this interface will have to provide.
@@ -31,27 +32,27 @@ import org.xwoot.wootEngine.core.WootPage;
 public interface WootOp
 {
     /**
-     * Applies this operation on a WootPage.
+     * Applies this operation on a Wootcontent.
      * <p>
      * Users have to implement the behavior of the operation trough this method.
      * 
-     * @param page the page where to execute this operation.
+     * @param content the content where to execute this operation.
      */
-    void execute(WootPage page);
+    void execute(WootContent content);
 
     /**
-     * Checks whether this operation can be applied on a page or not.
+     * Checks whether this operation can be applied on a content or not.
      * 
-     * @param page the page the check.
+     * @param content the content the check.
      * @return true if it can be applied, false otherwise.
      */
-    boolean canExecute(WootPage page);
+    boolean canExecute(WootContent content);
 
     /**
-     * @param page the page this operation affects.
+     * @param content the content this operation affects.
      * @return the indexes of the {@link WootRow}s affected by this operation.
      */
-    Object getAffectedRowIndexes(WootPage page);
+    Object getAffectedRowIndexes(WootContent content);
 
     /**
      * @return the associated WootId of this operation.
@@ -65,13 +66,13 @@ public interface WootOp
     void setOpId(WootId opId);
 
     /**
-     * @return the name of the page on which this operation will be applied.
+     * @return the name of the content on which this operation will be applied.
      */
-    String getPageName();
+    ContentId getContentId();
 
     /**
-     * @param pageName the pageName to set.
-     * @see #getPageName()
+     * @param contentId the contentId to set.
+     * @see #getContentId()
      */
-    void setPageName(String pageName);
+    void setContentId(ContentId contentId);
 }

@@ -49,10 +49,10 @@ import java.io.Serializable;
 /**
  * Unique identifier in all P2P networks composed of siteId + internal clock value.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 @SuppressWarnings("unchecked")
-public class WootId implements Comparable, Serializable
+public class WootId implements Comparable, Serializable, Cloneable
 {
     /** Id of beginning of content. */
     public static final WootId FIRST_WOOT_ID = new WootId(-1, -1);
