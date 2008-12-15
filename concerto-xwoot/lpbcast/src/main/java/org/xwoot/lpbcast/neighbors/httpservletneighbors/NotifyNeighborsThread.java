@@ -124,7 +124,6 @@ public class NotifyNeighborsThread extends Thread
             } else {
                 if (this.neighbors != null) {
                     for (Iterator i = this.neighbors.getNeighborsList().iterator(); i.hasNext();) {
-                        // TODO externalize the communication?
                         Object aNeighbor = i.next();
                         this.call(aNeighbor);
                     }

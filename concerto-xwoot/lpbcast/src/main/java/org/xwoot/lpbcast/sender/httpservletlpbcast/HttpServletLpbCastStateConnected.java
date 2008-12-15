@@ -3,7 +3,7 @@ package org.xwoot.lpbcast.sender.httpservletlpbcast;
 /**
  * Implements the connected state of a sender.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,7 +26,7 @@ import org.xwoot.lpbcast.util.NetUtil;
 /**
  * Implements the connected state of a sender.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class HttpServletLpbCastStateConnected extends AbstractLpbCastState
 {
@@ -71,7 +71,7 @@ public class HttpServletLpbCastStateConnected extends AbstractLpbCastState
         String neighborURL = "";
         HttpURLConnection init = null;
         try {
-            if (!this.getNeighborsList().contains(neighbor)) {
+            if (this.getNeighborsList().contains(neighbor)) {
                 return false;
             }
 
@@ -84,11 +84,15 @@ public class HttpServletLpbCastStateConnected extends AbstractLpbCastState
             }
 
             URL to = new URL(neighborURL + HttpServletLpbCast.SEND_NEIGHBOR_TEST_PATH + from);
+            
+            this.connection.logger.debug("Test neighbor: " + to);
 
             init = (HttpURLConnection) to.openConnection();
             init.connect();
             String response = init.getHeaderField(AbstractHttpServletReceiver.HTTP_CONNECTED_HEADER_FIELD);
 
+            this.connection.logger.debug("Response: " + response);
+            
             if (response != null && response.equals(AbstractHttpServletReceiver.HTTP_CONNECTED_HEADER_OK_VALUE)) {
                 this.getNeighbors().addNeighbor(neighborURL);
                 this.connection.logger.debug(this.connection.getSiteId() + " - Neighbor tested and successfuly added.");
@@ -117,7 +121,7 @@ public class HttpServletLpbCastStateConnected extends AbstractLpbCastState
     {
         if (state != null) {
             this.connection.logger.debug(this.connection.getSiteId() + " - Send state.");
-            response.setHeader(AbstractHttpServletReceiver.HTTP_CONNECTED_HEADER_FIELD,
+            response.setHeader(AbstractHttpServletReceiver.HTTP_CONTENT_TYPE_HEADER,
                 AbstractHttpServletReceiver.HTTP_CONTENT_TYPE_VALUE_FOR_STATE);
             response.setHeader("Content-Disposition", "attachment; filename=" + state.getName());
 

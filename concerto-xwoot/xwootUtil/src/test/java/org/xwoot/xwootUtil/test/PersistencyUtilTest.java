@@ -24,7 +24,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import junit.framework.Assert;
 
@@ -34,7 +36,7 @@ import org.xwoot.xwootUtil.PersistencyUtil;
 /**
  * Tests for the PersistencyUtil class.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public final class PersistencyUtilTest extends AbstractXwootUtilTestBase
 {
@@ -217,5 +219,24 @@ public final class PersistencyUtilTest extends AbstractXwootUtilTestBase
         // same attempt, but by using a fallback object for file not found cases.
         loadedCollection = PersistencyUtil.loadObjectFromXml(filePath, new ArrayList<Object>());
         Assert.assertTrue(((Collection<Object>) loadedCollection).isEmpty());
+    }
+    
+    /**
+     * @throws Exception x
+     * 
+     */
+    @Test
+    public void testSaveSetAsCollection() throws Exception
+    {
+        String filePath = new File(this.workingDir, this.xmlFileNameToSaveObjectTo).getPath();
+        
+        Set<Object> test = new HashSet<Object>();
+        String object = "TEST";
+        test.add(object);
+        PersistencyUtil.saveCollectionToFile(test, filePath);
+        
+        Set<Object> result = (HashSet<Object>) PersistencyUtil.loadObjectFromFile(filePath, new HashSet<Object>());
+        Assert.assertNotNull(result);
+        Assert.assertTrue(result.contains(object));
     }
 }

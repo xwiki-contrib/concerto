@@ -230,7 +230,7 @@ public class NeighborsTest
         Assert.assertEquals(this.neighbors.getNeighborsListSize(), 1);
 
         this.neighbors.removeNeighbor(this.testNeighbor);
-        Assert.assertEquals(this.neighbors.getNeighborsListSize(), 0);
+        Assert.assertEquals(0, this.neighbors.getNeighborsListSize());
     }
 
     /**
@@ -246,6 +246,6 @@ public class NeighborsTest
         this.neighbors.addNeighbor(this.testNeighbor);
         this.neighbors.addNeighbor(this.testNeighbor);
 
-        Assert.assertEquals(this.neighbors.getNeighborsListSize(), 1);
+        Assert.assertEquals(1, this.neighbors.getNeighborsListSize());
     }
 }

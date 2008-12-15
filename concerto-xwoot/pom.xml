@@ -258,10 +258,6 @@
     <module>lpbcast</module>
     <!-- to synchronize flate structure like string datas -->
     <module>wootEngine</module>
-    <!-- to replace iphone for tests -->
-    <module>mockiphone</module>
-    <!-- Interface with Iphone -->
-    <module>iwoot</module>
     <!-- Utility module for tasks common to most of the modules -->
     <module>xwootUtil</module>
   </modules>

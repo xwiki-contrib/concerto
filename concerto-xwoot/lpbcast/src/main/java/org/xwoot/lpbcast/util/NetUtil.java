@@ -75,7 +75,7 @@ public final class NetUtil
     public static final String DOWNLOADED_STATE_FILE_NAME = "downloadedState";
 
     /** The extension of the temporary file where to store the downloaded content. */
-    public static final String DOWNLOADED_STATE_EXTENSION = ".zip";
+    public static final String DOWNLOADED_STATE_FILE_EXTENSION = ".zip";
 
     /** The HTTP header field for Content-type. */
     public static final String HTTP_CONTENT_TYPE_HEADER = "Content-type";
@@ -104,12 +104,13 @@ public final class NetUtil
 
         try {
             connection = url.openConnection();
-
-            if ((connection == null) || connection.getHeaderField(HTTP_CONTENT_TYPE_HEADER).equals("null")) {
+            String contentTypeHeaderField = connection.getHeaderField(HTTP_CONTENT_TYPE_HEADER);
+            
+            if ((connection == null) || contentTypeHeaderField == null || contentTypeHeaderField.equals("null")) {
                 return null;
             }
 
-            file = File.createTempFile(DOWNLOADED_STATE_FILE_NAME, DOWNLOADED_STATE_FILE_NAME);
+            file = File.createTempFile(DOWNLOADED_STATE_FILE_NAME, DOWNLOADED_STATE_FILE_EXTENSION);
             bos = new BufferedOutputStream(new FileOutputStream(file.getAbsolutePath()));
 
             connectionInputStream = connection.getInputStream();
@@ -121,7 +122,7 @@ public final class NetUtil
                 bos.flush();
             }
         } catch (Exception e) {
-            throw new IOException("Problems while getting file from Url: " + url + "\n " + e.getMessage());
+            throw new IOException("Problems while getting file from Url: " + url + "\n " + e);
         } finally {
             try {
                 if (connectionInputStream != null) {
