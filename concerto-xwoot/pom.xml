@@ -260,6 +260,8 @@
     <module>wootEngine</module>
     <!-- Utility module for tasks common to most of the modules -->
     <module>xwootUtil</module>
+    <!-- Module for XWoot special data. -->
+    <module>xwoot-content-provider</module>
   </modules>
   
   <build>
