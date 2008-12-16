@@ -14,8 +14,13 @@ import java.util.List;
  * 
  * @version $Id$
  */
-public class XWootObject
+public class XWootObject implements Serializable
 {
+    /**
+     *  For serialization.
+     */
+    private static final long serialVersionUID = 155439744078747171L;
+
     /**
      * The pageId of the page this XWootObject is built from.
      */
@@ -129,4 +134,51 @@ public class XWootObject
         return null;
     }
 
+    /** 
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode()
+    {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((fields == null) ? 0 : fields.hashCode());
+        result = prime * result + ((guid == null) ? 0 : guid.hashCode());
+        result = prime * result + ((pageId == null) ? 0 : pageId.hashCode());
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (!(obj instanceof XWootObject))
+            return false;
+        XWootObject other = (XWootObject) obj;
+        if (fields == null) {
+            if (other.fields != null)
+                return false;
+        } else if (!fields.equals(other.fields))
+            return false;
+        if (guid == null) {
+            if (other.guid != null)
+                return false;
+        } else if (!guid.equals(other.guid))
+            return false;
+        if (pageId == null) {
+            if (other.pageId != null)
+                return false;
+        } else if (!pageId.equals(other.pageId))
+            return false;
+        return true;
+    }
+
+    
+    
 }

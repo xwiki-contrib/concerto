@@ -432,4 +432,15 @@ public class XWootContentProvider
 
     }
 
+    /**
+     * Updates xwiki's data. TODO
+     * @param o : the object to update
+     * @return true if no concurrent modification detected.
+     */
+    public boolean store(XWootObject o)
+    {
+        //TODO
+        return true;
+    }
+
 }

@@ -7,8 +7,13 @@ import java.io.Serializable;
  * 
  * @version $Id$
  */
-public class XWootObjectField
+public class XWootObjectField implements Serializable
 {
+    /**
+     *  For serialization.
+     */
+    private static final long serialVersionUID = 3230723710897699107L;
+
     /**
      * True is the field should be handled by XWoot.
      */
@@ -55,6 +60,47 @@ public class XWootObjectField
     public String getName()
     {
         return name;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode()
+    {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((value == null) ? 0 : value.hashCode());
+        return result;
+    }
+
+    
+    /**
+     * {@inheritDoc}
+     */
+    
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (!(obj instanceof XWootObjectField))
+            return false;
+        XWootObjectField other = (XWootObjectField) obj;
+        if (name == null) {
+            if (other.name != null)
+                return false;
+        } else if (!name.equals(other.name))
+            return false;
+        if (value == null) {
+            if (other.value != null)
+                return false;
+        } else if (!value.equals(other.value))
+            return false;
+        return true;
     }
 
 }
