@@ -10,6 +10,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.slf4j.Logger;
@@ -251,16 +253,16 @@ public class XWootContentProvider
      * Returns a list of references where each reference points to a different page at its oldest modification available
      * in the modification list that has not been cleared.
      * 
-     * @return A list of XWootIds.
+     * @return A set of XWootIds.
      * @throws XWootContentProviderException
      */
-    public List<XWootId> getModifiedPagesIds() throws XWootContentProviderException
+    public Set<XWootId> getModifiedPagesIds() throws XWootContentProviderException
     {
         if (rpc == null) {
             throw new XWootContentProviderException("XWootContentProvider is not logged in.");
         }
 
-        List<XWootId> result = new ArrayList<XWootId>();
+        Set<XWootId> result = new TreeSet<XWootId>();
 
         /* Download last modifications from the server */
         updateModifiedPages();
@@ -434,12 +436,13 @@ public class XWootContentProvider
 
     /**
      * Updates xwiki's data. TODO
+     * 
      * @param o : the object to update
      * @return true if no concurrent modification detected.
      */
     public boolean store(XWootObject o)
     {
-        //TODO
+        // TODO
         return true;
     }
 
