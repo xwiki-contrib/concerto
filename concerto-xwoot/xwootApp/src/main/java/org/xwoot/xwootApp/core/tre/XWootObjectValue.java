@@ -44,7 +44,11 @@
 
 package org.xwoot.xwootApp.core.tre;
 
-import org.xwoot.thomasRuleEngine.core.Identifier;
+import org.xwoot.XWootObject;
+import org.xwoot.XWootObjectField;
+import org.xwoot.thomasRuleEngine.core.Value;
+
+import java.io.Serializable;
 
 /**
  * DOCUMENT ME!
@@ -52,74 +56,69 @@ import org.xwoot.thomasRuleEngine.core.Identifier;
  * @author $author$
  * @version $Revision$
  */
-public class MDIdentifier implements Identifier
+public class XWootObjectValue implements Value
 {
     /**  */
-    private static final long serialVersionUID = 4717183124930677075L;
+    private static final long serialVersionUID = 3460912988689095045L;
 
-    private String pageName;
-
-    private String metaDataId;
-
-    private String id;
+    private XWootObject value;
 
     /**
-     * Creates a new MDIdentifier object.
+     * Creates a new TagValue object.
      * 
-     * @param pageName DOCUMENT ME!
-     * @param metaDataId DOCUMENT ME!
+     * @param value DOCUMENT ME!
      */
-    public MDIdentifier(String pageName, String metaDataId)
+    public XWootObjectValue()
     {
-        this.pageName = pageName;
-        this.metaDataId = metaDataId;
-        this.setId();
+        // void
+    }
+
+    public void setObject(XWootObject value)
+    {
+        this.value = value;
+    }
+
+    public boolean setObjectField(XWootObjectField value)
+    {
+        if (this.value.getFieldValue(value.getName()) == null) {
+            return false;
+        }
+        this.value.setFieldValue(value.getName(), value.getValue());
+        return true;
     }
 
     /**
      * DOCUMENT ME!
      * 
-     * @param with DOCUMENT ME!
+     * @param obj DOCUMENT ME!
      * @return DOCUMENT ME!
      */
     @Override
-    public boolean equals(Object with)
+    public boolean equals(Object obj)
     {
-        if (!(with instanceof Identifier)) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (obj == null) {
             return false;
         }
 
-        return this.id.equals(((MDIdentifier) with).getId());
-    }
+        if (this.getClass() != obj.getClass()) {
+            return false;
+        }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public String getId()
-    {
-        return this.id;
-    }
+        final XWootObjectValue other = (XWootObjectValue) obj;
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public String getMetaDataId()
-    {
-        return this.metaDataId;
-    }
+        if (this.value == null) {
+            if (other.value != null) {
+                return false;
+            }
+        } else if (!(this.value.equals(other.value))) {
+            return false;
+        }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public String getPageName()
-    {
-        return this.pageName;
+        return true;
     }
 
     /**
@@ -130,34 +129,11 @@ public class MDIdentifier implements Identifier
     @Override
     public int hashCode()
     {
-        return this.id.hashCode();
-    }
+        final int prime = 31;
+        int result = 1;
+        result = (prime * result) + ((this.value == null) ? 0 : this.value.hashCode());
 
-    private void setId()
-    {
-        this.id = this.pageName + "." + this.metaDataId;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param metaDataId DOCUMENT ME!
-     */
-    public void setMetaDataId(String metaDataId)
-    {
-        this.metaDataId = metaDataId;
-        this.setId();
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param pageName DOCUMENT ME!
-     */
-    public void setPageName(String pageName)
-    {
-        this.pageName = pageName;
-        this.setId();
+        return result;
     }
 
     /**
@@ -168,6 +144,11 @@ public class MDIdentifier implements Identifier
     @Override
     public String toString()
     {
-        return this.id;
+        return this.value.toString();
+    }
+
+    public Serializable get()
+    {
+        return this.value;
     }
 }

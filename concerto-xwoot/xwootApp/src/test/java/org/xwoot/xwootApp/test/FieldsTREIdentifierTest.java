@@ -3,7 +3,7 @@ package org.xwoot.xwootApp.test;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
-import org.xwoot.xwootApp.core.tre.MDIdentifier;
+import org.xwoot.xwootApp.core.tre.XWootObjectIdentifier;
 import org.xwoot.xwootApp.core.tre.PageFieldValue;
 
 public class FieldsTREIdentifierTest
@@ -12,7 +12,7 @@ public class FieldsTREIdentifierTest
     @Test
     public void testFieldsTREIdentifier()
     {
-        MDIdentifier f = new MDIdentifier("test.0", "content");
+        XWootObjectIdentifier f = new XWootObjectIdentifier("test.0", "content");
         assertEquals("test.0", f.getPageName());
         assertEquals("content", f.getMetaDataId());
         assertEquals("test.0.content", f.getId());
@@ -22,25 +22,25 @@ public class FieldsTREIdentifierTest
         f.setMetaDataId("Content");
         assertEquals("Content", f.getMetaDataId());
         assertEquals("test.2.Content", f.getId());
-        MDIdentifier f2 = new MDIdentifier("test.0", "content");
+        XWootObjectIdentifier f2 = new XWootObjectIdentifier("test.0", "content");
         f2.setPageName("toto");
     }
 
     @Test
     public void testToString()
     {
-        MDIdentifier f0 = new MDIdentifier("test.0", "content");
+        XWootObjectIdentifier f0 = new XWootObjectIdentifier("test.0", "content");
         assertEquals("test.0.content", f0.toString());
     }
 
     @Test
     public void testEqualsAndHashCodeObject()
     {
-        MDIdentifier f0 = new MDIdentifier("test.0", "content");
-        MDIdentifier f1 = new MDIdentifier("test.1", "content");
-        MDIdentifier f2 = new MDIdentifier("test.1", "content");
-        MDIdentifier f3 = new MDIdentifier("test.1", "content");
-        MDIdentifier f4 = f3;
+        XWootObjectIdentifier f0 = new XWootObjectIdentifier("test.0", "content");
+        XWootObjectIdentifier f1 = new XWootObjectIdentifier("test.1", "content");
+        XWootObjectIdentifier f2 = new XWootObjectIdentifier("test.1", "content");
+        XWootObjectIdentifier f3 = new XWootObjectIdentifier("test.1", "content");
+        XWootObjectIdentifier f4 = f3;
 
         PageFieldValue v = new PageFieldValue("tagada");
 

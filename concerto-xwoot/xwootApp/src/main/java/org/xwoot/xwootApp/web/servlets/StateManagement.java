@@ -121,7 +121,7 @@ public class StateManagement extends HttpServlet
                     if (this.upload(requestParameters.get("statefile"))) {
                         uploadSuccessful = true;
                         try {
-                            XWootSite.getInstance().getXWootEngine().importWootStorage(this.temp);
+                            XWootSite.getInstance().getXWootEngine().importState(this.temp);
                         } catch (Exception e) {
                             throw new ServletException(e);
                         }
@@ -134,13 +134,13 @@ public class StateManagement extends HttpServlet
                 }
             } else if (action == StateAction.CREATE) {
                 System.out.println("Want to compute state");
-                XWootSite.getInstance().getXWootEngine().initialiseWootStorage();
+                XWootSite.getInstance().getXWootEngine().computeState();
             }
         } catch (Exception e) {
             throw new ServletException(e);
         }
 
-        if (XWootSite.getInstance().getXWootEngine().isWootStorageComputed()) {
+        if (XWootSite.getInstance().getXWootEngine().isStateComputed()) {
             response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/synchronize.do"));
             return;
         }

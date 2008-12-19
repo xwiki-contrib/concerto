@@ -139,11 +139,9 @@ public class ThomasRuleEngine
         } else if (entry != null) {
             // set
             if ((value != null) && !entry.isDeleted()) {
-                if (!value.equals(entry.getValue())) {
-                    return new ThomasRuleOpSet(id, value, false, entry.getTimestampIdCreation(), this.getTimestamp());
-                }
 
-                return null;
+                return new ThomasRuleOpSet(id, value, false, entry.getTimestampIdCreation(), this.getTimestamp());
+
             }
 
             // del

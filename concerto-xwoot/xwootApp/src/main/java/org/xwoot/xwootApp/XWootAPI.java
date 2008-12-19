@@ -4,10 +4,12 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
+import org.xwoot.lpbcast.message.Message;
+
 public interface XWootAPI
 {
 
-    //TODO : Verifier le rechargement des donnees (fichiers) en cas d'arret de l'application 
+    // TODO : Verifier le rechargement des donnees (fichiers) en cas d'arret de l'application
     // (rechargement de l'instance)
 
     /**
@@ -18,22 +20,18 @@ public interface XWootAPI
      * @param wst : a zip file (must be computed by an XWoot neighbor)
      * @return true if import success
      */
-    boolean importWootStorage(File wst) throws XWootException;
+    boolean importState(File wst) throws XWootException;
+
+    public File computeState() throws XWootException;
 
     /**
      * To get woot storage. No need to be connected with P2P/contentManager.
      * 
      * @return : the woot storage : a zip file.
      */
-    File exportWootStorage();
+    File getState();
 
-    /**
-     * To compute woot storage. Need to be connected with content provider.
-     * 
-     */
-    void initialiseWootStorage() throws XWootException;
-
-    boolean isWootStorageComputed();
+    boolean isStateComputed();
 
     void doAntiEntropy(String neighborURL) throws XWootException;
 
@@ -61,11 +59,13 @@ public interface XWootAPI
 
     void removeNeighbor(String neighborURL) throws XWootException;
 
-    void synchronizePages() throws XWootException;
-    
+    void synchronize() throws XWootException;
+
     List<String> getLastPages(String id) throws XWootException;
 
     String getXWootPeerId();
 
     String getContentManagerURL();
+
+    void receivePatch(Message toSend) throws XWootException;
 }

@@ -96,18 +96,17 @@ public class Patch implements Serializable
      * @param objectId the content id that this patch applies to.
      * @param timestamp the timestamp of the modification
      * @param version the version of the page
-     * @param minorVersion the minor version of the page
+     * @param minorV the minor version of the page
      */
-    @SuppressWarnings("unchecked")
-    public Patch(List data, List metaData, String pageId, String objectId, long timestamp, int version, 
-        int minorVersion)
+    public Patch(List data, List metaData, String pageId, String objectId, long timestamp, int version, int minorV)
     {
-        this.elements = data;
-        this.mDelements = metaData;
         this.setData(data);
         this.setMDelements(metaData);
         this.setObjectId(objectId);
         this.setPageId(pageId);
+        this.setTimestamp(timestamp);
+        this.setVersion(version);
+        this.setMinorVersion(minorV);
 
     }
 
@@ -132,7 +131,6 @@ public class Patch implements Serializable
      * @param elements a List of {@link org.xwoot.wootEngine.op.WootOp WootOp} elements representing changes in the
      *            content of a page.
      */
-    @SuppressWarnings("unchecked")
     public void setData(Iterable elements)
     {
         this.elements = (List) elements;

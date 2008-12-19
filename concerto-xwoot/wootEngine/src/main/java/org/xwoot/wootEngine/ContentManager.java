@@ -355,6 +355,32 @@ public class ContentManager extends LoggedWootExceptionThrower
      * @param pageName the name of the page.
      * @param objectId the id of the container object of the wanted content in the associated page.
      * @param fieldId the id of the wanted content in the object in the page.
+     * @param getCopy if true, loads the copied content in place of the "normal" content.
+     * @return the visible content or empty string if the page does not exist.
+     * @throws WootEngineException if problems occur while accessing the page.
+     * @see WootContent#toHumanString()
+     * @see #loadPage(String)
+     * @see WootRow#isVisible()
+     */
+    private String getContent(String pageName, String objectId, String fieldId, boolean getCopy)
+        throws WootEngineException
+    {
+        if (!this.fileExists(pageName)) {
+            return "";
+        }
+
+        WootContent content =
+            this.loadFile(pageName).getContents().get(new ContentId(pageName, objectId, fieldId, getCopy));
+        if (content == null) {
+            return "";
+        }
+        return content.toHumanString();
+    }
+
+    /**
+     * @param pageName the name of the page.
+     * @param objectId the id of the container object of the wanted content in the associated page.
+     * @param fieldId the id of the wanted content in the object in the page.
      * @return the visible content or empty string if the page does not exist.
      * @throws WootEngineException if problems occur while accessing the page.
      * @see WootContent#toHumanString()
@@ -363,16 +389,22 @@ public class ContentManager extends LoggedWootExceptionThrower
      */
     public String getContent(String pageName, String objectId, String fieldId) throws WootEngineException
     {
-        if (!this.fileExists(pageName)) {
-            return "";
-        }
+        return this.getContent(pageName, objectId, fieldId, false);
+    }
 
-        WootContent content =
-            this.loadFile(pageName).getContents().get(new ContentId(pageName, objectId, fieldId, false));
-        if (content == null) {
-            return "";
-        }
-        return content.toHumanString();
+    /**
+     * @param pageName the name of the page.
+     * @param objectId the id of the container object of the wanted copied content in the associated page.
+     * @param fieldId the id of the wanted copied content in the object in the page.
+     * @return the visible copied content or empty string if the page does not exist.
+     * @throws WootEngineException if problems occur while accessing the page.
+     * @see WootContent#toHumanString()
+     * @see #loadPage(String)
+     * @see WootRow#isVisible()
+     */
+    public String getCopyContent(String pageName, String objectId, String fieldId) throws WootEngineException
+    {
+        return this.getContent(pageName, objectId, fieldId, true);
     }
 
     /**

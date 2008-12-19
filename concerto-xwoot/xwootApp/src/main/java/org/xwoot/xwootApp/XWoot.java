@@ -98,7 +98,7 @@ import org.xwoot.wootEngine.core.WootContent;
 import org.xwoot.wootEngine.op.WootOp;
 import org.xwoot.xwootApp.core.XWootPage;
 import org.xwoot.xwootApp.core.tre.CommentValue;
-import org.xwoot.xwootApp.core.tre.MDIdentifier;
+import org.xwoot.xwootApp.core.tre.XWootObjectIdentifier;
 import org.xwoot.xwootApp.core.tre.PageFieldValue;
 import org.xwoot.xwootUtil.FileUtil;
 
@@ -150,21 +150,18 @@ public class XWoot implements XWootAPI
     public static final String XWOOTSTATEFILENAME = "xwoot.zip";
 
     private static final String PAGELISTFILEFORSTATE = "list.txt";
-    
+
     public static final String PAGEOBJECTID = "page";
-    
+
     public static final String PAGECONTENTFIELDID = "mainContent";
 
     private String workingDir;
 
     /**
-     * 
-     * This structure associate a key to a list of pagenames. 
-     * This pagenames list is the list of the last modified pages 
-     * since the last call to this structure with the associated id. 
-     *
+     * This structure associate a key to a list of pagenames. This pagenames list is the list of the last modified pages
+     * since the last call to this structure with the associated id.
      */
-    private Map<String,List<String>> lastModifiedPageNames; 
+    private Map<String, List<String>> lastModifiedPageNames;
 
     /**
      * Creates a new XWoot object.
@@ -178,13 +175,13 @@ public class XWoot implements XWootAPI
      * @param tre DOCUMENT ME!
      * @param ae TODO
      * @param WORKINGDIR DOCUMENT ME!
-     * @throws XWootException 
+     * @throws XWootException
      */
     public XWoot(WikiContentManager contentManager, WootEngine wootEngine, LpbCastAPI sender, String workingDir,
-        String peerId, Integer siteId, ThomasRuleEngine tre, AntiEntropy ae) throws XWootException 
-        {
+        String peerId, Integer siteId, ThomasRuleEngine tre, AntiEntropy ae) throws XWootException
+    {
 
-        this.lastModifiedPageNames=new Hashtable<String, List<String>>();
+        this.lastModifiedPageNames = new Hashtable<String, List<String>>();
         this.workingDir = workingDir;
         this.lastVuePagesDir = workingDir + File.separator + "lastVuePages";
         this.stateDir = workingDir + File.separator + "stateDir";
@@ -205,7 +202,7 @@ public class XWoot implements XWootAPI
         if (this.sender.isSenderConnected()) {
             this.sender.disconnectSender();
         }
-        }
+    }
 
     public void clearWorkingDir() throws XWootException
     {
@@ -258,62 +255,63 @@ public class XWoot implements XWootAPI
 
             this.logger.info(this.siteId + " : overwrite page : " + pageName + " ...");
             // overwrite content
-            String wootContent=null;
+            String wootContent = null;
             try {
-                wootContent = this.getWootEngine().getContentManager().getContent(pageName,PAGEOBJECTID,PAGECONTENTFIELDID);
+                wootContent =
+                    this.getWootEngine().getContentManager().getContent(pageName, PAGEOBJECTID, PAGECONTENTFIELDID);
             } catch (WootEngineException e) {
-                this.logger.error("Problem when loading woot page -- "+pageName+"\n",e);
+                this.logger.error("Problem when loading woot page -- " + pageName + "\n", e);
             }
 
-            if (wootContent!=null){
+            if (wootContent != null) {
                 try {
                     this.contentManager.overwritePageContent(pageName, wootContent);
                 } catch (WikiContentManagerException e) {
-                    this.logger.error("Problem when overwritting page content -- "+pageName+" \n",e);
+                    this.logger.error("Problem when overwritting page content -- " + pageName + " \n", e);
                 }
 
                 // overwrite fields
-                Map<String, String> fields=null;
+                Map<String, String> fields = null;
                 try {
                     fields = this.contentManager.getFields(pageName);
                 } catch (WikiContentManagerException e) {
-                    this.logger.error("Problem when overwritting page MD  -- "+pageName+" \n",e);
+                    this.logger.error("Problem when overwritting page MD  -- " + pageName + " \n", e);
                 }
                 if (fields != null) {
                     for (PAGEMDTABLE pageMd : PAGEMDTABLE.values()) {
-                        Value v=null;
+                        Value v = null;
                         try {
-                            v = this.tre.getValue(new MDIdentifier(pageName, String.valueOf(pageMd)));
+                            v = this.tre.getValue(new XWootObjectIdentifier(pageName, String.valueOf(pageMd)));
                         } catch (ThomasRuleEngineException e) {
-                            this.logger.error("Problem when getting tre value for page : "+pageName+"\n",e);
-                        } 
+                            this.logger.error("Problem when getting tre value for page : " + pageName + "\n", e);
+                        }
                         if (v != null) {
-                            fields.put(String.valueOf(pageMd),(String)v.get());
+                            fields.put(String.valueOf(pageMd), (String) v.get());
                         }
                     }
                     try {
                         this.contentManager.setFields(pageName, fields);
                     } catch (WikiContentManagerException e) {
-                        this.logger.error("Problem when overwritting page fields -- "+pageName+" \n",e);
+                        this.logger.error("Problem when overwritting page fields -- " + pageName + " \n", e);
                     }
                 }
 
                 // overwrite comments
-//                CommentValue value=null;
-//                try {
-//                    value = (CommentValue) this.tre.getValue(new MDIdentifier(pageName, WikiContentManager.COMMENT));
-//                } catch (ThomasRuleEngineException e) {
-//                    this.logger.error("Problem when getting tre comment for page : "+pageName+"\n",e);
-//                } 
-//                if (value != null) {
-//                    List<Map> comments = (List<Map>) value.get();
-//                    try {
-//                        this.contentManager.overWriteComments(pageName, comments);
-//                    } catch (WikiContentManagerException e) {
-//                        this.logger.error("Problem when overwritting page comments -- "+pageName+" \n",e);
-//                    }
-//                }
-//                this.logger.info(this.siteId + " : overwrite page : " + pageName + " OK");
+                // CommentValue value=null;
+                // try {
+                // value = (CommentValue) this.tre.getValue(new MDIdentifier(pageName, WikiContentManager.COMMENT));
+                // } catch (ThomasRuleEngineException e) {
+                // this.logger.error("Problem when getting tre comment for page : "+pageName+"\n",e);
+                // }
+                // if (value != null) {
+                // List<Map> comments = (List<Map>) value.get();
+                // try {
+                // this.contentManager.overWriteComments(pageName, comments);
+                // } catch (WikiContentManagerException e) {
+                // this.logger.error("Problem when overwritting page comments -- "+pageName+" \n",e);
+                // }
+                // }
+                // this.logger.info(this.siteId + " : overwrite page : " + pageName + " OK");
             }
         }
 
@@ -366,22 +364,24 @@ public class XWoot implements XWootAPI
         }
     }
 
-    private Patch sendNewPatch(List<WootOp> contentData, List<ThomasRuleOp> mDContentData, String pageName) throws XWootException 
+    private Patch sendNewPatch(List<WootOp> contentData, List<ThomasRuleOp> mDContentData, String pageName)
+        throws XWootException
     {
         // send the new patch
-        Patch newPatch = new Patch(contentData, mDContentData, pageName,PAGEOBJECTID,-1,-1,-1);
-        Message message=null;
-        message = this.sender.getNewMessage(this.getXWootPeerId(), newPatch, LpbCastAPI.LOG_AND_GOSSIP_OBJECT, this.sender
-            .getRound()); 
-        if (message!=null){
+        Patch newPatch = new Patch(contentData, mDContentData, pageName, PAGEOBJECTID, -1, -1, -1);
+        Message message = null;
+        message =
+            this.sender.getNewMessage(this.getXWootPeerId(), newPatch, LpbCastAPI.LOG_AND_GOSSIP_OBJECT, this.sender
+                .getRound());
+        if (message != null) {
             try {
                 this.addPageNameToLastPages(pageName);
                 this.sender.gossip(message);
                 this.getAntiEntropy().logMessage(message.getId(), message);
             } catch (SenderException e) {
-                throw new XWootException("Can't send new Message ",e);  
+                throw new XWootException("Can't send new Message ", e);
             } catch (AntiEntropyException e) {
-                throw new XWootException("Can't send new Message ",e);    
+                throw new XWootException("Can't send new Message ", e);
             }
         }
         return newPatch;
@@ -408,7 +408,8 @@ public class XWoot implements XWootAPI
             byte[] lastVuePageDigest = md.digest();
 
             // get the woot engine page
-            String modelPage = this.getWootEngine().getContentManager().getContent(pageName,PAGEOBJECTID,PAGECONTENTFIELDID);
+            String modelPage =
+                this.getWootEngine().getContentManager().getContent(pageName, PAGEOBJECTID, PAGECONTENTFIELDID);
 
             if (this.isContentManagerConnected()) {
 
@@ -429,11 +430,9 @@ public class XWoot implements XWootAPI
                     this.logger.debug(this.siteId + " : - lastVuePage : " + lastVuePage + "   newPage : " + newPage);
 
                     // make diff on woot page copy (last parameter = true) !!
-                    List<WootOp> dataContent =
-                        this.synchronizePageContent(pageName, lastVuePage, newPage, true);
+                    List<WootOp> dataContent = this.synchronizePageContent(pageName, lastVuePage, newPage, true);
 
                     // save the last vue page with the contentManager page
-                    this.getWootEngine().getContentManager().copyWootContent(pageName, PAGEOBJECTID, PAGECONTENTFIELDID);
                     page.setContent(newPage);
                     page.unloadPage(this.lastVuePagesDir);
                     // send the new patch
@@ -447,12 +446,15 @@ public class XWoot implements XWootAPI
                     Patch newPatch = this.sendNewPatch(dataContent, null, pageName);
                     this.wootEngine.deliverPatch(newPatch);
                     this.treatePatch_PageContent(pageName);
+                    this.getWootEngine().getContentManager()
+                        .copyWootContent(pageName, PAGEOBJECTID, PAGECONTENTFIELDID);
 
                 } else {
                     this.logger.info(this.siteId + " : contentManager page have no change");
                     // save the last vue page with the woot engine page
                     page.setContent(modelPage);
-                    this.getWootEngine().getContentManager().copyWootContent(pageName, PAGEOBJECTID, PAGECONTENTFIELDID);
+                    this.getWootEngine().getContentManager()
+                        .copyWootContent(pageName, PAGEOBJECTID, PAGECONTENTFIELDID);
                     page.unloadPage(this.lastVuePagesDir);
                 }
             }
@@ -461,7 +463,7 @@ public class XWoot implements XWootAPI
             if (page != null) {
                 try {
                     page.unloadPage(pageName);
-                }  catch (XWootException e1) {
+                } catch (XWootException e1) {
                     // TODO Auto-generated catch block
                     e1.printStackTrace();
                 }
@@ -474,7 +476,7 @@ public class XWoot implements XWootAPI
     {
         this.logger.info(this.siteId + " : apply metaData modif");
 
-        if ((list == null) || list.isEmpty() || !(list.get(0)!=null && list.get(0) instanceof ThomasRuleOp)) {
+        if ((list == null) || list.isEmpty() || !(list.get(0) != null && list.get(0) instanceof ThomasRuleOp)) {
             return;
         }
 
@@ -483,13 +485,13 @@ public class XWoot implements XWootAPI
         List<Map> comments = new ArrayList<Map>();
         Collection entries = new ArrayList<Entry>();
         for (int i = 0; i < list.size(); i++) {
-            Entry e=null;
+            Entry e = null;
             try {
                 e = this.tre.applyOp((ThomasRuleOp) list.get(i));
             } catch (ThomasRuleEngineException e1) {
-                this.logger.error("Problem to apply op"+e1);
-            } 
-            if (e!=null){
+                this.logger.error("Problem to apply op" + e1);
+            }
+            if (e != null) {
                 entries.add(e);
             }
         }
@@ -499,15 +501,16 @@ public class XWoot implements XWootAPI
             try {
                 fields = this.contentManager.getFields(pageName);
             } catch (WikiContentManagerException e1) {
-                this.logger.error("Error when getting fields for page "+pageName+"\n"+e1);
+                this.logger.error("Error when getting fields for page " + pageName + "\n" + e1);
             }
 
             if (fields == null) {
                 try {
                     fields = this.contentManager.createPage(pageName, "");
                 } catch (WikiContentManagerException e) {
-                    this.logger.error("Problem with page : " + pageName + " -- can't get it, can't create it.",e);
-                    throw new XWootException("Problem with page : " + pageName + " -- can't get it, can't create it.",e);
+                    this.logger.error("Problem with page : " + pageName + " -- can't get it, can't create it.", e);
+                    throw new XWootException("Problem with page : " + pageName + " -- can't get it, can't create it.",
+                        e);
                 }
 
             }
@@ -522,9 +525,11 @@ public class XWoot implements XWootAPI
                     Value val = e.getValue();
                     if (val != null) {
                         if (val instanceof PageFieldValue) {
-                            fields.put(((MDIdentifier) e.getId()).getMetaDataId(), (String)((PageFieldValue) e.getValue()).get());
+                            fields.put(((XWootObjectIdentifier) e.getId()).getMetaDataId(),
+                                (String) ((PageFieldValue) e.getValue()).get());
                             this.logger.debug(this.siteId + " : set field -- "
-                                + ((MDIdentifier) e.getId()).getMetaDataId() + "," + ((PageFieldValue) e.getValue()).get());
+                                + ((XWootObjectIdentifier) e.getId()).getMetaDataId() + ","
+                                + ((PageFieldValue) e.getValue()).get());
                         } else if (val instanceof CommentValue) {
                             comments.add((Map) ((CommentValue) e.getValue()).get());
                         } else {
@@ -537,21 +542,21 @@ public class XWoot implements XWootAPI
             try {
                 this.contentManager.setFields(pageName, fields);
             } catch (WikiContentManagerException e) {
-                this.logger.error("Problem when setting page "+pageName+"\n",e);
+                this.logger.error("Problem when setting page " + pageName + "\n", e);
             }
 
-//            if (!comments.isEmpty()) {
-//                try {
-//                    this.contentManager.overWriteComments(pageName, comments);
-//                } catch (WikiContentManagerException e) {
-//                    this.logger.error("Problem when overwritting comments "+pageName+"\n",e);
-//                }
-//                this.logger.debug(this.siteId + " : set comments : " + comments);
-//            }
+            // if (!comments.isEmpty()) {
+            // try {
+            // this.contentManager.overWriteComments(pageName, comments);
+            // } catch (WikiContentManagerException e) {
+            // this.logger.error("Problem when overwritting comments "+pageName+"\n",e);
+            // }
+            // this.logger.debug(this.siteId + " : set comments : " + comments);
+            // }
         }
     }
 
-    private synchronized void synchronizePage(String pageName) throws XWootException 
+    private synchronized void synchronizePage(String pageName) throws XWootException
     {
         if (!this.isContentManagerConnected()) {
             return;
@@ -559,21 +564,22 @@ public class XWoot implements XWootAPI
         this.logger.trace(this.siteId + " : Synchronising page : " + pageName);
 
         // get the woot engine content
-        String wootContent=null;
+        String wootContent = null;
         try {
-            wootContent = this.getWootEngine().getContentManager().getContent(pageName,PAGEOBJECTID,PAGECONTENTFIELDID);
+            wootContent =
+                this.getWootEngine().getContentManager().getContent(pageName, PAGEOBJECTID, PAGECONTENTFIELDID);
         } catch (WootEngineException e) {
-            this.logger.error("Can't synchronize page : "+pageName+"\n",e);
+            this.logger.error("Can't synchronize page : " + pageName + "\n", e);
             return;
         }
 
         // get the contentManager content
 
-        Map<String, String> fields=null;
+        Map<String, String> fields = null;
         try {
             fields = this.contentManager.getFields(pageName);
         } catch (WikiContentManagerException e) {
-            this.logger.error("Can't synchronize page : "+pageName+"\n",e);
+            this.logger.error("Can't synchronize page : " + pageName + "\n", e);
             return;
         }
         String contentManagerContent = "";
@@ -599,33 +605,28 @@ public class XWoot implements XWootAPI
             try {
                 this.getWootEngine().getContentManager().copyWootContent(pageName, PAGEOBJECTID, PAGECONTENTFIELDID);
             } catch (WootEngineException e) {
-                this.logger.error("Can't synchronize page : "+pageName+"\n",e);
+                this.logger.error("Can't synchronize page : " + pageName + "\n", e);
                 return;
-            } 
+            }
         }
 
         // synchronize MD contents
         List<ThomasRuleOp> mdOp = this.synchronizePageMD(pageName, fields);
-//        List<ThomasRuleOp> o=null;
-//        try {
-//            o = this.synchronizePageComments(pageName, this.contentManager.getComments(pageName));
-//            if (o != null){
-//                mdOp.addAll(o);
-//            }
-//
-//        } catch (WikiContentManagerException e) {
-//            this.logger.error("Problem when getting comments for page "+pageName+"\n",e);
-//        }
+        // List<ThomasRuleOp> o=null;
+        // try {
+        // o = this.synchronizePageComments(pageName, this.contentManager.getComments(pageName));
+        // if (o != null){
+        // mdOp.addAll(o);
+        // }
+        //
+        // } catch (WikiContentManagerException e) {
+        // this.logger.error("Problem when getting comments for page "+pageName+"\n",e);
+        // }
 
-        /*   try {
-            o = this.synchronizePageTags(pageName, this.contentManager.getTags(pageName));
-            if (o != null){
-                mdOp.add(o);
-            }
-
-        } catch (WikiContentManagerException e) {
-            this.logger.error("Problem when getting comments for page "+pageName+"\n",e);
-        }
+        /*
+         * try { o = this.synchronizePageTags(pageName, this.contentManager.getTags(pageName)); if (o != null){
+         * mdOp.add(o); } } catch (WikiContentManagerException e) {
+         * this.logger.error("Problem when getting comments for page "+pageName+"\n",e); }
          */
         // CreatePatch if necessary
         if (!dataContent.isEmpty() || !mdOp.isEmpty()) {
@@ -635,79 +636,59 @@ public class XWoot implements XWootAPI
 
     }
 
-    /* private ThomasRuleOp synchronizePageTags(String pageName, Map<Integer, List<String>> tags)
-    {
+    /*
+     * private ThomasRuleOp synchronizePageTags(String pageName, Map<Integer, List<String>> tags) { CommentsValue value
+     * = null; Identifier id = new MDIdentifier(pageName, WikiContentManager.COMMENT); if (comments != null) { value =
+     * new CommentsValue(comments); } ThomasRuleOp op=null; try { op = this.tre.getOp(id, value); this.tre.applyOp(op);
+     * } catch (ThomasRuleEngineException e) { this.logger.error("Can't apply comment op "); } if (op == null) {
+     * this.logger.info(this.siteId + " : no comment to synchronize\n\n"); } else { this.logger.info(this.siteId +
+     * " : comments changed ; synchronizing"); } return op; }
+     */
 
-        CommentsValue value = null;
-        Identifier id = new MDIdentifier(pageName, WikiContentManager.COMMENT);
-
-        if (comments != null) {
-            value = new CommentsValue(comments);
-        }
-
-        ThomasRuleOp op=null;
-        try {
-            op = this.tre.getOp(id, value);
-            this.tre.applyOp(op);
-        } catch (ThomasRuleEngineException e) {
-            this.logger.error("Can't apply comment op ");
-        } 
-
-
-        if (op == null) {
-            this.logger.info(this.siteId + " : no comment to synchronize\n\n");
-        } else {
-            this.logger.info(this.siteId + " : comments changed ; synchronizing");
-        }
-
-        return op;
-    }*/
-
-//    private synchronized List<ThomasRuleOp> synchronizePageComments(String pageName, List<Map> comments)
-//    {
-//        List<ThomasRuleOp> result=new ArrayList<ThomasRuleOp>();
-//
-//        if (comments==null){
-//            return null;
-//        }
-//        List<Identifier> pageIds=null;
-//        
-//        try {
-//            pageIds = this.tre.getEntriesIds(pageName);
-//        } catch (ThomasRuleEngineException e1) {
-//           return null;
-//        }
-//
-//        for(Map comment:comments){
-//            CommentValue value= null;
-//            try {
-//                if (comment != null) {
-//                    Identifier id = new MDIdentifier(pageName, WikiContentManager.COMMENT+comment.get(WikiContentManager.ID));
-//                    if (pageIds.contains(id)){
-//                        value = new CommentValue(comment);
-//                    }
-//                    ThomasRuleOp op=null;
-//                    op = this.tre.getOp(id, value);
-//                    this.tre.applyOp(op);
-//                    result.add(op);
-//
-//                }
-//            } catch (ThomasRuleEngineException e) {
-//                this.logger.error("Can't apply comment op ");
-//            }
-//
-//        }
-//
-//
-//        if (result.isEmpty()) {
-//            this.logger.info(this.siteId + " : no comment to synchronize\n\n");
-//        } else {
-//            this.logger.info(this.siteId + " : comments changed ; synchronizing");
-//        }
-//
-//        return result;
-//    }
-
+    // private synchronized List<ThomasRuleOp> synchronizePageComments(String pageName, List<Map> comments)
+    // {
+    // List<ThomasRuleOp> result=new ArrayList<ThomasRuleOp>();
+    //
+    // if (comments==null){
+    // return null;
+    // }
+    // List<Identifier> pageIds=null;
+    //        
+    // try {
+    // pageIds = this.tre.getEntriesIds(pageName);
+    // } catch (ThomasRuleEngineException e1) {
+    // return null;
+    // }
+    //
+    // for(Map comment:comments){
+    // CommentValue value= null;
+    // try {
+    // if (comment != null) {
+    // Identifier id = new MDIdentifier(pageName, WikiContentManager.COMMENT+comment.get(WikiContentManager.ID));
+    // if (pageIds.contains(id)){
+    // value = new CommentValue(comment);
+    // }
+    // ThomasRuleOp op=null;
+    // op = this.tre.getOp(id, value);
+    // this.tre.applyOp(op);
+    // result.add(op);
+    //
+    // }
+    // } catch (ThomasRuleEngineException e) {
+    // this.logger.error("Can't apply comment op ");
+    // }
+    //
+    // }
+    //
+    //
+    // if (result.isEmpty()) {
+    // this.logger.info(this.siteId + " : no comment to synchronize\n\n");
+    // } else {
+    // this.logger.info(this.siteId + " : comments changed ; synchronizing");
+    // }
+    //
+    // return result;
+    // }
     private synchronized List<ThomasRuleOp> synchronizePageMD(String pageName, Map<String, String> fields)
     {
 
@@ -717,16 +698,18 @@ public class XWoot implements XWootAPI
             for (PAGEMDTABLE pageMd : PAGEMDTABLE.values()) {
                 value = fields.get(pageMd.toString());
                 if (value != null) {
-                    ThomasRuleOp op=null;
+                    ThomasRuleOp op = null;
                     try {
-                        op = this.tre.getOp(new MDIdentifier(pageName, pageMd.toString()), new PageFieldValue(value));
+                        op =
+                            this.tre.getOp(new XWootObjectIdentifier(pageName, pageMd.toString()), new PageFieldValue(
+                                value));
                         if (op != null) {
                             this.tre.applyOp(op);
                             result.add(op);
                         }
                     } catch (ThomasRuleEngineException e) {
-                        this.logger.error(this.siteId + " : problem to get an op \n",e);
-                    } 
+                        this.logger.error(this.siteId + " : problem to get an op \n", e);
+                    }
                 }
             }
         }
@@ -737,9 +720,9 @@ public class XWoot implements XWootAPI
         return result;
     }
 
-    private synchronized List<WootOp> synchronizePageContent(String pageName, String oldPage,
-        String newPage, boolean inCopy) throws XWootException
-        {
+    private synchronized List<WootOp> synchronizePageContent(String pageName, String oldPage, String newPage,
+        boolean inCopy) throws XWootException
+    {
         BufferedReader oldContent = new BufferedReader(new StringReader(oldPage));
         BufferedReader newContent = new BufferedReader(new StringReader(newPage));
 
@@ -747,7 +730,7 @@ public class XWoot implements XWootAPI
         try {
             d.diff(oldContent, newContent);
         } catch (IOException e) {
-            this.logger.error(this.siteId + " : Problem with diff when synchronizing content",e);
+            this.logger.error(this.siteId + " : Problem with diff when synchronizing content", e);
         }
 
         List l = d.getHunks();
@@ -758,20 +741,22 @@ public class XWoot implements XWootAPI
             try {
                 this.wootEngine.loadClock();
             } catch (ClockException e) {
-                throw new XWootException(this.siteId+" : Problem when synchronizing content",e);
+                throw new XWootException(this.siteId + " : Problem when synchronizing content", e);
             }
             WootContent page = null;
             try {
                 if (inCopy) {
-                    page = this.wootEngine.getContentManager().loadWootContentCopy(pageName, PAGEOBJECTID, PAGECONTENTFIELDID);
+                    page =
+                        this.wootEngine.getContentManager().loadWootContentCopy(pageName, PAGEOBJECTID,
+                            PAGECONTENTFIELDID);
                 } else {
-                    page = this.wootEngine.getContentManager().loadWootContent(pageName, PAGEOBJECTID, PAGECONTENTFIELDID);
+                    page =
+                        this.wootEngine.getContentManager().loadWootContent(pageName, PAGEOBJECTID, PAGECONTENTFIELDID);
                 }
-            }
-            catch (WootEngineException e) {
-                throw new XWootException(this.siteId+" : Problem when synchronizing content",e);
+            } catch (WootEngineException e) {
+                throw new XWootException(this.siteId + " : Problem when synchronizing content", e);
 
-            } 
+            }
             do {
                 Hunk hunk = (Hunk) lIt.next();
 
@@ -787,7 +772,7 @@ public class XWoot implements XWootAPI
                         try {
                             ins = this.getWootEngine().insert(page, line, (pos + i));
                         } catch (WootEngineException e) {
-                            throw new XWootException(this.siteId+" : Problem when synchronizing content",e);
+                            throw new XWootException(this.siteId + " : Problem when synchronizing content", e);
                         }
                         data.add(ins);
                         i++;
@@ -802,7 +787,7 @@ public class XWoot implements XWootAPI
                         try {
                             del = this.getWootEngine().delete(page, pos);
                         } catch (WootEngineException e) {
-                            throw new XWootException(this.siteId+" : Problem when synchronizing content",e); 
+                            throw new XWootException(this.siteId + " : Problem when synchronizing content", e);
                         }
                         data.add(del);
                     }
@@ -813,13 +798,13 @@ public class XWoot implements XWootAPI
             try {
                 this.wootEngine.unloadClock();
             } catch (ClockException e) {
-                this.logger.error(this.siteId+" : Problem when synchronizing content",e);
+                this.logger.error(this.siteId + " : Problem when synchronizing content", e);
             }
             try {
                 this.wootEngine.getContentManager().unloadWootContent(page);
             } catch (WootEngineException e) {
-                this.logger.error(this.siteId+" : Problem when synchronizing content",e);
-            } 
+                this.logger.error(this.siteId + " : Problem when synchronizing content", e);
+            }
         }
 
         if (!data.isEmpty()) {
@@ -829,21 +814,21 @@ public class XWoot implements XWootAPI
         }
 
         return data;
-        }
+    }
 
     /**
      * DOCUMENT ME!
-     * @throws XWootException 
      * 
+     * @throws XWootException
      */
-    public synchronized void synchronizePages() throws XWootException
+    public synchronized void synchronize() throws XWootException
     {
         if (!this.isContentManagerConnected()) {
             return;
         }
         this.logger.info(this.siteId + " : Starting the synchronisation of each managed pages");
 
-        Collection listPages=null;
+        Collection listPages = null;
         listPages = XWootPage.getManagedPageNames(this.lastVuePagesDir);
         Iterator i = listPages.iterator();
         try {
@@ -868,13 +853,13 @@ public class XWoot implements XWootAPI
      * DOCUMENT ME!
      * 
      * @param receivedMessage DOCUMENT ME!
-     * @throws XWootException 
+     * @throws XWootException
      */
-    public synchronized void receivePatch(Message message) throws XWootException 
+    public synchronized void receivePatch(Message message) throws XWootException
     {
         if (!this.isConnectedToP2PNetwork()) {
             return;
-        }  
+        }
         String randNeighbor = (String) message.getRandNeighbor();
         this.logger.info(this.siteId + " : received message...");
         switch (message.getAction()) {
@@ -888,11 +873,11 @@ public class XWoot implements XWootAPI
                     try {
                         if (!this.antiEntropy.getLog().existInLog(mess.getId())) {
                             this.antiEntropy.logMessage(mess.getId(), mess);
-                            this.treatePatch((Patch)mess.getContent());
+                            this.treatePatch((Patch) mess.getContent());
                         }
                     } catch (AntiEntropyException e) {
-                        throw new XWootException(this.siteId+" : Problem to send a message",e);
-                    } 
+                        throw new XWootException(this.siteId + " : Problem to send a message", e);
+                    }
                 }
                 break;
 
@@ -902,14 +887,14 @@ public class XWoot implements XWootAPI
                     if (!this.antiEntropy.getLog().existInLog(message.getId())) {
                         this.logger.info(this.siteId + " : received message : integration and logging.");
                         this.antiEntropy.logMessage(message.getId(), message);
-                        this.treatePatch((Patch)message.getContent());
+                        this.treatePatch((Patch) message.getContent());
                     } else {
                         this.logger.info(this.siteId + " : received message : already in log.");
                     }
                 } catch (AntiEntropyException e) {
-                    throw new XWootException(this.siteId+" : Problem to log message",e);
+                    throw new XWootException(this.siteId + " : Problem to log message", e);
                 }
-                
+
                 message.setRound(message.getRound() - 1);
                 message.setOriginalPeerId(this.getXWootPeerId());
 
@@ -918,8 +903,8 @@ public class XWoot implements XWootAPI
                     try {
                         this.sender.gossip(message);
                     } catch (SenderException e) {
-                        throw new XWootException(this.siteId+" : Problem to gossip message",e);
-                    } 
+                        throw new XWootException(this.siteId + " : Problem to gossip message", e);
+                    }
                 } else {
                     this.logger.info(this.siteId + " : Received message : round=0 ; stop gossip message.");
                 }
@@ -934,19 +919,19 @@ public class XWoot implements XWootAPI
                 try {
                     content = this.antiEntropy.answerAntiEntropy(message.getContent());
                 } catch (AntiEntropyException e) {
-                    throw new XWootException(this.siteId+" : Problem to do antiEntropy \n",e);   
+                    throw new XWootException(this.siteId + " : Problem to do antiEntropy \n", e);
                 }
                 Message toSend;
 
                 toSend = this.sender.getNewMessage(this.getXWootPeerId(), content, LpbCastAPI.LOG_OBJECT, 0);
 
                 this.logger
-                .debug(this.siteId
-                    + " : New message -- content : patches : result of diff beetween given log and local log -- Action : LOG_OBJECT -- round : 0");
+                    .debug(this.siteId
+                        + " : New message -- content : patches : result of diff beetween given log and local log -- Action : LOG_OBJECT -- round : 0");
                 try {
                     this.sender.sendTo(message.getOriginalPeerId(), toSend);
                 } catch (SenderException e) {
-                    throw new XWootException(this.siteId+" : Problem to send a Message \n",e);
+                    throw new XWootException(this.siteId + " : Problem to send a Message \n", e);
                 }
 
                 break;
@@ -972,7 +957,7 @@ public class XWoot implements XWootAPI
     public boolean joinNetwork(String neighborURL) throws XWootException
     {
         File s = null;
-        if (this.isWootStorageComputed()) {
+        if (this.isStateComputed()) {
             s = new File(this.getStateFilePath());
         }
         if (!this.isConnectedToP2PNetwork()) {
@@ -990,7 +975,7 @@ public class XWoot implements XWootAPI
                     return false;
                 }
             }
-            this.importWootStorage(s);
+            this.importState(s);
             return true;
         }
         return false;
@@ -1010,16 +995,16 @@ public class XWoot implements XWootAPI
 
             return state;
         } catch (IOException e) {
-            this.logger.error(this.peerId+" : Problem to get file via http request \n",e);
-            throw new XWootException(this.peerId+" : Problem to get file via http request \n",e);
+            this.logger.error(this.peerId + " : Problem to get file via http request \n", e);
+            throw new XWootException(this.peerId + " : Problem to get file via http request \n", e);
         } catch (URISyntaxException e) {
-            this.logger.error(this.peerId+" : Problem to get file via http request \n",e);
-            throw new XWootException(this.peerId+" : Problem to get file via http request \n",e);
+            this.logger.error(this.peerId + " : Problem to get file via http request \n", e);
+            throw new XWootException(this.peerId + " : Problem to get file via http request \n", e);
         }
 
     }
 
-    public Message[] askAE(String from, String to) throws XWootException 
+    public Message[] askAE(String from, String to) throws XWootException
     {
         try {
             System.out.println(this.getXWootPeerId() + " Ask antiEntropy to " + NetUtil.normalize(to));
@@ -1027,17 +1012,17 @@ public class XWoot implements XWootAPI
                 new URL(NetUtil.normalize(to) + HttpServletLpbCast.SEND_AE_DIFF_SERVLET + "?neighbor=" + from
                     + "&file=stateFile");
             getNeighborAE.openConnection().addRequestProperty("file", "stateFile");
-            //Message[] log=(Message[]) this.getAntiEntropy().getContentForAskAntiEntropy();
-            //TODO send log and receive diff 
+            // Message[] log=(Message[]) this.getAntiEntropy().getContentForAskAntiEntropy();
+            // TODO send log and receive diff
             return null;
-            //NetUtil.sendObjectViaHTTPRequest(getNeighborAE, log);
-        }catch (IOException e) {
-            this.logger.error(this.peerId+" : Problem to get file via http request \n",e);
-            throw new XWootException(this.peerId+" : Problem to get file via http request \n",e);
+            // NetUtil.sendObjectViaHTTPRequest(getNeighborAE, log);
+        } catch (IOException e) {
+            this.logger.error(this.peerId + " : Problem to get file via http request \n", e);
+            throw new XWootException(this.peerId + " : Problem to get file via http request \n", e);
         } catch (URISyntaxException e) {
-            this.logger.error(this.peerId+" : Problem to get file via http request \n",e);
-            throw new XWootException(this.peerId+" : Problem to get file via http request \n",e);
-        } 
+            this.logger.error(this.peerId + " : Problem to get file via http request \n", e);
+            throw new XWootException(this.peerId + " : Problem to get file via http request \n", e);
+        }
     }
 
     public boolean createNetwork() throws XWootException
@@ -1045,17 +1030,17 @@ public class XWoot implements XWootAPI
         try {
             this.wootEngine.clearWorkingDir();
         } catch (WootEngineException e) {
-            this.logger.error(this.peerId+" : Problem when clearing wootEngine dir\n",e);
-            throw new XWootException(this.peerId+" : Problem when clearing wootEngine dir\n",e);
+            this.logger.error(this.peerId + " : Problem when clearing wootEngine dir\n", e);
+            throw new XWootException(this.peerId + " : Problem when clearing wootEngine dir\n", e);
         }
         this.tre.clearWorkingDir();
         this.antiEntropy.clearWorkingDir();
-        //try {
-            this.sender.clearWorkingDir();
-        //} catch (SenderException e) {
-        //    this.logger.error(this.peerId+" : Problem when clearing sender dir\n",e);
-        //    throw new XWootException(this.peerId+" : Problem when clearing  sender dir\n",e);
-        //}
+        // try {
+        this.sender.clearWorkingDir();
+        // } catch (SenderException e) {
+        // this.logger.error(this.peerId+" : Problem when clearing sender dir\n",e);
+        // throw new XWootException(this.peerId+" : Problem when clearing  sender dir\n",e);
+        // }
         this.clearWorkingDir();
         this.logger.info(this.siteId + " : all datas clears");
         if (!this.isContentManagerConnected()) {
@@ -1071,7 +1056,7 @@ public class XWoot implements XWootAPI
                 this.doAntiEntropyWithAllNeighbors();
             }
             this.contentManagerConnected = true;
-            this.synchronizePages();
+            this.synchronize();
         }
     }
 
@@ -1081,7 +1066,7 @@ public class XWoot implements XWootAPI
             if (this.isConnectedToP2PNetwork()) {
                 this.doAntiEntropyWithAllNeighbors();
             }
-            this.synchronizePages();
+            this.synchronize();
             this.contentManagerConnected = false;
         }
     }
@@ -1090,7 +1075,7 @@ public class XWoot implements XWootAPI
     {
         if (!this.isConnectedToP2PNetwork()) {
             if (this.isContentManagerConnected()) {
-                this.synchronizePages();
+                this.synchronize();
             }
             this.sender.connectSender();
             this.p2Pconnected = true;
@@ -1102,7 +1087,7 @@ public class XWoot implements XWootAPI
     {
         if (this.isConnectedToP2PNetwork()) {
             if (this.isContentManagerConnected()) {
-                this.synchronizePages();
+                this.synchronize();
             }
             this.doAntiEntropyWithAllNeighbors();
 
@@ -1130,10 +1115,9 @@ public class XWoot implements XWootAPI
      * DOCUMENT ME!
      * 
      * @param neighbor DOCUMENT ME!
-     * @throws XWootException 
-     * 
+     * @throws XWootException
      */
-    synchronized public void doAntiEntropy(String neighborURL) throws XWootException 
+    synchronized public void doAntiEntropy(String neighborURL) throws XWootException
     {
         if (!this.isConnectedToP2PNetwork())
             return;
@@ -1141,20 +1125,21 @@ public class XWoot implements XWootAPI
 
         Message message;
         try {
-            message = this.sender.getNewMessage(this.getXWootPeerId(), this.antiEntropy.getMessageIdsForAskAntiEntropy(),
-                LpbCastAPI.ANTI_ENTROPY, 0);
+            message =
+                this.sender.getNewMessage(this.getXWootPeerId(), this.antiEntropy.getMessageIdsForAskAntiEntropy(),
+                    LpbCastAPI.ANTI_ENTROPY, 0);
         } catch (AntiEntropyException e) {
-            this.logger.error(this.peerId+" : Problem to get content for antiEntropy \n",e);
-            throw new XWootException(this.peerId+" : Problem to get content for antiEntropy \n",e);
+            this.logger.error(this.peerId + " : Problem to get content for antiEntropy \n", e);
+            throw new XWootException(this.peerId + " : Problem to get content for antiEntropy \n", e);
         }
         this.logger
-        .debug(this.siteId + " : New message -- content : log patches -- Action : ANTI_ENTROPY -- round : 0");
+            .debug(this.siteId + " : New message -- content : log patches -- Action : ANTI_ENTROPY -- round : 0");
         try {
 
             this.sender.sendTo(neighborURL, message);
         } catch (SenderException e) {
-            this.logger.error(this.peerId+" : Problem to send message\n",e);
-            throw new XWootException(this.peerId+" : Problem to send message\n",e);
+            this.logger.error(this.peerId + " : Problem to send message\n", e);
+            throw new XWootException(this.peerId + " : Problem to send message\n", e);
         }
     }
 
@@ -1182,13 +1167,12 @@ public class XWoot implements XWootAPI
         try {
             if (this.isConnectedToP2PNetwork() && this.sender.getNeighborsList().size() > 0) {
                 throw new XWootException(
-                "Can't initialize woot Storage : neighbors list is not empty (This operation must be done at startup).");
+                    "Can't initialize woot Storage : neighbors list is not empty (This operation must be done at startup).");
             }
         } catch (SenderException e) {
-            this.logger.error(this.peerId+
-                " : Can't initialize woot Storage : Problem to get neighbors list.\n",e);
-            throw new XWootException(this.peerId+
-                " : Can't initialize woot Storage : Problem to get neighbors list.\n",e);
+            this.logger.error(this.peerId + " : Can't initialize woot Storage : Problem to get neighbors list.\n", e);
+            throw new XWootException(this.peerId
+                + " : Can't initialize woot Storage : Problem to get neighbors list.\n", e);
         }
 
         // initialization of the state directory
@@ -1200,23 +1184,24 @@ public class XWoot implements XWootAPI
         /*********************************************/
         /** TODO WARNING BE CARREFUL ! **/
         /* this.addAllPageManagement(); */
-        Collection l=null;
+        Collection l = null;
         try {
             l = this.contentManager.getListPageId("test");
         } catch (WikiContentManagerException e) {
-            //void
+            // void
         }
-        if (l==null){
-            l= new ArrayList<String>();
+        if (l == null) {
+            l = new ArrayList<String>();
             l.add("Main.WebHome");
         }
-        //        if (l==null){
-        //            this.contentManager.createSpace("test");
-        //            this.contentManager.createPage("test.WebHome", "");
-        //            this.contentManager.overwritePageContent("test.WebHome", "This page have been created to test XWoot application");
-        //            l = this.contentManager.getListPageId("test");
-        //        }
-        /*********************************************/ 
+        // if (l==null){
+        // this.contentManager.createSpace("test");
+        // this.contentManager.createPage("test.WebHome", "");
+        // this.contentManager.overwritePageContent("test.WebHome",
+        // "This page have been created to test XWoot application");
+        // l = this.contentManager.getListPageId("test");
+        // }
+        /*********************************************/
 
         Iterator i = l.iterator();
         while (i.hasNext()) {
@@ -1226,10 +1211,9 @@ public class XWoot implements XWootAPI
             if (!this.isPageManaged(xWootPage)) {
                 this.addPageManagement(xWootPage);
             }
-        } 
+        }
 
-
-        this.synchronizePages();
+        this.synchronize();
         this.logger.debug(this.siteId + " : create state");
 
         // get WOOT state
@@ -1237,19 +1221,19 @@ public class XWoot implements XWootAPI
         try {
             wootState = this.getWootEngine().getState();
         } catch (WootEngineException e) {
-            this.logger.error(this.peerId+" : Problem to get woot engine state \n",e);
-            throw new XWootException(this.peerId+" : Problem to get woot engine state \n",e);
+            this.logger.error(this.peerId + " : Problem to get woot engine state \n", e);
+            throw new XWootException(this.peerId + " : Problem to get woot engine state \n", e);
         }
 
         File copy0 = new File(this.stateDir + File.separatorChar + WootEngine.STATE_FILE_NAME);
         wootState.renameTo(copy0);
 
-
         try {
             // get XWOOT state
-            FileUtil.zipDirectory(this.lastVuePagesDir,this.stateDir + File.separatorChar + XWOOTSTATEFILENAME);
+            FileUtil.zipDirectory(this.lastVuePagesDir, this.stateDir + File.separatorChar + XWOOTSTATEFILENAME);
             // get TRE state
-            FileUtil.zipDirectory(this.tre.getWorkingDir(),this.stateDir + File.separatorChar + ThomasRuleEngine.TRE_STATE_FILE_NAME);
+            FileUtil.zipDirectory(this.tre.getWorkingDir(), this.stateDir + File.separatorChar
+                + ThomasRuleEngine.TRE_STATE_FILE_NAME);
             // create page list file
             File pageListFile = new File(this.stateDir + File.separator + PAGELISTFILEFORSTATE);
             XStream xstream = new XStream();
@@ -1259,18 +1243,15 @@ public class XWoot implements XWootAPI
             output.flush();
             output.close();
 
-            File r = new File(FileUtil.zipDirectory(this.stateDir,File.createTempFile("state",".zip").getPath()));
-            File result=new File(this.stateDir + File.separatorChar + STATEFILENAME);
+            File r = new File(FileUtil.zipDirectory(this.stateDir, File.createTempFile("state", ".zip").getPath()));
+            File result = new File(this.stateDir + File.separatorChar + STATEFILENAME);
             r.renameTo(result);
 
             return result;
         } catch (IOException e) {
-            this.logger.error(this.peerId+" : Problem to zip xwoot datas \n",e);
-            throw new XWootException(this.peerId+" : Problem to zip xwoot datas \n",e);
+            this.logger.error(this.peerId + " : Problem to zip xwoot datas \n", e);
+            throw new XWootException(this.peerId + " : Problem to zip xwoot datas \n", e);
         }
-
-
-
 
     }
 
@@ -1278,11 +1259,10 @@ public class XWoot implements XWootAPI
      * DOCUMENT ME!
      * 
      * @param state DOCUMENT ME!
-     * @throws XWootException 
-     * 
+     * @throws XWootException
      */
     @SuppressWarnings("cast")
-    public Collection setWootStorage(File s) throws XWootException 
+    public Collection setWootStorage(File s) throws XWootException
     {
         this.logger.debug(this.siteId + " : receive state and apply");
 
@@ -1316,7 +1296,6 @@ public class XWoot implements XWootAPI
                     states[j] = new File(this.stateDir + File.separatorChar + l[i]);
             }
 
-
             if (this.getWootEngine().setState(states[0])) {
                 if ((states.length >= 2) && (states[1] != null) && (states[1] instanceof File)) {
                     // MD gestion
@@ -1343,7 +1322,7 @@ public class XWoot implements XWootAPI
                     // this.overwriteCPPages();
                     xWootState = new ZipFile(states[1]);
 
-                    if (!this.isWootStorageComputed()) {
+                    if (!this.isStateComputed()) {
                         File temp = new File(this.stateDir + File.separatorChar + STATEFILENAME);
                         s.renameTo(temp);
                     }
@@ -1359,61 +1338,55 @@ public class XWoot implements XWootAPI
                 return null;
             }
         } catch (WootEngineException e) {
-            this.logger.error(this.peerId+" : Problem to get woot engine state \n",e);
-            throw new XWootException(this.peerId+" : Problem to get woot engine state \n",e);
+            this.logger.error(this.peerId + " : Problem to get woot engine state \n", e);
+            throw new XWootException(this.peerId + " : Problem to get woot engine state \n", e);
         } catch (IOException e) {
-            this.logger.error(this.peerId+" : Problem with files when computing state \n",e);
-            throw new XWootException(this.peerId+" : Problem with files when computing state \n",e);
+            this.logger.error(this.peerId + " : Problem with files when computing state \n", e);
+            throw new XWootException(this.peerId + " : Problem with files when computing state \n", e);
         }
         return null;
 
     }
 
-    public boolean isWootStorageComputed()
+    public boolean isStateComputed()
     {
         File result = new File(this.getStateFilePath());
         return result.exists();
     }
 
-    public void initialiseWootStorage() throws XWootException
+    public File getState()
     {
-        this.computeState();
-    }
-
-    public File exportWootStorage()
-    {
-        if (this.isWootStorageComputed()) {
+        if (this.isStateComputed()) {
             return new File(this.getStateFilePath());
         }
         return null;
     }
 
-    public boolean importWootStorage(File wst) throws XWootException
+    public boolean importState(File wst) throws XWootException
     {
         if (!this.isContentManagerConnected()) {
             this.contentManagerConnected = true;
         }
         File state = new File(this.getStateFilePath());
-        if (wst!=null && !wst.equals(state)) {
+        if (wst != null && !wst.equals(state)) {
             try {
                 FileUtil.copyFile(wst.toString(), state.toString());
             } catch (IOException e) {
-                this.logger.error(this.peerId+" : Problem when copying state file ",e);
-                throw new XWootException(this.peerId+" : Problem when copying state file ",e);
+                this.logger.error(this.peerId + " : Problem when copying state file ", e);
+                throw new XWootException(this.peerId + " : Problem when copying state file ", e);
             }
         }
-        Collection list =this.setWootStorage(wst);
+        Collection list = this.setWootStorage(wst);
         this.overwriteCPPages(list);
-        this.synchronizePages();
+        this.synchronize();
         return true;
     }
-
 
     /**
      * DOCUMENT ME!
      * 
      * @return DOCUMENT ME!
-     * @throws XWootException 
+     * @throws XWootException
      */
     public Collection getListOfManagedPages() throws XWootException
     {
@@ -1429,13 +1402,13 @@ public class XWoot implements XWootAPI
         return result;
     }
 
-    public void removeNeighbor(String neighborURL) throws XWootException 
+    public void removeNeighbor(String neighborURL) throws XWootException
     {
         try {
             this.sender.removeNeighbor(neighborURL);
         } catch (SenderException e) {
-            this.logger.error(this.peerId+" : Problem to remove neighbor \n",e);
-            throw new XWootException(this.peerId+" : Problem to remove neighbor \n",e);
+            this.logger.error(this.peerId + " : Problem to remove neighbor \n", e);
+            throw new XWootException(this.peerId + " : Problem to remove neighbor \n", e);
         }
     }
 
@@ -1451,13 +1424,13 @@ public class XWoot implements XWootAPI
 
     }
 
-    public Collection<String> getNeighborsList() throws XWootException 
+    public Collection<String> getNeighborsList() throws XWootException
     {
         try {
             return this.sender.getNeighborsList();
         } catch (SenderException e) {
-            this.logger.error(this.peerId+" : Problem to get neigbors list \n",e);
-            throw new XWootException(this.peerId+" : Problem to get neigbors list \n",e);
+            this.logger.error(this.peerId + " : Problem to get neigbors list \n", e);
+            throw new XWootException(this.peerId + " : Problem to get neigbors list \n", e);
         }
     }
 
@@ -1521,10 +1494,10 @@ public class XWoot implements XWootAPI
 
     /**
      * DOCUMENT ME!
-     * @throws XWootException 
      * 
+     * @throws XWootException
      */
-    public void addAllPageManagement() throws XWootException 
+    public void addAllPageManagement() throws XWootException
     {
         if (!this.contentManagerConnected) {
             return;
@@ -1533,8 +1506,8 @@ public class XWoot implements XWootAPI
         try {
             spaces = this.contentManager.getListSpaceId();
         } catch (WikiContentManagerException e) {
-            this.logger.error(this.peerId+" : Problem to get space list \n",e);
-            throw new XWootException(this.peerId+" : Problem to get space list \n",e);
+            this.logger.error(this.peerId + " : Problem to get space list \n", e);
+            throw new XWootException(this.peerId + " : Problem to get space list \n", e);
         }
 
         Iterator i = spaces.iterator();
@@ -1558,16 +1531,16 @@ public class XWoot implements XWootAPI
                     }
                 }
             } catch (WikiContentManagerException e) {
-                this.logger.error(this.peerId+" : Problem to get page list for space "+space+" \n",e);
-                throw new XWootException(this.peerId+" : Problem to get page list for space "+space+" \n",e);
+                this.logger.error(this.peerId + " : Problem to get page list for space " + space + " \n", e);
+                throw new XWootException(this.peerId + " : Problem to get page list for space " + space + " \n", e);
             }
         }
     }
 
     /**
      * DOCUMENT ME!
-     * @throws XWootException 
      * 
+     * @throws XWootException
      */
     public void removeAllManagedPages() throws XWootException
     {
@@ -1601,9 +1574,9 @@ public class XWoot implements XWootAPI
      * 
      * @param contentManagerPages DOCUMENT ME!
      * @return DOCUMENT ME!
-     * @throws XWootException 
+     * @throws XWootException
      */
-    public HashMap isPagesManaged(Collection contentManagerPages) throws XWootException 
+    public HashMap isPagesManaged(Collection contentManagerPages) throws XWootException
     {
         Collection managedPages = XWootPage.getManagedPageNames(this.lastVuePagesDir);
         HashMap<String, Boolean> result = new HashMap<String, Boolean>();
@@ -1626,10 +1599,9 @@ public class XWoot implements XWootAPI
      * DOCUMENT ME!
      * 
      * @param page DOCUMENT ME!
-     * @throws XWootException 
-     * 
+     * @throws XWootException
      */
-    public void addPageManagement(XWootPage page) throws XWootException 
+    public void addPageManagement(XWootPage page) throws XWootException
     {
         page.createPage(this.lastVuePagesDir);
     }
@@ -1639,14 +1611,14 @@ public class XWoot implements XWootAPI
      * 
      * @param space DOCUMENT ME!
      * @param managedPages DOCUMENT ME!
-     * @throws XWootException 
+     * @throws XWootException
      */
-    public void setPageManagement(String space, List<String> managedPages) throws XWootException 
+    public void setPageManagement(String space, List<String> managedPages) throws XWootException
     {
         if (!this.contentManagerConnected) {
             return;
         }
-        try{
+        try {
             Collection pages = this.contentManager.getListPageId(space);
 
             if (pages != null) {
@@ -1666,8 +1638,8 @@ public class XWoot implements XWootAPI
 
             }
         } catch (WikiContentManagerException e) {
-            this.logger.error(this.peerId+" : Problem to get page list for space "+space+" \n",e);
-            throw new XWootException(this.peerId+" : Problem to get page list for space "+space+" \n",e);
+            this.logger.error(this.peerId + " : Problem to get page list for space " + space + " \n", e);
+            throw new XWootException(this.peerId + " : Problem to get page list for space " + space + " \n", e);
         }
 
     }
@@ -1686,21 +1658,22 @@ public class XWoot implements XWootAPI
 
     public List<String> getLastPages(String id) throws XWootException
     {
-        List<String> result=null;
-        if (this.lastModifiedPageNames.get(id)==null){
-            result=(List<String>) this.getListOfManagedPages();
-        }else{
-            result=new ArrayList<String>();
+        List<String> result = null;
+        if (this.lastModifiedPageNames.get(id) == null) {
+            result = (List<String>) this.getListOfManagedPages();
+        } else {
+            result = new ArrayList<String>();
             result.addAll(this.lastModifiedPageNames.get(id));
         }
         this.lastModifiedPageNames.put(id, new ArrayList());
         return result;
     }
 
-    private void addPageNameToLastPages(String pageName){
-        Set s=this.lastModifiedPageNames.keySet();
-        Iterator i=s.iterator();
-        while(i.hasNext()){
+    private void addPageNameToLastPages(String pageName)
+    {
+        Set s = this.lastModifiedPageNames.keySet();
+        Iterator i = s.iterator();
+        while (i.hasNext()) {
             this.lastModifiedPageNames.get(i.next()).add(pageName);
         }
     }

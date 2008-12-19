@@ -198,18 +198,21 @@ public class XWootTest extends AbstractXWootTest
         this.xwoot1.connectToContentManager();
         this.xwoot1.reconnectToP2PNetwork();
         this.xwoot1.addAllPageManagement();
-        this.xwoot1.synchronizePages();
+        this.xwoot1.synchronize();
         assertTrue(this.xwoot1.getListOfManagedPages().size() >= 3);
-        assertEquals("toto\n", this.wootEngine1.getContentManager().getContent("test.1",XWoot.PAGEOBJECTID,XWoot.PAGECONTENTFIELDID));
-        assertEquals("titi\n", this.wootEngine1.getContentManager().getContent("test.2",XWoot.PAGEOBJECTID,XWoot.PAGECONTENTFIELDID));
-        assertEquals("tata\n", this.wootEngine1.getContentManager().getContent("test.3",XWoot.PAGEOBJECTID,XWoot.PAGECONTENTFIELDID));
+        assertEquals("toto\n", this.wootEngine1.getContentManager().getContent("test.1", XWoot.PAGEOBJECTID,
+            XWoot.PAGECONTENTFIELDID));
+        assertEquals("titi\n", this.wootEngine1.getContentManager().getContent("test.2", XWoot.PAGEOBJECTID,
+            XWoot.PAGECONTENTFIELDID));
+        assertEquals("tata\n", this.wootEngine1.getContentManager().getContent("test.3", XWoot.PAGEOBJECTID,
+            XWoot.PAGECONTENTFIELDID));
         assertEquals("toto\n", this.xwiki1.getPageContent("test.1"));
         assertEquals("titi\n", this.xwiki1.getPageContent("test.2"));
         assertEquals("tata\n", this.xwiki1.getPageContent("test.3"));
         File f = this.xwoot1.computeState();
         assertNotNull(f);
         System.out.println(f);
-        this.xwoot2.setWootStorage(f);
+        this.xwoot2.importState(f);
         this.xwoot2.connectToContentManager();
         this.xwoot2.reconnectToP2PNetwork();
         assertEquals(this.xwoot1.getListOfManagedPages().size(), this.xwoot2.getListOfManagedPages().size());
