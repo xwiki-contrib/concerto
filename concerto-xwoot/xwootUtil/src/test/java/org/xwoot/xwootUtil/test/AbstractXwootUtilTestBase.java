@@ -29,7 +29,7 @@ import org.xwoot.xwootUtil.FileUtil;
  * <p>
  * Just add tests to subclasses.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class AbstractXwootUtilTestBase
 {
@@ -44,7 +44,7 @@ public class AbstractXwootUtilTestBase
     @Before
     public void initWorkingDir() throws Exception
     {
-        FileUtil.checkDirectoryPath(workingDir);
+        FileUtil.checkDirectoryPath(this.workingDir);
     }
 
     /**
@@ -55,6 +55,6 @@ public class AbstractXwootUtilTestBase
     @After
     public void clearWorkingDir() throws Exception
     {
-        FileUtil.deleteDirectory(workingDir);
+        FileUtil.deleteDirectory(this.workingDir);
     }
 }

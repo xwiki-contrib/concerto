@@ -85,7 +85,7 @@ public final class NetUtil
      */
     private NetUtil()
     {
-        //void
+        // void
     }
 
     /**
@@ -104,9 +104,13 @@ public final class NetUtil
 
         try {
             connection = url.openConnection();
-            String contentTypeHeaderField = connection.getHeaderField(HTTP_CONTENT_TYPE_HEADER);
-            
-            if ((connection == null) || contentTypeHeaderField == null || contentTypeHeaderField.equals("null")) {
+
+            if (connection != null) {
+                String contentTypeHeaderField = connection.getHeaderField(HTTP_CONTENT_TYPE_HEADER);
+                if (contentTypeHeaderField == null || contentTypeHeaderField.equals("null")) {
+                    return null;
+                }
+            } else {
                 return null;
             }
 

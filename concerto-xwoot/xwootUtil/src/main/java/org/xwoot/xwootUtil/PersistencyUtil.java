@@ -199,9 +199,8 @@ public final class PersistencyUtil
     {
         if (!new File(filePath).exists()) {
             return fallBackIfFileNotFound;
-        } else {
-            return loadObjectFromFile(filePath);
         }
+        return loadObjectFromFile(filePath);
     }
 
     /**
@@ -317,8 +316,7 @@ public final class PersistencyUtil
     {
         if (!new File(xmlFilePath).exists()) {
             return fallBackIfFileNotFound;
-        } else {
-            return loadObjectFromXml(xmlFilePath);
         }
+        return loadObjectFromXml(xmlFilePath);
     }
 }

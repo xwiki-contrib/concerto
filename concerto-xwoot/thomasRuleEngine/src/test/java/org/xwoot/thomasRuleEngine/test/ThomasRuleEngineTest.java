@@ -164,45 +164,45 @@ public class ThomasRuleEngineTest
         // ////////////////////
         // (!existInBase,NewOp) => Creation
         // ////////////////////
-        ThomasRuleOp op0new = tre1.getOp(id1, val1);
+        ThomasRuleOp op0new = this.tre1.getOp(this.id1, this.val1);
 
-        tre1.applyOp(op0new);
-        tre2.applyOp(op0new);
+        this.tre1.applyOp(op0new);
+        this.tre2.applyOp(op0new);
 
-        Assert.assertEquals(val1, tre1.getValue(id1));
-        Assert.assertEquals(val1, tre2.getValue(id1));
+        Assert.assertEquals(this.val1, this.tre1.getValue(this.id1));
+        Assert.assertEquals(this.val1, this.tre2.getValue(this.id1));
 
         // ////////////////////
         // (!existInBase,SetOp) => Creation + Set value
         // ////////////////////
-        ThomasRuleOp op0set = tre1.getOp(id2, val1);
+        ThomasRuleOp op0set = this.tre1.getOp(this.id2, this.val1);
 
-        tre1.applyOp(op0set);
-        tre2.applyOp(op0set);
+        this.tre1.applyOp(op0set);
+        this.tre2.applyOp(op0set);
 
-        Assert.assertEquals(val1, tre1.getValue(id2));
-        Assert.assertEquals(val1, tre2.getValue(id2));
+        Assert.assertEquals(this.val1, this.tre1.getValue(this.id2));
+        Assert.assertEquals(this.val1, this.tre2.getValue(this.id2));
 
         // ////////////////////
         // (!existInBase,DelOp) => Nothing
         // ////////////////////
-        ThomasRuleOp op0del = tre1.getOp(id3, null);
+        ThomasRuleOp op0del = this.tre1.getOp(this.id3, null);
         Assert.assertNull(op0del);
 
         // /////////////////////////
         // (existInBase,BaseTc>opTc) => Nothing (local value is last writer)
         // /////////////////////////
         // new id3 with val=val1 on tre1 and tre2
-        ThomasRuleOp op1greater = tre1.getOp(id3, val1);
-        tre1.applyOp(op1greater);
-        tre2.applyOp(op1greater);
-        Assert.assertEquals(val1, tre1.getValue(id3));
-        Assert.assertEquals(val1, tre2.getValue(id3));
+        ThomasRuleOp op1greater = this.tre1.getOp(this.id3, this.val1);
+        this.tre1.applyOp(op1greater);
+        this.tre2.applyOp(op1greater);
+        Assert.assertEquals(this.val1, this.tre1.getValue(this.id3));
+        Assert.assertEquals(this.val1, this.tre2.getValue(this.id3));
 
         // del id3 on tre1
-        ThomasRuleOp op1greaterBis = tre1.getOp(id3, null);
-        tre1.applyOp(op1greaterBis);
-        Assert.assertNull(tre1.getValue(id3));
+        ThomasRuleOp op1greaterBis = this.tre1.getOp(this.id3, null);
+        this.tre1.applyOp(op1greaterBis);
+        Assert.assertNull(this.tre1.getValue(this.id3));
     }
 
     /**
@@ -221,22 +221,22 @@ public class ThomasRuleEngineTest
         // /////////////////////////
 
         // set id3 to val2 on tre2
-        ThomasRuleOp op1greaterQ = tre2.getOp(id3, val2);
-        tre2.applyOp(op1greaterQ);
+        ThomasRuleOp op1greaterQ = this.tre2.getOp(this.id3, this.val2);
+        this.tre2.applyOp(op1greaterQ);
         Thread.sleep(10);
 
         // create id3 with val3 on tre1
-        ThomasRuleOp op1greaterTer = tre1.getOp(id3, val3);
+        ThomasRuleOp op1greaterTer = this.tre1.getOp(this.id3, this.val3);
 
         // compare with the latest op applied to the wanted id
         Assert.assertTrue(op1greaterTer.getTimestampIdCreation().compareTo(op1greaterQ.getTimestampIdCreation()) == 1);
-        tre1.applyOp(op1greaterTer);
-        Assert.assertEquals(val3, tre1.getValue(id3));
+        this.tre1.applyOp(op1greaterTer);
+        Assert.assertEquals(this.val3, this.tre1.getValue(this.id3));
 
         // verify
-        Assert.assertEquals(val2, tre2.getValue(id3));
-        tre1.applyOp(op1greaterQ);
-        Assert.assertEquals(val3, tre1.getValue(id3));
+        Assert.assertEquals(this.val2, this.tre2.getValue(this.id3));
+        this.tre1.applyOp(op1greaterQ);
+        Assert.assertEquals(this.val3, this.tre1.getValue(this.id3));
 
         // ///////////////////////////////
         // (existInBase,BaseTc<opTc,NewOp) => overwrite local value
@@ -246,8 +246,8 @@ public class ThomasRuleEngineTest
         // compare with the latest op applied to the wanted id
         Assert.assertTrue(op1greaterTer.getTimestampIdCreation().compareTo(op1greaterQ.getTimestampIdCreation()) == 1);
 
-        tre2.applyOp(op1greaterTer);
-        Assert.assertEquals(val3, tre2.getValue(id3));
+        this.tre2.applyOp(op1greaterTer);
+        Assert.assertEquals(this.val3, this.tre2.getValue(this.id3));
     }
 
     /**
@@ -261,62 +261,62 @@ public class ThomasRuleEngineTest
     public void testApplyOpBasedOnTimestamps2() throws Exception
     {
 
-        // create a New operation. 
-        ThomasRuleOp op1greaterTer = tre1.getOp(id3, val3);
+        // create a New operation.
+        ThomasRuleOp op1greaterTer = this.tre1.getOp(this.id3, this.val3);
         Thread.sleep(10);
 
         // ///////////////////////////////
         // (existInBase,BaseTc<opTc,SetOp) => overwrite local value
         // ///////////////////////////////
-        tre1.applyOp(tre1.getOp(id3, null));
-        tre1.applyOp(tre1.getOp(id3, val1));
+        this.tre1.applyOp(this.tre1.getOp(this.id3, null));
+        this.tre1.applyOp(this.tre1.getOp(this.id3, this.val1));
 
-        ThomasRuleOp op1lowerSet = tre1.getOp(id3, val2);
+        ThomasRuleOp op1lowerSet = this.tre1.getOp(this.id3, this.val2);
         Assert.assertTrue((op1lowerSet instanceof ThomasRuleOpSet));
-        tre1.applyOp(op1lowerSet);
-        
+        this.tre1.applyOp(op1lowerSet);
+
         // compare with the latest op applied to the wanted id
         Assert.assertTrue(op1lowerSet.getTimestampIdCreation().compareTo(op1greaterTer.getTimestampIdCreation()) == 1);
 
-        tre2.applyOp(op1lowerSet);
-        Assert.assertEquals(val2, tre2.getValue(id3));
+        this.tre2.applyOp(op1lowerSet);
+        Assert.assertEquals(this.val2, this.tre2.getValue(this.id3));
 
         // ///////////////////////////////
         // (existInBase,BaseTc<opTc,DelOp) => overwrite local value
         // ///////////////////////////////
-        tre1.applyOp(tre1.getOp(id3, null));
-        tre1.applyOp(tre1.getOp(id3, val3));
+        this.tre1.applyOp(this.tre1.getOp(this.id3, null));
+        this.tre1.applyOp(this.tre1.getOp(this.id3, this.val3));
 
-        ThomasRuleOp op1lowerDel = tre1.getOp(id3, null);
+        ThomasRuleOp op1lowerDel = this.tre1.getOp(this.id3, null);
         Assert.assertTrue((op1lowerDel instanceof ThomasRuleOpDel));
 
-        tre1.applyOp(op1lowerDel);
+        this.tre1.applyOp(op1lowerDel);
         // compare with the latest op applied to the wanted id
         Assert.assertTrue(op1lowerDel.getTimestampIdCreation().compareTo(op1lowerSet.getTimestampIdCreation()) == 1);
 
-        tre2.applyOp(op1lowerDel);
-        Assert.assertNull(tre2.getValue(id3));
+        this.tre2.applyOp(op1lowerDel);
+        Assert.assertNull(this.tre2.getValue(this.id3));
 
         // ///////////////////////////////////////
         // (existInBase,BaseTc==opTc,BaseTm>=opTm) => Nothing (local value is
         // last writer)
         // ///////////////////////////////////////
-        tre1.applyOp(tre1.getOp(id1, null));
-        tre1.applyOp(tre1.getOp(id1, val1));
+        this.tre1.applyOp(this.tre1.getOp(this.id1, null));
+        this.tre1.applyOp(this.tre1.getOp(this.id1, this.val1));
 
-        ThomasRuleOp op1TcEqualTmGreater = tre1.getOp(id1, val2);
-        tre1.applyOp(op1TcEqualTmGreater);
+        ThomasRuleOp op1TcEqualTmG = this.tre1.getOp(this.id1, this.val2);
+        this.tre1.applyOp(op1TcEqualTmG);
 
-        ThomasRuleOp op1TcEqualTmGreaterBis = tre1.getOp(id1, val3);
-        tre1.applyOp(op1TcEqualTmGreaterBis);
-        Assert.assertTrue(op1TcEqualTmGreater.getTimestampIdCreation().compareTo(
-            op1TcEqualTmGreaterBis.getTimestampIdCreation()) == 0);
-        Assert.assertTrue(op1TcEqualTmGreater.getTimestampModif().compareTo(
-            op1TcEqualTmGreaterBis.getTimestampModif()) == -1);
+        ThomasRuleOp op1TcEqualTmGBis = this.tre1.getOp(this.id1, this.val3);
+        this.tre1.applyOp(op1TcEqualTmGBis);
+        Assert.assertTrue(op1TcEqualTmG.getTimestampIdCreation().compareTo(
+            op1TcEqualTmGBis.getTimestampIdCreation()) == 0);
+        Assert
+            .assertEquals(-1, op1TcEqualTmG.getTimestampModif().compareTo(op1TcEqualTmGBis.getTimestampModif()));
 
-        tre1.applyOp(op1TcEqualTmGreater);
+        this.tre1.applyOp(op1TcEqualTmG);
 
-        Assert.assertEquals(val3, tre1.getValue(id1));
+        Assert.assertEquals(this.val3, this.tre1.getValue(this.id1));
     }
 
     /**
@@ -333,48 +333,41 @@ public class ThomasRuleEngineTest
         // ////////////////////////
         // (!existInBase,givenVal) => normal id creation
         // ////////////////////////
-        ThomasRuleOp op01 = tre1.getOp(id1, val1);
+        ThomasRuleOp op01 = this.tre1.getOp(this.id1, this.val1);
         Assert.assertTrue((op01 instanceof ThomasRuleOpNew));
-        // Thread.sleep(50);
 
         // /////////////////////////
         // (!existInBase,!givenVal) => del on unknown value == return null
         // /////////////////////////
-        ThomasRuleOp op00 = tre1.getOp(id2, null);
+        ThomasRuleOp op00 = this.tre1.getOp(this.id2, null);
         Assert.assertNull(op00);
-        // Thread.sleep(50);
 
         // apply op new
-        tre1.applyOp(op01);
-        Assert.assertEquals(val1, tre1.getValue(id1));
-        // Thread.sleep(50);
+        this.tre1.applyOp(op01);
+        Assert.assertEquals(this.val1, this.tre1.getValue(this.id1));
 
         // get op set
         // ///////////////////////////////////////
         // (existInBase,!deletedInBase,givenVal) => normal set value
         // ///////////////////////////////////////
         // NORMAL SET
-        ThomasRuleOp op101 = tre1.getOp(id1, val2);
+        ThomasRuleOp op101 = this.tre1.getOp(this.id1, this.val2);
         Assert.assertTrue((op101 instanceof ThomasRuleOpSet));
-        // Thread.sleep(50);
 
         // ///////////////////////////////////////
         // (existInBase,!deletedInBase,!givenVal) => normal del value
         // ///////////////////////////////////////
         // NORMAL DEL
-        ThomasRuleOp op100 = tre1.getOp(id1, null);
+        ThomasRuleOp op100 = this.tre1.getOp(this.id1, null);
         Assert.assertTrue((op100 instanceof ThomasRuleOpDel));
-        // Thread.sleep(50);
 
         // apply op set
-        tre1.applyOp(op101);
-        Assert.assertEquals(val2, tre1.getValue(id1));
-        // Thread.sleep(50);
+        this.tre1.applyOp(op101);
+        Assert.assertEquals(this.val2, this.tre1.getValue(this.id1));
 
         // apply op del
-        Assert.assertNotNull(tre1.applyOp(op100));
-        Assert.assertEquals(null, tre1.getValue(id1));
-        // Thread.sleep(50);
+        Assert.assertNotNull(this.tre1.applyOp(op100));
+        Assert.assertEquals(null, this.tre1.getValue(this.id1));
 
         // get op with new val on a deleted entry
         // /////////////////////////////////////
@@ -382,10 +375,9 @@ public class ThomasRuleEngineTest
         // deleted value is re-created)
         // /////////////////////////////////////
         // NORMAL RE-NEW
-        ThomasRuleOp op111 = tre1.getOp(id1, val3);
+        ThomasRuleOp op111 = this.tre1.getOp(this.id1, this.val3);
         Assert.assertTrue((op111 instanceof ThomasRuleOpNew));
         Assert.assertTrue(op111.getTimestampIdCreation().compareTo(op01.getTimestampIdCreation()) > 0);
-        // Thread.sleep(50);
 
         // get op with no val on a deleted entry
         // ///////////////////////////////////////
@@ -393,30 +385,19 @@ public class ThomasRuleEngineTest
         // modif timestamp is update ...)
         // ///////////////////////////////////////
         // NORMAL RE-DEL
-        ThomasRuleOp op110 = tre1.getOp(id1, null);
+        ThomasRuleOp op110 = this.tre1.getOp(this.id1, null);
         Assert.assertTrue((op110 instanceof ThomasRuleOpDel));
         Assert.assertTrue(op110.getTimestampModif().compareTo(op111.getTimestampModif()) >= 0);
-        // Thread.sleep(50);
 
         // tre1 must not apply the new op (same timestamp of creation and
         // timestamp modif of op new is older than the latest modif)
-        tre1.applyOp(op01);
-        Assert.assertNull(tre1.getValue(id1));
-        // Thread.sleep(50);
+        this.tre1.applyOp(op01);
+        Assert.assertNull(this.tre1.getValue(this.id1));
 
         // tre1 must not apply the new op (same timestamp of creation and
         // timestamp modif of op set is older than the latest modif)
-        tre1.applyOp(op101);
-        Assert.assertNull(tre1.getValue(id1));
-        // Thread.sleep(50);
-
-        // ////////////////////////////////////////
-        // test set with same value than in base
-        // engine must return null
-        // ///////////////////////////////////////
-        tre1.applyOp(tre1.getOp(id1, val1));
-        Assert.assertEquals(val1, tre1.getValue(id1));
-        Assert.assertNull(tre1.getOp(id1, val1));
+        this.tre1.applyOp(op101);
+        Assert.assertNull(this.tre1.getValue(this.id1));
     }
 
     /**
@@ -430,12 +411,12 @@ public class ThomasRuleEngineTest
     @Test
     public synchronized void testGetTimestamp() throws Exception
     {
-        Timestamp t1 = tre1.getTimestamp();
-        Timestamp t2 = tre2.getTimestamp();
+        Timestamp t1 = this.tre1.getTimestamp();
+        Timestamp t2 = this.tre2.getTimestamp();
 
         this.wait(10);
 
-        Timestamp t3 = tre1.getTimestamp();
+        Timestamp t3 = this.tre1.getTimestamp();
 
         Assert.assertEquals(1, t3.compareTo(t1));
         Assert.assertEquals(1, t2.compareTo(t1));

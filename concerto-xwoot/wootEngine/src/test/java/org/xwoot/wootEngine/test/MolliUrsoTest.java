@@ -44,6 +44,8 @@
 
 package org.xwoot.wootEngine.test;
 
+import static org.junit.Assert.*;
+
 import org.junit.Test;
 import org.xwoot.wootEngine.Patch;
 import org.xwoot.wootEngine.core.WootContent;
@@ -52,8 +54,6 @@ import org.xwoot.wootEngine.op.WootOp;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Vector;
-
-import junit.framework.Assert;
 
 /**
  * Tests for the WootEngine class.
@@ -79,7 +79,7 @@ public class MolliUrsoTest extends AbstractWootEngineTest
 
         this.site0.getContentManager().unloadWootContent(wootContent);
 
-        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), this.site0.getContentManager()
+        assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), this.site0.getContentManager()
             .getContentInternal(this.pageName, this.objectId, this.fieldId));
     }
 
@@ -102,10 +102,10 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         this.site0.getContentManager().unloadWootContent(wc1);
         this.site1.getContentManager().unloadWootContent(wc2);
 
-        Assert.assertEquals(addEndLine(this.line1), this.site0.getContentManager().getContent(this.pageName,
-            this.objectId, this.fieldId));
-        Assert.assertEquals(addEndLine(this.line2), this.site1.getContentManager().getContent(this.pageName,
-            this.objectId, this.fieldId));
+        assertEquals(addEndLine(this.line1), this.site0.getContentManager().getContent(this.pageName, this.objectId,
+            this.fieldId));
+        assertEquals(addEndLine(this.line2), this.site1.getContentManager().getContent(this.pageName, this.objectId,
+            this.fieldId));
 
         // operation 2
         List<WootOp> data0 = new Vector<WootOp>();
@@ -120,10 +120,9 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         this.site0.deliverPatch(patch0);
         this.site1.deliverPatch(patch1);
 
-        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2), this.site0.getContentManager()
-            .getContentInternal(this.pageName, this.objectId, this.fieldId));
-        Assert.assertEquals(
-            this.site0.getContentManager().getContentInternal(this.pageName, this.objectId, this.fieldId), 
+        assertEquals(wrapStartEndMarkers(this.line1 + this.line2), this.site0.getContentManager().getContentInternal(
+            this.pageName, this.objectId, this.fieldId));
+        assertEquals(this.site0.getContentManager().getContentInternal(this.pageName, this.objectId, this.fieldId),
             this.site1.getContentManager().getContentInternal(this.pageName, this.objectId, this.fieldId));
     }
 
@@ -145,7 +144,7 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         this.site0.insert(wc, this.line4, 0);
         this.site0.getContentManager().unloadWootContent(wc);
 
-        Assert.assertEquals(wrapStartEndMarkers(this.line4 + this.line1 + this.line2 + this.line3), this.site0
+        assertEquals(wrapStartEndMarkers(this.line4 + this.line1 + this.line2 + this.line3), this.site0
             .getContentManager().getContentInternal(this.pageName, this.objectId, this.fieldId));
     }
 
@@ -162,14 +161,14 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         WootContent wc1 = this.site0.getContentManager().loadWootContent(this.pageName, this.objectId, this.fieldId);
         this.site0.insert(wc1, this.line1, 0);
         this.site0.getContentManager().unloadWootContent(wc1);
-        Assert.assertEquals(wrapStartEndMarkers(this.line1), this.site0.getContentManager().getContentInternal(
-            this.pageName, this.objectId, this.fieldId));
+        assertEquals(wrapStartEndMarkers(this.line1), this.site0.getContentManager().getContentInternal(this.pageName,
+            this.objectId, this.fieldId));
 
         wc1 = this.site0.getContentManager().loadWootContent(this.pageName, this.objectId, this.fieldId);
         this.site0.delete(wc1, 0);
         this.site0.getContentManager().unloadWootContent(wc1);
-        Assert.assertEquals(this.emptyPageContent, this.site0.getContentManager().getContentInternalVisible(
-            this.pageName, this.objectId, this.fieldId));
+        assertEquals(this.emptyPageContent, this.site0.getContentManager().getContentInternalVisible(this.pageName,
+            this.objectId, this.fieldId));
     }
 
     /**
@@ -200,10 +199,10 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         /*
          * site0: line1 line2 line3 site1: line1 line2 line3 site2: line1 line2 line3
          */
-        Assert.assertEquals(this.site0.getContentManager().getContent(this.pageName, this.objectId, this.fieldId),
-            this.site1.getContentManager().getContent(this.pageName, this.objectId, this.fieldId));
-        Assert.assertEquals(this.site1.getContentManager().getContent(this.pageName, this.objectId, this.fieldId),
-            this.site2.getContentManager().getContent(this.pageName, this.objectId, this.fieldId));
+        assertEquals(this.site0.getContentManager().getContent(this.pageName, this.objectId, this.fieldId), this.site1
+            .getContentManager().getContent(this.pageName, this.objectId, this.fieldId));
+        assertEquals(this.site1.getContentManager().getContent(this.pageName, this.objectId, this.fieldId), this.site2
+            .getContentManager().getContent(this.pageName, this.objectId, this.fieldId));
 
         wc = this.site0.getContentManager().loadWootContent(this.pageName, this.objectId, this.fieldId);
         WootContent wc2 = this.site1.getContentManager().loadWootContent(this.pageName, this.objectId, this.fieldId);
@@ -227,8 +226,8 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         /*
          * site1: line1 line2 {deleted line3} line5 site2: line1 line2 {deleted line3} line5
          */
-        Assert.assertEquals(this.site1.getContentManager().getContent(this.pageName, this.objectId, this.fieldId),
-            this.site2.getContentManager().getContent(this.pageName, this.objectId, this.fieldId));
+        assertEquals(this.site1.getContentManager().getContent(this.pageName, this.objectId, this.fieldId), this.site2
+            .getContentManager().getContent(this.pageName, this.objectId, this.fieldId));
 
         // op3 descent
         // data = Arrays.asList(new WootOp[] {op3});
@@ -240,8 +239,8 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         /*
          * site1: line1 line2 {deleted line3} line4 line5 site2: line1 line2 {deleted line3} line4 line5
          */
-        Assert.assertEquals(this.site1.getContentManager().getContent(this.pageName, this.objectId, this.fieldId),
-            this.site2.getContentManager().getContent(this.pageName, this.objectId, this.fieldId));
+        assertEquals(this.site1.getContentManager().getContent(this.pageName, this.objectId, this.fieldId), this.site2
+            .getContentManager().getContent(this.pageName, this.objectId, this.fieldId));
 
         // data = Arrays.asList(new WootOp[] {op4});
         this.site0.deliverPatch(new Patch(Arrays.asList(new WootOp[] {op4}), null, this.pageName, this.objectId, 0, 0,
@@ -254,8 +253,8 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         /*
          * site0: line1 line2 {deleted line3} line4 line5 site1: line1 line2 {deleted line3} line4 line5
          */
-        Assert.assertEquals(this.site0.getContentManager().getContent(this.pageName, this.objectId, this.fieldId),
-            this.site1.getContentManager().getContent(this.pageName, this.objectId, this.fieldId));
+        assertEquals(this.site0.getContentManager().getContent(this.pageName, this.objectId, this.fieldId), this.site1
+            .getContentManager().getContent(this.pageName, this.objectId, this.fieldId));
     }
 
     /**
@@ -316,8 +315,8 @@ public class MolliUrsoTest extends AbstractWootEngineTest
          * SITE0: [line1line5line3line4line2] SITE1: [line1line4line2] SITE2: [line1line5line3line4line2]
          */
 
-        Assert.assertEquals(this.site0.getContentManager().getContent(this.pageName, this.objectId, this.fieldId),
-            this.site2.getContentManager().getContent(this.pageName, this.objectId, this.fieldId));
+        assertEquals(this.site0.getContentManager().getContent(this.pageName, this.objectId, this.fieldId), this.site2
+            .getContentManager().getContent(this.pageName, this.objectId, this.fieldId));
     }
 
     /**
@@ -334,16 +333,16 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         WootOp op0 = this.site0.insert(wc, this.line1, 0);
         this.site0.getContentManager().unloadWootContent(wc);
 
-        Assert.assertEquals(addEndLine(this.line1), this.site0.getContentManager().getContent(this.pageName,
-            this.objectId, this.fieldId));
+        assertEquals(addEndLine(this.line1), this.site0.getContentManager().getContent(this.pageName, this.objectId,
+            this.fieldId));
 
         // send op00
         List<WootOp> data = new Vector<WootOp>();
         data.add(op0);
         Patch patch = new Patch(data, null, this.pageName, this.objectId, 0, 0, 0);
         this.site1.deliverPatch(patch);
-        Assert.assertEquals(addEndLine(this.line1), this.site1.getContentManager().getContent(this.pageName,
-            this.objectId, this.fieldId));
+        assertEquals(addEndLine(this.line1), this.site1.getContentManager().getContent(this.pageName, this.objectId,
+            this.fieldId));
 
         // update on site0
         wc = this.site0.getContentManager().loadWootContent(this.pageName, this.objectId, this.fieldId);
@@ -351,8 +350,8 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         WootOp op01 = this.site0.insert(wc, this.line2, 0);
         this.site0.getContentManager().unloadWootContent(wc);
 
-        Assert.assertEquals(addEndLine(this.line2), this.site0.getContentManager().getContent(this.pageName,
-            this.objectId, this.fieldId));
+        assertEquals(addEndLine(this.line2), this.site0.getContentManager().getContent(this.pageName, this.objectId,
+            this.fieldId));
 
         // update on site1
         WootContent wc2 = this.site1.getContentManager().loadWootContent(this.pageName, this.objectId, this.fieldId);
@@ -360,8 +359,8 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         WootOp op11 = this.site1.insert(wc2, this.line3, 0);
         this.site1.getContentManager().unloadWootContent(wc2);
 
-        Assert.assertEquals(addEndLine(this.line3), this.site1.getContentManager().getContent(this.pageName,
-            this.objectId, this.fieldId));
+        assertEquals(addEndLine(this.line3), this.site1.getContentManager().getContent(this.pageName, this.objectId,
+            this.fieldId));
 
         // send op00 + op01
         data.clear();
@@ -383,8 +382,7 @@ public class MolliUrsoTest extends AbstractWootEngineTest
          * Site0: [line2line3] Site1: [line2line3]
          */
 
-        Assert.assertEquals(
-            this.site0.getContentManager().getContentInternal(this.pageName, this.objectId, this.fieldId), 
+        assertEquals(this.site0.getContentManager().getContentInternal(this.pageName, this.objectId, this.fieldId),
             this.site1.getContentManager().getContentInternal(this.pageName, this.objectId, this.fieldId));
     }
 
@@ -404,7 +402,7 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         WootOp op3 = this.site0.insert(wc, this.line3, 2);
         this.site0.getContentManager().unloadWootContent(wc);
 
-        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), this.site0.getContentManager()
+        assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), this.site0.getContentManager()
             .getContentInternal(this.pageName, this.objectId, this.fieldId));
 
         // real test : send 2 last op without the first
@@ -418,7 +416,7 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         Patch patch = new Patch(data, null, this.pageName, this.objectId, 0, 0, 0);
 
         this.site1.deliverPatch(patch);
-        Assert.assertEquals(this.emptyPageContent, this.site1.getContentManager().getContentInternal(this.pageName,
+        assertEquals(this.emptyPageContent, this.site1.getContentManager().getContentInternal(this.pageName,
             this.objectId, this.fieldId));
 
         data.clear();
@@ -426,7 +424,7 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         patch.setData(data);
 
         this.site1.deliverPatch(patch);
-        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), this.site1.getContentManager()
+        assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), this.site1.getContentManager()
             .getContentInternal(this.pageName, this.objectId, this.fieldId));
     }
 
@@ -447,7 +445,7 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         WootOp op3 = this.site0.insert(wc, this.line3, 2);
         this.site0.getContentManager().unloadWootContent(wc);
 
-        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), this.site0.getContentManager()
+        assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), this.site0.getContentManager()
             .getContentInternal(this.pageName, this.objectId, this.fieldId));
 
         // real test : send 2 last op without the first
@@ -461,7 +459,7 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         Patch patch = new Patch(data, null, this.pageName, this.objectId, 0, 0, 0);
         this.site1.deliverPatch(patch);
 
-        Assert.assertEquals(this.emptyPageContent, this.site1.getContentManager().getContentInternal(this.pageName,
+        assertEquals(this.emptyPageContent, this.site1.getContentManager().getContentInternal(this.pageName,
             this.objectId, this.fieldId));
 
         data.clear();
@@ -469,14 +467,14 @@ public class MolliUrsoTest extends AbstractWootEngineTest
         patch.setData(data);
 
         this.site1.deliverPatch(patch);
-        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), this.site1.getContentManager()
+        assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), this.site1.getContentManager()
             .getContentInternal(this.pageName, this.objectId, this.fieldId));
 
         data.add(op2);
         patch.setData(data);
         this.site1.deliverPatch(patch);
 
-        Assert.assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), this.site1.getContentManager()
+        assertEquals(wrapStartEndMarkers(this.line1 + this.line2 + this.line3), this.site1.getContentManager()
             .getContentInternal(this.pageName, this.objectId, this.fieldId));
     }
 }

@@ -195,11 +195,11 @@ public class EntriesListTest
         Assert.assertEquals(true, f.exists());
 
         // test the getEntry function
-        Assert.assertEquals(entry1, this.entriesList.getEntry(id1));
+        Assert.assertEquals(entry1, this.entriesList.getEntry(this.id1));
 
         // test unicity of the add
         this.entriesList.addEntry(entry1);
-        Assert.assertEquals(entry1, this.entriesList.getEntry(id1));
+        Assert.assertEquals(entry1, this.entriesList.getEntry(this.id1));
         Assert.assertEquals(this.entriesList.size(), 1);
 
         // test a second entry
@@ -207,7 +207,7 @@ public class EntriesListTest
         this.entriesList.addEntry(entry2);
         Assert.assertEquals(2, this.entriesList.size());
         Assert.assertEquals(2, this.entriesList.getEntries(this.id1.getPageName()).size());
-        Assert.assertEquals(entry2, this.entriesList.getEntry(id2));
+        Assert.assertEquals(entry2, this.entriesList.getEntry(this.id2));
 
         // test a third in a different page entry
         Entry entry3 = new Entry(this.id3, this.value3, false, null, null);
@@ -215,7 +215,7 @@ public class EntriesListTest
         Assert.assertEquals(3, this.entriesList.size());
         Assert.assertEquals(2, this.entriesList.getEntries(this.id1.getPageName()).size());
         Assert.assertEquals(1, this.entriesList.getEntries(this.id3.getPageName()).size());
-        Assert.assertEquals(entry3, this.entriesList.getEntry(id3));
+        Assert.assertEquals(entry3, this.entriesList.getEntry(this.id3));
     }
 
     /**
@@ -263,6 +263,6 @@ public class EntriesListTest
         Entry entry2 = new Entry(this.id1, this.value2, false, null, null);
         this.entriesList.addEntry(entry2);
         Assert.assertEquals(this.entriesList.size(), 1);
-        Assert.assertEquals(entry2, this.entriesList.getEntry(id1));
+        Assert.assertEquals(entry2, this.entriesList.getEntry(this.id1));
     }
 }
