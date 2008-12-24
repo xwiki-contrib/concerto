@@ -119,8 +119,7 @@ public class LastModifiedContentIdMap
     {
         this.loadContentIdMap();
         Set contents = this.getContentIdMap().get(pageName);
-        if (contents == null) {
-            // use a Vector to allow duplicate contentId
+        if (contents == null) {   
             contents = new TreeSet<String>();
             this.getContentIdMap().put(pageName, contents);
         }
@@ -165,10 +164,26 @@ public class LastModifiedContentIdMap
         return this.getContentIdMap();
     }
 
-    public void remove(XWootId id) throws XWootException
+//    public void remove(XWootId id) throws XWootException
+//    {
+//        this.loadContentIdMap();
+//        this.contentIdMap.remove(id);
+//        this.storeContentIdMap();
+//    }
+
+    public void remove(XWootId xwid, String objectId) throws XWootException
     {
         this.loadContentIdMap();
-        this.contentIdMap.remove(id);
+        Set contents = this.getContentIdMap().get(xwid);
+        if (contents == null) {   
+           return ;
+        }
+        contents.remove(objectId);
+        if (contents.isEmpty()){
+            this.getContentIdMap().remove(xwid);
+        }
+
         this.storeContentIdMap();
+        
     }
 }

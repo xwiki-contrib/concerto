@@ -186,7 +186,17 @@ public class XWoot2 implements XWootAPI
         }
     }
 
-    public void clearWorkingDir() throws XWootException
+    public void clearWorkingDir()
+    {
+        File stateDirFile = new File(this.stateDir);
+
+        if (stateDirFile.exists()) {
+            FileUtil.deleteDirectory(stateDirFile);
+        }
+      
+    }
+    
+    public void clearBaseDir() throws XWootException
     {
         File f = new File(this.workingDir);
         System.out.println("=>" + this.workingDir);
@@ -444,13 +454,14 @@ public class XWoot2 implements XWootAPI
                         }
                     }
                     this.synchronizeObjectFromModelToXWiki(xwootObject);
-                    this.lastModifiedContentIdMap.remove(xwid);
+                    this.lastModifiedContentIdMap.remove(xwid,objectId);         
                 } catch (ThomasRuleEngineException e) {
                     throw new XWootException("Problem with Thomas Rule Engine", e);
                 } catch (WootEngineException e) {
                     throw new XWootException("Problem with WootEngine", e);
                 }
             }
+           
         }
 
     }
@@ -649,6 +660,7 @@ public class XWoot2 implements XWootAPI
 
     public boolean createNetwork() throws XWootException
     {
+        this.clearWorkingDir();
         try {
             this.wootEngine.clearWorkingDir();
         } catch (WootEngineException e) {
@@ -663,7 +675,7 @@ public class XWoot2 implements XWootAPI
         // this.logger.error(this.peerId+" : Problem when clearing sender dir\n",e);
         // throw new XWootException(this.peerId+" : Problem when clearing  sender dir\n",e);
         // }
-        this.clearWorkingDir();
+       
         this.logger.info(this.siteId + " : all datas clears");
         if (!this.isContentManagerConnected()) {
             this.contentManagerConnected = true;
@@ -691,7 +703,7 @@ public class XWoot2 implements XWootAPI
             File[] states = new File[2];
             String[] l = new File(this.stateDir).list();
 
-            if (l.length != 2) {
+            if (l.length != 3) {
                 return;
             }
 

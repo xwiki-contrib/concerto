@@ -163,6 +163,7 @@ public abstract class AbstractXWootTest
                 throw new RuntimeException("Can't create working directory: " + site3);
             }
         }
+        
         //        
         // this.xwiki1 =
         // WikiContentManagerFactory.getSwizzleFactory().createWCM(
