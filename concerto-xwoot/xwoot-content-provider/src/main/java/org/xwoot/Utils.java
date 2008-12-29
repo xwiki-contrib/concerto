@@ -1,8 +1,16 @@
 package org.xwoot;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Formatter;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.xmlrpc.XmlRpcException;
+import org.xwiki.xmlrpc.XWikiXmlRpcClient;
+import org.xwiki.xmlrpc.model.XWikiObject;
+import org.xwiki.xmlrpc.model.XWikiObjectSummary;
 import org.xwiki.xmlrpc.model.XWikiPage;
 
 /**
@@ -12,6 +20,7 @@ import org.xwiki.xmlrpc.model.XWikiPage;
  */
 public class Utils
 {
+    public static final String LIST_CONVERSION_SEPARATOR = "\n";
     /**
      * Convert an XWikiPage to an XWootObject.
      * 
@@ -25,10 +34,14 @@ public class Utils
 
         XWootObjectField field;
 
+        /* These are the relevant fields */
         field = new XWootObjectField("content", page.getContent(), true);
         fields.add(field);
 
         field = new XWootObjectField("title", page.getTitle(), true);
+        fields.add(field);
+
+        field = new XWootObjectField("parentId", page.getParentId(), false);
         fields.add(field);
 
         XWootObject result =
@@ -36,6 +49,140 @@ public class Utils
                 fields, newlyCreated);
 
         return result;
+    }
+
+    public static String listToString(List list, String separator)
+    {
+        Formatter f = new Formatter();
+
+        for (int i = 0; i < list.size(); i++) {
+            if (i == list.size() - 1) {
+                f.format("%s", list.get(i));
+            } else {
+                f.format("%s%s", list.get(i), separator);
+            }
+        }
+
+        return f.toString();
+    }
+    
+    public static List<String> stringToList(String string, String separator) {
+        String[] values = string.split(separator);
+        
+        List<String> result = new ArrayList<String>();
+        for(String value : values) {
+            result.add(value);            
+        }
+        
+        return result;
+    }
+
+    public static XWootObject xwikiObjectToXWootObject(XWikiObject object, boolean newlyCreated)
+    {
+        XWootContentProviderConfiguration config = XWootContentProviderConfiguration.getDefault();
+
+        List<XWootObjectField> fields = new ArrayList<XWootObjectField>();
+
+        for (String property : object.getProperties()) {
+            Object valueObject = object.getProperty(property);
+            if (!(valueObject instanceof Serializable)) {
+                System.out.format("%s.%s is not serializable (%s)\n", object.getPrettyName(), property, valueObject
+                    .getClass().getName());
+            } else {
+                boolean isWootable = config.isWootable(object.getClassName(), property);
+                Serializable value = (Serializable) valueObject;
+                Class originalType = value.getClass();
+
+                if (isWootable && (value instanceof List)) {
+                    value = listToString((List) value, LIST_CONVERSION_SEPARATOR);
+                }
+
+                XWootObjectField field = new XWootObjectField(property, value, originalType, isWootable);
+                fields.add(field);
+            }
+        }
+
+        boolean isCumulative = config.isCumulative(object.getClassName());
+        String guid;
+
+        if (isCumulative) {
+            guid = String.format("%s:%s", Constants.OBJECT_NAMESPACE, object.getGuid());
+        } else {
+            guid =
+                String.format("%s:%s:%s[%d]", Constants.OBJECT_NAMESPACE, object.getPageId(), object.getClassName(),
+                    object.getId());
+        }
+
+        XWootObject result = new XWootObject(object.getPageId(), guid, isCumulative, fields, newlyCreated);
+
+        return result;
+    }
+
+    public static XWikiPage xwootObjectToXWikiPage(XWootObject object)
+    {
+        String namespace = object.getGuid().split(":")[0];
+        if (!namespace.equals(Constants.PAGE_NAMESPACE)) {
+            throw new IllegalArgumentException(String.format("Invalid namespace. Expected '%s', got '%s'\n",
+                Constants.PAGE_NAMESPACE, namespace));
+        }
+
+        XWikiPage xwikiPage = new XWikiPage();
+
+        xwikiPage.setId(object.getPageId());
+        xwikiPage.setTitle((String) object.getFieldValue("title"));
+        xwikiPage.setParentId((String) object.getFieldValue("parentId"));
+        xwikiPage.setContent((String) object.getFieldValue("content"));
+
+        return xwikiPage;
+    }
+
+    public static XWikiObject xwootObjectToXWikiObject(XWootObject object)
+    {
+        String[] components = object.getGuid().split(":", 2);
+
+        String namespace = components[0];
+        String guid = components[1];
+        if (!namespace.equals(Constants.OBJECT_NAMESPACE)) {
+            throw new IllegalArgumentException(String.format("Invalid namespace. Expected '%s', got '%s'\n",
+                Constants.OBJECT_NAMESPACE, namespace));
+        }
+
+        XWikiObject xwikiObject = new XWikiObject();
+
+        xwikiObject.setPageId(object.getPageId());
+
+        /*
+         * If the object is cumulative then we use the guid to reference it. Otherwise the XWootObject guid is in the
+         * form PageId:ClassName[ObjectNumber]. In this case we parse this guid and fill the relevant fields of the
+         * final XWikiObject.
+         */
+        if (object.isCumulative()) {
+            xwikiObject.setGuid(guid);
+        } else {
+            Pattern pattern = Pattern.compile("([^:]+):([^\\[]+)\\[(\\p{Digit}+)\\]");
+            Matcher matcher = pattern.matcher(guid);
+            if (matcher.matches()) {
+                String className = matcher.group(2);
+                int number = Integer.parseInt(matcher.group(3));
+
+                xwikiObject.setClassName(className);
+                xwikiObject.setId(number);
+            }
+            else {
+                throw new IllegalArgumentException(String.format("Invalid guid for non cumulative object: %s\n", guid));
+            }
+        }
+
+        for (XWootObjectField field : object.getFields()) {
+            Serializable value = field.getValue();
+            if(List.class.isAssignableFrom(field.getOriginalType()) && (field.getValue() instanceof String)) {
+                value = (Serializable) stringToList((String)field.getValue(), LIST_CONVERSION_SEPARATOR);
+            }
+                        
+            xwikiObject.setProperty(field.getName(), value);
+        }
+
+        return xwikiObject;
     }
 
     /**
@@ -61,5 +208,24 @@ public class Utils
 
         return new XWootObject(currentObject.getPageId(), currentObject.getGuid(), currentObject.isCumulative(),
             resultFields, currentObject.isNewlyCreated());
+    }
+
+    public static List<XWootObject> getXWootObjects(XWikiXmlRpcClient rpcClient, XWootId xwootId)
+        throws XmlRpcException
+    {
+        XWikiPage xwikiPage = rpcClient.getPage(xwootId.getPageId(), xwootId.getVersion(), xwootId.getMinorVersion());
+        List<XWikiObjectSummary> xwikiObjectSummaries =
+            rpcClient.getObjects(xwootId.getPageId(), xwootId.getVersion(), xwootId.getMinorVersion());
+
+        List<XWikiObject> xwikiObjects = new ArrayList<XWikiObject>();
+        for (XWikiObjectSummary objectSummary : xwikiObjectSummaries) {
+            XWikiObject xwikiObject =
+                rpcClient.getObject(objectSummary.getPageId(), objectSummary.getClassName(), objectSummary.getId(),
+                    objectSummary.getPageVersion(), objectSummary.getPageMinorVersion());
+            xwikiObjects.add(xwikiObject);
+        }
+
+        return null;
+
     }
 }

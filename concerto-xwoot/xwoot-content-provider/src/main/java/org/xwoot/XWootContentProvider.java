@@ -292,6 +292,14 @@ public class XWootContentProvider
         return result;
     }
 
+    /**
+     * Retrieve all the information for building an XWootId. From the (pageId, timestamp) pair retrieve the associated
+     * version number.
+     * 
+     * @param pageId
+     * @param timestamp
+     * @return
+     */
     private XWootId getXWootId(String pageId, long timestamp)
     {
         XWootId result = null;
@@ -411,6 +419,7 @@ public class XWootContentProvider
 
             XWootId previousModification = getPreviousModification(xwootId);
 
+            /* Main page */
             if (previousModification == null) {
                 XWikiPage page = rpc.getPage(xwootId.getPageId(), xwootId.getVersion(), xwootId.getMinorVersion());
                 XWootObject object = Utils.xwikiPageToXWootObject(page, true);
@@ -435,15 +444,35 @@ public class XWootContentProvider
     }
 
     /**
-     * Updates xwiki's data. TODO
+     * Updates xwiki's data.
      * 
-     * @param o : the object to update
+     * @param object : the object to update
      * @return true if no concurrent modification detected.
      */
-    public boolean store(XWootObject o)
+    public boolean store(XWootObject object)
     {
-        // TODO
-        return true;
+        String namespace = object.getGuid().split(":")[0];
+
+        if (namespace.equals(Constants.PAGE_NAMESPACE)) {
+            return storeXWikiPage(object);
+        } else if (namespace.equals(Constants.OBJECT_NAMESPACE)) {
+            return storeXWikiObject(object);
+        }
+
+        throw new IllegalArgumentException(String.format("Invalid namespace %s\n", namespace));
+    }
+
+    private boolean storeXWikiObject(XWootObject object)
+    {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    private boolean storeXWikiPage(XWootObject object)
+    {
+        
+        
+        return false;
     }
 
 }

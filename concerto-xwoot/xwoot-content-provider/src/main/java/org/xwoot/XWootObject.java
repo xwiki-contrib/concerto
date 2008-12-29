@@ -2,6 +2,7 @@ package org.xwoot;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Formatter;
 import java.util.List;
 
 /**
@@ -17,7 +18,7 @@ import java.util.List;
 public class XWootObject implements Serializable
 {
     /**
-     *  For serialization.
+     * For serialization.
      */
     private static final long serialVersionUID = 155439744078747171L;
 
@@ -134,7 +135,7 @@ public class XWootObject implements Serializable
         return null;
     }
 
-    /** 
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -179,6 +180,20 @@ public class XWootObject implements Serializable
         return true;
     }
 
-    
-    
+    @Override
+    public String toString()
+    {
+        Formatter f = new Formatter();
+        f.format("XWootObject\n");
+        f.format(" PageId: %s\n", pageId);
+        f.format(" Cumulative: %b\n", cumulative);
+        f.format(" GUID: %s\n", guid);
+        for (XWootObjectField field : fields) {
+            f.format(" Field '%s': %s (wootable: %b)\n", field.getName(), field.getValue(), field.isWootable());
+        }
+        f.format("\n");
+        
+        return f.toString();
+    }
+
 }

@@ -1,13 +1,12 @@
 package org.xwoot.test;
 
-import java.util.List;
 import java.util.Set;
+
+import junit.framework.TestCase;
 
 import org.xwoot.XWootContentProvider;
 import org.xwoot.XWootContentProviderException;
 import org.xwoot.XWootId;
-
-import junit.framework.TestCase;
 
 public class XWootContentProviderTest extends TestCase
 {

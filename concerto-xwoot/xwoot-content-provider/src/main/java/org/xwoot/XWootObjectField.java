@@ -10,7 +10,7 @@ import java.io.Serializable;
 public class XWootObjectField implements Serializable
 {
     /**
-     *  For serialization.
+     * For serialization.
      */
     private static final long serialVersionUID = 3230723710897699107L;
 
@@ -29,7 +29,14 @@ public class XWootObjectField implements Serializable
      */
     private Serializable value;
 
+    private Class originalType;
+
     public XWootObjectField(String name, Serializable value, boolean wootable)
+    {
+        this(name, value, value.getClass(), wootable);
+    }
+
+    public XWootObjectField(String name, Serializable value, Class originalType, boolean wootable)
     {
         if (wootable) {
             if (!value.getClass().equals(String.class)) {
@@ -39,6 +46,7 @@ public class XWootObjectField implements Serializable
 
         this.name = name;
         this.value = value;
+        this.originalType = originalType;
         this.wootable = wootable;
     }
 
@@ -49,6 +57,10 @@ public class XWootObjectField implements Serializable
 
     public void setValue(Serializable value)
     {
+        if (!value.getClass().equals(this.value.getClass())) {
+            throw new IllegalArgumentException(String.format("Invalid type for %s. Expected %s, got %s", name,
+                this.value.getClass(), value.getClass()));
+        }
         this.value = value;
     }
 
@@ -61,7 +73,12 @@ public class XWootObjectField implements Serializable
     {
         return name;
     }
-    
+
+    public Class getOriginalType()
+    {
+        return originalType;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -75,11 +92,10 @@ public class XWootObjectField implements Serializable
         return result;
     }
 
-    
     /**
      * {@inheritDoc}
      */
-    
+
     @Override
     public boolean equals(Object obj)
     {
