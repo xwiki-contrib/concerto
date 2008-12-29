@@ -1,10 +1,13 @@
 package org.xwoot;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.xmlrpc.XmlRpcException;
 
 /**
  * XWootContentProvider. This class is the implementation of the XWiki interface for handling modifications and

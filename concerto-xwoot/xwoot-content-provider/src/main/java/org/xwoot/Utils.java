@@ -21,6 +21,7 @@ import org.xwiki.xmlrpc.model.XWikiPage;
 public class Utils
 {
     public static final String LIST_CONVERSION_SEPARATOR = "\n";
+
     /**
      * Convert an XWikiPage to an XWootObject.
      * 
@@ -51,6 +52,13 @@ public class Utils
         return result;
     }
 
+    /**
+     * Convert a list to a string containing list's elements separated by a separator.
+     * 
+     * @param list
+     * @param separator
+     * @return
+     */
     public static String listToString(List list, String separator)
     {
         Formatter f = new Formatter();
@@ -65,18 +73,33 @@ public class Utils
 
         return f.toString();
     }
-    
-    public static List<String> stringToList(String string, String separator) {
+
+    /**
+     * Convert a string of elements separated by a separator into a list.
+     * 
+     * @param string
+     * @param separator
+     * @return
+     */
+    public static List<String> stringToList(String string, String separator)
+    {
         String[] values = string.split(separator);
-        
+
         List<String> result = new ArrayList<String>();
-        for(String value : values) {
-            result.add(value);            
+        for (String value : values) {
+            result.add(value);
         }
-        
+
         return result;
     }
 
+    /**
+     * Build an XWootObject from a corresponding XWikiObject.
+     * 
+     * @param object
+     * @param newlyCreated The value of the newlyCreated field in the returned XWootObject.
+     * @return
+     */
     public static XWootObject xwikiObjectToXWootObject(XWikiObject object, boolean newlyCreated)
     {
         XWootContentProviderConfiguration config = XWootContentProviderConfiguration.getDefault();
@@ -105,6 +128,7 @@ public class Utils
         boolean isCumulative = config.isCumulative(object.getClassName());
         String guid;
 
+        /* Create a guid depending on the fact that the object is cumulative or not */
         if (isCumulative) {
             guid = String.format("%s:%s", Constants.OBJECT_NAMESPACE, object.getGuid());
         } else {
@@ -118,6 +142,12 @@ public class Utils
         return result;
     }
 
+    /**
+     * Build an xwiki page from the corresponding XWoot object
+     * 
+     * @param object
+     * @return
+     */
     public static XWikiPage xwootObjectToXWikiPage(XWootObject object)
     {
         String namespace = object.getGuid().split(":")[0];
@@ -136,6 +166,12 @@ public class Utils
         return xwikiPage;
     }
 
+    /**
+     * Build an XWikiObject from the corresponding XWootObject by performing necessary conversions.
+     * 
+     * @param object An XWootObject
+     * @return The corresponding XWikiObject
+     */
     public static XWikiObject xwootObjectToXWikiObject(XWootObject object)
     {
         String[] components = object.getGuid().split(":", 2);
@@ -167,18 +203,23 @@ public class Utils
 
                 xwikiObject.setClassName(className);
                 xwikiObject.setId(number);
-            }
-            else {
+            } else {
                 throw new IllegalArgumentException(String.format("Invalid guid for non cumulative object: %s\n", guid));
             }
         }
 
+        /* Populate xwiki object's values */
         for (XWootObjectField field : object.getFields()) {
             Serializable value = field.getValue();
-            if(List.class.isAssignableFrom(field.getOriginalType()) && (field.getValue() instanceof String)) {
-                value = (Serializable) stringToList((String)field.getValue(), LIST_CONVERSION_SEPARATOR);
+
+            /*
+             * Perform string to list conversion. This happens when a list field has been declared wootable: it is
+             * translated to a String. Here we do the opposite
+             */
+            if (List.class.isAssignableFrom(field.getOriginalType()) && (field.getValue() instanceof String)) {
+                value = (Serializable) stringToList((String) field.getValue(), LIST_CONVERSION_SEPARATOR);
             }
-                        
+
             xwikiObject.setProperty(field.getName(), value);
         }
 

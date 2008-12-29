@@ -29,6 +29,11 @@ public class XWootObjectField implements Serializable
      */
     private Serializable value;
 
+    /**
+     * This is the field's original type. This is used to keep track of the real type that must be reflected when
+     * converting back the XWoot object this field belongs to, to an XWikiObject. In particular this is used to
+     * understand when a List is converted to a String because it is declared wootable (e.g., tags).
+     */
     private Class originalType;
 
     public XWootObjectField(String name, Serializable value, boolean wootable)
@@ -36,6 +41,15 @@ public class XWootObjectField implements Serializable
         this(name, value, value.getClass(), wootable);
     }
 
+    /**
+     * Constructor
+     * 
+     * @param name The field's name.
+     * @param value The field's value.
+     * @param originalType Original field's type. This is useful for keeping track of "converted" fields, such as
+     *            wootable lists that are converted to String.
+     * @param wootable Wootable flag.
+     */
     public XWootObjectField(String name, Serializable value, Class originalType, boolean wootable)
     {
         if (wootable) {

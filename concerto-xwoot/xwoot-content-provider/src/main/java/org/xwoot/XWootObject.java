@@ -192,7 +192,7 @@ public class XWootObject implements Serializable
             f.format(" Field '%s': %s (wootable: %b)\n", field.getName(), field.getValue(), field.isWootable());
         }
         f.format("\n");
-        
+
         return f.toString();
     }
 

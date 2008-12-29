@@ -470,8 +470,7 @@ public class XWootContentProvider
 
     private boolean storeXWikiPage(XWootObject object)
     {
-        
-        
+
         return false;
     }
 
