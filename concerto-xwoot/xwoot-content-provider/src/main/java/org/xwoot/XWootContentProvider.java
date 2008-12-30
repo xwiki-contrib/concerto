@@ -17,6 +17,8 @@ import org.apache.xmlrpc.XmlRpcException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xwiki.xmlrpc.XWikiXmlRpcClient;
+import org.xwiki.xmlrpc.model.XWikiExtendedId;
+import org.xwiki.xmlrpc.model.XWikiObject;
 import org.xwiki.xmlrpc.model.XWikiPage;
 import org.xwiki.xmlrpc.model.XWikiPageHistorySummary;
 
@@ -448,8 +450,9 @@ public class XWootContentProvider
      * 
      * @param object : the object to update
      * @return true if no concurrent modification detected.
+     * @throws XWootContentProviderException
      */
-    public boolean store(XWootObject object)
+    public boolean store(XWootObject object) throws XWootContentProviderException
     {
         String namespace = object.getGuid().split(":")[0];
 
@@ -464,14 +467,56 @@ public class XWootContentProvider
 
     private boolean storeXWikiObject(XWootObject object)
     {
-        // TODO Auto-generated method stub
-        return false;
+        try {
+            XWikiObject xwikiObject = Utils.xwootObjectToXWikiObject(object);
+            xwikiObject = rpc.storeObject(xwikiObject, true);
+
+            /* Retrieve the page this object was stored to in order to get additional information like the timestamp. */
+            XWikiPage xwikiPage =
+                rpc.getPage(xwikiObject.getPageId(), xwikiObject.getPageVersion(), xwikiObject.getPageMinorVersion());
+
+            /* Mark this page as cleared so the next time it will not be returned in the modification list */
+            PreparedStatement ps = connection.prepareStatement("INSERT INTO modifications VALUES (?, ?, ?, ?, 1)");
+
+            XWikiExtendedId extendedId = new XWikiExtendedId(xwikiPage.getId());
+
+            ps.setString(1, extendedId.getBasePageId());
+            ps.setLong(2, xwikiPage.getModified().getTime());
+            ps.setInt(3, xwikiPage.getVersion());
+            ps.setInt(4, xwikiPage.getMinorVersion());
+            ps.executeUpdate();
+
+            ps.close();
+        } catch (Exception e) {
+            // throw new XWootContentProviderException(e);
+            return false;
+        }
+
+        return true;
     }
 
-    private boolean storeXWikiPage(XWootObject object)
+    private boolean storeXWikiPage(XWootObject object) throws XWootContentProviderException
     {
+        try {
+            XWikiPage page = Utils.xwootObjectToXWikiPage(object);
+            page = rpc.storePage(page, true);
 
-        return false;
+            /* Mark this page as cleared so the next time it will not be returned in the modification list */
+            PreparedStatement ps = connection.prepareStatement("INSERT INTO modifications VALUES (?, ?, ?, ?, 1)");
+
+            ps.setString(1, page.getId());
+            ps.setLong(2, page.getModified().getTime());
+            ps.setInt(3, page.getVersion());
+            ps.setInt(4, page.getMinorVersion());
+            ps.executeUpdate();
+
+            ps.close();
+        } catch (Exception e) {
+            // throw new XWootContentProviderException(e);
+            return false;
+        }
+
+        return true;
     }
 
 }

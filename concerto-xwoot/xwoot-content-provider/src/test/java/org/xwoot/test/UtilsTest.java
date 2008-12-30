@@ -67,7 +67,12 @@ public class UtilsTest extends TestCase
 
     public void testXWootObjectToXWikiObjectAndViceversa() throws XmlRpcException
     {
-        String value = "a\nb\nc";
+        List<String> list = new ArrayList<String>();
+        list.add("a");
+        list.add("b");
+        list.add("c");
+
+        String value = Utils.listToString(list, Utils.LIST_CONVERSION_SEPARATOR);
 
         XWikiObject object = rpc.getObject("Main.WebHome", "XWiki.TagClass", 0);
         XWootObject xwootObject = Utils.xwikiObjectToXWootObject(object, false);
@@ -79,11 +84,6 @@ public class UtilsTest extends TestCase
         rpc.storeObject(object);
 
         object = rpc.getObject("Main.WebHome", "XWiki.TagClass", 0);
-
-        List<String> list = new ArrayList<String>();
-        list.add("a");
-        list.add("b");
-        list.add("c");
 
         assertTrue(list.equals(object.getProperty("tags")));
     }
@@ -101,8 +101,6 @@ public class UtilsTest extends TestCase
 
         XWootObject xwootObject = Utils.xwikiObjectToXWootObject(object, false);
         object = Utils.xwootObjectToXWikiObject(xwootObject);
-
-        System.out.format("%s\n", object.getProperty("tags").getClass());
 
         assertTrue(List.class.isAssignableFrom(object.getProperty("tags").getClass()));
     }
