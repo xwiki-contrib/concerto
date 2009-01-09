@@ -46,8 +46,8 @@ public class Utils
         fields.add(field);
 
         XWootObject result =
-            new XWootObject(page.getId(), String.format("%s:%s", Constants.PAGE_NAMESPACE, page.getId()), false,
-                fields, newlyCreated);
+            new XWootObject(page.getId(), page.getVersion(), page.getMinorVersion(), String.format("%s:%s",
+                Constants.PAGE_NAMESPACE, page.getId()), false, fields, newlyCreated);
 
         return result;
     }
@@ -137,7 +137,9 @@ public class Utils
                     object.getId());
         }
 
-        XWootObject result = new XWootObject(object.getPageId(), guid, isCumulative, fields, newlyCreated);
+        XWootObject result =
+            new XWootObject(object.getPageId(), object.getPageVersion(), object.getPageMinorVersion(), guid,
+                isCumulative, fields, newlyCreated);
 
         return result;
     }
@@ -159,9 +161,17 @@ public class Utils
         XWikiPage xwikiPage = new XWikiPage();
 
         xwikiPage.setId(object.getPageId());
-        xwikiPage.setTitle((String) object.getFieldValue("title"));
-        xwikiPage.setParentId((String) object.getFieldValue("parentId"));
-        xwikiPage.setContent((String) object.getFieldValue("content"));
+        xwikiPage.setVersion(object.getPageVersion());
+        xwikiPage.setMinorVersion(object.getPageMinorVersion());
+
+        String value = (String) object.getFieldValue("title");
+        xwikiPage.setTitle(value != null ? value : "");
+
+        value = (String) object.getFieldValue("parentId");
+        xwikiPage.setParentId(value != null ? value : "");
+
+        value = (String) object.getFieldValue("content");
+        xwikiPage.setContent(value != null ? value : "");
 
         return xwikiPage;
     }
@@ -247,8 +257,9 @@ public class Utils
             }
         }
 
-        return new XWootObject(currentObject.getPageId(), currentObject.getGuid(), currentObject.isCumulative(),
-            resultFields, currentObject.isNewlyCreated());
+        return new XWootObject(currentObject.getPageId(), currentObject.getPageVersion(), currentObject
+            .getPageMinorVersion(), currentObject.getGuid(), currentObject.isCumulative(), resultFields, currentObject
+            .isNewlyCreated());
     }
 
     public static List<XWootObject> getXWootObjects(XWikiXmlRpcClient rpcClient, XWootId xwootId)

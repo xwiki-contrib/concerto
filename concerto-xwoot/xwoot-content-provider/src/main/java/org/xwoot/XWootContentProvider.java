@@ -8,7 +8,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -19,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.xwiki.xmlrpc.XWikiXmlRpcClient;
 import org.xwiki.xmlrpc.model.XWikiExtendedId;
 import org.xwiki.xmlrpc.model.XWikiObject;
+import org.xwiki.xmlrpc.model.XWikiObjectSummary;
 import org.xwiki.xmlrpc.model.XWikiPage;
 import org.xwiki.xmlrpc.model.XWikiPageHistorySummary;
 
@@ -210,27 +213,35 @@ public class XWootContentProvider
             int duplicatedEntries = 0;
             int start = 0;
 
+            int ignored = 0;
+            Set<String> ignoredPages = new HashSet<String>();
+
             while (true) {
                 List<XWikiPageHistorySummary> xphsList =
                     rpc.getModifiedPagesHistory(new Date(maxTimestamp), MODIFICATION_RESULTS_PER_CALL, start, true);
 
                 for (XWikiPageHistorySummary xphs : xphsList) {
-                    ps.setString(1, xphs.getId());
-                    ps.setLong(2, xphs.getModified().getTime());
-                    ps.setInt(3, xphs.getVersion());
-                    ps.setInt(4, xphs.getMinorVersion());
+                    if (!XWootContentProviderConfiguration.getDefault().isIgnored(xphs.getId())) {
+                        ps.setString(1, xphs.getId());
+                        ps.setLong(2, xphs.getModified().getTime());
+                        ps.setInt(3, xphs.getVersion());
+                        ps.setInt(4, xphs.getMinorVersion());
 
-                    try {
-                        ps.executeUpdate();
-                    } catch (SQLException e) {
-                        /* Ignore duplicated entries that we receive */
-                        if (e.getErrorCode() != 30000) {
-                            throw e;
+                        try {
+                            ps.executeUpdate();
+                        } catch (SQLException e) {
+                            /* Ignore duplicated entries that we receive */
+                            if (e.getErrorCode() != 30000) {
+                                throw e;
+                            }
+                            duplicatedEntries++;
                         }
-                        duplicatedEntries++;
-                    }
 
-                    entriesReceived++;
+                        entriesReceived++;
+                    } else {
+                        ignored++;
+                        ignoredPages.add(xphs.getId());
+                    }
                 }
 
                 if (xphsList.size() < MODIFICATION_RESULTS_PER_CALL) {
@@ -243,6 +254,7 @@ public class XWootContentProvider
             logger.info(String.format(
                 "Modifcations list updated. Received %d entries starting from %s (%d). %d duplicates.",
                 entriesReceived, new Date(maxTimestamp), maxTimestamp, duplicatedEntries));
+            logger.info(String.format("Modifcations list updated. Ignored %d entried: %s\n", ignored, ignoredPages));
 
             ps.close();
         } catch (Exception e) {
@@ -264,7 +276,14 @@ public class XWootContentProvider
             throw new XWootContentProviderException("XWootContentProvider is not logged in.");
         }
 
-        Set<XWootId> result = new TreeSet<XWootId>();
+        Set<XWootId> result = new TreeSet<XWootId>(new Comparator<XWootId>()
+        {
+            public int compare(XWootId arg0, XWootId arg1)
+            {
+                return (int) (arg0.getTimestamp() - arg1.getTimestamp());
+            }
+
+        });
 
         /* Download last modifications from the server */
         updateModifiedPages();
@@ -288,6 +307,7 @@ public class XWootContentProvider
 
             ps.close();
         } catch (Exception e) {
+            e.printStackTrace();
             throw new XWootContentProviderException(e);
         }
 
@@ -374,6 +394,26 @@ public class XWootContentProvider
     }
 
     /**
+     * Clear all the modifications. Useful for testing purpose.
+     * 
+     * @throws XWootContentProviderException
+     */
+    public void clearAllModifications() throws XWootContentProviderException
+    {
+        try {
+            PreparedStatement ps = connection.prepareStatement("UPDATE modifications SET cleared=1");
+
+            int rowsUpdated = ps.executeUpdate();
+
+            logger.info(String.format("Cleared all modifications. %d rows updated", rowsUpdated));
+
+            ps.close();
+        } catch (Exception e) {
+            throw new XWootContentProviderException(e);
+        }
+    }
+
+    /**
      * Find the previous modification with respect to the one identified by the XWootId passed as parameters.
      * 
      * @param xwootId
@@ -386,7 +426,7 @@ public class XWootContentProvider
             XWootId result = null;
             PreparedStatement ps =
                 connection
-                    .prepareStatement("SELECT * FROM modifications WHERE pageId=? AND timestamp < ? ORDER BY timestamp ASC");
+                    .prepareStatement("SELECT * FROM modifications WHERE pageId=? AND timestamp < ? ORDER BY timestamp DESC");
             ps.setString(1, xwootId.getPageId());
             ps.setLong(2, xwootId.getTimestamp());
 
@@ -426,6 +466,15 @@ public class XWootContentProvider
                 XWikiPage page = rpc.getPage(xwootId.getPageId(), xwootId.getVersion(), xwootId.getMinorVersion());
                 XWootObject object = Utils.xwikiPageToXWootObject(page, true);
                 result.add(object);
+
+                List<XWikiObjectSummary> xwikiObjectSummaries =
+                    rpc.getObjects(xwootId.getPageId(), xwootId.getVersion(), xwootId.getMinorVersion());
+                for (XWikiObjectSummary xwikiObjectSummary : xwikiObjectSummaries) {
+                    XWikiObject xwikiObject =
+                        rpc.getObject(xwikiObjectSummary.getPageId(), xwikiObjectSummary.getGuid());
+                    object = Utils.xwikiObjectToXWootObject(xwikiObject, true);
+                    result.add(object);
+                }
             } else {
                 XWikiPage page = rpc.getPage(xwootId.getPageId(), xwootId.getVersion(), xwootId.getMinorVersion());
                 XWikiPage previousPage =
@@ -435,7 +484,45 @@ public class XWootContentProvider
                 XWootObject currentPageObject = Utils.xwikiPageToXWootObject(page, false);
                 XWootObject previousPageObject = Utils.xwikiPageToXWootObject(previousPage, false);
 
-                result.add(Utils.removeUnchangedFields(currentPageObject, previousPageObject));
+                XWootObject cleanedUpXWootObject = Utils.removeUnchangedFields(currentPageObject, previousPageObject);
+
+                if (cleanedUpXWootObject.getFields().size() > 0) {
+                    result.add(cleanedUpXWootObject);
+                }
+
+                List<XWikiObjectSummary> xwikiObjectSummaries =
+                    rpc.getObjects(xwootId.getPageId(), xwootId.getVersion(), xwootId.getMinorVersion());
+                for (XWikiObjectSummary xwikiObjectSummary : xwikiObjectSummaries) {
+                    XWikiObject xwikiObject =
+                        rpc.getObject(xwootId.getPageId(), xwikiObjectSummary.getGuid(), xwootId.getVersion(), xwootId
+                            .getMinorVersion());
+
+                    XWikiObject previousXWikiObject = null;
+
+                    /*
+                     * This is ugly because we cannot understand when there has been a network problem or the object
+                     * doesn't exist.
+                     */
+                    try {
+                        previousXWikiObject =
+                            rpc.getObject(previousModification.getPageId(), xwikiObjectSummary.getGuid(),
+                                previousModification.getVersion(), previousModification.getMinorVersion());
+                    } catch (Exception e) {
+                    }
+
+                    if (previousXWikiObject != null) {
+                        XWootObject currentXWootObject = Utils.xwikiObjectToXWootObject(xwikiObject, false);
+                        XWootObject previousXWootObject = Utils.xwikiObjectToXWootObject(previousXWikiObject, false);
+
+                        cleanedUpXWootObject = Utils.removeUnchangedFields(currentXWootObject, previousXWootObject);
+
+                        if (cleanedUpXWootObject.getFields().size() > 0) {
+                            result.add(cleanedUpXWootObject);
+                        }
+                    } else {
+                        result.add(Utils.xwikiObjectToXWootObject(xwikiObject, true));
+                    }
+                }
             }
 
             return result;
@@ -501,6 +588,11 @@ public class XWootContentProvider
             XWikiPage page = Utils.xwootObjectToXWikiPage(object);
             page = rpc.storePage(page, true);
 
+            /* If an empty page is returned then the store failed */
+            if (page.getId().equals("")) {
+                return false;
+            }
+
             /* Mark this page as cleared so the next time it will not be returned in the modification list */
             PreparedStatement ps = connection.prepareStatement("INSERT INTO modifications VALUES (?, ?, ?, ?, 1)");
 
@@ -512,11 +604,49 @@ public class XWootContentProvider
 
             ps.close();
         } catch (Exception e) {
+            System.out.format("%s\n", e);
             // throw new XWootContentProviderException(e);
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * For testing purposes.
+     * 
+     * @return
+     */
+    public XWikiXmlRpcClient getRpc()
+    {
+        return rpc;
+    }
+
+    public void dumpDbLines(String message, int n)
+    {
+
+        try {
+            System.out.format("%s\n", message);
+            System.out.format("-----------------------------------------\n");
+            Statement s = connection.createStatement();
+            ResultSet rs = s.executeQuery("SELECT * FROM modifications ORDER by timestamp DESC");
+
+            int i = 0;
+            while (rs.next()) {
+                System.out.format("%-30s\t| %d\t| %d.%d\t| %d\n", rs.getString(1), rs.getLong(2), rs.getInt(3), rs
+                    .getInt(4), rs.getShort(5));
+                i++;
+                if (i >= n) {
+                    break;
+                }
+            }
+
+            s.close();
+            System.out.format("-----------------------------------------\n");
+        } catch (SQLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
 }

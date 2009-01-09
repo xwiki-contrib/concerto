@@ -79,4 +79,10 @@ public class XWootId
         return true;
     }
 
+    @Override
+    public String toString()
+    {
+        return String.format("[XWootId: %s %d %d.%d]", pageId, timestamp, version, minorVersion);
+    }
+
 }

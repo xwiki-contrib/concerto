@@ -44,7 +44,6 @@ public class UtilsTest extends TestCase
 
             System.out.format("%s\n", xwo);
         }
-
     }
 
     public void testXWootObjectToXWikiPageAndViceversa() throws XmlRpcException

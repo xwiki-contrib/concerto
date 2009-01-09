@@ -27,6 +27,10 @@ public class XWootObject implements Serializable
      */
     private String pageId;
 
+    private Integer pageVersion;
+
+    private Integer pageMinorVersion;
+
     /**
      * The GUID for uniquely identifying this object. See: {@link http
      * ://concerto.xwiki.com/xwiki/bin/view/Main/APIChat101208}
@@ -48,10 +52,12 @@ public class XWootObject implements Serializable
      */
     private List<XWootObjectField> fields;
 
-    public XWootObject(String pageId, String guid, boolean cumulative, List<XWootObjectField> fields,
-        boolean newlyCreated)
+    public XWootObject(String pageId, Integer pageVersion, Integer pageMinorVersion, String guid, boolean cumulative,
+        List<XWootObjectField> fields, boolean newlyCreated)
     {
         this.pageId = pageId;
+        this.pageVersion = pageVersion;
+        this.pageMinorVersion = pageMinorVersion;
         this.guid = guid;
         this.cumulative = cumulative;
         this.fields = fields;
@@ -186,14 +192,26 @@ public class XWootObject implements Serializable
         Formatter f = new Formatter();
         f.format("XWootObject\n");
         f.format(" PageId: %s\n", pageId);
+        f.format(" Page version: %d.%d", pageVersion, pageMinorVersion);
         f.format(" Cumulative: %b\n", cumulative);
         f.format(" GUID: %s\n", guid);
+        f.format(" Newly created: %b\n", newlyCreated);
         for (XWootObjectField field : fields) {
             f.format(" Field '%s': %s (wootable: %b)\n", field.getName(), field.getValue(), field.isWootable());
         }
         f.format("\n");
 
         return f.toString();
+    }
+
+    public Integer getPageVersion()
+    {
+        return pageVersion;
+    }
+
+    public Integer getPageMinorVersion()
+    {
+        return pageMinorVersion;
     }
 
 }

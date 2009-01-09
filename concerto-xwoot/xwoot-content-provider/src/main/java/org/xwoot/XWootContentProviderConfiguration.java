@@ -2,11 +2,14 @@ package org.xwoot;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @version $Id$
@@ -14,6 +17,8 @@ import java.util.Set;
 public class XWootContentProviderConfiguration
 {
     private static final String CONFIGURATION_FILE = "xwoot-content-provider.properties";
+
+    private static final String IGNORE_PROPERTY = "ignore";
 
     private static final String CUMULATIVE_CLASSES_PROPERTY = "cumulative_classes";
 
@@ -24,6 +29,8 @@ public class XWootContentProviderConfiguration
     private Set<String> cumulativeClasses;
 
     private Map<String, Set<String>> wootablePropertiesMap;
+
+    private ArrayList<Pattern> ignorePatterns;
 
     private XWootContentProviderConfiguration()
     {
@@ -36,6 +43,16 @@ public class XWootContentProviderConfiguration
                 is.close();
             } catch (IOException e) {
                 e.printStackTrace();
+            }
+        }
+
+        /* Read ignore list */
+        ignorePatterns = new ArrayList<Pattern>();
+        String ignoreListValue = properties.getProperty(IGNORE_PROPERTY);
+        if (ignoreListValue != null) {
+            String[] values = ignoreListValue.split(",");
+            for (String value : values) {
+                ignorePatterns.add(Pattern.compile(value));
             }
         }
 
@@ -91,6 +108,18 @@ public class XWootContentProviderConfiguration
         Set<String> properties = wootablePropertiesMap.get(className);
         if (properties != null) {
             return properties.contains(property);
+        }
+
+        return false;
+    }
+
+    public boolean isIgnored(String pageName)
+    {
+        for (Pattern pattern : ignorePatterns) {
+            Matcher matcher = pattern.matcher(pageName);
+            if (matcher.matches()) {
+                return true;
+            }
         }
 
         return false;
