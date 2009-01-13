@@ -305,7 +305,7 @@ public class FileUtilTest extends AbstractXwootUtilTestBase
 
         // set write permission on root dir to false;
         File testDirRoot = new File(this.workingDir);
-        testDirRoot.setWritable(false);
+        testDirRoot.setReadOnly();
 
         IOException mustHappen = null;
         try {
@@ -318,9 +318,10 @@ public class FileUtilTest extends AbstractXwootUtilTestBase
         Assert.assertFalse(mustHappen == null && testDir.exists());
 
         // reset the root directory to writable and create the test dir but make it not writable.
-        testDirRoot.setWritable(true);
+        testDirRoot.delete();
+        testDirRoot = new File(this.workingDir);
         testDir.mkdirs();
-        testDir.setWritable(false);
+        testDir.setReadOnly();
 
         // check the direcotry and throw an exception because it is exists byt it's not usable.
         IOException mustHappenToo = null;
