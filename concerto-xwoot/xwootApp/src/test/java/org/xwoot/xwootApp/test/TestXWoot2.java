@@ -38,7 +38,7 @@ public class TestXWoot2 extends AbstractXWootTest
         fields.add(f1);
         fields.add(f2);
         fields.add(f3);
-        XWootObject obj = new XWootObject(pageId, "XWikiPage", false, fields, true);
+        XWootObject obj = new XWootObject(pageId, 1, 0, "XWikiPage", false, fields, true);
         return obj;
     }
 
@@ -47,7 +47,7 @@ public class TestXWoot2 extends AbstractXWootTest
         List fields = new ArrayList<XWootObjectField>();
         XWootObjectField f1 = new XWootObjectField("content", newContent, true);
         fields.add(f1);
-        XWootObject obj = new XWootObject(pageId, "XWikiPage", false, fields, false);
+        XWootObject obj = new XWootObject(pageId, 1, 0, "XWikiPage", false, fields, false);
         return obj;
     }
 
