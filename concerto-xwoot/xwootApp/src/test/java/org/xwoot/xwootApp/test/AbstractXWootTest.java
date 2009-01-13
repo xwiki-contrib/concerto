@@ -46,6 +46,8 @@ package org.xwoot.xwootApp.test;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.xwoot.XWootContentProviderFactory;
+import org.xwoot.XWootContentProviderInterface;
 import org.xwoot.antiEntropy.AntiEntropy;
 import org.xwoot.clockEngine.Clock;
 import org.xwoot.lpbcast.sender.LpbCastAPI;
@@ -79,7 +81,11 @@ public abstract class AbstractXWootTest
     WikiContentManager xwiki2;
 
     WikiContentManager xwiki3;
-
+    
+    XWootContentProviderInterface xwiki21;
+    XWootContentProviderInterface xwiki22;
+    XWootContentProviderInterface xwiki23;
+    
     Clock opClock1;
 
     Clock opClock2;
@@ -178,6 +184,10 @@ public abstract class AbstractXWootTest
         this.xwiki1 = WikiContentManagerFactory.getMockFactory().createWCM();
         this.xwiki2 = WikiContentManagerFactory.getMockFactory().createWCM();
         this.xwiki3 = WikiContentManagerFactory.getMockFactory().createWCM();
+        
+        this.xwiki21 = XWootContentProviderFactory.getXWootContentProvider("http://concerto1:8080/xwiki/xmlrpc");
+        this.xwiki22 = XWootContentProviderFactory.getXWootContentProvider("http://concerto2:8080/xwiki/xmlrpc");
+        this.xwiki23 = XWootContentProviderFactory.getXWootContentProvider("");
 
         this.opClock1 = new Clock(WORKINGDIR + File.separator + "Site1" + File.separator + "WootClock");
         this.opClock2 = new Clock(WORKINGDIR + File.separator + "Site2" + File.separator + "WootClock");
@@ -229,14 +239,14 @@ public abstract class AbstractXWootTest
                 new Integer(3), this.tre3, this.ae3);
 
         this.xwoot21 =
-            new XWoot2(this.xwiki1, this.wootEngine1, this.lpbCast1, WORKINGDIR + File.separator + "Site1", "Site1",
+            new XWoot2(this.xwiki21, this.wootEngine1, this.lpbCast1, WORKINGDIR + File.separator + "Site1", "Site1",
                 new Integer(1), this.tre1, this.ae1);
 
         this.xwoot22 =
-            new XWoot2(this.xwiki2, this.wootEngine2, this.lpbCast2, WORKINGDIR + File.separator + "Site2", "Site2",
+            new XWoot2(this.xwiki22, this.wootEngine2, this.lpbCast2, WORKINGDIR + File.separator + "Site2", "Site2",
                 new Integer(2), this.tre2, this.ae2);
         this.xwoot23 =
-            new XWoot2(this.xwiki3, this.wootEngine3, this.lpbCast3, WORKINGDIR + File.separator + "Site3", "Site3",
+            new XWoot2(this.xwiki23, this.wootEngine3, this.lpbCast3, WORKINGDIR + File.separator + "Site3", "Site3",
                 new Integer(3), this.tre3, this.ae3);
         this.cleanXWikis();
     }

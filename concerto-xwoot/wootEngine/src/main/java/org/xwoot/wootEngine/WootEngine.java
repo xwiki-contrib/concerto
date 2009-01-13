@@ -329,20 +329,16 @@ public class WootEngine extends LoggedWootExceptionThrower
             + patch.globalId());
         this.logger.debug(this.wootEngineId + " - Patch contents : " + patch.toString());
 
-        // if (!this.getPageManager().fileExists(pageName)) {
-        // page = this.getPageManager().createPage(pageName);
-        // } else {
-        // page = this.getPageManager().loadPage(pageName);
-        // }
-
         WootContent content = null;
         this.logger.debug(this.wootEngineId + " - Execution of patch operations...");
 
-        if (patch.getData() != null && patch.getData().iterator().hasNext()) {
-            ContentId cid = ((WootOp) patch.getData().iterator().next()).getContentId();
-            content = this.contentManager.loadWootContent(cid);
+        if (patch.getData() == null || !(patch.getData().iterator().hasNext())) {
+            return;
         }
-
+        
+        ContentId cid = ((WootOp) patch.getData().iterator().next()).getContentId();
+        content = this.contentManager.loadWootContent(cid);
+       
         this.getWaitingQueue().loadPool();
         for (Object obj : patch.getData()) {
             WootOp op = (WootOp) obj;
@@ -355,6 +351,7 @@ public class WootEngine extends LoggedWootExceptionThrower
         this.waitingQueueExec(content);
         this.getWaitingQueue().unLoadPool();
         this.getContentManager().unloadWootContent(content);
+      
     }
 
     /**

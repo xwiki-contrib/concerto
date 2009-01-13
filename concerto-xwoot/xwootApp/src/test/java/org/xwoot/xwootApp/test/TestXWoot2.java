@@ -4,9 +4,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.junit.Assert;
 import org.junit.Test;
+import org.xwiki.xmlrpc.XWikiXmlRpcClient;
+import org.xwiki.xmlrpc.model.XWikiPage;
 import org.xwoot.MockXWootContentProvider;
+import org.xwoot.XWootContentProvider;
+import org.xwoot.XWootContentProviderInterface;
 import org.xwoot.XWootId;
 import org.xwoot.XWootObject;
 import org.xwoot.XWootObjectField;
@@ -14,7 +19,6 @@ import org.xwoot.lpbcast.message.Message;
 import org.xwoot.lpbcast.sender.LpbCastAPI;
 import org.xwoot.thomasRuleEngine.core.Value;
 import org.xwoot.thomasRuleEngine.op.ThomasRuleOp;
-import org.xwoot.wikiContentManager.XWikiSwizzleClient.XwikiSwizzleClient;
 import org.xwoot.wootEngine.Patch;
 import org.xwoot.wootEngine.core.ContentId;
 import org.xwoot.wootEngine.core.WootId;
@@ -29,28 +33,50 @@ import org.xwoot.xwootApp.core.tre.XWootObjectValue;
 public class TestXWoot2 extends AbstractXWootTest
 {
 
-    private XWootObject createObject1(String pageId,String content)
+//    un XWootObject peut etre de 3 type :
+//    … pages
+//    … xwiki objets cumulable
+//    … xwiki objets non cumulabe
+    
+//    Guid :
+//    page:PageId
+//    object:guid
+//    object:page:class[number]
+    
+    private void simulateXWikiUserModification(XWootContentProviderInterface i,XWootId id,XWootObject obj) throws XmlRpcException{
+        if (i instanceof XWootContentProvider){
+            //void
+            XWikiXmlRpcClient rpc = ((XWootContentProvider)i).getRpc();
+            XWikiPage page = new XWikiPage();
+            page.setId(obj.getPageId());
+            page.setContent((String) obj.getFieldValue("content"));           
+            page.setTitle("");
+            page=rpc.storePage(page);
+        }
+        else if (i instanceof MockXWootContentProvider){
+            ((MockXWootContentProvider)i).addEntryInList(id, obj);
+        }
+        else{
+          return ;
+        }
+    }
+    
+    private XWootObject createObject(String pageId,String content,int major,int minor,boolean newlyCreated)
     {
         List fields = new ArrayList<XWootObjectField>();
         XWootObjectField f1 = new XWootObjectField("content", content, true);
-        XWootObjectField f2 = new XWootObjectField("title", "Page de test", false);
+        XWootObjectField f2 = new XWootObjectField("title", "", false);
         XWootObjectField f3 = new XWootObjectField("author", "Terminator", false);
         fields.add(f1);
         fields.add(f2);
         fields.add(f3);
-        XWootObject obj = new XWootObject(pageId, 1, 0, "XWikiPage", false, fields, true);
+        XWootObject obj = new XWootObject(pageId,Integer.valueOf(major),Integer.valueOf(minor), "page:"+pageId, false, fields, newlyCreated);
         return obj;
     }
 
-    private XWootObject createObjectContentModification(String pageId,String newContent)
-    {
-        List fields = new ArrayList<XWootObjectField>();
-        XWootObjectField f1 = new XWootObjectField("content", newContent, true);
-        fields.add(f1);
-        XWootObject obj = new XWootObject(pageId, 1, 0, "XWikiPage", false, fields, false);
-        return obj;
-    }
-
+    
+    
+    
     /**
      * DOCUMENT ME!
      * 
@@ -62,50 +88,50 @@ public class TestXWoot2 extends AbstractXWootTest
         // connect XWoot to content provider
         this.xwoot21.connectToContentManager();
 
-        MockXWootContentProvider mxwcp = this.xwoot21.getContentManager();
+        XWootContentProviderInterface mxwcp = this.xwoot21.getContentManager();
 
         // simulate XWiki user page creation
         XWootId id = new XWootId("test.1", 10, 1, 0);
-        XWootObject obj1 = this.createObject1("test.1","titi\n");
-        mxwcp.addEntryInList(id, obj1);
-
+        XWootObject obj1 = this.createObject("test.1","titi\n",1,0,true);
+        this.simulateXWikiUserModification(mxwcp, id, obj1);
+       
         // synchronize xwoot
         this.xwoot21.synchronize();
 
+       
         // verify no-wootables fields
         Assert.assertEquals(obj1.getGuid(), ((XWootObject) this.xwoot21.getTre().getValue(
-            new XWootObjectIdentifier("test.1", obj1.getGuid())).get()).getGuid());
-        Assert.assertEquals(obj1.getFieldValue("author"), ((XWootObject) this.xwoot21.getTre().getValue(
-            new XWootObjectIdentifier("test.1", obj1.getGuid())).get()).getFieldValue("author"));
-        Assert.assertEquals(obj1.getFieldValue("title"), ((XWootObject) this.xwoot21.getTre().getValue(
-            new XWootObjectIdentifier("test.1", obj1.getGuid())).get()).getFieldValue("title"));
+            new XWootObjectIdentifier("page:test.1")).get()).getGuid());
+
         // verify wootable field
         Assert.assertEquals("titi\n", this.xwoot21.getWootEngine().getContentManager().getContent("test.1",
-            "XWikiPage", "content"));
+            "page:test.1", "content"));
 
         Assert.assertEquals(0, this.xwoot21.getContentManager().getModifiedPagesIds().size());
         XWootId id2 = new XWootId("test.1", 11, 1, 1);
-        XWootObject obj2 = this.createObjectContentModification("test.1","toto\n");
-        mxwcp.addEntryInList(id2, obj2);
-
+        XWootObject obj2 = this.createObject("test.1","toto\n",1,1,false);
+        this.simulateXWikiUserModification(mxwcp, id2, obj2);
+       
         this.xwoot21.synchronize();
         // verify no-wootables fields
-        Assert.assertEquals(obj1.getGuid(), ((XWootObject) this.xwoot21.getTre().getValue(
-            new XWootObjectIdentifier("test.1", obj1.getGuid())).get()).getGuid());
-        Assert.assertEquals(obj1.getFieldValue("author"), ((XWootObject) this.xwoot21.getTre().getValue(
-            new XWootObjectIdentifier("test.1", obj1.getGuid())).get()).getFieldValue("author"));
-        Assert.assertEquals(obj1.getFieldValue("title"), ((XWootObject) this.xwoot21.getTre().getValue(
-            new XWootObjectIdentifier("test.1", obj1.getGuid())).get()).getFieldValue("title"));
+        Assert.assertEquals(obj2.getGuid(), ((XWootObject) this.xwoot21.getTre().getValue(
+            new XWootObjectIdentifier("page:test.1")).get()).getGuid());
+
         // verify wootable field
         Assert.assertEquals("toto\n", this.xwoot21.getWootEngine().getContentManager().getContent("test.1",
-            "XWikiPage", "content"));
+            "page:test.1", "content"));
     }
 
     @Test
     public void testBasicWithTwoXWiki() throws Exception
     {
-        Assert.assertEquals("", this.wootEngine1.getContentManager().getContent("test.1", "XWikiPage", "content"));
-
+        
+        String content="toto\n";
+        String pageName="test.13";
+        String page="page:"+pageName;
+        Assert.assertEquals("",  this.xwoot21.getWootEngine().getContentManager().getContent(pageName, page, "content"));
+        Assert.assertEquals("",  this.xwoot22.getWootEngine().getContentManager().getContent(pageName, page, "content"));
+     
         // connect XWoot
         this.xwoot21.reconnectToP2PNetwork();
         this.xwoot21.connectToContentManager();
@@ -116,35 +142,30 @@ public class TestXWoot2 extends AbstractXWootTest
         this.lpbCast1.addNeighbor(this.xwoot21, this.xwoot22);
         this.lpbCast2.addNeighbor(this.xwoot22, this.xwoot21);
         Assert.assertTrue(this.lpbCast1.getNeighborsList().size() > 0);
-
+        Assert.assertTrue(this.lpbCast2.getNeighborsList().size() > 0);
+        
         // xwoot1 : Simulate a change from XWiki1 user...
-        MockXWootContentProvider mxwcp = this.xwoot21.getContentManager();
-        XWootId id = new XWootId("test.1", 10, 1, 0);
+        XWootContentProviderInterface mxwcp = this.xwoot21.getContentManager();
+        XWootId id = new XWootId(pageName, 10, 1, 0);
 
-        XWootObject obj1 = this.createObject1("test.1","titi\n");
-        mxwcp.addEntryInList(id, obj1);
+        XWootObject obj1 = this.createObject(pageName,content,1,0,true);
+        this.simulateXWikiUserModification(mxwcp, id, obj1);
+        
         this.xwoot21.synchronize();
         // verify no-wootables fields
         Assert.assertEquals(obj1.getGuid(), ((XWootObject) this.xwoot21.getTre().getValue(
-            new XWootObjectIdentifier("test.1", obj1.getGuid())).get()).getGuid());
-        Assert.assertEquals(obj1.getFieldValue("author"), ((XWootObject) this.xwoot21.getTre().getValue(
-            new XWootObjectIdentifier("test.1", obj1.getGuid())).get()).getFieldValue("author"));
-        Assert.assertEquals(obj1.getFieldValue("title"), ((XWootObject) this.xwoot21.getTre().getValue(
-            new XWootObjectIdentifier("test.1", obj1.getGuid())).get()).getFieldValue("title"));
+            new XWootObjectIdentifier(page)).get()).getGuid());
+
         // verify wootable field
-        Assert.assertEquals("titi\n", this.xwoot21.getWootEngine().getContentManager().getContent("test.1",
-            "XWikiPage", "content"));
+        Assert.assertEquals(content, this.xwoot21.getWootEngine().getContentManager().getContent(pageName,
+            page, "content"));
         // verify no-wootables fields
-        System.out.println(this.xwoot22.getTre().getValue(new XWootObjectIdentifier("test.1", obj1.getGuid())));
         Assert.assertEquals(obj1.getGuid(), ((XWootObject) this.xwoot22.getTre().getValue(
-            new XWootObjectIdentifier("test.1", obj1.getGuid())).get()).getGuid());
-        Assert.assertEquals(obj1.getFieldValue("author"), ((XWootObject) this.xwoot22.getTre().getValue(
-            new XWootObjectIdentifier("test.1", obj1.getGuid())).get()).getFieldValue("author"));
-        Assert.assertEquals(obj1.getFieldValue("title"), ((XWootObject) this.xwoot22.getTre().getValue(
-            new XWootObjectIdentifier("test.1", obj1.getGuid())).get()).getFieldValue("title"));
+            new XWootObjectIdentifier(page)).get()).getGuid());
+
         // verify wootable field
-        Assert.assertEquals("titi\n", this.xwoot22.getWootEngine().getContentManager().getContent("test.1",
-            "XWikiPage", "content"));
+        Assert.assertEquals(content, this.xwoot22.getWootEngine().getContentManager().getContent(pageName,
+            page, "content"));
     }
 
     /**
@@ -160,11 +181,11 @@ public class TestXWoot2 extends AbstractXWootTest
         this.xwoot21.connectToContentManager();
 
         // simulate XWiki user page creation
-        MockXWootContentProvider mxwcp = this.xwoot21.getContentManager();
+        XWootContentProviderInterface mxwcp = this.xwoot21.getContentManager();
         XWootId id = new XWootId("test.1", 10, 1, 0);
 
-        XWootObject obj1 = this.createObject1("test.1","titi");
-        mxwcp.addEntryInList(id, obj1);
+        XWootObject obj1 = this.createObject("test.1","titi",1,0,true);
+        this.simulateXWikiUserModification(mxwcp, id, obj1);
 
         // create patch to change wootEngine model : insert "titi" in first
         // position
@@ -204,32 +225,32 @@ public class TestXWoot2 extends AbstractXWootTest
         this.xwoot21.connectToContentManager();
 
         // simulate XWiki user page creation
-        MockXWootContentProvider mxwcp = this.xwoot21.getContentManager();
+        XWootContentProviderInterface mxwcp = this.xwoot21.getContentManager();
         XWootId id = new XWootId("test.1", 10, 1, 0);
-        XWootObject obj1 = this.createObject1("test.1","titi");
-        mxwcp.addEntryInList(id, obj1);
+        XWootObject obj1 = this.createObject("test.1","titi",1,0,true);
+        this.simulateXWikiUserModification(mxwcp, id, obj1);
 
         // create patch to change wootEngine model : insert "titi" in first
         // position
         Patch patch = new Patch();
         List<WootOp> vector = new ArrayList<WootOp>();
         WootIns op0 = new WootIns(new WootRow(new WootId(0, 0), "toto"), new WootId(-1, -1), new WootId(-2, -2));
-        op0.setContentId(new ContentId("test.1", "XWikiPage", "content", false));
+        op0.setContentId(new ContentId("test.1", "page:test.1", "content", false));
         op0.setOpId(new WootId(0, 0));
         vector.add(op0);
         patch.setData(vector);
         patch.setPageId("test.1");
-        patch.setObjectId("XWikiPage");
+        patch.setObjectId("page:test.1");
         patch.setTimestamp(10);
         patch.setVersion(1);
         patch.setMinorVersion(0);
 
         // patch must contain corresponding TRE op to have the xwootObject
 
-        XWootObject obj2 = this.createObject1("test.1","toto");
+        XWootObject obj2 = this.createObject("test.1","toto",1,0,true);
         Value tre_val = new XWootObjectValue();
         ((XWootObjectValue) tre_val).setObject(obj2);
-        XWootObjectIdentifier tre_id = new XWootObjectIdentifier("test.1", obj2.getGuid());
+        XWootObjectIdentifier tre_id = new XWootObjectIdentifier(obj2.getGuid());
         ThomasRuleOp tre_op = this.xwoot21.getTre().getOp(tre_id, tre_val);
         List tre_ops = new ArrayList<ThomasRuleOp>();
         tre_ops.add(tre_op);
@@ -243,9 +264,9 @@ public class TestXWoot2 extends AbstractXWootTest
 
         this.xwoot21.receivePatch(mess);
         this.xwoot21.synchronize();
-
+        
         Assert.assertEquals("toto\ntiti\n", this.xwoot21.getWootEngine().getContentManager().getContent("test.1",
-            "XWikiPage", "content"));
+            "page:test.1", "content"));
     }
 
     /**
@@ -279,42 +300,41 @@ public class TestXWoot2 extends AbstractXWootTest
         // simulate a change from wikiContentManager user...
 
         // simulate XWiki user page creation
-        MockXWootContentProvider mxwcp = this.xwoot21.getContentManager();
+        XWootContentProviderInterface mxwcp = this.xwoot21.getContentManager();
         XWootId id = new XWootId("test.1", 10, 1, 0);
-        XWootObject obj1 = this.createObject1("test.1","Ligne 1 sur xwiki1\n");
-        mxwcp.addEntryInList(id, obj1);
+        XWootObject obj1 = this.createObject("test.1","Ligne 1 sur xwiki1\n",1,0,true);
+        this.simulateXWikiUserModification(mxwcp, id, obj1);
 
         // Launch the synch...
         this.xwoot21.synchronize();
 
         Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine1.getContentManager().getContent("test.1",
-            "XWikiPage", "content"));
+            "page:test.1", "content"));
 
         Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine2.getContentManager().getContent("test.1",
-            "XWikiPage", "content"));
+            "page:test.1", "content"));
 
         Assert.assertEquals("Ligne 1 sur xwiki1\n", this.wootEngine3.getContentManager().getContent("test.1",
-            "XWikiPage", "content"));
+            "page:test.1", "content"));
 
         // simulate a change from wikiContentManager user...
         XWootObject obj11 =
-            this.createObjectContentModification("test.1","Ligne -1 sur xwiki1\nLigne 0 sur xwiki1\nLigne 1 sur xwiki1\n");
+            this.createObject("test.1","Ligne -1 sur xwiki1\nLigne 0 sur xwiki1\nLigne 1 sur xwiki1\n",1,1,false);
         XWootId id11 = new XWootId("test.1", 11, 1, 1);
-        this.xwoot21.getContentManager().addEntryInList(id11, obj11);
-
+        this.simulateXWikiUserModification(this.xwoot21.getContentManager(), id11, obj11);
+       
         XWootObject obj12 =
-            this.createObjectContentModification("test.1","Ligne 0 sur xwiki2\nLigne 1 sur xwiki1\nLigne 2 sur xwiki2\n");
+            this.createObject("test.1","Ligne 0 sur xwiki2\nLigne 1 sur xwiki1\nLigne 2 sur xwiki2\n",1,1,false);
         XWootId id12 = new XWootId("test.1", 11, 1, 1);
-        this.xwoot22.getContentManager().addEntryInList(id12, obj12);
+        this.simulateXWikiUserModification(this.xwoot22.getContentManager(),id12, obj12);
 
         XWootObject obj13 =
-            this.createObjectContentModification("test.1","Ligne 1 sur xwiki1\nLigne 2 sur xwiki3\nLigne 3 sur xwiki3\n");
+            this.createObject("test.1","Ligne 1 sur xwiki1\nLigne 2 sur xwiki3\nLigne 3 sur xwiki3\n",1,1,false);
         XWootId id13 = new XWootId("test.1", 11, 1, 1);
-        this.xwoot23.getContentManager().addEntryInList(id13, obj13);
+        this.simulateXWikiUserModification(this.xwoot23.getContentManager(),id13, obj13);
 
         // Launch the synch...
         this.xwoot21.synchronize();
-      
         Assert.assertEquals("Ligne -1 sur xwiki1\n" +
         		"Ligne 0 sur xwiki1\n" +
         		"Ligne 0 sur xwiki2\n" +
@@ -322,26 +342,26 @@ public class TestXWoot2 extends AbstractXWootTest
         		"Ligne 2 sur xwiki2\n" +
         		"Ligne 2 sur xwiki3\n" +
         		"Ligne 3 sur xwiki3\n",
-        		this.wootEngine1.getContentManager().getContent("test.1", "XWikiPage", "content"));
+        		this.wootEngine1.getContentManager().getContent("test.1", "page:test.1", "content"));
         Assert.assertEquals(
-            this.wootEngine1.getContentManager().getContent("test.1", "XWikiPage", "content"),
-            this.wootEngine2.getContentManager().getContent("test.1", "XWikiPage", "content"));
+            this.wootEngine1.getContentManager().getContent("test.1", "page:test.1", "content"),
+            this.wootEngine2.getContentManager().getContent("test.1", "page:test.1", "content"));
         Assert.assertEquals(
-            this.wootEngine2.getContentManager().getContent("test.1", "XWikiPage", "content"),
-            this.wootEngine3.getContentManager().getContent("test.1", "XWikiPage", "content"));
+            this.wootEngine2.getContentManager().getContent("test.1", "page:test.1", "content"),
+            this.wootEngine3.getContentManager().getContent("test.1", "page:test.1", "content"));
         
 
         System.out.println("woot1 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine1.getContentManager().getContent("test.1", "XWikiPage", "content"));
+        System.out.println(this.wootEngine1.getContentManager().getContent("test.1", "page:test.1", "content"));
         System.out.println("-------------------");
         System.out.println("woot2 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine2.getContentManager().getContent("test.1", "XWikiPage", "content"));
+        System.out.println(this.wootEngine2.getContentManager().getContent("test.1", "page:test.1", "content"));
         System.out.println("-------------------");
         System.out.println("woot3 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine3.getContentManager().getContent("test.1", "XWikiPage", "content"));
+        System.out.println(this.wootEngine3.getContentManager().getContent("test.1", "page:test.1", "content"));
         System.out.println("-------------------");
     }
 
@@ -369,11 +389,12 @@ public class TestXWoot2 extends AbstractXWootTest
         // /////////////////////
         // simulate a change from wikiContentManager user...
         XWootId id1 = new XWootId("test.1", 10, 1, 0);
-        XWootObject obj1 = this.createObject1("test.1","Ligne 1 sur xwiki1\n");
-        this.xwoot21.getContentManager().addEntryInList(id1, obj1);
+        XWootObject obj1 = this.createObject("test.1","Ligne 1 sur xwiki1\n",1,0,true);
+        this.simulateXWikiUserModification(this.xwoot21.getContentManager(),id1, obj1);
+      
         XWootId id2 = new XWootId("test.1", 10, 1, 0);
-        XWootObject obj2 = this.createObject1("test.1","Ligne 1 sur xwiki2\n");
-        this.xwoot22.getContentManager().addEntryInList(id2, obj2);
+        XWootObject obj2 = this.createObject("test.1","Ligne 1 sur xwiki2\n",1,0,true);
+        this.simulateXWikiUserModification(this.xwoot22.getContentManager(),id2, obj2);
 
         // create patch to change wootEngine model : insert "titi" in first
         // position
@@ -382,22 +403,22 @@ public class TestXWoot2 extends AbstractXWootTest
         WootIns op0 =
             new WootIns(new WootRow(new WootId(0, 0), "Ligne 1 sur xwiki fantôme"), new WootId(-1, -1), new WootId(-2,
                 -2));
-        op0.setContentId(new ContentId("test.1", "XWikiPage", "content", false));
+        op0.setContentId(new ContentId("test.1", "page:test.1", "content", false));
         op0.setOpId(new WootId(0, 0));
         vector.add(op0);
         patch.setData(vector);
         patch.setPageId("test.1");
-        patch.setObjectId("XWikiPage");
+        patch.setObjectId("page:test.1");
         patch.setTimestamp(10);
         patch.setVersion(1);
         patch.setMinorVersion(0);
 
         // patch must contain corresponding TRE op to have the xwootObject
 
-        XWootObject obj3 = this.createObject1("test.1","Cette valeur est ecrasée par le contenu du wootEngine\n");
+        XWootObject obj3 = this.createObject("test.1","Cette valeur est ecrasée par le contenu du wootEngine\n",1,0,true);
         Value tre_val = new XWootObjectValue();
         ((XWootObjectValue) tre_val).setObject(obj3);
-        XWootObjectIdentifier tre_id = new XWootObjectIdentifier("test.1", obj3.getGuid());
+        XWootObjectIdentifier tre_id = new XWootObjectIdentifier(obj3.getGuid());
         ThomasRuleOp tre_op = this.xwoot21.getTre().getOp(tre_id, tre_val);
         List tre_ops = new ArrayList<ThomasRuleOp>();
         tre_ops.add(tre_op);
@@ -410,44 +431,45 @@ public class TestXWoot2 extends AbstractXWootTest
 
         this.xwoot21.receivePatch(mess);
         this.xwoot22.receivePatch(mess);
-
+        this.xwoot21.synchronize();
+        this.xwoot22.synchronize();
         Assert.assertEquals("Ligne 1 sur xwiki fantôme\nLigne 1 sur xwiki1\nLigne 1 sur xwiki2\n",
-            this.wootEngine1.getContentManager().getContent("test.1", "XWikiPage", "content"));
-        Assert.assertEquals(this.wootEngine1.getContentManager().getContent("test.1", "XWikiPage", "content"),
-            this.wootEngine2.getContentManager().getContent("test.1", "XWikiPage", "content") );
+            this.wootEngine2.getContentManager().getContent("test.1", "page:test.1", "content"));
+        Assert.assertEquals(this.wootEngine1.getContentManager().getContent("test.1", "page:test.1", "content"),
+            this.wootEngine2.getContentManager().getContent("test.1", "page:test.1", "content") );
         
         System.out.println("woot1 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine1.getContentManager().getContent("test.1", "XWikiPage", "content"));
+        System.out.println(this.wootEngine1.getContentManager().getContent("test.1", "page:test.1", "content"));
         System.out.println("-------------------");
         System.out.println("woot2 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine2.getContentManager().getContent("test.1", "XWikiPage", "content"));
+        System.out.println(this.wootEngine2.getContentManager().getContent("test.1", "page:test.1", "content"));
         System.out.println("-------------------");
 
         // simulate a change from wikiContentManager user...
-        XWootObject obj4 = this.createObjectContentModification("test.1","Nouvelle ligne sur xwiki1\nLigne 1 sur xwiki1\n");
-        XWootObject obj5 = this.createObjectContentModification("test.1","Ligne 1 sur xwiki1\nNouvelle ligne sur xwiki2\n");
+        XWootObject obj4 = this.createObject("test.1","Nouvelle ligne sur xwiki1\nLigne 1 sur xwiki1\n",1,1,false);
+        XWootObject obj5 = this.createObject("test.1","Ligne 1 sur xwiki1\nNouvelle ligne sur xwiki2\n",1,1,false);
         XWootId id4 = new XWootId("test.1", 11, 1, 1);
         XWootId id5 = new XWootId("test.1", 11, 1, 1);
 
-        this.xwoot21.getContentManager().addEntryInList(id4, obj4);
-        this.xwoot22.getContentManager().addEntryInList(id5, obj5);
+        this.simulateXWikiUserModification(this.xwoot21.getContentManager(),id4, obj4);       
+        this.simulateXWikiUserModification(this.xwoot22.getContentManager(),id5, obj5);
 
         this.xwoot21.synchronize();
         
         Assert.assertEquals("Nouvelle ligne sur xwiki1\nLigne 1 sur xwiki1\nNouvelle ligne sur xwiki2\n",
-            this.wootEngine1.getContentManager().getContent("test.1", "XWikiPage", "content"));
-        Assert.assertEquals(this.wootEngine1.getContentManager().getContent("test.1", "XWikiPage", "content"),
-            this.wootEngine2.getContentManager().getContent("test.1", "XWikiPage", "content") );
+            this.wootEngine1.getContentManager().getContent("test.1", "page:test.1", "content"));
+        Assert.assertEquals(this.wootEngine1.getContentManager().getContent("test.1", "page:test.1", "content"),
+            this.wootEngine2.getContentManager().getContent("test.1", "page:test.1", "content") );
 
         System.out.println("woot1 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine1.getContentManager().getContent("test.1", "XWikiPage", "content"));
+        System.out.println(this.wootEngine1.getContentManager().getContent("test.1", "page:test.1", "content"));
         System.out.println("-------------------");
         System.out.println("woot2 : ");
         System.out.println("-------------------");
-        System.out.println(this.wootEngine2.getContentManager().getContent("test.1", "XWikiPage", "content"));
+        System.out.println(this.wootEngine2.getContentManager().getContent("test.1", "page:test.1", "content"));
         System.out.println("-------------------");
     }
 
@@ -455,7 +477,7 @@ public class TestXWoot2 extends AbstractXWootTest
     public void testXWoot1() throws Exception
     {
         this.xwoot21 =
-            new XWoot2(this.xwiki1, this.wootEngine1, this.lpbCast1, "/cantBecreated" + File.separator + "Site1", "Site1",
+            new XWoot2(this.xwiki21, this.wootEngine1, this.lpbCast1, "/cantBecreated" + File.separator + "Site1", "Site1",
                 new Integer(1), this.tre1, this.ae1);
     }
 
@@ -468,7 +490,7 @@ public class TestXWoot2 extends AbstractXWootTest
         f.createNewFile();
         Assert.assertTrue(f.exists());
         this.xwoot21 =
-            new XWoot2(this.xwiki1, this.wootEngine1, this.lpbCast1, f.toString(), "Site 1", new Integer(1),
+            new XWoot2(this.xwiki21, this.wootEngine1, this.lpbCast1, f.toString(), "Site 1", new Integer(1),
                 this.tre1, this.ae1);
     }
 
@@ -483,7 +505,7 @@ public class TestXWoot2 extends AbstractXWootTest
         f.setReadOnly();
         Assert.assertFalse(f.canWrite());
         this.xwoot21 =
-            new XWoot2(this.xwiki1, this.wootEngine1, this.lpbCast1, f.toString(), "Site 1", new Integer(1),
+            new XWoot2(this.xwiki21, this.wootEngine1, this.lpbCast1, f.toString(), "Site 1", new Integer(1),
                 this.tre1, this.ae1);
     }
 
@@ -497,7 +519,7 @@ public class TestXWoot2 extends AbstractXWootTest
         this.lpbCast1.connectSender();
         Assert.assertTrue(this.lpbCast1.isSenderConnected());
         this.xwoot21 =
-            new XWoot2(this.xwiki1, this.wootEngine1, this.lpbCast1, f.toString(), f.toString() + File.separator
+            new XWoot2(this.xwiki21, this.wootEngine1, this.lpbCast1, f.toString(), f.toString() + File.separator
                 + "Site1", new Integer(1), this.tre1, this.ae1);
         Assert.assertNotNull(this.xwoot21);
     }
@@ -558,35 +580,30 @@ public class TestXWoot2 extends AbstractXWootTest
     public void testState() throws Exception
     {
 
-        if (this.xwiki1 instanceof XwikiSwizzleClient) {
-            return;
-        }
-        
         this.xwoot21.connectToContentManager();
         
         // simulate XWiki user page creation
-        MockXWootContentProvider mxwcp = this.xwoot21.getContentManager();
+        XWootContentProviderInterface mxwcp = this.xwoot21.getContentManager();
         XWootId id = new XWootId("test.1", 10, 1, 0);
-        XWootObject obj1 = this.createObject1("test.1","toto\n");
-        mxwcp.addEntryInList(id, obj1);
+        XWootObject obj1 = this.createObject("test.1","toto\n",1,0,true);
+        this.simulateXWikiUserModification(mxwcp, id, obj1);
       
         XWootId id2 = new XWootId("test.2", 10, 1, 0);
-        XWootObject obj2 = this.createObject1("test.2","titi\n");
-        mxwcp.addEntryInList(id2, obj2);
+        XWootObject obj2 = this.createObject("test.2","titi\n",1,0,true);
+        this.simulateXWikiUserModification(mxwcp, id2, obj2);
         
         XWootId id3 = new XWootId("test.3", 10, 1, 0);
-        XWootObject obj3 = this.createObject1("test.3","tata\n");
-        mxwcp.addEntryInList(id3, obj3);
-
+        XWootObject obj3 = this.createObject("test.3","tata\n",1,0,true);
+        this.simulateXWikiUserModification(mxwcp, id3, obj3);
+       
         this.xwoot21.createNetwork();
         this.xwoot21.reconnectToP2PNetwork();
         this.xwoot21.synchronize();
         
-        System.out.println(this.xwoot21.getWootEngine().getContentManager().listPages()[0]);
         Assert.assertEquals(3,this.xwoot21.getWootEngine().getContentManager().listPages().length);
-        Assert.assertEquals("toto\n", this.xwoot21.getWootEngine().getContentManager().getContent("test.1", "XWikiPage", "content"));
-        Assert.assertEquals("titi\n", this.xwoot21.getWootEngine().getContentManager().getContent("test.2", "XWikiPage", "content"));
-        Assert.assertEquals("tata\n", this.xwoot21.getWootEngine().getContentManager().getContent("test.3", "XWikiPage", "content"));
+        Assert.assertEquals("toto\n", this.xwoot21.getWootEngine().getContentManager().getContent("test.1", "page:test.1", "content"));
+        Assert.assertEquals("titi\n", this.xwoot21.getWootEngine().getContentManager().getContent("test.2", "page:test.2", "content"));
+        Assert.assertEquals("tata\n", this.xwoot21.getWootEngine().getContentManager().getContent("test.3", "page:test.3", "content"));
         
         File f = this.xwoot21.computeState();
         Assert.assertNotNull(f);
@@ -595,9 +612,9 @@ public class TestXWoot2 extends AbstractXWootTest
         this.xwoot22.connectToContentManager();
         this.xwoot22.reconnectToP2PNetwork();
         Assert.assertEquals(3,this.xwoot22.getWootEngine().getContentManager().listPages().length);
-        Assert.assertEquals("toto\n", this.xwoot22.getWootEngine().getContentManager().getContent("test.1", "XWikiPage", "content"));
-        Assert.assertEquals("titi\n", this.xwoot22.getWootEngine().getContentManager().getContent("test.2", "XWikiPage", "content"));
-        Assert.assertEquals("tata\n", this.xwoot22.getWootEngine().getContentManager().getContent("test.3", "XWikiPage", "content"));
+        Assert.assertEquals("toto\n", this.xwoot22.getWootEngine().getContentManager().getContent("test.1", "page:test.1", "content"));
+        Assert.assertEquals("titi\n", this.xwoot22.getWootEngine().getContentManager().getContent("test.2", "page:test.2", "content"));
+        Assert.assertEquals("tata\n", this.xwoot22.getWootEngine().getContentManager().getContent("test.3", "page:test.3", "content"));
         
     }
 }

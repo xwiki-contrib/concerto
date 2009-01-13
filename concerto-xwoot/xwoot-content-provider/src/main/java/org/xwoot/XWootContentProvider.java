@@ -31,7 +31,7 @@ import org.xwiki.xmlrpc.model.XWikiPageHistorySummary;
  * 
  * @version $Id$
  */
-public class XWootContentProvider
+public class XWootContentProvider implements XWootContentProviderInterface
 {
     final Logger logger = LoggerFactory.getLogger(XWootContentProvider.class);
 

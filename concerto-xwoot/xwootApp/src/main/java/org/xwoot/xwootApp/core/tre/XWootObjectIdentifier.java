@@ -57,10 +57,6 @@ public class XWootObjectIdentifier implements Identifier
     /**  */
     private static final long serialVersionUID = 4717183124930677075L;
 
-    private String pageName;
-
-    private String metaDataId;
-
     private String id;
 
     /**
@@ -69,11 +65,9 @@ public class XWootObjectIdentifier implements Identifier
      * @param pageName DOCUMENT ME!
      * @param metaDataId DOCUMENT ME!
      */
-    public XWootObjectIdentifier(String pageName, String metaDataId)
+    public XWootObjectIdentifier(String id)
     {
-        this.pageName = pageName;
-        this.metaDataId = metaDataId;
-        this.setId();
+        this.id = id;
     }
 
     /**
@@ -88,7 +82,7 @@ public class XWootObjectIdentifier implements Identifier
         if (!(with instanceof Identifier)) {
             return false;
         }
-
+        System.out.println(this.id);
         return this.id.equals(((XWootObjectIdentifier) with).getId());
     }
 
@@ -107,35 +101,11 @@ public class XWootObjectIdentifier implements Identifier
      * 
      * @return DOCUMENT ME!
      */
-    public String getMetaDataId()
-    {
-        return this.metaDataId;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
-    public String getPageName()
-    {
-        return this.pageName;
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
     @Override
     public int hashCode()
     {
+        //System.out.println("hashcode id : "+this.id);
         return this.id.hashCode();
-    }
-
-    private void setId()
-    {
-        this.id = this.pageName + "." + this.metaDataId;
     }
 
     /**
@@ -143,21 +113,9 @@ public class XWootObjectIdentifier implements Identifier
      * 
      * @param metaDataId DOCUMENT ME!
      */
-    public void setMetaDataId(String metaDataId)
+    public void setId(String id)
     {
-        this.metaDataId = metaDataId;
-        this.setId();
-    }
-
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param pageName DOCUMENT ME!
-     */
-    public void setPageName(String pageName)
-    {
-        this.pageName = pageName;
-        this.setId();
+        this.id=id;
     }
 
     /**

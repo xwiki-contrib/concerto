@@ -1,11 +1,11 @@
 package org.xwoot;
 
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.xmlrpc.XmlRpcException;
 
@@ -15,14 +15,13 @@ import org.apache.xmlrpc.XmlRpcException;
  * 
  * @version $Id$
  */
-public class MockXWootContentProvider
+public class MockXWootContentProvider implements XWootContentProviderInterface
 {
     private Map<XWootId, List<XWootObject>> list;
 
     /**
      * Constructor.
      * 
-     * @param endpoint The target XWiki XMLRPC endpoint URL.
      * @throws XWootContentProviderException
      */
     public MockXWootContentProvider() throws XWootContentProviderException
@@ -36,8 +35,6 @@ public class MockXWootContentProvider
      * @param username
      * @param password
      * @throws XWootContentProviderException
-     * @throws XmlRpcException
-     * @throws MalformedURLException
      */
     public void login(String username, String password) throws XWootContentProviderException
     {
@@ -61,9 +58,9 @@ public class MockXWootContentProvider
      * @return A list of XWootIds.
      * @throws XWootContentProviderException
      */
-    public List<XWootId> getModifiedPagesIds() throws XWootContentProviderException
+    public Set<XWootId> getModifiedPagesIds() throws XWootContentProviderException
     {
-        return new ArrayList(this.list.keySet());
+        return this.list.keySet();
     }
 
     /**
@@ -121,5 +118,12 @@ public class MockXWootContentProvider
             }
         }
         return result;
+    }
+
+    public void clearAllModifications() throws XWootContentProviderException
+    {   
+        return;
+        //TODO
+        
     }
 }

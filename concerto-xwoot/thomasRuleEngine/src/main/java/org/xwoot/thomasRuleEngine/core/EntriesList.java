@@ -66,7 +66,7 @@ import org.xwoot.xwootUtil.PersistencyUtil;
 public class EntriesList
 {
     /** The list of entries. */
-    private Map<Identifier, Entry> entriesList;
+    private Map<org.xwoot.thomasRuleEngine.core.Identifier, org.xwoot.thomasRuleEngine.core.Entry> entriesList;
 
     /** The location on drive where to store the database. */
     private String filePath;
@@ -122,7 +122,7 @@ public class EntriesList
      * @see #load()
      * @see #store()
      */
-    public void addEntry(Entry entry) throws ThomasRuleEngineException
+    public void addEntry(org.xwoot.thomasRuleEngine.core.Entry entry) throws ThomasRuleEngineException
     {
         if ((entry == null) || (entry.getId() == null)) {
             throw new NullPointerException("The entry must not be null.");
@@ -140,7 +140,8 @@ public class EntriesList
      * @throws NullPointerException if the id is null.
      * @see #load()
      */
-    public Entry getEntry(Identifier id) throws ThomasRuleEngineException
+    public org.xwoot.thomasRuleEngine.core.Entry getEntry(org.xwoot.thomasRuleEngine.core.Identifier id)
+        throws ThomasRuleEngineException
     {
         if (id == null) {
             throw new NullPointerException("The ID must not be null.");
@@ -157,7 +158,7 @@ public class EntriesList
      * @throws ThomasRuleEngineException if problems occur while loading.
      * @throws NullPointerException if the pageId is null.
      */
-    public List<Entry> getEntries(String pageId) throws ThomasRuleEngineException
+    public List<org.xwoot.thomasRuleEngine.core.Entry> getEntries(String pageId) throws ThomasRuleEngineException
     {
         if (pageId == null || pageId.length() == 0) {
             throw new NullPointerException("Parameters must not be null");
@@ -165,10 +166,10 @@ public class EntriesList
 
         this.load();
 
-        List<Entry> result = new ArrayList<Entry>();
+        List<org.xwoot.thomasRuleEngine.core.Entry> result = new ArrayList<org.xwoot.thomasRuleEngine.core.Entry>();
 
-        for (Identifier id : this.entriesList.keySet()) {
-            if (id.getPageName().equals(pageId)) {
+        for (org.xwoot.thomasRuleEngine.core.Identifier id : this.entriesList.keySet()) {
+            if (id.getId().equals(pageId)) {
                 result.add(this.entriesList.get(id));
             }
         }
@@ -192,7 +193,7 @@ public class EntriesList
      * @throws ThomasRuleEngineException if problems loading/storing occur.
      * @throws NullPointerException if the id is null.
      */
-    public void removeEntry(Identifier id) throws ThomasRuleEngineException
+    public void removeEntry(org.xwoot.thomasRuleEngine.core.Identifier id) throws ThomasRuleEngineException
     {
         if (id == null) {
             throw new NullPointerException("Parameters must not be null.");
@@ -227,10 +228,13 @@ public class EntriesList
     @SuppressWarnings("unchecked")
     private void load() throws ThomasRuleEngineException
     {
-        Object fallback = new Hashtable<Identifier, Entry>();
+        Object fallback =
+            new Hashtable<org.xwoot.thomasRuleEngine.core.Identifier, org.xwoot.thomasRuleEngine.core.Entry>();
         try {
             this.entriesList =
-                (Hashtable<Identifier, Entry>) PersistencyUtil.loadObjectFromFile(this.filePath, fallback);
+                (Hashtable<org.xwoot.thomasRuleEngine.core.Identifier, 
+                    org.xwoot.thomasRuleEngine.core.Entry>) PersistencyUtil
+                    .loadObjectFromFile(this.filePath, fallback);
         } catch (Exception e) {
             throw new ThomasRuleEngineException("Problems loading the entris list.\n", e);
         }
@@ -246,11 +250,12 @@ public class EntriesList
             e1.printStackTrace();
         }
 
-        Iterator<Map.Entry<Identifier, Entry>> i = this.entriesList.entrySet().iterator();
+        Iterator<Map.Entry<org.xwoot.thomasRuleEngine.core.Identifier, org.xwoot.thomasRuleEngine.core.Entry>> i =
+            this.entriesList.entrySet().iterator();
 
         String result = "List : ";
         while (i.hasNext()) {
-            Entry temp = (Entry) i.next();
+            Map.Entry temp = i.next();
             result = result + "<" + temp.toString() + ">";
         }
 

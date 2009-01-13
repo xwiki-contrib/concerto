@@ -55,7 +55,7 @@ import java.io.Serializable;
 public interface Identifier extends Serializable
 {
     /** @return the pageName this identifier belongs to. */
-    String getPageName();
+    String getId();
     
     /** {@inheritDoc} */
     @Override

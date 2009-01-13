@@ -42,6 +42,7 @@ public class LastModifiedContentIdMapTest extends AbstractXWootTest
     {
         // page toto have been modified to version => 1.0
         LastModifiedContentIdMap lmcim = new LastModifiedContentIdMap(WORKINGDIR);
+        lmcim.removeAll();
         XWootId id1 = new XWootId(this.pn1, 10, 1, 0);
         XWootId id2 = new XWootId(this.pn2, 10, 1, 0);
         lmcim.add(id1, this.cid1);
@@ -55,6 +56,7 @@ public class LastModifiedContentIdMapTest extends AbstractXWootTest
 
         Assert.assertTrue(currentMap.containsKey(id1));
         Assert.assertTrue(currentMap.containsKey(id2));
+        System.out.println(currentMap);
         Assert.assertEquals(currentMap.size(), 2);
         Assert.assertEquals(currentMap.get(id1).size(), 3);
         Assert.assertEquals(currentMap.get(id2).size(), 2);
@@ -86,6 +88,7 @@ public class LastModifiedContentIdMapTest extends AbstractXWootTest
     {
         // page toto have been modified to version => 1.0
         LastModifiedContentIdMap lmcim = new LastModifiedContentIdMap(WORKINGDIR);
+        lmcim.removeAll();
         XWootId id1 = new XWootId(this.pn1, 10, 1, 0);
         lmcim.add(id1, this.cid1);
         lmcim.add(id1, this.cid2);

@@ -12,34 +12,28 @@ public class FieldsTREIdentifierTest
     @Test
     public void testFieldsTREIdentifier()
     {
-        XWootObjectIdentifier f = new XWootObjectIdentifier("test.0", "content");
-        assertEquals("test.0", f.getPageName());
-        assertEquals("content", f.getMetaDataId());
+        XWootObjectIdentifier f = new XWootObjectIdentifier("test.0.content");
         assertEquals("test.0.content", f.getId());
-        f.setPageName("test.2");
-        assertEquals("test.2", f.getPageName());
+        f.setId("test.2.content");
         assertEquals("test.2.content", f.getId());
-        f.setMetaDataId("Content");
-        assertEquals("Content", f.getMetaDataId());
-        assertEquals("test.2.Content", f.getId());
-        XWootObjectIdentifier f2 = new XWootObjectIdentifier("test.0", "content");
-        f2.setPageName("toto");
+        f.setId("test.2.Comment");
+        assertEquals("test.2.Comment", f.getId());
     }
 
     @Test
     public void testToString()
     {
-        XWootObjectIdentifier f0 = new XWootObjectIdentifier("test.0", "content");
+        XWootObjectIdentifier f0 = new XWootObjectIdentifier("test.0.content");
         assertEquals("test.0.content", f0.toString());
     }
 
     @Test
     public void testEqualsAndHashCodeObject()
     {
-        XWootObjectIdentifier f0 = new XWootObjectIdentifier("test.0", "content");
-        XWootObjectIdentifier f1 = new XWootObjectIdentifier("test.1", "content");
-        XWootObjectIdentifier f2 = new XWootObjectIdentifier("test.1", "content");
-        XWootObjectIdentifier f3 = new XWootObjectIdentifier("test.1", "content");
+        XWootObjectIdentifier f0 = new XWootObjectIdentifier("test.0.content");
+        XWootObjectIdentifier f1 = new XWootObjectIdentifier("test.1.content");
+        XWootObjectIdentifier f2 = new XWootObjectIdentifier("test.1.content");
+        XWootObjectIdentifier f3 = new XWootObjectIdentifier("test.1.content");
         XWootObjectIdentifier f4 = f3;
 
         PageFieldValue v = new PageFieldValue("tagada");

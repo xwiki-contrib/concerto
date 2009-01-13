@@ -206,15 +206,15 @@ public class EntriesListTest
         Entry entry2 = new Entry(this.id2, this.value2, false, null, null);
         this.entriesList.addEntry(entry2);
         Assert.assertEquals(2, this.entriesList.size());
-        Assert.assertEquals(2, this.entriesList.getEntries(this.id1.getPageName()).size());
+        Assert.assertEquals(1, this.entriesList.getEntries(this.id1.getId()).size());
         Assert.assertEquals(entry2, this.entriesList.getEntry(this.id2));
 
         // test a third in a different page entry
         Entry entry3 = new Entry(this.id3, this.value3, false, null, null);
         this.entriesList.addEntry(entry3);
         Assert.assertEquals(3, this.entriesList.size());
-        Assert.assertEquals(2, this.entriesList.getEntries(this.id1.getPageName()).size());
-        Assert.assertEquals(1, this.entriesList.getEntries(this.id3.getPageName()).size());
+        Assert.assertEquals(1, this.entriesList.getEntries(this.id1.getId()).size());
+        Assert.assertEquals(1, this.entriesList.getEntries(this.id3.getId()).size());
         Assert.assertEquals(entry3, this.entriesList.getEntry(this.id3));
     }
 

@@ -186,4 +186,12 @@ public class LastModifiedContentIdMap
         this.storeContentIdMap();
         
     }
+    
+    public void removeAll() throws XWootException
+    {
+        this.loadContentIdMap();
+        this.getContentIdMap().clear();
+        this.storeContentIdMap();
+        
+    }
 }

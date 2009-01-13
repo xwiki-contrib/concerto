@@ -281,7 +281,7 @@ public class XWoot implements XWootAPI
                     for (PAGEMDTABLE pageMd : PAGEMDTABLE.values()) {
                         Value v = null;
                         try {
-                            v = this.tre.getValue(new XWootObjectIdentifier(pageName, String.valueOf(pageMd)));
+                            v = this.tre.getValue(new XWootObjectIdentifier(pageName+"."+String.valueOf(pageMd)));
                         } catch (ThomasRuleEngineException e) {
                             this.logger.error("Problem when getting tre value for page : " + pageName + "\n", e);
                         }
@@ -525,10 +525,10 @@ public class XWoot implements XWootAPI
                     Value val = e.getValue();
                     if (val != null) {
                         if (val instanceof PageFieldValue) {
-                            fields.put(((XWootObjectIdentifier) e.getId()).getMetaDataId(),
+                            fields.put(((XWootObjectIdentifier) e.getId()).getId(),
                                 (String) ((PageFieldValue) e.getValue()).get());
                             this.logger.debug(this.siteId + " : set field -- "
-                                + ((XWootObjectIdentifier) e.getId()).getMetaDataId() + ","
+                                + ((XWootObjectIdentifier) e.getId()).getId() + ","
                                 + ((PageFieldValue) e.getValue()).get());
                         } else if (val instanceof CommentValue) {
                             comments.add((Map) ((CommentValue) e.getValue()).get());
@@ -701,7 +701,7 @@ public class XWoot implements XWootAPI
                     ThomasRuleOp op = null;
                     try {
                         op =
-                            this.tre.getOp(new XWootObjectIdentifier(pageName, pageMd.toString()), new PageFieldValue(
+                            this.tre.getOp(new XWootObjectIdentifier(pageName+"."+pageMd.toString()), new PageFieldValue(
                                 value));
                         if (op != null) {
                             this.tre.applyOp(op);
