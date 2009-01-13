@@ -61,7 +61,7 @@
 						<!--
 							Exclude tests that require an instance of XWoot running.
 						-->
-						<exclude>**/XWootContentProviderTest.java</exclude>
+						<exclude>**/*.java</exclude>
 					</excludes>
 				</configuration>
 			</plugin>
@@ -73,6 +73,8 @@
 					<skip>true</skip>
 				</configuration>
 			</plugin>
+
+			
 
 		</plugins>
 
