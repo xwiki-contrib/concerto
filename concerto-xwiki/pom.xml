@@ -25,9 +25,9 @@
     <platform.tool.jetty.version>1.10</platform.tool.jetty.version>
     <platform.tool.packager.version>1.10</platform.tool.packager.version>
     <platform.tool.test.version>1.11</platform.tool.test.version>
-    <platform.core.version>1.5.2</platform.core.version>
-    <platform.web.version>1.5.2</platform.web.version>
-    <product.enterprise.version>1.5.2</product.enterprise.version>
+    <platform.core.version>1.8-SNAPSHOT</platform.core.version>
+    <platform.web.version>1.8-SNAPSHOT</platform.web.version>
+    <product.enterprise.version>1.8-SNAPSHOT</product.enterprise.version>
   </properties>
   <build>
     <extensions>
