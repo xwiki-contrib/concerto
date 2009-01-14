@@ -493,9 +493,13 @@ public class XWootContentProvider implements XWootContentProviderInterface
                 List<XWikiObjectSummary> xwikiObjectSummaries =
                     rpc.getObjects(xwootId.getPageId(), xwootId.getVersion(), xwootId.getMinorVersion());
                 for (XWikiObjectSummary xwikiObjectSummary : xwikiObjectSummaries) {
+                    /* In order to get an object with a guid at a given version we need to use XWiki Extended Ids */
+                    XWikiExtendedId extendedId = new XWikiExtendedId(xwootId.getPageId());
+                    extendedId.setParameter(XWikiExtendedId.VERSION_PARAMETER, String.format("%d", xwootId.getVersion()));
+                    extendedId.setParameter(XWikiExtendedId.MINOR_VERSION_PARAMETER, String.format("%d", xwootId.getMinorVersion()));
+                    
                     XWikiObject xwikiObject =
-                        rpc.getObject(xwootId.getPageId(), xwikiObjectSummary.getGuid(), xwootId.getVersion(), xwootId
-                            .getMinorVersion());
+                        rpc.getObject(extendedId.toString(), xwikiObjectSummary.getGuid());
 
                     XWikiObject previousXWikiObject = null;
 
@@ -504,9 +508,13 @@ public class XWootContentProvider implements XWootContentProviderInterface
                      * doesn't exist.
                      */
                     try {
+                        /* In order to get an object with a guid at a given version we need to use XWiki Extended Ids */
+                        extendedId = new XWikiExtendedId(previousModification.getPageId());
+                        extendedId.setParameter(XWikiExtendedId.VERSION_PARAMETER, String.format("%d", previousModification.getVersion()));
+                        extendedId.setParameter(XWikiExtendedId.MINOR_VERSION_PARAMETER, String.format("%d", previousModification.getMinorVersion()));
+                        
                         previousXWikiObject =
-                            rpc.getObject(previousModification.getPageId(), xwikiObjectSummary.getGuid(),
-                                previousModification.getVersion(), previousModification.getMinorVersion());
+                            rpc.getObject(extendedId.toString(), xwikiObjectSummary.getGuid());
                     } catch (Exception e) {
                     }
 
@@ -620,6 +628,29 @@ public class XWootContentProvider implements XWootContentProviderInterface
     public XWikiXmlRpcClient getRpc()
     {
         return rpc;
+    }
+
+    public void dumpDbLines(String pageId)
+    {
+        try {
+            System.out.format("PageId: %s\n", pageId);
+            System.out.format("-----------------------------------------\n");
+            PreparedStatement ps =
+                connection.prepareStatement("SELECT * FROM modifications WHERE pageId=? ORDER by timestamp DESC");
+            ps.setString(1, pageId);
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                System.out.format("%-30s\t| %d\t| %d.%d\t| %d\n", rs.getString(1), rs.getLong(2), rs.getInt(3), rs
+                    .getInt(4), rs.getShort(5));
+            }
+
+            ps.close();
+            System.out.format("-----------------------------------------\n");
+        } catch (SQLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     public void dumpDbLines(String message, int n)

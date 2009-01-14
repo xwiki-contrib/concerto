@@ -8,7 +8,7 @@ public abstract class XWootContentProviderFactory
             if (endpoint==null || endpoint.equals("")){
                 return new MockXWootContentProvider();
             }
-            return new MockXWootContentProvider();//XWootContentProvider(endpoint);
+            return new XWootContentProvider(endpoint, true);
         } catch (Exception e) {
             throw new XWootContentProviderException("Problem with XWoot content provider factory", e);
         }
