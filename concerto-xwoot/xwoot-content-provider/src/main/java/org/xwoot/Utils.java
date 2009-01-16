@@ -204,6 +204,17 @@ public class Utils
         xwikiObject.setPageId(object.getPageId());
 
         /*
+         * By convention the version 0 means that the object is newly created so adjust the version to 1 if it's the
+         * case
+         */
+        if (object.getPageVersion() == 0) {
+            xwikiObject.setPageVersion(1);
+        } else {
+            xwikiObject.setPageVersion(object.getPageVersion());
+        }
+        xwikiObject.setPageMinorVersion(object.getPageMinorVersion());
+
+        /*
          * If the object is cumulative then we use the guid to reference it. Otherwise the XWootObject guid is in the
          * form PageId:ClassName[ObjectNumber]. In this case we parse this guid and fill the relevant fields of the
          * final XWikiObject.
