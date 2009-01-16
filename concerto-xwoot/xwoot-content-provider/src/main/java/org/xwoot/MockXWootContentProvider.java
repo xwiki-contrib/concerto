@@ -121,9 +121,9 @@ public class MockXWootContentProvider implements XWootContentProviderInterface
     }
 
     public void clearAllModifications() throws XWootContentProviderException
-    {   
+    {
         return;
-        //TODO
-        
+        // TODO
+
     }
 }

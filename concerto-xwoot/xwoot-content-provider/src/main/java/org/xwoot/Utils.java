@@ -39,7 +39,7 @@ public class Utils
         field = new XWootObjectField("content", page.getContent(), true);
         fields.add(field);
 
-        field = new XWootObjectField("title", page.getTitle(), true);
+        field = new XWootObjectField("title", page.getTitle(), false);
         fields.add(field);
 
         field = new XWootObjectField("parentId", page.getParentId(), false);
@@ -164,10 +164,16 @@ public class Utils
         xwikiPage.setVersion(object.getPageVersion());
         xwikiPage.setMinorVersion(object.getPageMinorVersion());
 
-        String value = (String) object.getFieldValue("title");
-        xwikiPage.setTitle(value != null ? value : "");
+        /*
+         * String value = (String) object.getFieldValue("title"); xwikiPage.setTitle(value != null ? value : "");
+         */
+        /*
+         * Ignore the title field. We cannot change the title through the store function because it would imply a
+         * rename, due to the Confluence semantics of the store operation. A dedicated API will be needed here
+         */
+        xwikiPage.setTitle("");
 
-        value = (String) object.getFieldValue("parentId");
+        String value = (String) object.getFieldValue("parentId");
         xwikiPage.setParentId(value != null ? value : "");
 
         value = (String) object.getFieldValue("content");

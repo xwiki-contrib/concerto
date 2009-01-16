@@ -52,7 +52,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
 
     private Connection connection;
 
-    private String endpoint;       
+    private String endpoint;
 
     /**
      * Constructor.
@@ -69,12 +69,12 @@ public class XWootContentProvider implements XWootContentProviderInterface
     {
         this(endpoint, dbName, false);
     }
-    
+
     public XWootContentProvider(String endpoint, boolean recreateDB) throws XWootContentProviderException
     {
         this(endpoint, DB_NAME, recreateDB);
     }
-    
+
     /**
      * Constructor.
      * 
@@ -82,7 +82,8 @@ public class XWootContentProvider implements XWootContentProviderInterface
      * @param createDB If true the modifications DB is recreated (removing the previous one if it existed)
      * @throws XWootContentProviderException
      */
-    public XWootContentProvider(String endpoint, String dbName, boolean recreateDB) throws XWootContentProviderException
+    public XWootContentProvider(String endpoint, String dbName, boolean recreateDB)
+        throws XWootContentProviderException
     {
         try {
             rpc = null;
@@ -102,8 +103,8 @@ public class XWootContentProvider implements XWootContentProviderInterface
      * @throws ClassNotFoundException
      * @throws SQLException
      */
-    private void init(String dbName, boolean createDB) throws InstantiationException, IllegalAccessException, ClassNotFoundException,
-        SQLException
+    private void init(String dbName, boolean createDB) throws InstantiationException, IllegalAccessException,
+        ClassNotFoundException, SQLException
     {
         Class.forName(DB_DRIVER).newInstance();
         connection = DriverManager.getConnection(String.format("%s%s;create=true", DB_PROTOCOL, dbName));
@@ -124,6 +125,13 @@ public class XWootContentProvider implements XWootContentProviderInterface
         }
 
         try {
+            /*
+             * Note: Here we set a UNIQUE(pageId, timestamp) constraint. However the the resolution of a page
+             * modification date is about the order of the seconds. So if a client stores several time the same page one
+             * after another on a very fast connection (e.g., on a local server) in less than a second, we could end up
+             * with duplicates because these pages will have the same timestamp. In a real scenarion this should almost
+             * never happen.
+             */
             s
                 .execute("CREATE TABLE modifications (pageId VARCHAR(64), timestamp BIGINT, version INT, minorVersion INT, cleared SMALLINT DEFAULT 0, PRIMARY KEY(pageId, timestamp, version, minorVersion), UNIQUE(pageId, timestamp))");
 
@@ -334,7 +342,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
 
             while (true) {
                 List<XWikiPageHistorySummary> xphsList =
-                    rpc.getModifiedPagesHistory(new Date(maxTimestamp), MODIFICATION_RESULTS_PER_CALL, start, true);                
+                    rpc.getModifiedPagesHistory(new Date(maxTimestamp), MODIFICATION_RESULTS_PER_CALL, start, true);
 
                 for (XWikiPageHistorySummary xphs : xphsList) {
                     if (!XWootContentProviderConfiguration.getDefault().isIgnored(xphs.getId())) {
@@ -347,10 +355,10 @@ public class XWootContentProvider implements XWootContentProviderInterface
                             ps.executeUpdate();
                         } catch (SQLException e) {
                             /* Ignore duplicated entries that we receive */
-                            if (e.getErrorCode() != 30000) {                                
+                            if (e.getErrorCode() != 30000) {
                                 throw e;
-                            }                          
-                            
+                            }
+
                             duplicatedEntries++;
                         }
 
@@ -745,7 +753,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
             ps.executeUpdate();
 
             ps.close();
-        } catch (Exception e) {       
+        } catch (Exception e) {
             // throw new XWootContentProviderException(e);
             return false;
         }
@@ -763,22 +771,23 @@ public class XWootContentProvider implements XWootContentProviderInterface
         return rpc;
     }
 
-    public List<XWootId> getXWootIdsFor(String pageId) throws SQLException {
-        List<XWootId> result = new ArrayList<XWootId>();        
-        
+    public List<XWootId> getXWootIdsFor(String pageId) throws SQLException
+    {
+        List<XWootId> result = new ArrayList<XWootId>();
+
         PreparedStatement ps =
             connection.prepareStatement("SELECT * FROM modifications WHERE pageId=? ORDER by timestamp DESC");
         ps.setString(1, pageId);
         ResultSet rs = ps.executeQuery();
-        
-        while(rs.next()) {
+
+        while (rs.next()) {
             XWootId xwootId = new XWootId(rs.getString(1), rs.getLong(2), rs.getInt(3), rs.getInt(4));
             result.add(xwootId);
         }
-        
-        return result;                
+
+        return result;
     }
-    
+
     public void dumpDbLines(String pageId)
     {
         try {

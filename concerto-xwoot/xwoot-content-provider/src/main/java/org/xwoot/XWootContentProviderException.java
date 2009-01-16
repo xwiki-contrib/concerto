@@ -13,7 +13,7 @@ public class XWootContentProviderException extends Exception
     {
         super(t);
     }
-    
+
     public XWootContentProviderException(String arg0, Throwable t)
     {
         super(arg0, t);

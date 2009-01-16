@@ -1,11 +1,12 @@
 package org.xwoot;
 
 public abstract class XWootContentProviderFactory
-{ 
-    public static XWootContentProviderInterface getXWootContentProvider(String endpoint, String dbName, boolean reInitialize) throws XWootContentProviderException
+{
+    public static XWootContentProviderInterface getXWootContentProvider(String endpoint, String dbName,
+        boolean reInitialize) throws XWootContentProviderException
     {
         try {
-            if (endpoint==null || endpoint.equals("")){
+            if (endpoint == null || endpoint.equals("")) {
                 return new MockXWootContentProvider();
             }
             return new XWootContentProvider(endpoint, dbName, reInitialize);
