@@ -607,13 +607,12 @@ public class XWootContentProvider implements XWootContentProviderInterface
                 for (XWikiObjectSummary xwikiObjectSummary : xwikiObjectSummaries) {
                     /* In order to get an object with a guid at a given version we need to use XWiki Extended Ids */
                     XWikiExtendedId extendedId = new XWikiExtendedId(xwootId.getPageId());
-                    extendedId.setParameter(XWikiExtendedId.VERSION_PARAMETER, String.format("%d",
-                        xwootId.getVersion()));
-                    extendedId.setParameter(XWikiExtendedId.MINOR_VERSION_PARAMETER, String.format("%d",
-                        xwootId.getMinorVersion()));                    
-                    
-                    XWikiObject xwikiObject =
-                        rpc.getObject(extendedId.toString(), xwikiObjectSummary.getGuid());
+                    extendedId.setParameter(XWikiExtendedId.VERSION_PARAMETER, String
+                        .format("%d", xwootId.getVersion()));
+                    extendedId.setParameter(XWikiExtendedId.MINOR_VERSION_PARAMETER, String.format("%d", xwootId
+                        .getMinorVersion()));
+
+                    XWikiObject xwikiObject = rpc.getObject(extendedId.toString(), xwikiObjectSummary.getGuid());
                     object = Utils.xwikiObjectToXWootObject(xwikiObject, true);
                     result.add(object);
                 }
@@ -716,21 +715,10 @@ public class XWootContentProvider implements XWootContentProviderInterface
             }
 
             /* Retrieve the page this object was stored to in order to get additional information like the timestamp. */
-            XWikiPage xwikiPage =
+            XWikiPage page =
                 rpc.getPage(xwikiObject.getPageId(), xwikiObject.getPageVersion(), xwikiObject.getPageMinorVersion());
 
-            /* Mark this page as cleared so the next time it will not be returned in the modification list */
-            PreparedStatement ps = connection.prepareStatement("INSERT INTO modifications VALUES (?, ?, ?, ?, 1)");
-
-            XWikiExtendedId extendedId = new XWikiExtendedId(xwikiPage.getId());
-
-            ps.setString(1, extendedId.getBasePageId());
-            ps.setLong(2, xwikiPage.getModified().getTime());
-            ps.setInt(3, xwikiPage.getVersion());
-            ps.setInt(4, xwikiPage.getMinorVersion());
-            ps.executeUpdate();
-
-            ps.close();
+            clearOrInsert(page.getId(), page.getModified().getTime(), page.getVersion(), page.getMinorVersion());
         } catch (Exception e) {
             // throw new XWootContentProviderException(e);
             return false;
@@ -750,22 +738,54 @@ public class XWootContentProvider implements XWootContentProviderInterface
                 return false;
             }
 
-            /* Mark this page as cleared so the next time it will not be returned in the modification list */
-            PreparedStatement ps = connection.prepareStatement("INSERT INTO modifications VALUES (?, ?, ?, ?, 1)");
-
-            ps.setString(1, page.getId());
-            ps.setLong(2, page.getModified().getTime());
-            ps.setInt(3, page.getVersion());
-            ps.setInt(4, page.getMinorVersion());
-            ps.executeUpdate();
-
-            ps.close();
+            clearOrInsert(page.getId(), page.getModified().getTime(), page.getVersion(), page.getMinorVersion());
         } catch (Exception e) {
             // throw new XWootContentProviderException(e);
+            e.printStackTrace();
             return false;
         }
 
         return true;
+    }
+
+    private void clearOrInsert(String pageId, long timestamp, int version, int minorVersion)
+        throws XWootContentProviderException
+    {
+        try {
+            /* Try to clear the line if it exists */
+            PreparedStatement ps =
+                connection.prepareStatement("UPDATE modifications SET cleared=1 WHERE pageId=? AND timestamp=?");
+            ps.setString(1, pageId);
+            ps.setLong(2, timestamp);
+
+            int rowsUpdated = ps.executeUpdate();
+
+            ps.close();
+
+            if (rowsUpdated > 0) {
+                logger.info(String.format("%s at %s (%d) cleared. %d rows updated", pageId, new Date(timestamp),
+                    timestamp, rowsUpdated));
+                return;
+            }
+
+            /*
+             * If the entry doesn't exist then insert it and mark it as cleared so the next time it will not be returned
+             * in the modification list
+             */
+            ps = connection.prepareStatement("INSERT INTO modifications VALUES (?, ?, ?, ?, 1)");
+
+            ps.setString(1, pageId);
+            ps.setLong(2, timestamp);
+            ps.setInt(3, version);
+            ps.setInt(4, minorVersion);
+            ps.executeUpdate();
+
+            ps.close();
+
+            logger.info(String.format("%s at %s (%d) inserted and cleared.", pageId, new Date(timestamp), timestamp));
+        } catch (SQLException e) {
+            throw new XWootContentProviderException(e);
+        }
     }
 
     /**
