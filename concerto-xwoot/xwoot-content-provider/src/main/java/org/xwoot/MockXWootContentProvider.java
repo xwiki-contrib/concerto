@@ -108,7 +108,7 @@ public class MockXWootContentProvider implements XWootContentProviderInterface
         this.list.put(id, current);
     }
 
-    public XWootId store(XWootObject o)
+    public XWootId store(XWootObject o, XWootId versionAdjustement)
     {        
         for (Iterator i = this.list.keySet().iterator(); i.hasNext();) {
             XWootId id = (XWootId) i.next();

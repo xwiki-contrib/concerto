@@ -82,6 +82,6 @@ public interface XWootContentProviderInterface
      *         modification detected.
      * @throws XWootContentProviderException
      */
-    XWootId store(XWootObject object) throws XWootContentProviderException;
+    XWootId store(XWootObject object, XWootId versionAdjustement) throws XWootContentProviderException;
 
 }

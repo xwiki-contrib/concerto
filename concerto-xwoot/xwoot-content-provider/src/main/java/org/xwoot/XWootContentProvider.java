@@ -691,23 +691,28 @@ public class XWootContentProvider implements XWootContentProviderInterface
      *         modification detected.
      * @throws XWootContentProviderException
      */
-    public XWootId store(XWootObject object) throws XWootContentProviderException
+    public XWootId store(XWootObject object, XWootId versionAdjustment) throws XWootContentProviderException
     {
         String namespace = object.getGuid().split(":")[0];
 
         if (namespace.equals(Constants.PAGE_NAMESPACE)) {
-            return storeXWikiPage(object);
+            return storeXWikiPage(object, versionAdjustment);
         } else if (namespace.equals(Constants.OBJECT_NAMESPACE)) {
-            return storeXWikiObject(object);
+            return storeXWikiObject(object, versionAdjustment);
         }
 
         throw new IllegalArgumentException(String.format("Invalid namespace %s\n", namespace));
     }
 
-    private XWootId storeXWikiObject(XWootObject object)
+    private XWootId storeXWikiObject(XWootObject object, XWootId versionAdjustment)
     {
         try {
             XWikiObject xwikiObject = Utils.xwootObjectToXWikiObject(object);
+            if(versionAdjustment != null) {
+                xwikiObject.setPageVersion(versionAdjustment.getVersion());
+                xwikiObject.setPageMinorVersion(versionAdjustment.getMinorVersion());
+            }
+            
             xwikiObject = rpc.storeObject(xwikiObject, true);
 
             /* If an empty object is returned then the store failed */
@@ -728,10 +733,15 @@ public class XWootContentProvider implements XWootContentProviderInterface
         }
     }
 
-    private XWootId storeXWikiPage(XWootObject object) throws XWootContentProviderException
+    private XWootId storeXWikiPage(XWootObject object, XWootId versionAdjustement) throws XWootContentProviderException
     {
         try {
             XWikiPage page = Utils.xwootObjectToXWikiPage(object);
+            if(versionAdjustement != null) {
+                page.setVersion(versionAdjustement.getVersion());
+                page.setMinorVersion(versionAdjustement.getMinorVersion());
+            }            
+            
             page = rpc.storePage(page, true);
 
             /* If an empty page is returned then the store failed */
