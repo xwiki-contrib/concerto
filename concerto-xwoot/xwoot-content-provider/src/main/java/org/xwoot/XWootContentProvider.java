@@ -605,8 +605,15 @@ public class XWootContentProvider implements XWootContentProviderInterface
                 List<XWikiObjectSummary> xwikiObjectSummaries =
                     rpc.getObjects(xwootId.getPageId(), xwootId.getVersion(), xwootId.getMinorVersion());
                 for (XWikiObjectSummary xwikiObjectSummary : xwikiObjectSummaries) {
+                    /* In order to get an object with a guid at a given version we need to use XWiki Extended Ids */
+                    XWikiExtendedId extendedId = new XWikiExtendedId(xwootId.getPageId());
+                    extendedId.setParameter(XWikiExtendedId.VERSION_PARAMETER, String.format("%d",
+                        xwootId.getVersion()));
+                    extendedId.setParameter(XWikiExtendedId.MINOR_VERSION_PARAMETER, String.format("%d",
+                        xwootId.getMinorVersion()));                    
+                    
                     XWikiObject xwikiObject =
-                        rpc.getObject(xwikiObjectSummary.getPageId(), xwikiObjectSummary.getGuid());
+                        rpc.getObject(extendedId.toString(), xwikiObjectSummary.getGuid());
                     object = Utils.xwikiObjectToXWootObject(xwikiObject, true);
                     result.add(object);
                 }
