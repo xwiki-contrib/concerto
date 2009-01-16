@@ -113,7 +113,7 @@ public class TempTest extends TestCase
         XWootObject xwootObject = Utils.xwikiPageToXWootObject(page, false);
         xwootObject.setFieldValue("content", content);
 
-        xwc.store(xwootObject);
+        xwc.store(xwootObject, null);
         page = rpc.getPage("Main.WebHome");
         System.out.format("XWiki page stored by XWoot. At version %d.%d\n", page.getVersion(), page.getMinorVersion());
         xwc.dumpDbLines("Right after store", 3);
