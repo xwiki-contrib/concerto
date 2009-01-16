@@ -78,9 +78,10 @@ public interface XWootContentProviderInterface
      * Updates xwiki's data.
      * 
      * @param object : the object to update
-     * @return true if no concurrent modification detected.
+     * @return An XWootId containing the pageId and the new updated version of the page, or null if concurrent
+     *         modification detected.
      * @throws XWootContentProviderException
      */
-    boolean store(XWootObject object) throws XWootContentProviderException;
+    XWootId store(XWootObject object) throws XWootContentProviderException;
 
 }

@@ -214,4 +214,16 @@ public class XWootObject implements Serializable
         return pageMinorVersion;
     }
 
+    public void setPageVersion(Integer pageVersion)
+    {
+        this.pageVersion = pageVersion;
+    }
+
+    public void setPageMinorVersion(Integer pageMinorVersion)
+    {
+        this.pageMinorVersion = pageMinorVersion;
+    }
+    
+    
+
 }

@@ -108,16 +108,15 @@ public class MockXWootContentProvider implements XWootContentProviderInterface
         this.list.put(id, current);
     }
 
-    public boolean store(XWootObject o)
-    {
-        boolean result = true;
-        for (Iterator i = this.list.keySet().iterator(); i.hasNext() && result;) {
+    public XWootId store(XWootObject o)
+    {        
+        for (Iterator i = this.list.keySet().iterator(); i.hasNext();) {
             XWootId id = (XWootId) i.next();
             if (id.getPageId().equals(o.getPageId())) {
-                result = false;
+                return null;
             }
         }
-        return result;
+        return new XWootId(o.getPageId(), 0, o.getPageVersion() + 1, o.getPageMinorVersion());
     }
 
     public void clearAllModifications() throws XWootContentProviderException

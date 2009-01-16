@@ -687,10 +687,11 @@ public class XWootContentProvider implements XWootContentProviderInterface
      * Updates xwiki's data.
      * 
      * @param object : the object to update
-     * @return true if no concurrent modification detected.
+     * @return An XWootId containing the pageId and the new updated version of the page, or null if concurrent
+     *         modification detected.
      * @throws XWootContentProviderException
      */
-    public boolean store(XWootObject object) throws XWootContentProviderException
+    public XWootId store(XWootObject object) throws XWootContentProviderException
     {
         String namespace = object.getGuid().split(":")[0];
 
@@ -703,7 +704,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
         throw new IllegalArgumentException(String.format("Invalid namespace %s\n", namespace));
     }
 
-    private boolean storeXWikiObject(XWootObject object)
+    private XWootId storeXWikiObject(XWootObject object)
     {
         try {
             XWikiObject xwikiObject = Utils.xwootObjectToXWikiObject(object);
@@ -711,7 +712,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
 
             /* If an empty object is returned then the store failed */
             if (xwikiObject.getPageId().equals("")) {
-                return false;
+                return null;
             }
 
             /* Retrieve the page this object was stored to in order to get additional information like the timestamp. */
@@ -719,15 +720,15 @@ public class XWootContentProvider implements XWootContentProviderInterface
                 rpc.getPage(xwikiObject.getPageId(), xwikiObject.getPageVersion(), xwikiObject.getPageMinorVersion());
 
             clearOrInsert(page.getId(), page.getModified().getTime(), page.getVersion(), page.getMinorVersion());
+            
+            return new XWootId(page.getId(), page.getModified().getTime(), page.getVersion(), page.getMinorVersion());
         } catch (Exception e) {
             // throw new XWootContentProviderException(e);
-            return false;
+            return null;
         }
-
-        return true;
     }
 
-    private boolean storeXWikiPage(XWootObject object) throws XWootContentProviderException
+    private XWootId storeXWikiPage(XWootObject object) throws XWootContentProviderException
     {
         try {
             XWikiPage page = Utils.xwootObjectToXWikiPage(object);
@@ -735,17 +736,17 @@ public class XWootContentProvider implements XWootContentProviderInterface
 
             /* If an empty page is returned then the store failed */
             if (page.getId().equals("")) {
-                return false;
+                return null;
             }
 
             clearOrInsert(page.getId(), page.getModified().getTime(), page.getVersion(), page.getMinorVersion());
+            
+            return new XWootId(page.getId(), page.getModified().getTime(), page.getVersion(), page.getMinorVersion());
         } catch (Exception e) {
             // throw new XWootContentProviderException(e);
             e.printStackTrace();
-            return false;
+            return null;
         }
-
-        return true;
     }
 
     private void clearOrInsert(String pageId, long timestamp, int version, int minorVersion)
