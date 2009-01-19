@@ -84,7 +84,7 @@ import org.xwoot.lpbcast.util.NetUtil;
 
 import org.xwoot.thomasRuleEngine.ThomasRuleEngine;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngineException;
-import org.xwoot.thomasRuleEngine.core.Entry;
+import org.xwoot.thomasRuleEngine.core.Value;
 import org.xwoot.thomasRuleEngine.op.ThomasRuleOp;
 
 import org.xwoot.wootEngine.Patch;
@@ -92,7 +92,7 @@ import org.xwoot.wootEngine.WootEngineException;
 import org.xwoot.wootEngine.WootEngine;
 import org.xwoot.wootEngine.core.WootContent;
 import org.xwoot.wootEngine.op.WootOp;
-import org.xwoot.xwootApp.core.LastModifiedContentIdMap;
+import org.xwoot.xwootApp.core.LastPatchAndXWikiXWootId;
 import org.xwoot.xwootApp.core.tre.XWootObjectIdentifier;
 import org.xwoot.xwootApp.core.tre.XWootObjectValue;
 import org.xwoot.xwootUtil.FileUtil;
@@ -136,10 +136,10 @@ public class XWoot2 implements XWootAPI
     private String workingDir;
 
     /**
-     * A content id list. ContentManager adds an id when a content change occurs. (see {@link LastModifiedContentIdMap}
+     * A content id list. ContentManager adds an id when a content change occurs. (see {@link LastPatchAndXWikiXWootId}
      * )
      */
-    private LastModifiedContentIdMap lastModifiedContentIdMap;
+    private LastPatchAndXWikiXWootId lastModifiedContentIdMap;
 
     /**
      * Creates a new XWoot object.
@@ -158,16 +158,16 @@ public class XWoot2 implements XWootAPI
      */
     public XWoot2(XWootContentProviderInterface contentManager, WootEngine wootEngine, LpbCastAPI sender, String workingDir,
         String peerId, Integer siteId, ThomasRuleEngine tre, AntiEntropy ae) throws XWootException
-    {
-        this.lastModifiedContentIdMap = new LastModifiedContentIdMap(workingDir);
+        {
+        this.lastModifiedContentIdMap = new LastPatchAndXWikiXWootId(workingDir);
         this.workingDir = workingDir;
         this.stateDir = workingDir + File.separator + "stateDir";
         this.createWorkingDir();
 
         //String endpoint="http://concerto1:8080/xwiki/xmlrpc";
-       
+
         this.contentManager = contentManager;
-       
+
         //TODO
         this.contentManagerURL = "";
         this.wootEngine = wootEngine;
@@ -183,7 +183,7 @@ public class XWoot2 implements XWootAPI
         if (this.sender.isSenderConnected()) {
             this.sender.disconnectSender();
         }
-    }
+        }
 
     public void clearWorkingDir()
     {
@@ -192,9 +192,9 @@ public class XWoot2 implements XWootAPI
         if (stateDirFile.exists()) {
             FileUtil.deleteDirectory(stateDirFile);
         }
-      
+
     }
-    
+
     public void clearBaseDir() throws XWootException
     {
         File f = new File(this.workingDir);
@@ -303,8 +303,8 @@ public class XWoot2 implements XWootAPI
                 toSend = this.sender.getNewMessage(this.getXWootPeerId(), content, LpbCastAPI.LOG_OBJECT, 0);
 
                 this.logger
-                    .debug(this.siteId
-                        + " : New message -- content : patches : result of diff beetween given log and local log -- Action : LOG_OBJECT -- round : 0");
+                .debug(this.siteId
+                    + " : New message -- content : patches : result of diff beetween given log and local log -- Action : LOG_OBJECT -- round : 0");
                 try {
                     this.sender.sendTo(message.getOriginalPeerId(), toSend);
                 } catch (SenderException e) {
@@ -322,30 +322,33 @@ public class XWoot2 implements XWootAPI
     }
 
     private void treatePatch(Patch patch) throws XWootException
-    {
-        XWootId xWootId =
-            new XWootId(patch.getPageId(), patch.getTimestamp(), patch.getVersion(), patch.getMinorVersion());
+    { 
+        try {
+            if (patch.getMDelements() != null) {
 
-        this.lastModifiedContentIdMap.add(xWootId, patch.getObjectId());
-
-
-        if (patch.getMDelements() != null) {
-            try {
                 for (Object tre_op : patch.getMDelements()) {
                     this.getTre().applyOp((ThomasRuleOp) tre_op);
                 }
-            } catch (ThomasRuleEngineException e) {
-                throw new XWootException("Problem with ThomasRuleEngine");
             }
-        }
 
-        try {
+            XWootId xWootId =this.lastModifiedContentIdMap.getXwikiId(patch.getPageId());
+            if (xWootId==null){
+                xWootId=new XWootId(patch.getPageId(), patch.getTimestamp(), patch.getVersion(), patch.getMinorVersion());
+            }
+            System.out.println("New XWootID in treatePatch : "+xWootId);
+
+            this.lastModifiedContentIdMap.add2PatchIdMap(xWootId, patch.getObjectId());
+
             this.getWootEngine().deliverPatch(patch);
         } catch (WootEngineException e) {
             throw new XWootException("Problem with WootEngine");
+        }catch (ThomasRuleEngineException e) {
+            throw new XWootException("Problem with ThomasRuleEngine");
         }
-       
-        this.synchronizeFromModelToXWiki();
+        
+        this.synchronize();
+        /*this.synchronizeFromXWikiToModel(true);
+        this.synchronizeFromModelToXWiki();*/
     }
 
     private void sendNewPatch(Patch newPatch) throws XWootException
@@ -359,7 +362,7 @@ public class XWoot2 implements XWootAPI
                 // the message must be logged before send it 
                 this.getAntiEntropy().logMessage(message.getId(), message);  
                 this.sender.gossip(message);
-             
+
             } catch (SenderException e) {
                 throw new XWootException("Can't send new Message ", e);
             } catch (AntiEntropyException e) {
@@ -372,25 +375,42 @@ public class XWoot2 implements XWootAPI
     {
         try {
             Set<XWootId> xwootIds = this.contentManager.getModifiedPagesIds();
+            System.out.println(this.siteId+" : xwootIds => "+xwootIds);
 
             while (xwootIds != null && xwootIds.size() > 0) {
                 Object[] objArray=xwootIds.toArray();
                 for (Object o : objArray) {
                     XWootId id=(XWootId)o;
+
+
                     List<XWootObject> objects = this.contentManager.getModifiedEntities(id);
-                    
+                    System.out.println(this.siteId+" - "+id+" : entites => "+this.contentManager.getModifiedEntities(id));
+
                     // need some security : the id is cleared server side but 
                     // all the modifiedEntities are not already consumed...
                     // It's important to remove the id before modifiedEntites treatment. 
-                    this.contentManager.clearModification(id); 
-                    
+                    System.out.println(this.siteId+" : remove in xwiki list : "+id);
+
+                    this.contentManager.clearModification(id);
+                    this.getLastModifiedContentIdMap().add2XWikiIdMap(id.getPageId(), id);
+                    //this.contentManager.clearModification(id);
                     for (XWootObject newObject : objects) {
                         Patch newPatch = this.synchronizeObjectFromXWikiToModel(newObject, id, inCopy);
                         if (inCopy) {
                             this.wootEngine.deliverPatch(newPatch);
+
+                            if (newPatch.getMDelements() != null) {
+                                try {
+                                    for (Object tre_op : newPatch.getMDelements()) {
+                                        this.getTre().applyOp((ThomasRuleOp) tre_op);
+                                    }
+                                } catch (ThomasRuleEngineException e) {
+                                    throw new XWootException("Problem with ThomasRuleEngine");
+                                }
+                            }
                         }                       
                         this.sendNewPatch(newPatch);
-                    }                    
+                    }
                 }
                 xwootIds = this.contentManager.getModifiedPagesIds();
             }
@@ -403,7 +423,7 @@ public class XWoot2 implements XWootAPI
     }
 
     private synchronized Patch synchronizeObjectFromXWikiToModel(XWootObject newObject, XWootId id, boolean inCopy)
-        throws XWootException, WootEngineException
+    throws XWootException, WootEngineException
     {
         List<ThomasRuleOp> treOps = new ArrayList<ThomasRuleOp>();
         String objectId = newObject.getGuid();
@@ -428,7 +448,7 @@ public class XWoot2 implements XWootAPI
                         oldContent = this.getWootEngine().getContentManager().getContent(pageName, objectId, fieldId);
                     }
                     wootOps.addAll(this.synchronizeWithWootEngine(pageName, objectId, fieldId, oldContent, (String) f.getValue(),
-                            inCopy));
+                        inCopy));
                 }
             }
         }
@@ -438,63 +458,85 @@ public class XWoot2 implements XWootAPI
         return newPatch;
     }
 
-    private void synchronizeFromModelToXWiki() throws XWootException
-    {
-        Map<XWootId, Set<String>> currentList = this.lastModifiedContentIdMap.getCurrentMap();
-        for (XWootId xwid : currentList.keySet()) {
-            for (String objectId : currentList.get(xwid)) {
-                XWootObjectValue obj_tre = null;
-                String pageName = xwid.getPageId();
-                XWootObjectIdentifier id_tre = new XWootObjectIdentifier(objectId);
-                try {
-                    obj_tre = (XWootObjectValue) this.tre.getValue(id_tre);
-                    if (obj_tre == null) {
-                        throw new XWootException(
-                            "Problem with last modified content id list -- An id is in the list but not in the Thomas Rule Engine model.");
-                    }
-                    XWootObject xwootObject = (XWootObject) obj_tre.get();
-                    for (XWootObjectField f : xwootObject.getFields()) {
-                        String fieldId = f.getName();
-                        if (f.isWootable()) {
-                            String content =
-                                this.wootEngine.getContentManager().getContent(pageName, objectId, fieldId);
-                            obj_tre.setObjectField(new XWootObjectField(fieldId, content, true));
-                        }
-                    }
-                    this.synchronizeObjectFromModelToXWiki(xwootObject);
-                    this.lastModifiedContentIdMap.remove(xwid,objectId);         
-                } catch (ThomasRuleEngineException e) {
-                    throw new XWootException("Problem with Thomas Rule Engine", e);
-                } catch (WootEngineException e) {
-                    throw new XWootException("Problem with WootEngine", e);
+    private Value loadObjectFromModel(String pageName,String objectId) throws XWootException{
+        XWootObjectValue obj_tre = null;
+        XWootObject result =null;
+        XWootObjectIdentifier id_tre = new XWootObjectIdentifier(objectId);
+        try {
+            obj_tre = (XWootObjectValue) this.tre.getValue(id_tre);
+            if (obj_tre == null) {
+                throw new XWootException(
+                "Problem with last modified content id list -- An id is in the list but not in the Thomas Rule Engine model.");
+            }
+            result = (XWootObject) obj_tre.get();
+            for (XWootObjectField f : result.getFields()) {
+                String fieldId = f.getName();
+                if (f.isWootable()) {
+                    String content =
+                        this.wootEngine.getContentManager().getContent(pageName, objectId, fieldId);
+                    obj_tre.setObjectField(new XWootObjectField(fieldId, content, true));
                 }
             }
-           
+        } catch (WootEngineException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (ThomasRuleEngineException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return obj_tre;
+
+    }
+
+    private void synchronizeFromModelToXWiki() throws XWootException
+    {
+        Map<XWootId, Set<String>> currentList = this.lastModifiedContentIdMap.getCurrentPatchIdMap();
+        for (XWootId xwid : currentList.keySet()) {
+            for (String objectId : currentList.get(xwid)) {
+                Value objectValue=this.loadObjectFromModel(xwid.getPageId(), objectId);
+                XWootObject xwootObject=(XWootObject) objectValue.get();
+                try {
+                    this.synchronizeObjectFromModelToXWiki(xwootObject);
+                    for (XWootObjectField f : xwootObject.getFields()) {
+                        if (f.isWootable()) {
+                            this.getWootEngine().getContentManager().copyWootContent(xwootObject.getPageId(), xwootObject.getGuid(), f.getName());
+                        }
+                    }
+                    System.out.println(this.siteId+" : remove in xwoot2 list : "+xwid);
+                    this.lastModifiedContentIdMap.removePatchId(xwid,objectId);        
+                } catch (WootEngineException e) {
+                    throw new XWootException(e);
+                }
+
+            }
         }
 
     }
 
-    private synchronized void synchronizeObjectFromModelToXWiki(XWootObject o) throws XWootException,
-        WootEngineException
+
+    private synchronized void synchronizeObjectFromModelToXWiki(XWootObject o2) throws XWootException,
+    WootEngineException
     {
         this.logger.info(this.siteId + " : apply content modif");
-
         if (this.isContentManagerConnected()) {
             try {
-                if (!this.contentManager.store(o)) {
-                    this.logger.info(this.siteId + " : some no consummed datas for id : " + o.getPageId() + "."
-                        + o.getGuid());
+                System.out.println("["+o2.getPageVersion()+"."+o2.getPageMinorVersion()+"]");
+                System.out.println(o2);
+               
+                XWootId newXWootId=this.contentManager.store(o2,this.getLastModifiedContentIdMap().getXwikiId(o2.getPageId()));
+                if (newXWootId==null) {
+                    this.logger.info(this.siteId + " : some no consummed datas for id : " + o2.getPageId() + "."
+                        + o2.getGuid());
                     this.synchronizeFromXWikiToModel(true);
-                    this.synchronizeObjectFromModelToXWiki(o);
+
+                    this.synchronizeObjectFromModelToXWiki((XWootObject) loadObjectFromModel(o2.getPageId(), o2.getGuid()).get());
+                }
+                else{
+                    this.getLastModifiedContentIdMap().add2XWikiIdMap(o2.getPageId(), newXWootId);
                 }
             } catch (XWootContentProviderException e) {
                 throw new XWootException(e);
-            }
-
-            for (XWootObjectField f : o.getFields()) {
-                if (f.isWootable()) {
-                    this.getWootEngine().getContentManager().copyWootContent(o.getPageId(), o.getGuid(), f.getName());
-                }
             }
         }
 
@@ -502,7 +544,7 @@ public class XWoot2 implements XWootAPI
 
     private synchronized List<WootOp> synchronizeWithWootEngine(String pageName, String objectId, String fieldId,
         String oldPage, String newPage, boolean inCopy) throws XWootException
-    {
+        {
         BufferedReader oldContent = new BufferedReader(new StringReader(oldPage));
         BufferedReader newContent = new BufferedReader(new StringReader(newPage));
 
@@ -591,7 +633,7 @@ public class XWoot2 implements XWootAPI
         }
 
         return data;
-    }
+        }
 
     private ThomasRuleOp synchronizeWithTRE(XWootObject o) throws XWootException
     {
@@ -605,6 +647,7 @@ public class XWoot2 implements XWootAPI
 
             if (o.isNewlyCreated()) {
                 tre_value.setObject(o);
+
             } else {
                 for (XWootObjectField f : o.getFields()) {
                     tre_value.setObjectField(f);
@@ -632,13 +675,12 @@ public class XWoot2 implements XWootAPI
             return;
         }
         this.logger.info(this.siteId + " : Starting the synchronisation of each managed pages");
-        
-        if (!this.lastModifiedContentIdMap.getCurrentMap().isEmpty()){
-            this.synchronizeFromModelToXWiki();
-        }
-        this.synchronizeFromXWikiToModel(false);
-        this.synchronizeFromModelToXWiki();
+
+        boolean incopy = !this.lastModifiedContentIdMap.getCurrentPatchIdMap().isEmpty();
        
+        this.synchronizeFromXWikiToModel(incopy);
+        this.synchronizeFromModelToXWiki();
+
         this.logger.info(this.siteId + " : Synchronising OK.");
     }
 
@@ -686,7 +728,7 @@ public class XWoot2 implements XWootAPI
         // this.logger.error(this.peerId+" : Problem when clearing sender dir\n",e);
         // throw new XWootException(this.peerId+" : Problem when clearing  sender dir\n",e);
         // }
-       
+
         this.logger.info(this.siteId + " : all datas clears");
         if (!this.isContentManagerConnected()) {
             this.contentManagerConnected = true;
@@ -701,7 +743,7 @@ public class XWoot2 implements XWootAPI
      * @throws XWootException
      */
     private void setState(File s) throws XWootException
-    {
+    { 
         this.logger.debug(this.siteId + " : receive state and apply");
 
         if (s == null) {
@@ -770,7 +812,7 @@ public class XWoot2 implements XWootAPI
         try {
             if (this.isConnectedToP2PNetwork() && this.sender.getNeighborsList().size() > 0) {
                 throw new XWootException(
-                    "Can't initialize woot Storage : neighbors list is not empty (This operation must be done at startup).");
+                "Can't initialize woot Storage : neighbors list is not empty (This operation must be done at startup).");
             }
         } catch (SenderException e) {
             this.logger.error(this.peerId + " : Can't initialize woot Storage : Problem to get neighbors list.\n", e);
@@ -908,7 +950,7 @@ public class XWoot2 implements XWootAPI
             throw new XWootException(this.peerId + " : Problem to get content for antiEntropy \n", e);
         }
         this.logger
-            .debug(this.siteId + " : New message -- content : log patches -- Action : ANTI_ENTROPY -- round : 0");
+        .debug(this.siteId + " : New message -- content : log patches -- Action : ANTI_ENTROPY -- round : 0");
         try {
 
             this.sender.sendTo(neighborURL, message);
@@ -924,13 +966,13 @@ public class XWoot2 implements XWootAPI
             try {
                 this.contentManager.login("Admin", "admin");
             } catch (XWootContentProviderException e) {
-               throw new XWootException("Problem with login",e);
+                throw new XWootException("Problem with login",e);
             }
             if (this.isConnectedToP2PNetwork()) {
-               // this.doAntiEntropyWithAllNeighbors();
+                // this.doAntiEntropyWithAllNeighbors();
             }
             this.contentManagerConnected = true;
-           // this.synchronize();
+            // this.synchronize();
         }
     }
 
@@ -1083,7 +1125,7 @@ public class XWoot2 implements XWootAPI
     /**
      * @return the lastModifiedContentIdMap
      */
-    public LastModifiedContentIdMap getLastModifiedContentIdMap()
+    public LastPatchAndXWikiXWootId getLastModifiedContentIdMap()
     {
         return this.lastModifiedContentIdMap;
     }

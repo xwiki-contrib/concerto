@@ -8,7 +8,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 import org.xwoot.XWootId;
 import org.xwoot.xwootApp.XWootException;
-import org.xwoot.xwootApp.core.LastModifiedContentIdMap;
+import org.xwoot.xwootApp.core.LastPatchAndXWikiXWootId;
 
 /**
  * Test the LastModifiedPageNameList class.
@@ -41,18 +41,18 @@ public class LastModifiedContentIdMapTest extends AbstractXWootTest
     public void pageListTest() throws XWootException
     {
         // page toto have been modified to version => 1.0
-        LastModifiedContentIdMap lmcim = new LastModifiedContentIdMap(WORKINGDIR);
-        lmcim.removeAll();
+        LastPatchAndXWikiXWootId lmcim = new LastPatchAndXWikiXWootId(WORKINGDIR);
+        lmcim.removeAllPatchId();
         XWootId id1 = new XWootId(this.pn1, 10, 1, 0);
         XWootId id2 = new XWootId(this.pn2, 10, 1, 0);
-        lmcim.add(id1, this.cid1);
-        lmcim.add(id1, this.cid2);
-        lmcim.add(id1, this.cid3);
-        lmcim.add(id2, this.cid3);
-        lmcim.add(id2, this.cid3);
-        lmcim.add(id2, this.cid1);
+        lmcim.add2PatchIdMap(id1, this.cid1);
+        lmcim.add2PatchIdMap(id1, this.cid2);
+        lmcim.add2PatchIdMap(id1, this.cid3);
+        lmcim.add2PatchIdMap(id2, this.cid3);
+        lmcim.add2PatchIdMap(id2, this.cid3);
+        lmcim.add2PatchIdMap(id2, this.cid1);
         
-        Map<XWootId, Set<String>> currentMap = lmcim.getCurrentMap();
+        Map<XWootId, Set<String>> currentMap = lmcim.getCurrentPatchIdMap();
 
         Assert.assertTrue(currentMap.containsKey(id1));
         Assert.assertTrue(currentMap.containsKey(id2));
@@ -63,15 +63,15 @@ public class LastModifiedContentIdMapTest extends AbstractXWootTest
         Assert.assertTrue(currentMap.get(id1).contains(this.cid1));
         Assert.assertTrue(currentMap.get(id1).contains(this.cid2));
         Assert.assertTrue(currentMap.get(id1).contains(this.cid3));
-        lmcim.remove(id1,this.cid1);
-        lmcim.remove(id1,this.cid2);
-        lmcim.remove(id1,this.cid3);
-        lmcim.remove(id1,this.cid3);
+        lmcim.removePatchId(id1,this.cid1);
+        lmcim.removePatchId(id1,this.cid2);
+        lmcim.removePatchId(id1,this.cid3);
+        lmcim.removePatchId(id1,this.cid3);
         Assert.assertTrue(currentMap.containsKey(id1));
         Assert.assertTrue(currentMap.containsKey(id2));
         Assert.assertEquals(currentMap.get(id1).size(), 3);
         Assert.assertEquals(currentMap.get(id2).size(), 2);
-        currentMap = lmcim.getCurrentMap();
+        currentMap = lmcim.getCurrentPatchIdMap();
         Assert.assertFalse(currentMap.containsKey(id1));
         Assert.assertTrue(currentMap.containsKey(id2));
         Assert.assertEquals(currentMap.get(id2).size(), 2);
@@ -87,20 +87,20 @@ public class LastModifiedContentIdMapTest extends AbstractXWootTest
     public void concurrencyPageListTest() throws XWootException
     {
         // page toto have been modified to version => 1.0
-        LastModifiedContentIdMap lmcim = new LastModifiedContentIdMap(WORKINGDIR);
-        lmcim.removeAll();
+        LastPatchAndXWikiXWootId lmcim = new LastPatchAndXWikiXWootId(WORKINGDIR);
+        lmcim.removeAllPatchId();
         XWootId id1 = new XWootId(this.pn1, 10, 1, 0);
-        lmcim.add(id1, this.cid1);
-        lmcim.add(id1, this.cid2);
-        lmcim.add(id1, this.cid3);
+        lmcim.add2PatchIdMap(id1, this.cid1);
+        lmcim.add2PatchIdMap(id1, this.cid2);
+        lmcim.add2PatchIdMap(id1, this.cid3);
 
-        Map<XWootId, Set<String>> currentMap = lmcim.getCurrentMap();
+        Map<XWootId, Set<String>> currentMap = lmcim.getCurrentPatchIdMap();
 
         XWootId id2 = new XWootId(this.pn1, 11, 1, 1);
 
-        lmcim.add(id2, this.cid1);
-        lmcim.add(id2, this.cid2);
-        lmcim.add(id2, this.cid3);
+        lmcim.add2PatchIdMap(id2, this.cid1);
+        lmcim.add2PatchIdMap(id2, this.cid2);
+        lmcim.add2PatchIdMap(id2, this.cid3);
 
         Assert.assertTrue(currentMap.containsKey(id1));
         Assert.assertEquals(currentMap.size(), 1);
@@ -109,13 +109,13 @@ public class LastModifiedContentIdMapTest extends AbstractXWootTest
         Assert.assertTrue(currentMap.get(id1).contains(this.cid2));
         Assert.assertTrue(currentMap.get(id1).contains(this.cid3));
         Assert.assertFalse(currentMap.containsKey(id2));
-        lmcim.remove(id1,this.cid1);
-        lmcim.remove(id1,this.cid2);
-        lmcim.remove(id1,this.cid3);
+        lmcim.removePatchId(id1,this.cid1);
+        lmcim.removePatchId(id1,this.cid2);
+        lmcim.removePatchId(id1,this.cid3);
         Assert.assertTrue(currentMap.containsKey(id1));
         Assert.assertEquals(currentMap.get(id1).size(), 3);
         Assert.assertFalse(currentMap.containsKey(id2));
-        currentMap = lmcim.getCurrentMap();
+        currentMap = lmcim.getCurrentPatchIdMap();
         Assert.assertFalse(currentMap.containsKey(id1));
         Assert.assertEquals(currentMap.size(), 1);
         Assert.assertTrue(currentMap.containsKey(id2));

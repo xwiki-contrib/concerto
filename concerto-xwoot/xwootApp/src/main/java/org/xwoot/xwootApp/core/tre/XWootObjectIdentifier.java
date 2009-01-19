@@ -82,7 +82,6 @@ public class XWootObjectIdentifier implements Identifier
         if (!(with instanceof Identifier)) {
             return false;
         }
-        System.out.println(this.id);
         return this.id.equals(((XWootObjectIdentifier) with).getId());
     }
 
@@ -104,7 +103,6 @@ public class XWootObjectIdentifier implements Identifier
     @Override
     public int hashCode()
     {
-        //System.out.println("hashcode id : "+this.id);
         return this.id.hashCode();
     }
 

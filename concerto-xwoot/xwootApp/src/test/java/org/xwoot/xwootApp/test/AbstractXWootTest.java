@@ -185,9 +185,9 @@ public abstract class AbstractXWootTest
         this.xwiki2 = WikiContentManagerFactory.getMockFactory().createWCM();
         this.xwiki3 = WikiContentManagerFactory.getMockFactory().createWCM();
         
-        this.xwiki21 = XWootContentProviderFactory.getXWootContentProvider("http://concerto1:8080/xwiki/xmlrpc");
-        this.xwiki22 = XWootContentProviderFactory.getXWootContentProvider("http://concerto2:8080/xwiki/xmlrpc");
-        this.xwiki23 = XWootContentProviderFactory.getXWootContentProvider("");
+        this.xwiki21 = XWootContentProviderFactory.getXWootContentProvider("http://concerto1:8080/xwiki/xmlrpc","xwoot1",true);
+        this.xwiki22 = XWootContentProviderFactory.getXWootContentProvider("http://concerto2:8080/xwiki/xmlrpc","xwoot2",true);
+        this.xwiki23 = XWootContentProviderFactory.getXWootContentProvider("","xwoot3",true);
 
         this.opClock1 = new Clock(WORKINGDIR + File.separator + "Site1" + File.separator + "WootClock");
         this.opClock2 = new Clock(WORKINGDIR + File.separator + "Site2" + File.separator + "WootClock");

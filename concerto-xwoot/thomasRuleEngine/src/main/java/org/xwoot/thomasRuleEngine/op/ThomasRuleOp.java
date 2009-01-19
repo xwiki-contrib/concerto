@@ -31,7 +31,7 @@ import org.xwoot.thomasRuleEngine.core.Value;
  * Defines the structure of an operation as described in RFC677.
  * 
  * @see <a href="http://tools.ietf.org/html/rfc677">RFC677 - The Maintenance of Duplicate Databases</a>
- * @version $Id:$
+ * @version $Id$
  */
 public interface ThomasRuleOp extends Serializable
 {

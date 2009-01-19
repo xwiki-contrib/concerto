@@ -61,7 +61,7 @@ public class XWootObjectValue implements Value
     /**  */
     private static final long serialVersionUID = 3460912988689095045L;
 
-    private XWootObject value;
+    private Serializable value;
 
     /**
      * Creates a new TagValue object.
@@ -73,17 +73,17 @@ public class XWootObjectValue implements Value
         // void
     }
 
-    public void setObject(XWootObject value)
+    public void setObject(Serializable value)
     {
         this.value = value;
     }
 
     public boolean setObjectField(XWootObjectField value)
     {
-        if (this.value.getFieldValue(value.getName()) == null) {
+        if (((XWootObject) this.value).getFieldValue(value.getName()) == null) {
             return false;
         }
-        this.value.setFieldValue(value.getName(), value.getValue());
+        ((XWootObject) this.value).setFieldValue(value.getName(), value.getValue());
         return true;
     }
 
