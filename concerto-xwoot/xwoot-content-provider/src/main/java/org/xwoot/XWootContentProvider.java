@@ -126,10 +126,10 @@ public class XWootContentProvider implements XWootContentProviderInterface
 
         try {
             /*
-             * Note: Here we set a UNIQUE(pageId, timestamp) constraint. However the the resolution of a page
-             * modification date is about the order of the seconds. So if a client stores several time the same page one
-             * after another on a very fast connection (e.g., on a local server) in less than a second, we could end up
-             * with duplicates because these pages will have the same timestamp. In a real scenarion this should almost
+             * Note: Here we set a UNIQUE(pageId, timestamp) constraint. However the resolution of a page modification
+             * date is about the order of the seconds. So if a client stores several times the same page, one after
+             * another on a very fast connection (e.g., on a local server) and in less than a second, we could end up
+             * with duplicates because these pages will have the same timestamps. In a real scenario this should almost
              * never happen.
              */
             s
@@ -684,11 +684,15 @@ public class XWootContentProvider implements XWootContentProviderInterface
     }
 
     /**
-     * Updates xwiki's data.
+     * Updates XWiki's data.
      * 
      * @param object : the object to update
-     * @return An XWootId containing the pageId and the new updated version of the page, or null if concurrent
-     *         modification detected.
+     * @param versionAdjustement : An XWootId that contains version number information for adjusting the
+     *            page-to-be-sent's version. This is useful because clients (i.e., the synchronizer) can set the
+     *            "last known version number" before trying to store the page.
+     * @return An XWootId containing the pageId and the new updated version of the stored page so that clients are able
+     *         to know what is the version that they have stored on the server, or null if concurrent modification
+     *         detected in the meanwhile.
      * @throws XWootContentProviderException
      */
     public XWootId store(XWootObject object, XWootId versionAdjustment) throws XWootContentProviderException
@@ -708,11 +712,11 @@ public class XWootContentProvider implements XWootContentProviderInterface
     {
         try {
             XWikiObject xwikiObject = Utils.xwootObjectToXWikiObject(object);
-            if(versionAdjustment != null) {
+            if (versionAdjustment != null) {
                 xwikiObject.setPageVersion(versionAdjustment.getVersion());
                 xwikiObject.setPageMinorVersion(versionAdjustment.getMinorVersion());
             }
-            
+
             xwikiObject = rpc.storeObject(xwikiObject, true);
 
             /* If an empty object is returned then the store failed */
@@ -725,7 +729,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
                 rpc.getPage(xwikiObject.getPageId(), xwikiObject.getPageVersion(), xwikiObject.getPageMinorVersion());
 
             clearOrInsert(page.getId(), page.getModified().getTime(), page.getVersion(), page.getMinorVersion());
-            
+
             return new XWootId(page.getId(), page.getModified().getTime(), page.getVersion(), page.getMinorVersion());
         } catch (Exception e) {
             // throw new XWootContentProviderException(e);
@@ -733,15 +737,45 @@ public class XWootContentProvider implements XWootContentProviderInterface
         }
     }
 
+    /**
+     * The store XWikiPage has the following semantics:
+     * <ul>
+     * <li>If the target page doesn't exist then the store succeeds</li>
+     * <li>If the target page already exist then:</li>
+     * <ul>
+     * <li>If version adjustement is null then store fails (This prevents some cases where a page is created before that
+     * the synchronization is completed. The case here is that the synchronizer doesn't have information about the
+     * previous version of a page (version adjustement == null) and it tries to store a page at its first version. But
+     * this version has already been created by somebody else in the meanwhile so, if the store succeeds, this
+     * modification will be overwritten.</li>
+     * <li>If version adjustement is not null then the page to be stored's version is set to the version provided by the
+     * adjustement and the normal store with version check is performed (i.e., the page is stored iff the version of the
+     * sent page matches with the version of the remote page).</li>
+     * </ul>
+     * </ul>
+     * 
+     * @param object
+     * @param versionAdjustement
+     * @return
+     * @throws XWootContentProviderException
+     */
     private XWootId storeXWikiPage(XWootObject object, XWootId versionAdjustement) throws XWootContentProviderException
     {
         try {
             XWikiPage page = Utils.xwootObjectToXWikiPage(object);
-            if(versionAdjustement != null) {
+            if (versionAdjustement != null) {
                 page.setVersion(versionAdjustement.getVersion());
                 page.setMinorVersion(versionAdjustement.getMinorVersion());
-            }            
-            
+            } else {
+                /*
+                 * If the version adjustement is null, we set a fake version 0.1 so that we have the following
+                 * behaviour: 1) If the page doesn't exist it is created. 2) If the page exists the store fails. This is
+                 * needed in order to prevent a case of page removal while synchronising.
+                 */
+                page.setVersion(0);
+                page.setVersion(1);
+            }
+
             page = rpc.storePage(page, true);
 
             /* If an empty page is returned then the store failed */
@@ -750,7 +784,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
             }
 
             clearOrInsert(page.getId(), page.getModified().getTime(), page.getVersion(), page.getMinorVersion());
-            
+
             return new XWootId(page.getId(), page.getModified().getTime(), page.getVersion(), page.getMinorVersion());
         } catch (Exception e) {
             // throw new XWootContentProviderException(e);

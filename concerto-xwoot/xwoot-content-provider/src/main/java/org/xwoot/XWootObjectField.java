@@ -38,7 +38,14 @@ public class XWootObjectField implements Serializable
 
     public XWootObjectField(String name, Serializable value, boolean wootable)
     {
-        this(name, value, value.getClass(), wootable);
+        this.name = name;
+        this.value = value;
+        if (value != null) {
+            this.originalType = value.getClass();
+        } else {
+            this.originalType = null;
+        }
+        this.wootable = wootable;
     }
 
     /**
