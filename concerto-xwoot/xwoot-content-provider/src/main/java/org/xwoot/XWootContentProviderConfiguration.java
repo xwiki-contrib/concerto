@@ -36,6 +36,16 @@ public class XWootContentProviderConfiguration
     {
         if(properties == null) {
             properties = new Properties();
+            InputStream is = XWootContentProviderConfiguration.class.getResourceAsStream(CONFIGURATION_FILE);
+
+            if (is != null) {
+                try {
+                    properties.load(is);
+                    is.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }            
         }        
         
         /* Read ignore list */
