@@ -207,8 +207,15 @@ public class LastPatchAndXWikiXWootId
     public void add2XWikiIdMap(String pageName,XWootId id) throws XWootException
     {
         this.loadXWikiIdMap();  
-        this.getXWikiIdMap().put(pageName, id);
-        this.storeXWikiIdMap();
+        XWootId old_id=this.xwikiIdMap.get(pageName);
+        if (old_id==null 
+            || (old_id.getVersion()<id.getVersion() 
+                || (old_id.getVersion()==id.getVersion() 
+                    && old_id.getMinorVersion()<id.getMinorVersion()))){            
+            this.getXWikiIdMap().put(pageName, id);
+            this.storeXWikiIdMap();
+        }
+       
     }
 
     /**

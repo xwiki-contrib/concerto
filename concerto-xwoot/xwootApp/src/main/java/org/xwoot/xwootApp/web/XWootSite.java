@@ -45,6 +45,10 @@
 package org.xwoot.xwootApp.web;
 
 import org.apache.commons.lang.StringUtils;
+import org.xwoot.XWootContentProvider;
+import org.xwoot.XWootContentProviderException;
+import org.xwoot.XWootContentProviderFactory;
+import org.xwoot.XWootContentProviderInterface;
 import org.xwoot.antiEntropy.AntiEntropy;
 import org.xwoot.antiEntropy.AntiEntropyException;
 import org.xwoot.clockEngine.Clock;
@@ -64,6 +68,7 @@ import org.xwoot.wootEngine.WootEngine;
 import org.xwoot.wootEngine.WootEngineException;
 
 import org.xwoot.xwootApp.XWoot;
+import org.xwoot.xwootApp.XWoot2;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.XWootException;
 
@@ -185,9 +190,10 @@ public class XWootSite
      * @throws AntiEntropyException 
      * @throws XWootException 
      * @throws ThomasRuleEngineException 
+     * @throws XWootContentProviderException 
      */
     public void init(int siteId, String peerId, String workingDirPath, int messagesRound, /* int logDelay, */
-    int maxNeighbors, String url, String login, String pwd) throws RuntimeException, ClockException, WikiContentManagerException, WootEngineException, HttpServletLpbCastException, AntiEntropyException, XWootException, ThomasRuleEngineException
+    int maxNeighbors, String url, String login, String pwd) throws RuntimeException, ClockException, WikiContentManagerException, WootEngineException, HttpServletLpbCastException, AntiEntropyException, XWootException, ThomasRuleEngineException, XWootContentProviderException
     {
 
         File pbCastDir = new File(workingDirPath + File.separator + PBCAST_DIR_NAME);
@@ -222,7 +228,8 @@ public class XWootSite
         }
 
         Clock wootEngineClock = new Clock(wootEngineClockDir.toString());
-        WikiContentManager wiki = WikiContentManagerFactory.getSwizzleFactory().createWCM(url, login, pwd);
+        XWootContentProviderInterface xwiki=XWootContentProviderFactory.getXWootContentProvider(url,String.valueOf(siteId),true);
+        //WikiContentManager wiki = WikiContentManagerFactory.getSwizzleFactory().createWCM(url, login, pwd);
         WootEngine wootEngine = new WootEngine(siteId, wootEngineDir.toString(), wootEngineClock);
         HttpServletLpbCast lpbCast =
             new HttpServletLpbCast(pbCastDir.toString(), messagesRound, maxNeighbors, Integer.valueOf(siteId));
@@ -231,7 +238,7 @@ public class XWootSite
 
         AntiEntropy ae = new AntiEntropy(aeDir.toString());
         this.xWootEngine =
-            new XWoot(wiki, wootEngine, lpbCast, xwootDir.toString(), peerId, Integer.valueOf(siteId), tre, ae);
+            new XWoot2(xwiki, wootEngine, lpbCast, xwootDir.toString(), peerId, Integer.valueOf(siteId), tre, ae);
 
         this.started = true;
         System.out.println("Site " + this.xWootEngine.getXWootPeerId() + " initialisation");

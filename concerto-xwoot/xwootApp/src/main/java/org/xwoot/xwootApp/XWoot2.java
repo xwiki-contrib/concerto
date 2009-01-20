@@ -335,7 +335,7 @@ public class XWoot2 implements XWootAPI
             if (xWootId==null){
                 xWootId=new XWootId(patch.getPageId(), patch.getTimestamp(), patch.getVersion(), patch.getMinorVersion());
             }
-            System.out.println("New XWootID in treatePatch : "+xWootId);
+            System.out.println(this.siteId+" : New XWootID in treatePatch : "+xWootId);
 
             this.lastModifiedContentIdMap.add2PatchIdMap(xWootId, patch.getObjectId());
 
@@ -370,9 +370,11 @@ public class XWoot2 implements XWootAPI
             }
         }
     }
-
+    
     private synchronized void synchronizeFromXWikiToModel(boolean inCopy) throws XWootException
     {
+        this.logger.info(this.siteId + " : synchronize From XWiki To Model ("+inCopy+")");
+        
         try {
             Set<XWootId> xwootIds = this.contentManager.getModifiedPagesIds();
             System.out.println(this.siteId+" : xwootIds => "+xwootIds);
@@ -392,6 +394,9 @@ public class XWoot2 implements XWootAPI
                     System.out.println(this.siteId+" : remove in xwiki list : "+id);
 
                     this.contentManager.clearModification(id);
+                    
+                    System.out.println(this.siteId+" : save version : "+id.getPageId()+" -> "+id);
+                   
                     this.getLastModifiedContentIdMap().add2XWikiIdMap(id.getPageId(), id);
                     //this.contentManager.clearModification(id);
                     for (XWootObject newObject : objects) {
@@ -420,11 +425,13 @@ public class XWoot2 implements XWootAPI
         } catch (WootEngineException e) {
             throw new XWootException(e);
         }
+        this.logger.info(this.siteId + " end of synchronize From XWiki To Model ("+inCopy+")");
     }
 
     private synchronized Patch synchronizeObjectFromXWikiToModel(XWootObject newObject, XWootId id, boolean inCopy)
     throws XWootException, WootEngineException
     {
+        this.logger.info(this.siteId + " : synchronize Object From XWiki To Model -- id : "+id+" -- Object : "+newObject);
         List<ThomasRuleOp> treOps = new ArrayList<ThomasRuleOp>();
         String objectId = newObject.getGuid();
         // TRE content
@@ -455,10 +462,12 @@ public class XWoot2 implements XWootAPI
         Patch newPatch =
             new Patch(wootOps, treOps, id.getPageId(), objectId, id.getTimestamp(), id.getVersion(), id
                 .getMinorVersion());
+        this.logger.info(this.siteId + " end of synchronize Object From XWiki To Model -- return : "+newPatch);
         return newPatch;
     }
 
     private Value loadObjectFromModel(String pageName,String objectId) throws XWootException{
+        this.logger.info(this.siteId + " : load Object From Model -- pagename : "+pageName+" -- id : "+objectId );
         XWootObjectValue obj_tre = null;
         XWootObject result =null;
         XWootObjectIdentifier id_tre = new XWootObjectIdentifier(objectId);
@@ -484,14 +493,16 @@ public class XWoot2 implements XWootAPI
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
+        this.logger.info(this.siteId + " : end of load Object From Model -- return : "+obj_tre); 
         return obj_tre;
 
     }
 
     private void synchronizeFromModelToXWiki() throws XWootException
     {
+        this.logger.info(this.siteId + " : synchronize From Model To XWiki");
         Map<XWootId, Set<String>> currentList = this.lastModifiedContentIdMap.getCurrentPatchIdMap();
+        System.out.println(this.siteId+" : current Pach id list : "+currentList);
         for (XWootId xwid : currentList.keySet()) {
             for (String objectId : currentList.get(xwid)) {
                 Value objectValue=this.loadObjectFromModel(xwid.getPageId(), objectId);
@@ -504,41 +515,44 @@ public class XWoot2 implements XWootAPI
                         }
                     }
                     System.out.println(this.siteId+" : remove in xwoot2 list : "+xwid);
-                    this.lastModifiedContentIdMap.removePatchId(xwid,objectId);        
+                    this.lastModifiedContentIdMap.removePatchId(xwid,objectId);       
                 } catch (WootEngineException e) {
                     throw new XWootException(e);
                 }
 
             }
         }
+        
+        this.logger.info(this.siteId + " end of synchronize From Model To XWiki");
 
     }
 
 
-    private synchronized void synchronizeObjectFromModelToXWiki(XWootObject o2) throws XWootException,
-    WootEngineException
+    private synchronized void synchronizeObjectFromModelToXWiki(XWootObject o2) throws XWootException
     {
-        this.logger.info(this.siteId + " : apply content modif");
+        this.logger.info(this.siteId + " : synchronize Object From Model To XWiki -- object : "+o2);
         if (this.isContentManagerConnected()) {
             try {
-                System.out.println("["+o2.getPageVersion()+"."+o2.getPageMinorVersion()+"]");
-                System.out.println(o2);
-               
-                XWootId newXWootId=this.contentManager.store(o2,this.getLastModifiedContentIdMap().getXwikiId(o2.getPageId()));
-                if (newXWootId==null) {
+
+                XWootId id=this.getLastModifiedContentIdMap().getXwikiId(o2.getPageId());
+                System.out.println(this.siteId+" last xwiki id saved : "+id +" -- try to store ...");
+                
+                XWootId newXWootId=this.contentManager.store(o2,id);
+                System.out.println(this.siteId+" result of store : "+newXWootId);
+                if (newXWootId!=null) {
+                    this.getLastModifiedContentIdMap().add2XWikiIdMap(o2.getPageId(), newXWootId);
+                    System.out.println(this.siteId+" save xwiki id : "+newXWootId);
+                    System.out.println("verif : "+ this.getLastModifiedContentIdMap().getXwikiId(o2.getPageId()));
+                }else{
                     this.logger.info(this.siteId + " : some no consummed datas for id : " + o2.getPageId() + "."
                         + o2.getGuid());
-                    this.synchronizeFromXWikiToModel(true);
-
-                    this.synchronizeObjectFromModelToXWiki((XWootObject) loadObjectFromModel(o2.getPageId(), o2.getGuid()).get());
-                }
-                else{
-                    this.getLastModifiedContentIdMap().add2XWikiIdMap(o2.getPageId(), newXWootId);
+                    this.synchronize();
                 }
             } catch (XWootContentProviderException e) {
                 throw new XWootException(e);
             }
         }
+        this.logger.info(this.siteId + " end of synchronize Object From Model To XWiki");
 
     }
 
@@ -637,7 +651,7 @@ public class XWoot2 implements XWootAPI
 
     private ThomasRuleOp synchronizeWithTRE(XWootObject o) throws XWootException
     {
-        XWootObjectIdentifier tre_id = new XWootObjectIdentifier(o.getGuid());
+        XWootObjectIdentifier tre_id = new XWootObjectIdentifier(o.getGuid()); 
         try {
             XWootObjectValue tre_value = (XWootObjectValue) this.tre.getValue(tre_id);
 
@@ -645,7 +659,7 @@ public class XWoot2 implements XWootAPI
                 tre_value = new XWootObjectValue();
             }
 
-            if (o.isNewlyCreated()) {
+            if (tre_value.get()==null) {
                 tre_value.setObject(o);
 
             } else {
@@ -675,11 +689,17 @@ public class XWoot2 implements XWootAPI
             return;
         }
         this.logger.info(this.siteId + " : Starting the synchronisation of each managed pages");
-
-        boolean incopy = !this.lastModifiedContentIdMap.getCurrentPatchIdMap().isEmpty();
        
-        this.synchronizeFromXWikiToModel(incopy);
-        this.synchronizeFromModelToXWiki();
+        try {
+            if (!this.getContentManager().getModifiedPagesIds().isEmpty()){
+                this.synchronizeFromXWikiToModel(!this.lastModifiedContentIdMap.getCurrentPatchIdMap().isEmpty());
+            }
+        } catch (XWootContentProviderException e) {
+            throw new XWootException(e);
+        }
+        if (!this.getLastModifiedContentIdMap().getCurrentPatchIdMap().isEmpty()){
+            this.synchronizeFromModelToXWiki();
+        }
 
         this.logger.info(this.siteId + " : Synchronising OK.");
     }
@@ -731,7 +751,7 @@ public class XWoot2 implements XWootAPI
 
         this.logger.info(this.siteId + " : all datas clears");
         if (!this.isContentManagerConnected()) {
-            this.contentManagerConnected = true;
+            this.connectToContentManager();
         }
         return true;
     }
@@ -964,15 +984,12 @@ public class XWoot2 implements XWootAPI
     {
         if (!this.isContentManagerConnected()) {
             try {
+                this.logger.info(this.siteId + " : Connect to content provider ");
                 this.contentManager.login("Admin", "admin");
             } catch (XWootContentProviderException e) {
                 throw new XWootException("Problem with login",e);
             }
-            if (this.isConnectedToP2PNetwork()) {
-                // this.doAntiEntropyWithAllNeighbors();
-            }
             this.contentManagerConnected = true;
-            // this.synchronize();
         }
     }
 
@@ -983,11 +1000,9 @@ public class XWoot2 implements XWootAPI
 
     public void disconnectFromContentManager() throws XWootException
     {
+        this.logger.info(this.siteId + " : Connect to content provider ");
+        this.contentManager.logout();
         if (this.isContentManagerConnected()) {
-            if (this.isConnectedToP2PNetwork()) {
-                this.doAntiEntropyWithAllNeighbors();
-            }
-            this.synchronize();
             this.contentManagerConnected = false;
         }
     }

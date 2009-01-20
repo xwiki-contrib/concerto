@@ -213,6 +213,9 @@ public class Synchronize extends HttpServlet
         else if ("cpconnection".equals(request.getParameter("action"))) {
             System.out.println("Content Provider connection gestion ...");
             try {
+                if (XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork()){
+                    XWootSite.getInstance().getXWootEngine().doAntiEntropyWithAllNeighbors();
+                } 
                 String mode = request.getParameter("switch");
                 if (StringUtils.equals(mode, "on")
                     && !XWootSite.getInstance().getXWootEngine().isContentManagerConnected()) {
@@ -224,7 +227,7 @@ public class Synchronize extends HttpServlet
                     if (XWootSite.getInstance().getXWootEngine().isContentManagerConnected()) {
                         XWootSite.getInstance().getXWootEngine().disconnectFromContentManager();
                     } else {
-                        XWootSite.getInstance().getXWootEngine().connectToContentManager();
+                        XWootSite.getInstance().getXWootEngine().connectToContentManager();  
                     }
                 }
             } catch (Exception e) {

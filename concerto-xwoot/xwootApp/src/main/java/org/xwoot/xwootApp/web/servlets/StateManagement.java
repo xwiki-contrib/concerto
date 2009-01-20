@@ -134,6 +134,7 @@ public class StateManagement extends HttpServlet
                 }
             } else if (action == StateAction.CREATE) {
                 System.out.println("Want to compute state");
+                XWootSite.getInstance().getXWootEngine().connectToContentManager();
                 XWootSite.getInstance().getXWootEngine().computeState();
             }
         } catch (Exception e) {
