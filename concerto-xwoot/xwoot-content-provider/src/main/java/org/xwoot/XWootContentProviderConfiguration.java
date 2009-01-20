@@ -32,20 +32,12 @@ public class XWootContentProviderConfiguration
 
     private ArrayList<Pattern> ignorePatterns;
 
-    private XWootContentProviderConfiguration()
+    public XWootContentProviderConfiguration(Properties properties)
     {
-        Properties properties = new Properties();
-        InputStream is = XWootContentProviderConfiguration.class.getResourceAsStream(CONFIGURATION_FILE);
-
-        if (is != null) {
-            try {
-                properties.load(is);
-                is.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
+        if(properties == null) {
+            properties = new Properties();
+        }        
+        
         /* Read ignore list */
         ignorePatterns = new ArrayList<Pattern>();
         String ignoreListValue = properties.getProperty(IGNORE_PROPERTY);
@@ -89,14 +81,14 @@ public class XWootContentProviderConfiguration
         }
     }
 
-    public static XWootContentProviderConfiguration getDefault()
-    {
-        if (sharedInstance == null) {
-            sharedInstance = new XWootContentProviderConfiguration();
-        }
-
-        return sharedInstance;
-    }
+//    public static XWootContentProviderConfiguration getDefault()
+//    {
+//        if (sharedInstance == null) {
+//            sharedInstance = new XWootContentProviderConfiguration();
+//        }
+//
+//        return sharedInstance;
+//    }
 
     public boolean isCumulative(String className)
     {

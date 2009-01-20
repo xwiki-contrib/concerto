@@ -100,10 +100,8 @@ public class Utils
      * @param newlyCreated The value of the newlyCreated field in the returned XWootObject.
      * @return
      */
-    public static XWootObject xwikiObjectToXWootObject(XWikiObject object, boolean newlyCreated)
-    {
-        XWootContentProviderConfiguration config = XWootContentProviderConfiguration.getDefault();
-
+    public static XWootObject xwikiObjectToXWootObject(XWikiObject object, boolean newlyCreated, XWootContentProviderConfiguration config)
+    {        
         List<XWootObjectField> fields = new ArrayList<XWootObjectField>();
 
         for (String property : object.getProperties()) {

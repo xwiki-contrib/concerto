@@ -15,7 +15,7 @@ public class XWootContentProviderTest extends TestCase
     @Override
     protected void setUp() throws Exception
     {
-        xwc = new XWootContentProvider("http://localhost:8080/xwiki/xmlrpc/confluence");
+        xwc = new XWootContentProvider("http://localhost:8080/xwiki/xmlrpc/confluence", null);
         xwc.login("Admin", "admin");
     }
 

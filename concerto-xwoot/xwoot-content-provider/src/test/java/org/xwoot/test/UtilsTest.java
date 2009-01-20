@@ -40,7 +40,7 @@ public class UtilsTest extends TestCase
         for (XWikiObjectSummary objectSummary : objectSummaries) {
             XWikiObject object = rpc.getObject("Main.WebHome", objectSummary.getGuid());
 
-            XWootObject xwo = Utils.xwikiObjectToXWootObject(object, false);
+            XWootObject xwo = Utils.xwikiObjectToXWootObject(object, false, null);
 
             System.out.format("%s\n", xwo);
         }
@@ -74,7 +74,7 @@ public class UtilsTest extends TestCase
         String value = Utils.listToString(list, Utils.LIST_CONVERSION_SEPARATOR);
 
         XWikiObject object = rpc.getObject("Main.WebHome", "XWiki.TagClass", 0);
-        XWootObject xwootObject = Utils.xwikiObjectToXWootObject(object, false);
+        XWootObject xwootObject = Utils.xwikiObjectToXWootObject(object, false, null);
 
         xwootObject.setFieldValue("tags", value);
 
@@ -98,7 +98,7 @@ public class UtilsTest extends TestCase
         object.setClassName("XWiki.TagClass");
         object.setProperty("tags", list);
 
-        XWootObject xwootObject = Utils.xwikiObjectToXWootObject(object, false);
+        XWootObject xwootObject = Utils.xwikiObjectToXWootObject(object, false, null);
         object = Utils.xwootObjectToXWikiObject(xwootObject);
 
         assertTrue(List.class.isAssignableFrom(object.getProperty("tags").getClass()));

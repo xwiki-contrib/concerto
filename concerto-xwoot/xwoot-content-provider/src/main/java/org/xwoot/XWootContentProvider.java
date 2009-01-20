@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -54,25 +55,27 @@ public class XWootContentProvider implements XWootContentProviderInterface
 
     private String endpoint;
 
+    private XWootContentProviderConfiguration configuration;
+
     /**
      * Constructor.
      * 
      * @param endpoint The target XWiki XMLRPC endpoint URL.
      * @throws XWootContentProviderException
      */
-    public XWootContentProvider(String endpoint) throws XWootContentProviderException
+    public XWootContentProvider(String endpoint, Properties configurationProperties) throws XWootContentProviderException
     {
-        this(endpoint, DB_NAME, false);
+        this(endpoint, DB_NAME, false, configurationProperties);
     }
 
-    public XWootContentProvider(String endpoint, String dbName) throws XWootContentProviderException
+    public XWootContentProvider(String endpoint, String dbName, Properties configurationProperties) throws XWootContentProviderException
     {
-        this(endpoint, dbName, false);
+        this(endpoint, dbName, false, configurationProperties);
     }
 
-    public XWootContentProvider(String endpoint, boolean recreateDB) throws XWootContentProviderException
+    public XWootContentProvider(String endpoint, boolean recreateDB, Properties configurationProperties) throws XWootContentProviderException
     {
-        this(endpoint, DB_NAME, recreateDB);
+        this(endpoint, DB_NAME, recreateDB, configurationProperties);
     }
 
     /**
@@ -82,12 +85,13 @@ public class XWootContentProvider implements XWootContentProviderInterface
      * @param createDB If true the modifications DB is recreated (removing the previous one if it existed)
      * @throws XWootContentProviderException
      */
-    public XWootContentProvider(String endpoint, String dbName, boolean recreateDB)
+    public XWootContentProvider(String endpoint, String dbName, boolean recreateDB, Properties configurationProperties)
         throws XWootContentProviderException
     {
         try {
             rpc = null;
             this.endpoint = endpoint;
+            configuration = new XWootContentProviderConfiguration(configurationProperties);
             init(dbName, recreateDB);
         } catch (Exception e) {
             throw new XWootContentProviderException(e);
@@ -243,7 +247,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
                     rpc.getModifiedPagesHistory(new Date(maxTimestamp), MODIFICATION_RESULTS_PER_CALL, start, true);
 
                 for (XWikiPageHistorySummary xphs : xphsList) {
-                    if (!XWootContentProviderConfiguration.getDefault().isIgnored(xphs.getId())) {
+                    if (!configuration.isIgnored(xphs.getId())) {
                         XWootId xwootId =
                             new XWootId(xphs.getBasePageId(), xphs.getModified().getTime(), xphs.getVersion(), xphs
                                 .getMinorVersion());
@@ -345,7 +349,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
                     rpc.getModifiedPagesHistory(new Date(maxTimestamp), MODIFICATION_RESULTS_PER_CALL, start, true);
 
                 for (XWikiPageHistorySummary xphs : xphsList) {
-                    if (!XWootContentProviderConfiguration.getDefault().isIgnored(xphs.getId())) {
+                    if (!configuration.isIgnored(xphs.getId())) {
                         ps.setString(1, xphs.getId());
                         ps.setLong(2, xphs.getModified().getTime());
                         ps.setInt(3, xphs.getVersion());
@@ -613,7 +617,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
                         .getMinorVersion()));
 
                     XWikiObject xwikiObject = rpc.getObject(extendedId.toString(), xwikiObjectSummary.getGuid());
-                    object = Utils.xwikiObjectToXWootObject(xwikiObject, true);
+                    object = Utils.xwikiObjectToXWootObject(xwikiObject, true, configuration);
                     result.add(object);
                 }
             } else {
@@ -662,8 +666,8 @@ public class XWootContentProvider implements XWootContentProviderInterface
                     }
 
                     if (previousXWikiObject != null) {
-                        XWootObject currentXWootObject = Utils.xwikiObjectToXWootObject(xwikiObject, false);
-                        XWootObject previousXWootObject = Utils.xwikiObjectToXWootObject(previousXWikiObject, false);
+                        XWootObject currentXWootObject = Utils.xwikiObjectToXWootObject(xwikiObject, false, configuration);
+                        XWootObject previousXWootObject = Utils.xwikiObjectToXWootObject(previousXWikiObject, false, configuration);
 
                         cleanedUpXWootObject = Utils.removeUnchangedFields(currentXWootObject, previousXWootObject);
 
@@ -671,7 +675,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
                             result.add(cleanedUpXWootObject);
                         }
                     } else {
-                        result.add(Utils.xwikiObjectToXWootObject(xwikiObject, true));
+                        result.add(Utils.xwikiObjectToXWootObject(xwikiObject, true, configuration));
                     }
                 }
             }
