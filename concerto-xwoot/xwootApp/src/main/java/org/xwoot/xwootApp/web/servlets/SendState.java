@@ -46,7 +46,7 @@ package org.xwoot.xwootApp.web.servlets;
 
 import java.io.File;
 
-import org.xwoot.xwootApp.XWoot;
+import org.xwoot.xwootApp.XWoot2;
 import org.xwoot.xwootApp.web.XWootSite;
 
 import javax.servlet.ServletException;
@@ -77,7 +77,7 @@ public class SendState extends HttpServlet
         File state;
         try {
             state = XWootSite.getInstance().getXWootEngine().getState();
-            ((XWoot) XWootSite.getInstance().getXWootEngine()).getSender().processSendState(response, state);
+            ((XWoot2) XWootSite.getInstance().getXWootEngine()).getSender().processSendState(response, state);
         } catch (Exception e) {
             throw new ServletException(e);
         }

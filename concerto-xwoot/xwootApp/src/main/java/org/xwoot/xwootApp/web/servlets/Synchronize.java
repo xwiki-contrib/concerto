@@ -48,12 +48,8 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -62,9 +58,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.xwoot.lpbcast.util.NetUtil;
-import org.xwoot.wikiContentManager.WikiContentManagerException;
-import org.xwoot.xwootApp.XWoot;
-import org.xwoot.xwootApp.XWootException;
 import org.xwoot.xwootApp.web.XWootSite;
 
 /**
@@ -141,7 +134,7 @@ public class Synchronize extends HttpServlet
         // }
 
         // page management
-        else if ("pageManagement".equals(request.getParameter("action"))
+       /* else if ("pageManagement".equals(request.getParameter("action"))
             && XWootSite.getInstance().getXWootEngine().isContentManagerConnected()) {
             System.out.print("pageManagement -- ");
             try {
@@ -162,7 +155,7 @@ public class Synchronize extends HttpServlet
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-        }
+        }*/
 
         // synchronize
         else if ("synchronize".equals(request.getParameter("action"))
@@ -261,11 +254,11 @@ public class Synchronize extends HttpServlet
                 }
             }
             /* NetUtil.READ_TIME_OUT=temp; */
-            Collection pages = ((XWoot) XWootSite.getInstance().getXWootEngine()).getListOfManagedPages();
-            request.setAttribute("nopage", Boolean.valueOf(pages.size() == 0));
+            /*Collection pages = ((XWoot2) XWootSite.getInstance().getXWootEngine()).getListOfManagedPages();*/
+           /* request.setAttribute("nopage", Boolean.valueOf(pages.size() == 0));*/
             request.setAttribute("noneighbor", Boolean.valueOf(neighbors.size() == 0));
             request.setAttribute("neighbors", result);
-            request.setAttribute("pages", pages);
+          /*  request.setAttribute("pages", pages);*/
             request.setAttribute("xwiki_url", XWootSite.getInstance().getXWootEngine().getContentManagerURL());
             request.setAttribute("p2pconnection", Boolean.valueOf(XWootSite.getInstance().getXWootEngine()
                 .isConnectedToP2PNetwork()));
@@ -280,7 +273,7 @@ public class Synchronize extends HttpServlet
         return;
     }
 
-    private void customPageManagement(HttpServletRequest request) throws WikiContentManagerException, XWootException
+  /*  private void customPageManagement(HttpServletRequest request) throws WikiContentManagerException, XWootException
     {
         System.out.print("Site " + XWootSite.getInstance().getXWootEngine().getXWootPeerId()
             + " : Page management page -");
@@ -325,5 +318,5 @@ public class Synchronize extends HttpServlet
         } else {
             System.out.println(" no action ! -");
         }
-    }
+    }*/
 }

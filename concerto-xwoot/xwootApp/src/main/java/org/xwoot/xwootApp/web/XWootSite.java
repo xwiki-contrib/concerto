@@ -45,7 +45,6 @@
 package org.xwoot.xwootApp.web;
 
 import org.apache.commons.lang.StringUtils;
-import org.xwoot.XWootContentProvider;
 import org.xwoot.XWootContentProviderException;
 import org.xwoot.XWootContentProviderFactory;
 import org.xwoot.XWootContentProviderInterface;
@@ -60,14 +59,11 @@ import org.xwoot.lpbcast.sender.httpservletlpbcast.HttpServletLpbCastException;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngine;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngineException;
 
-import org.xwoot.wikiContentManager.WikiContentManager;
 import org.xwoot.wikiContentManager.WikiContentManagerException;
-import org.xwoot.wikiContentManager.WikiContentManagerFactory;
 
 import org.xwoot.wootEngine.WootEngine;
 import org.xwoot.wootEngine.WootEngineException;
 
-import org.xwoot.xwootApp.XWoot;
 import org.xwoot.xwootApp.XWoot2;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.XWootException;
@@ -228,7 +224,11 @@ public class XWootSite
         }
 
         Clock wootEngineClock = new Clock(wootEngineClockDir.toString());
-        XWootContentProviderInterface xwiki=XWootContentProviderFactory.getXWootContentProvider(url,String.valueOf(siteId),true);
+        
+        //TODO better properties management 
+        Properties p=this.getProperties("/WEB-INF/xwoot-content-provider.properties");
+        
+        XWootContentProviderInterface xwiki=XWootContentProviderFactory.getXWootContentProvider(url,String.valueOf(siteId),true,p);
         //WikiContentManager wiki = WikiContentManagerFactory.getSwizzleFactory().createWCM(url, login, pwd);
         WootEngine wootEngine = new WootEngine(siteId, wootEngineDir.toString(), wootEngineClock);
         HttpServletLpbCast lpbCast =

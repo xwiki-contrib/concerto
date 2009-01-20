@@ -143,21 +143,6 @@ public class TestXWoot2 extends AbstractXWootTest
         Thread.sleep(100);
     }
 
-    @Test
-    public void testTest() throws XWootContentProviderException
-    {
-        XWootContentProvider a = new XWootContentProvider("http://concerto1:8080/xwiki/xmlrpc", true);
-        XWootContentProvider b = new XWootContentProvider("http://concerto2:8080/xwiki/xmlrpc", true);
-        a.login("Admin", "admin");
-        b.login("Admin", "admin");
-
-        System.out.println(a.getModifiedPagesIds());
-        System.out.println(b.getModifiedPagesIds());
-
-        a.logout();
-        b.logout();
-    }
-
     /**
      * DOCUMENT ME!
      * 

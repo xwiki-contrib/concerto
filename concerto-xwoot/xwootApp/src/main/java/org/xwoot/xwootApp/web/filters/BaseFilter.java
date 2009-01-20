@@ -58,7 +58,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.xwoot.lpbcast.util.NetUtil;
-import org.xwoot.xwootApp.XWoot;
+import org.xwoot.xwootApp.XWoot2;
 import org.xwoot.xwootApp.XWootException;
 import org.xwoot.xwootApp.web.XWootSite;
 
@@ -140,7 +140,7 @@ public class BaseFilter implements Filter
                     System.out.println("Site " + XWootSite.getInstance().getXWootEngine().getXWootPeerId()
                         + " : Base servlet - another xwoot send his url : " + NetUtil.normalize(neighbor) + " -");
                     if (!XWootSite.getInstance().getXWootEngine().getNeighborsList().contains(neighbor)
-                        && ((XWoot) XWootSite.getInstance().getXWootEngine()).forceAddNeighbour(neighbor)) {
+                        && ((XWoot2) XWootSite.getInstance().getXWootEngine()).forceAddNeighbour(neighbor)) {
                         XWootSite.getInstance().getXWootEngine().doAntiEntropy(neighbor);
                     }
                 }

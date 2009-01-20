@@ -53,7 +53,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.xwoot.lpbcast.message.Message;
 import org.xwoot.lpbcast.receiver.ReceiverException;
 import org.xwoot.lpbcast.receiver.httpservletreceiver.AbstractHttpServletReceiver;
-import org.xwoot.xwootApp.XWoot;
+import org.xwoot.xwootApp.XWoot2;
 import org.xwoot.xwootApp.XWootException;
 import org.xwoot.xwootApp.web.XWootSite;
 
@@ -90,7 +90,7 @@ public class ReceiveMessage extends AbstractHttpServletReceiver
     public void receive(Message message) throws ReceiverException
     {
         try {
-            ((XWoot) XWootSite.getInstance().getXWootEngine()).receivePatch(message);
+            ((XWoot2) XWootSite.getInstance().getXWootEngine()).receivePatch(message);
         } catch (XWootException e) {
            throw new ReceiverException("Problem to receive message \n",e);
         }

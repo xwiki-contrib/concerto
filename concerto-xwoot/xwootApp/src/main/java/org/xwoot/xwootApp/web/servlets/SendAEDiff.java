@@ -49,7 +49,7 @@ import java.util.Collection;
 
 import org.xwoot.lpbcast.message.Message;
 import org.xwoot.lpbcast.sender.SenderException;
-import org.xwoot.xwootApp.XWoot;
+import org.xwoot.xwootApp.XWoot2;
 import org.xwoot.xwootApp.web.XWootSite;
 
 import javax.servlet.ServletException;
@@ -83,14 +83,14 @@ public class SendAEDiff extends HttpServlet
             ObjectInputStream ois=new ObjectInputStream(request.getInputStream());
             log=(Message[]) ois.readObject();
             if (log!=null){
-                diff=((XWoot)XWootSite.getInstance().getXWootEngine()).getAntiEntropy().answerAntiEntropy(log);
+                diff=((XWoot2)XWootSite.getInstance().getXWootEngine()).getAntiEntropy().answerAntiEntropy(log);
             }
         } catch (Exception e) {
             throw new ServletException(e);
         }
         if (diff!=null) {
             try {
-                ((XWoot) XWootSite.getInstance().getXWootEngine()).getSender().processSendAE(response, diff);
+                ((XWoot2) XWootSite.getInstance().getXWootEngine()).getSender().processSendAE(response, diff);
             } catch (SenderException e) {
                 throw new ServletException(e);
             }
