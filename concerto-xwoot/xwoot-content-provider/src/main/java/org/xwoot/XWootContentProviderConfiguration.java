@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
  */
 public class XWootContentProviderConfiguration
 {
-    private static final String CONFIGURATION_FILE = "xwoot-content-provider.properties";
+    private static final String CONFIGURATION_FILE = "/xwoot-content-provider.properties";
 
     private static final String IGNORE_PROPERTY = "ignore";
 
@@ -35,7 +35,7 @@ public class XWootContentProviderConfiguration
     private XWootContentProviderConfiguration()
     {
         Properties properties = new Properties();
-        InputStream is = ClassLoader.getSystemResourceAsStream(CONFIGURATION_FILE);
+        InputStream is = XWootContentProviderConfiguration.class.getResourceAsStream(CONFIGURATION_FILE);
 
         if (is != null) {
             try {
