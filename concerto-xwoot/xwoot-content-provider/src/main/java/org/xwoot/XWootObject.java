@@ -223,5 +223,16 @@ public class XWootObject implements Serializable
     {
         this.pageMinorVersion = pageMinorVersion;
     }
+    
+    public boolean isPage()
+    {
+        String namespace = guid.split(":")[0];
+
+        if (namespace.equals(Constants.PAGE_NAMESPACE)) {
+            return true;
+        }
+
+        return false;
+    }
 
 }
