@@ -138,6 +138,8 @@ public class Utils
         XWootObject result =
             new XWootObject(object.getPageId(), object.getPageVersion(), object.getPageMinorVersion(), guid,
                 isCumulative, fields, newlyCreated);
+        
+        result.putMetadata(Constants.CLASS_NAME_METADATA, object.getClassName());
 
         return result;
     }
@@ -247,6 +249,8 @@ public class Utils
 
             xwikiObject.setProperty(field.getName(), value);
         }
+        
+        xwikiObject.setClassName(object.getMetadata(Constants.CLASS_NAME_METADATA));
 
         return xwikiObject;
     }

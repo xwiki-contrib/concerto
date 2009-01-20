@@ -3,7 +3,9 @@ package org.xwoot;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Formatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This class represents an XWootObject. XWootObjects are the abstraction used for representing XWiki data structures
@@ -51,6 +53,8 @@ public class XWootObject implements Serializable
      * The list of the fields that make up the object.
      */
     private List<XWootObjectField> fields;
+    
+    private Map<String, String> metadata;
 
     public XWootObject(String pageId, Integer pageVersion, Integer pageMinorVersion, String guid, boolean cumulative,
         List<XWootObjectField> fields, boolean newlyCreated)
@@ -62,6 +66,7 @@ public class XWootObject implements Serializable
         this.cumulative = cumulative;
         this.fields = fields;
         this.newlyCreated = newlyCreated;
+        this.metadata = new HashMap<String, String>();
     }
 
     public String getPageId()
@@ -196,6 +201,7 @@ public class XWootObject implements Serializable
         f.format(" Cumulative: %b\n", cumulative);
         f.format(" GUID: %s\n", guid);
         f.format(" Newly created: %b\n", newlyCreated);
+        f.format(" Metadata: %s\n", metadata);
         for (XWootObjectField field : fields) {
             f.format(" Field '%s': %s (wootable: %b)\n", field.getName(), field.getValue(), field.isWootable());
         }
@@ -233,6 +239,14 @@ public class XWootObject implements Serializable
         }
 
         return false;
+    }
+    
+    public void putMetadata(String key, String value) {
+        metadata.put(key, value);
+    }
+    
+    public String getMetadata(String key) {
+        return metadata.get(key);
     }
 
 }
