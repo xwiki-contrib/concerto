@@ -6,6 +6,7 @@ import java.util.Formatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This class represents an XWootObject. XWootObjects are the abstraction used for representing XWiki data structures
@@ -241,12 +242,24 @@ public class XWootObject implements Serializable
         return false;
     }
     
+    public Map<String, String> getMetadataMap() {
+        return metadata;
+    }
+    
+    public void setMetadataMap(Map<String, String> metadata) {
+        this.metadata = metadata;
+    }
+    
     public void putMetadata(String key, String value) {
         metadata.put(key, value);
     }
     
     public String getMetadata(String key) {
         return metadata.get(key);
+    }
+    
+    public Set<String> getMetadataKeys() {
+        return metadata.keySet();
     }
 
 }
