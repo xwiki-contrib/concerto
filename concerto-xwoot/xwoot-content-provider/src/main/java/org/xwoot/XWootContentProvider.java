@@ -701,6 +701,11 @@ public class XWootContentProvider implements XWootContentProviderInterface
      */
     public XWootId store(XWootObject object, XWootId versionAdjustment) throws XWootContentProviderException
     {
+        if(configuration.isIgnored(object.getPageId())) {
+            /* FIXME: Is it the right value to return? To be checked */
+            return new XWootId(object.getPageId(), (new Date()).getTime(), object.getPageVersion(), object.getPageMinorVersion());
+        }
+        
         String namespace = object.getGuid().split(":")[0];
 
         if (namespace.equals(Constants.PAGE_NAMESPACE)) {
