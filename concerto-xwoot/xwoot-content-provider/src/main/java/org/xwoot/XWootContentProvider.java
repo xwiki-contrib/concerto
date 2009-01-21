@@ -615,7 +615,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
                         .format("%d", xwootId.getVersion()));
                     extendedId.setParameter(XWikiExtendedId.MINOR_VERSION_PARAMETER, String.format("%d", xwootId
                         .getMinorVersion()));
-
+                    
                     XWikiObject xwikiObject = rpc.getObject(extendedId.toString(), xwikiObjectSummary.getGuid());
                     object = Utils.xwikiObjectToXWootObject(xwikiObject, true, configuration);
                     result.add(object);
@@ -737,6 +737,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
             return new XWootId(page.getId(), page.getModified().getTime(), page.getVersion(), page.getMinorVersion());
         } catch (Exception e) {
             // throw new XWootContentProviderException(e);
+            System.out.println(e);
             return null;
         }
     }

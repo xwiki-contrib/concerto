@@ -95,7 +95,6 @@ public class Synchronize extends HttpServlet
             }
             return;
         }
-
         // add neighbor
         else if ("addNeighbor".equals(request.getParameter("action"))) {
             String neighbor = request.getParameter("neighbor");

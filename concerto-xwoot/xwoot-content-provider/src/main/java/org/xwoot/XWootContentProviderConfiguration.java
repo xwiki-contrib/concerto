@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
  */
 public class XWootContentProviderConfiguration
 {
-    private static final String CONFIGURATION_FILE = "/WEB-INF/xwoot-content-provider.properties";
+    private static final String CONFIGURATION_FILE = "/xwoot-content-provider.properties";
 
     private static final String IGNORE_PROPERTY = "ignore";
 

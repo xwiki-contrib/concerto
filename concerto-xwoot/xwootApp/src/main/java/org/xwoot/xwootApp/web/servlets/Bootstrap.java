@@ -82,6 +82,8 @@ public class Bootstrap extends HttpServlet
                 request.getSession().getServletContext().getRealPath(XWootSite.XWIKI_PROPERTIES_FILENAME);
             String xwootPropertiesFile =
                 request.getSession().getServletContext().getRealPath(XWootSite.XWOOT_PROPERTIES_FILENAME);
+          //TODO better properties management 
+            String xwcopPath=request.getSession().getServletContext().getRealPath("xwoot-content-provider.properties");
 
             if (request.getParameter("update") != null) {
                 errors =
@@ -98,7 +100,8 @@ public class Bootstrap extends HttpServlet
                         Integer.parseInt((String) p_xwoot.get(XWootSite.XWOOT_PBCAST_ROUND)),
                         Integer.parseInt((String) p_xwoot.get(XWootSite.XWOOT_NEIGHBORS_LIST_SIZE)),
                         (String) p_xwiki.get(XWootSite.XWIKI_ENDPOINT), (String) p_xwiki.get(XWootSite.XWIKI_USERNAME),
-                        (String) p_xwiki.get(XWootSite.XWIKI_PASSWORD));
+                        (String) p_xwiki.get(XWootSite.XWIKI_PASSWORD),
+                        xwcopPath);
 
                     System.out.println("Site :" + XWootSite.getInstance().getXWootEngine().getXWootPeerId()
                         + " Bootstrap - starting instance -");

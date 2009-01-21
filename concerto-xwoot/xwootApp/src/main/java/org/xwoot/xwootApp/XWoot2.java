@@ -508,14 +508,16 @@ public class XWoot2 implements XWootAPI
                 Value objectValue=this.loadObjectFromModel(xwid.getPageId(), objectId);
                 XWootObject xwootObject=(XWootObject) objectValue.get();
                 try {
-                    this.synchronizeObjectFromModelToXWiki(xwootObject);
-                    for (XWootObjectField f : xwootObject.getFields()) {
-                        if (f.isWootable()) {
-                            this.getWootEngine().getContentManager().copyWootContent(xwootObject.getPageId(), xwootObject.getGuid(), f.getName());
+                    if (this.synchronizeObjectFromModelToXWiki(xwootObject))
+                    {
+                        for (XWootObjectField f : xwootObject.getFields()) {
+                            if (f.isWootable()) {
+                                this.getWootEngine().getContentManager().copyWootContent(xwootObject.getPageId(), xwootObject.getGuid(), f.getName());
+                            }
                         }
+                        System.out.println(this.siteId+" : remove in xwoot2 list : "+xwid);
+                        this.lastModifiedContentIdMap.removePatchId(xwid,objectId);
                     }
-                    System.out.println(this.siteId+" : remove in xwoot2 list : "+xwid);
-                    this.lastModifiedContentIdMap.removePatchId(xwid,objectId);       
                 } catch (WootEngineException e) {
                     throw new XWootException(e);
                 }
@@ -528,7 +530,7 @@ public class XWoot2 implements XWootAPI
     }
 
 
-    private synchronized void synchronizeObjectFromModelToXWiki(XWootObject o2) throws XWootException
+    private synchronized boolean synchronizeObjectFromModelToXWiki(XWootObject o2) throws XWootException
     {
         this.logger.info(this.siteId + " : synchronize Object From Model To XWiki -- object : "+o2);
         if (this.isContentManagerConnected()) {
@@ -546,13 +548,15 @@ public class XWoot2 implements XWootAPI
                 }else{
                     this.logger.info(this.siteId + " : some no consummed datas for id : " + o2.getPageId() + "."
                         + o2.getGuid());
-                    this.synchronize();
+                   // this.synchronize();
+                    return false;
                 }
             } catch (XWootContentProviderException e) {
                 throw new XWootException(e);
             }
         }
         this.logger.info(this.siteId + " end of synchronize Object From Model To XWiki");
+        return true;
 
     }
 
@@ -714,7 +718,7 @@ public class XWoot2 implements XWootAPI
             this.p2Pconnected = true;
         }
         if (!this.isContentManagerConnected()) {
-            this.contentManagerConnected = true;
+            this.connectToContentManager();
         }
 
         if (this.getNeighborsList().contains(neighborURL) || this.addNeighbour(neighborURL)) {
@@ -770,8 +774,13 @@ public class XWoot2 implements XWootAPI
             return;
         }
         System.out.println("Zip file : " + s);
+        ZipFile state=null;
         try {
-            ZipFile state = new ZipFile(s);
+           state = new ZipFile(s);
+        }catch(Exception e){
+            return ;
+        }
+        try{
             FileUtil.unzipInDirectory(state, this.stateDir);
             File[] states = new File[2];
             String[] l = new File(this.stateDir).list();
@@ -856,20 +865,32 @@ public class XWoot2 implements XWootAPI
             this.logger.error(this.peerId + " : Problem to get woot engine state \n", e);
             throw new XWootException(this.peerId + " : Problem to get woot engine state \n", e);
         }
-
-        File copy0 = new File(this.stateDir + File.separatorChar + WootEngine.STATE_FILE_NAME);
-        wootState.renameTo(copy0);
+        
+        if (wootState!=null){
+            File copy0 = new File(this.stateDir + File.separatorChar + WootEngine.STATE_FILE_NAME);
+            wootState.renameTo(copy0);
+        }
 
         try {
             // get TRE state
             FileUtil.zipDirectory(this.tre.getWorkingDir(), this.stateDir + File.separatorChar
                 + ThomasRuleEngine.TRE_STATE_FILE_NAME);
 
-            File r = new File(FileUtil.zipDirectory(this.stateDir, File.createTempFile("state", ".zip").getPath()));
-            File result = new File(this.stateDir + File.separatorChar + STATEFILENAME);
-            r.renameTo(result);
+            String zip=FileUtil.zipDirectory(this.stateDir, File.createTempFile("state", ".zip").getPath());
+            if (zip!=null){
+                File r = new File(zip);
+                File result = new File(this.stateDir + File.separatorChar + STATEFILENAME);
+                r.renameTo(result);
+                return result;
+            }
+           
+            File result = new File(this.getStateFilePath());
+            result.createNewFile();
+            return null;
+       
+           
 
-            return result;
+            
         } catch (IOException e) {
             this.logger.error(this.peerId + " : Problem to zip xwoot datas \n", e);
             throw new XWootException(this.peerId + " : Problem to zip xwoot datas \n", e);
@@ -894,7 +915,7 @@ public class XWoot2 implements XWootAPI
     public boolean importState(File wst) throws XWootException
     {
         if (!this.isContentManagerConnected()) {
-            this.contentManagerConnected = true;
+            this.connectToContentManager();
         }
         File state = new File(this.getStateFilePath());
         if (wst != null && !wst.equals(state)) {

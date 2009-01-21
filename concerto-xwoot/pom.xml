@@ -82,7 +82,7 @@
         <!-- # xwoot properties (file xwoot.properties) # -->
         <!-- ############################################ -->
         <!-- xwiki xml-rpc interface endpoint -->
-        <var.xwiki.endpoint>${var.localhost}/xwiki-enterprise-web-1.7-milestone-3/xmlrpc
+        <var.xwiki.endpoint>http://concerto1:8080/xwiki/xmlrpc
         </var.xwiki.endpoint>
         <!-- xwiki user for access (read/write) -->
         <var.xwiki.username>Admin</var.xwiki.username>

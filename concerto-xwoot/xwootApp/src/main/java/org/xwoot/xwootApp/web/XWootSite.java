@@ -189,7 +189,7 @@ public class XWootSite
      * @throws XWootContentProviderException 
      */
     public void init(int siteId, String peerId, String workingDirPath, int messagesRound, /* int logDelay, */
-    int maxNeighbors, String url, String login, String pwd) throws RuntimeException, ClockException, WikiContentManagerException, WootEngineException, HttpServletLpbCastException, AntiEntropyException, XWootException, ThomasRuleEngineException, XWootContentProviderException
+    int maxNeighbors, String url, String login, String pwd,String xwcpPath) throws RuntimeException, ClockException, WikiContentManagerException, WootEngineException, HttpServletLpbCastException, AntiEntropyException, XWootException, ThomasRuleEngineException, XWootContentProviderException
     {
 
         File pbCastDir = new File(workingDirPath + File.separator + PBCAST_DIR_NAME);
@@ -226,7 +226,9 @@ public class XWootSite
         Clock wootEngineClock = new Clock(wootEngineClockDir.toString());
         
         //TODO better properties management 
-        Properties p=this.getProperties("/WEB-INF/xwoot-content-provider.properties");
+        Properties p=this.getProperties(xwcpPath);
+        System.out.println(p);
+      
         
         XWootContentProviderInterface xwiki=XWootContentProviderFactory.getXWootContentProvider(url,String.valueOf(siteId),true,p);
         //WikiContentManager wiki = WikiContentManagerFactory.getSwizzleFactory().createWCM(url, login, pwd);

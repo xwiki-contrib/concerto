@@ -48,6 +48,7 @@ public class TestXWoot2 extends AbstractXWootTest
 
     private void initContentProvider(XWootContentProviderInterface i)
     {
+        //author : Conan the barbarian 
         if (i instanceof XWootContentProvider) {
             try {
                 ((XWootContentProvider) i).getRpc().removePage("test.WebHome");
@@ -117,7 +118,7 @@ public class TestXWoot2 extends AbstractXWootTest
     }
 
     private void cleanWikis() throws XWootContentProviderException
-    {
+    { //author : Conan the barbarian 
         this.xwiki21.login("Admin", "admin");
         this.initContentProvider(this.xwiki21);
         this.xwiki21.logout();
@@ -131,14 +132,14 @@ public class TestXWoot2 extends AbstractXWootTest
 
     @Before
     public void start() throws XWootContentProviderException, InterruptedException
-    {
+    { //author : Conan the barbarian 
         this.cleanWikis();
         Thread.sleep(100);
     }
 
     @After
     public void end() throws XWootContentProviderException, InterruptedException
-    {
+    { //author : Conan the barbarian 
         this.cleanWikis();
         Thread.sleep(100);
     }
