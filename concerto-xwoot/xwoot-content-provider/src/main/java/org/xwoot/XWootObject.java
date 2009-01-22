@@ -54,7 +54,7 @@ public class XWootObject implements Serializable
      * The list of the fields that make up the object.
      */
     private List<XWootObjectField> fields;
-    
+
     private Map<String, String> metadata;
 
     public XWootObject(String pageId, Integer pageVersion, Integer pageMinorVersion, String guid, boolean cumulative,
@@ -230,7 +230,7 @@ public class XWootObject implements Serializable
     {
         this.pageMinorVersion = pageMinorVersion;
     }
-    
+
     public boolean isPage()
     {
         String namespace = guid.split(":")[0];
@@ -241,24 +241,29 @@ public class XWootObject implements Serializable
 
         return false;
     }
-    
-    public Map<String, String> getMetadataMap() {
+
+    public Map<String, String> getMetadataMap()
+    {
         return metadata;
     }
-    
-    public void setMetadataMap(Map<String, String> metadata) {
+
+    public void setMetadataMap(Map<String, String> metadata)
+    {
         this.metadata = metadata;
     }
-    
-    public void putMetadata(String key, String value) {
+
+    public void putMetadata(String key, String value)
+    {
         metadata.put(key, value);
     }
-    
-    public String getMetadata(String key) {
+
+    public String getMetadata(String key)
+    {
         return metadata.get(key);
     }
-    
-    public Set<String> getMetadataKeys() {
+
+    public Set<String> getMetadataKeys()
+    {
         return metadata.keySet();
     }
 

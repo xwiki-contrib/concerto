@@ -38,6 +38,12 @@ public class XWootObjectField implements Serializable
 
     public XWootObjectField(String name, Serializable value, boolean wootable)
     {
+        if (wootable) {
+            if (!value.getClass().equals(String.class)) {
+                throw new IllegalArgumentException("Wootable fields must have String values");
+            }
+        }
+
         this.name = name;
         this.value = value;
         if (value != null) {

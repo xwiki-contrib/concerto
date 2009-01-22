@@ -100,8 +100,9 @@ public class Utils
      * @param newlyCreated The value of the newlyCreated field in the returned XWootObject.
      * @return
      */
-    public static XWootObject xwikiObjectToXWootObject(XWikiObject object, boolean newlyCreated, XWootContentProviderConfiguration config)
-    {        
+    public static XWootObject xwikiObjectToXWootObject(XWikiObject object, boolean newlyCreated,
+        XWootContentProviderConfiguration config)
+    {
         List<XWootObjectField> fields = new ArrayList<XWootObjectField>();
 
         for (String property : object.getProperties()) {
@@ -138,7 +139,7 @@ public class Utils
         XWootObject result =
             new XWootObject(object.getPageId(), object.getPageVersion(), object.getPageMinorVersion(), guid,
                 isCumulative, fields, newlyCreated);
-        
+
         result.putMetadata(Constants.CLASS_NAME_METADATA, object.getClassName());
 
         return result;
@@ -249,7 +250,7 @@ public class Utils
 
             xwikiObject.setProperty(field.getName(), value);
         }
-        
+
         xwikiObject.setClassName(object.getMetadata(Constants.CLASS_NAME_METADATA));
 
         return xwikiObject;

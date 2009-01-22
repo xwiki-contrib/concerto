@@ -14,12 +14,14 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.xwiki.platform</groupId>
-			<artifactId>xwiki-core-xmlrpc-client</artifactId>
+			<artifactId>xwiki-core-xmlrpc-client
+			</artifactId>
 			<version>1.8-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.xwiki.platform</groupId>
-			<artifactId>xwiki-core-xmlrpc-model</artifactId>
+			<artifactId>xwiki-core-xmlrpc-model
+			</artifactId>
 			<version>1.8-SNAPSHOT</version>
 		</dependency>
 		<dependency>
@@ -28,9 +30,19 @@
 			<version>10.4.2.0</version>
 		</dependency>
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-jdk14</artifactId>
-			<version>1.5.6</version>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<version>1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.9</version>
+		</dependency>
+		<dependency>
+			<groupId>com.xpn.xwiki.platform.tools</groupId>
+			<artifactId>xwiki-shared-tests</artifactId>
+			<version>1.15-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -41,9 +53,7 @@
 	</dependencies>
 
 	<build>
-
 		<plugins>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -58,9 +68,6 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 					<excludes>
-						<!--
-							Exclude tests that require an instance of XWoot running.
-						-->
 						<exclude>**/*.java</exclude>
 					</excludes>
 				</configuration>
@@ -68,16 +75,12 @@
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-checkstyle-plugin</artifactId>
+				<artifactId>maven-checkstyle-plugin
+				</artifactId>
 				<configuration>
 					<skip>true</skip>
 				</configuration>
 			</plugin>
-
-			
-
 		</plugins>
-
 	</build>
-
 </project>

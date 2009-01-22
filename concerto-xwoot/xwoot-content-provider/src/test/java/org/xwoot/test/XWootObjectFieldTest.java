@@ -17,7 +17,7 @@ public class XWootObjectFieldTest extends TestCase
             new XWootObjectField("foo", new Integer(0), true);
             fail("Wootable fields should be of type String");
         } catch (IllegalArgumentException e) {
-            //void
+            // void
         }
     }
 }

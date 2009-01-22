@@ -12,6 +12,7 @@ import org.xwiki.xmlrpc.model.XWikiObject;
 import org.xwiki.xmlrpc.model.XWikiObjectSummary;
 import org.xwiki.xmlrpc.model.XWikiPage;
 import org.xwoot.Utils;
+import org.xwoot.XWootContentProviderConfiguration;
 import org.xwoot.XWootObject;
 
 public class UtilsTest extends TestCase
@@ -20,11 +21,15 @@ public class UtilsTest extends TestCase
 
     protected Random random;
 
+    protected XWootContentProviderConfiguration configuration;
+
     public void setUp() throws Exception
     {
         rpc = new XWikiXmlRpcClient(TestConstants.ENDPOINT);
         rpc.login(TestConstants.USERNAME, TestConstants.PASSWORD);
         random = new Random();
+        configuration = new XWootContentProviderConfiguration();
+
     }
 
     public void tearDown() throws Exception
@@ -40,7 +45,7 @@ public class UtilsTest extends TestCase
         for (XWikiObjectSummary objectSummary : objectSummaries) {
             XWikiObject object = rpc.getObject("Main.WebHome", objectSummary.getGuid());
 
-            XWootObject xwo = Utils.xwikiObjectToXWootObject(object, false, null);
+            XWootObject xwo = Utils.xwikiObjectToXWootObject(object, false, configuration);
 
             System.out.format("%s\n", xwo);
         }
@@ -74,7 +79,7 @@ public class UtilsTest extends TestCase
         String value = Utils.listToString(list, Utils.LIST_CONVERSION_SEPARATOR);
 
         XWikiObject object = rpc.getObject("Main.WebHome", "XWiki.TagClass", 0);
-        XWootObject xwootObject = Utils.xwikiObjectToXWootObject(object, false, null);
+        XWootObject xwootObject = Utils.xwikiObjectToXWootObject(object, false, configuration);
 
         xwootObject.setFieldValue("tags", value);
 
@@ -98,7 +103,7 @@ public class UtilsTest extends TestCase
         object.setClassName("XWiki.TagClass");
         object.setProperty("tags", list);
 
-        XWootObject xwootObject = Utils.xwikiObjectToXWootObject(object, false, null);
+        XWootObject xwootObject = Utils.xwikiObjectToXWootObject(object, false, configuration);
         object = Utils.xwootObjectToXWikiObject(xwootObject);
 
         assertTrue(List.class.isAssignableFrom(object.getProperty("tags").getClass()));

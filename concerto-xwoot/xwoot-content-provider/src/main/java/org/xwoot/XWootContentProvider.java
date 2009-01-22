@@ -1,6 +1,7 @@
 package org.xwoot;
 
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -18,9 +19,9 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.xmlrpc.XmlRpcException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xwiki.xmlrpc.XWikiXmlRpcClient;
 import org.xwiki.xmlrpc.model.XWikiExtendedId;
 import org.xwiki.xmlrpc.model.XWikiObject;
@@ -36,7 +37,7 @@ import org.xwiki.xmlrpc.model.XWikiPageHistorySummary;
  */
 public class XWootContentProvider implements XWootContentProviderInterface
 {
-    final Logger logger = LoggerFactory.getLogger(XWootContentProvider.class);
+    final Log logger = LogFactory.getLog(XWootContentProvider.class);
 
     private static final String DB_DRIVER = "org.apache.derby.jdbc.EmbeddedDriver";
 
@@ -63,17 +64,20 @@ public class XWootContentProvider implements XWootContentProviderInterface
      * @param endpoint The target XWiki XMLRPC endpoint URL.
      * @throws XWootContentProviderException
      */
-    public XWootContentProvider(String endpoint, Properties configurationProperties) throws XWootContentProviderException
+    public XWootContentProvider(String endpoint, Properties configurationProperties)
+        throws XWootContentProviderException
     {
         this(endpoint, DB_NAME, false, configurationProperties);
     }
 
-    public XWootContentProvider(String endpoint, String dbName, Properties configurationProperties) throws XWootContentProviderException
+    public XWootContentProvider(String endpoint, String dbName, Properties configurationProperties)
+        throws XWootContentProviderException
     {
         this(endpoint, dbName, false, configurationProperties);
     }
 
-    public XWootContentProvider(String endpoint, boolean recreateDB, Properties configurationProperties) throws XWootContentProviderException
+    public XWootContentProvider(String endpoint, boolean recreateDB, Properties configurationProperties)
+        throws XWootContentProviderException
     {
         this(endpoint, DB_NAME, recreateDB, configurationProperties);
     }
@@ -96,6 +100,16 @@ public class XWootContentProvider implements XWootContentProviderInterface
         } catch (Exception e) {
             throw new XWootContentProviderException(e);
         }
+
+        logger.info("Initialization done.");
+
+        URL configurationFileUrl = configuration.getConfigurationFileUrl();
+
+        logger.info(String.format("Configured from: %s", configurationFileUrl != null ? configurationFileUrl
+            : "User provided properties."));
+        logger.info(String.format("Ignore patterns: %s", configuration.getIgnorePatterns()));
+        logger.info(String.format("Cumulative classes: %s", configuration.getCumulativeClasses()));
+        logger.info(String.format("Wootable properties: %s", configuration.getWootablePropertiesMap()));
     }
 
     /**
@@ -209,19 +223,59 @@ public class XWootContentProvider implements XWootContentProviderInterface
     }
 
     /**
+     * Set the cleared flag for all modification that doesn't match with the provided timestamp.
+     * 
+     * @param pageId The pageId the modification should refer to.
+     * @param timestamp The timestamp to be retained.
+     * @throws XWootContentProviderException
+     */
+    private void clearModificationsIfTimestampDoesntMatch(String pageId, long timestamp)
+        throws XWootContentProviderException
+    {
+        try {
+            PreparedStatement ps =
+                connection.prepareStatement("UPDATE modifications SET cleared=1 WHERE pageId=? AND timestamp<>?");
+            ps.setString(1, pageId);
+            ps.setLong(2, timestamp);
+
+            int rowsUpdated = ps.executeUpdate();
+
+            logger.info(String.format(
+                "Cleared all pages '%s' with timestamp different from at %s (%d). %d rows updated", pageId, new Date(
+                    timestamp), timestamp, rowsUpdated));
+
+            ps.close();
+        } catch (Exception e) {
+            throw new XWootContentProviderException(e);
+        }
+    }
+
+    /**
      * Retrieves the last modifications starting from the last timestamp seen (the max) and updates the modifications
-     * table. This version selects only the pages with the highest version number. For example if we receive A(4.1),
-     * A(5.1), A(6.1), only A(6.1) is inserted in the DB.
+     * table. This optimized version clears, for each received page, all the modifications except the one with the
+     * greatest timestamp (i.e., the last one). So that the next call to getModificationList will return only the latest
+     * change for each changed page.
      * 
      * @throws XWootContentProviderException
      */
     private void updateModifiedPagesOptimized() throws XWootContentProviderException
     {
+        /*
+         * This map contains, for each received page change, the greatest timestamp seen, i.e., the timestamp of the
+         * latest modification. It is used to clear previous modifications from the list and to leave only the last one
+         * (i.e., the one with the greatest timestamp)
+         */
+        Map<String, Long> pageIdToGreatestTimestampMap = new HashMap<String, Long>();
+
         if (rpc == null) {
             throw new XWootContentProviderException("XWootContentProvider is not logged in.");
         }
 
         try {
+            /*
+             * Retrieve the timestamp of the last modification received. We will ask the server to give us further
+             * modifications starting from that timestamp
+             */
             Statement s = connection.createStatement();
             ResultSet rs = s.executeQuery("SELECT MAX(timestamp) FROM modifications");
 
@@ -232,6 +286,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
 
             s.close();
 
+            /* Build a prepared statement for insertion */
             PreparedStatement ps = connection.prepareStatement("INSERT INTO modifications VALUES (?, ?, ?, ?, 0)");
 
             int entriesReceived = 0;
@@ -240,33 +295,39 @@ public class XWootContentProvider implements XWootContentProviderInterface
 
             int ignored = 0;
             Set<String> ignoredPages = new HashSet<String>();
-            Map<String, XWootId> xwootIdsToBeInserted = new HashMap<String, XWootId>();
 
+            /* Start fetching modifications */
             while (true) {
                 List<XWikiPageHistorySummary> xphsList =
                     rpc.getModifiedPagesHistory(new Date(maxTimestamp), MODIFICATION_RESULTS_PER_CALL, start, true);
 
                 for (XWikiPageHistorySummary xphs : xphsList) {
+                    /* Check if the page concerning the modification is ignored */
                     if (!configuration.isIgnored(xphs.getId())) {
-                        XWootId xwootId =
-                            new XWootId(xphs.getBasePageId(), xphs.getModified().getTime(), xphs.getVersion(), xphs
-                                .getMinorVersion());
+                        ps.setString(1, xphs.getId());
+                        ps.setLong(2, xphs.getModified().getTime());
+                        ps.setInt(3, xphs.getVersion());
+                        ps.setInt(4, xphs.getMinorVersion());
 
-                        /* Get the current xwootId in the map */
-                        XWootId currentXWootId = xwootIdsToBeInserted.get(xwootId.getPageId());
-                        if (currentXWootId == null) {
-                            /* If it doesn't exist then put the received xwootId in the map */
-                            xwootIdsToBeInserted.put(xwootId.getPageId(), xwootId);
-                        } else {
-                            /*
-                             * Check for the version. If the received xwootId references a more recent page then replace
-                             * the xwootId in the map
-                             */
-                            if (xwootId.getVersion() > currentXWootId.getVersion()) {
-                                xwootIdsToBeInserted.put(xwootId.getPageId(), xwootId);
-                            } else if (xwootId.getMinorVersion() > currentXWootId.getMinorVersion()) {
-                                xwootIdsToBeInserted.put(xwootId.getPageId(), xwootId);
+                        try {
+                            ps.executeUpdate();
+
+                            /* Update the greatest timestamp seen for the current modification */
+                            Long greatestTimeStamp = pageIdToGreatestTimestampMap.get(xphs.getId());
+                            if (greatestTimeStamp == null) {
+                                pageIdToGreatestTimestampMap.put(xphs.getId(), xphs.getModified().getTime());
+                            } else {
+                                if (xphs.getModified().getTime() >= greatestTimeStamp.longValue()) {
+                                    pageIdToGreatestTimestampMap.put(xphs.getId(), xphs.getModified().getTime());
+                                }
                             }
+                        } catch (SQLException e) {
+                            /* Ignore duplicated entries that we receive */
+                            if (e.getErrorCode() != 30000) {
+                                throw e;
+                            }
+
+                            duplicatedEntries++;
                         }
 
                         entriesReceived++;
@@ -283,29 +344,20 @@ public class XWootContentProvider implements XWootContentProviderInterface
                 start = start + MODIFICATION_RESULTS_PER_CALL;
             }
 
-            for (XWootId xwootId : xwootIdsToBeInserted.values()) {
-                ps.setString(1, xwootId.getPageId());
-                ps.setLong(2, xwootId.getTimestamp());
-                ps.setInt(3, xwootId.getVersion());
-                ps.setInt(4, xwootId.getMinorVersion());
-
-                try {
-                    ps.executeUpdate();
-                } catch (SQLException e) {
-                    /* Ignore duplicated entries that we receive */
-                    if (e.getErrorCode() != 30000) {
-                        throw e;
-                    }
-                    duplicatedEntries++;
-                }
-            }
-
             logger.info(String.format(
-                "Modifcations list updated. Received %d entries starting from %s (%d). %d duplicates.",
+                "Modifications list updated. Received %d entries starting from %s (%d). %d duplicates.",
                 entriesReceived, new Date(maxTimestamp), maxTimestamp, duplicatedEntries));
-            logger.info(String.format("Modifcations list updated. Ignored %d entried: %s\n", ignored, ignoredPages));
+            logger.info(String.format("Modifications list updated. Ignored %d entried: %s", ignored, ignoredPages));
 
             ps.close();
+
+            /*
+             * Clear all the received modifications for each page, except the one with the greatest timestamp, i.e., the
+             * most recent one.
+             */
+            for (String pageId : pageIdToGreatestTimestampMap.keySet()) {
+                clearModificationsIfTimestampDoesntMatch(pageId, pageIdToGreatestTimestampMap.get(pageId));
+            }
         } catch (Exception e) {
             throw new XWootContentProviderException(e);
         }
@@ -405,6 +457,8 @@ public class XWootContentProvider implements XWootContentProviderInterface
             throw new XWootContentProviderException("XWootContentProvider is not logged in.");
         }
 
+        logger.info("*** getModifiedPagesIds called");
+
         Set<XWootId> result = new TreeSet<XWootId>(new Comparator<XWootId>()
         {
             public int compare(XWootId arg0, XWootId arg1)
@@ -415,7 +469,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
         });
 
         /* Download last modifications from the server */
-        updateModifiedPages();
+        updateModifiedPagesOptimized();
 
         try {
             PreparedStatement ps =
@@ -440,6 +494,10 @@ public class XWootContentProvider implements XWootContentProviderInterface
             e.printStackTrace();
             throw new XWootContentProviderException(e);
         }
+
+        logger.info(String.format("Retrieved %d modifications: %s", result.size(), result));
+
+        logger.info("*** getModifiedPagesIds ended");
 
         return result;
     }
@@ -482,10 +540,6 @@ public class XWootContentProvider implements XWootContentProviderInterface
     public void clearModification(XWootId xwootId) throws XWootContentProviderException
     {
         try {
-            if (xwootId.getPageId().equals("test.1")) {
-                dumpDbLines("* CLEAR MODIFICATIONS test.1");
-            }
-
             PreparedStatement ps =
                 connection.prepareStatement("UPDATE modifications SET cleared=1 WHERE pageId=? AND timestamp=?");
             ps.setString(1, xwootId.getPageId());
@@ -497,10 +551,6 @@ public class XWootContentProvider implements XWootContentProviderInterface
                 .getTimestamp()), xwootId.getTimestamp(), rowsUpdated));
 
             ps.close();
-
-            if (xwootId.getPageId().equals("test.1")) {
-                dumpDbLines("test.1");
-            }
         } catch (Exception e) {
             throw new XWootContentProviderException(e);
         }
@@ -615,7 +665,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
                         .format("%d", xwootId.getVersion()));
                     extendedId.setParameter(XWikiExtendedId.MINOR_VERSION_PARAMETER, String.format("%d", xwootId
                         .getMinorVersion()));
-                    
+
                     XWikiObject xwikiObject = rpc.getObject(extendedId.toString(), xwikiObjectSummary.getGuid());
                     object = Utils.xwikiObjectToXWootObject(xwikiObject, true, configuration);
                     result.add(object);
@@ -666,8 +716,10 @@ public class XWootContentProvider implements XWootContentProviderInterface
                     }
 
                     if (previousXWikiObject != null) {
-                        XWootObject currentXWootObject = Utils.xwikiObjectToXWootObject(xwikiObject, false, configuration);
-                        XWootObject previousXWootObject = Utils.xwikiObjectToXWootObject(previousXWikiObject, false, configuration);
+                        XWootObject currentXWootObject =
+                            Utils.xwikiObjectToXWootObject(xwikiObject, false, configuration);
+                        XWootObject previousXWootObject =
+                            Utils.xwikiObjectToXWootObject(previousXWikiObject, false, configuration);
 
                         cleanedUpXWootObject = Utils.removeUnchangedFields(currentXWootObject, previousXWootObject);
 
@@ -701,11 +753,12 @@ public class XWootContentProvider implements XWootContentProviderInterface
      */
     public XWootId store(XWootObject object, XWootId versionAdjustment) throws XWootContentProviderException
     {
-        if(configuration.isIgnored(object.getPageId())) {
+        if (configuration.isIgnored(object.getPageId())) {
             /* FIXME: Is it the right value to return? To be checked */
-            return new XWootId(object.getPageId(), (new Date()).getTime(), object.getPageVersion(), object.getPageMinorVersion());
+            return new XWootId(object.getPageId(), (new Date()).getTime(), object.getPageVersion(), object
+                .getPageMinorVersion());
         }
-        
+
         String namespace = object.getGuid().split(":")[0];
 
         if (namespace.equals(Constants.PAGE_NAMESPACE)) {
@@ -853,6 +906,13 @@ public class XWootContentProvider implements XWootContentProviderInterface
         return rpc;
     }
 
+    /**
+     * Get a list of XWootId corresponding to the entries stored in the database.
+     * 
+     * @param pageId
+     * @return
+     * @throws SQLException
+     */
     public List<XWootId> getXWootIdsFor(String pageId) throws SQLException
     {
         List<XWootId> result = new ArrayList<XWootId>();
@@ -870,52 +930,74 @@ public class XWootContentProvider implements XWootContentProviderInterface
         return result;
     }
 
-    public void dumpDbLines(String pageId)
+    /**
+     * Get a list of XWootId corresponding to the entries stored in the database where the cleared flag is equal to the
+     * passed parameter.
+     * 
+     * @param pageId
+     * @param cleared
+     * @return
+     * @throws SQLException
+     */
+    public List<XWootId> getXWootIdsFor(String pageId, boolean cleared) throws SQLException
     {
-        try {
-            System.out.format("PageId: %s\n", pageId);
-            System.out.format("-----------------------------------------\n");
-            PreparedStatement ps =
-                connection.prepareStatement("SELECT * FROM modifications WHERE pageId=? ORDER by timestamp DESC");
-            ps.setString(1, pageId);
-            ResultSet rs = ps.executeQuery();
+        List<XWootId> result = new ArrayList<XWootId>();
 
-            while (rs.next()) {
-                System.out.format("%-30s\t| %d\t| %d.%d\t| %d\n", rs.getString(1), rs.getLong(2), rs.getInt(3), rs
-                    .getInt(4), rs.getShort(5));
-            }
+        PreparedStatement ps =
+            connection
+                .prepareStatement("SELECT * FROM modifications WHERE pageId=? AND cleared=? ORDER by timestamp DESC");
+        ps.setString(1, pageId);
+        ps.setBoolean(2, cleared);
+        ResultSet rs = ps.executeQuery();
 
-            ps.close();
-            System.out.format("-----------------------------------------\n");
-        } catch (SQLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        while (rs.next()) {
+            XWootId xwootId = new XWootId(rs.getString(1), rs.getLong(2), rs.getInt(3), rs.getInt(4));
+            result.add(xwootId);
         }
+
+        return result;
     }
 
-    public void dumpDbLines(String message, int n)
+    /**
+     * An utility method for dumping the content of the database.
+     * 
+     * @param message The message to be displayed
+     * @param pageId The pageId to be used in order to filter results on the pageId. null for returning all pageIds.
+     * @param n The maximum number of lines to be dumped. -1 for all.
+     */
+    public void dumpDbLines(String message, String pageId, int n)
     {
-
         try {
-            System.out.format("%s\n", message);
+            PreparedStatement ps = null;
+
+            if (pageId != null) {
+                ps = connection.prepareStatement("SELECT * FROM modifications WHERE pageId=? ORDER by timestamp DESC");
+                ps.setString(1, pageId);
+            } else {
+                ps = connection.prepareStatement("SELECT * FROM modifications ORDER by timestamp DESC");
+            }
+
+            ResultSet rs = ps.executeQuery();
+
+            System.out.format("Database dump for Page ID: '%s'\n", pageId != null ? pageId : "ANY");
+            if (message != null) {
+                System.out.format("%s\n", message);
+            }
             System.out.format("-----------------------------------------\n");
-            Statement s = connection.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM modifications ORDER by timestamp DESC");
 
             int i = 0;
             while (rs.next()) {
                 System.out.format("%-30s\t| %d\t| %d.%d\t| %d\n", rs.getString(1), rs.getLong(2), rs.getInt(3), rs
                     .getInt(4), rs.getShort(5));
                 i++;
-                if (i >= n) {
+                if (n > 0 && i >= n) {
                     break;
                 }
             }
 
-            s.close();
+            ps.close();
             System.out.format("-----------------------------------------\n");
-        } catch (SQLException e) {
-            // TODO Auto-generated catch block
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
