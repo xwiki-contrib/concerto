@@ -258,8 +258,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
      * 
      * @throws XWootContentProviderException
      */
-    private void updateModifiedPages(boolean clearAllExceptLatestVersions)
-        throws XWootContentProviderException
+    private void updateModifiedPages(boolean clearAllExceptLatestVersions) throws XWootContentProviderException
     {
         /*
          * This map contains, for each received page change, the greatest timestamp seen, i.e., the timestamp of the
@@ -286,6 +285,9 @@ public class XWootContentProvider implements XWootContentProviderInterface
             }
 
             s.close();
+
+            logger.info(String.format("Requesting modifications list starting from timestamp %d (%s)", maxTimestamp,
+                new Date(maxTimestamp)));
 
             /* Build a prepared statement for insertion */
             PreparedStatement ps = connection.prepareStatement("INSERT INTO modifications VALUES (?, ?, ?, ?, 0)");
@@ -348,7 +350,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
             logger.info(String.format(
                 "Modifications list updated. Received %d entries starting from %s (%d). %d duplicates.",
                 entriesReceived, new Date(maxTimestamp), maxTimestamp, duplicatedEntries));
-            logger.info(String.format("Modifications list updated. Ignored %d entried: %s", ignored, ignoredPages));
+            logger.info(String.format("Modifications list updated. Ignored %d entries.", ignored));
 
             ps.close();
 
@@ -451,7 +453,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
     {
         return getModifiedPagesIds(true);
     }
-    
+
     /**
      * Returns a list of references where each reference points to a different page at its oldest modification available
      * in the modification list that has not been cleared.
@@ -782,7 +784,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
         String namespace = object.getGuid().split(":")[0];
 
         logger.info(String.format("Storing '%s' (Associated page information: '%s', %d.%d)...", object.getGuid(),
-            object.getPageVersion(), object.getPageMinorVersion()));
+            object.getPageId(), object.getPageVersion(), object.getPageMinorVersion()));
 
         if (namespace.equals(Constants.PAGE_NAMESPACE)) {
             return storeXWikiPage(object, versionAdjustment);
