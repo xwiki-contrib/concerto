@@ -258,7 +258,8 @@ public class XWootContentProvider implements XWootContentProviderInterface
      * 
      * @throws XWootContentProviderException
      */
-    private void updateModifiedPagesOptimized() throws XWootContentProviderException
+    private void updateModifiedPages(boolean clearAllExceptLatestVersions)
+        throws XWootContentProviderException
     {
         /*
          * This map contains, for each received page change, the greatest timestamp seen, i.e., the timestamp of the
@@ -351,12 +352,14 @@ public class XWootContentProvider implements XWootContentProviderInterface
 
             ps.close();
 
-            /*
-             * Clear all the received modifications for each page, except the one with the greatest timestamp, i.e., the
-             * most recent one.
-             */
-            for (String pageId : pageIdToGreatestTimestampMap.keySet()) {
-                clearModificationsIfTimestampDoesntMatch(pageId, pageIdToGreatestTimestampMap.get(pageId));
+            if (clearAllExceptLatestVersions) {
+                /*
+                 * Clear all the received modifications for each page, except the one with the greatest timestamp, i.e.,
+                 * the most recent one.
+                 */
+                for (String pageId : pageIdToGreatestTimestampMap.keySet()) {
+                    clearModificationsIfTimestampDoesntMatch(pageId, pageIdToGreatestTimestampMap.get(pageId));
+                }
             }
         } catch (Exception e) {
             throw new XWootContentProviderException(e);
@@ -370,7 +373,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
      * 
      * @throws XWootContentProviderException
      */
-    private void updateModifiedPages() throws XWootContentProviderException
+    private void updateModifiedPagesOld() throws XWootContentProviderException
     {
         if (rpc == null) {
             throw new XWootContentProviderException("XWootContentProvider is not logged in.");
@@ -444,6 +447,11 @@ public class XWootContentProvider implements XWootContentProviderInterface
 
     }
 
+    public Set<XWootId> getModifiedPagesIds() throws XWootContentProviderException
+    {
+        return getModifiedPagesIds(true);
+    }
+    
     /**
      * Returns a list of references where each reference points to a different page at its oldest modification available
      * in the modification list that has not been cleared.
@@ -451,7 +459,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
      * @return A set of XWootIds.
      * @throws XWootContentProviderException
      */
-    public Set<XWootId> getModifiedPagesIds() throws XWootContentProviderException
+    public Set<XWootId> getModifiedPagesIds(boolean clearAllExceptLatestVersions) throws XWootContentProviderException
     {
         if (rpc == null) {
             throw new XWootContentProviderException("XWootContentProvider is not logged in.");
@@ -469,7 +477,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
         });
 
         /* Download last modifications from the server */
-        updateModifiedPagesOptimized();
+        updateModifiedPages(clearAllExceptLatestVersions);
 
         try {
             PreparedStatement ps =
@@ -648,10 +656,15 @@ public class XWootContentProvider implements XWootContentProviderInterface
         try {
             List<XWootObject> result = new ArrayList<XWootObject>();
 
+            logger.info(String.format("Getting modified entities for %s", xwootId));
+
             XWootId previousModification = getPreviousModification(xwootId);
 
             /* Main page */
             if (previousModification == null) {
+
+                logger.info(String.format("No previous version exists for %s", xwootId));
+
                 XWikiPage page = rpc.getPage(xwootId.getPageId(), xwootId.getVersion(), xwootId.getMinorVersion());
                 XWootObject object = Utils.xwikiPageToXWootObject(page, true);
                 result.add(object);
@@ -671,6 +684,8 @@ public class XWootContentProvider implements XWootContentProviderInterface
                     result.add(object);
                 }
             } else {
+                logger.info(String.format("Previous version exists %s is %s", xwootId, previousModification));
+
                 XWikiPage page = rpc.getPage(xwootId.getPageId(), xwootId.getVersion(), xwootId.getMinorVersion());
                 XWikiPage previousPage =
                     rpc.getPage(previousModification.getPageId(), previousModification.getVersion(),
@@ -732,6 +747,8 @@ public class XWootContentProvider implements XWootContentProviderInterface
                 }
             }
 
+            logger.info(System.out.format("Got modified entities: %s", result));
+
             return result;
         } catch (Exception e) {
             throw new XWootContentProviderException(e);
@@ -754,16 +771,18 @@ public class XWootContentProvider implements XWootContentProviderInterface
     public XWootId store(XWootObject object, XWootId versionAdjustment) throws XWootContentProviderException
     {
         if (configuration.isIgnored(object.getPageId())) {
-            logger.info(String.format("'%s' not stored because '%s' is on ignore list.", object.getGuid(), object.getPageId()));            
-            
+            logger.info(String.format("'%s' not stored because '%s' is on ignore list.", object.getGuid(), object
+                .getPageId()));
+
             /* FIXME: Is it the right value to return? To be checked */
             return new XWootId(object.getPageId(), (new Date()).getTime(), object.getPageVersion(), object
                 .getPageMinorVersion());
         }
 
         String namespace = object.getGuid().split(":")[0];
-        
-        logger.info(String.format("Storing '%s' (Associated page information: '%s', %d.%d)...", object.getGuid(), object.getPageVersion(), object.getPageMinorVersion()));
+
+        logger.info(String.format("Storing '%s' (Associated page information: '%s', %d.%d)...", object.getGuid(),
+            object.getPageVersion(), object.getPageMinorVersion()));
 
         if (namespace.equals(Constants.PAGE_NAMESPACE)) {
             return storeXWikiPage(object, versionAdjustment);
@@ -787,16 +806,19 @@ public class XWootContentProvider implements XWootContentProviderInterface
 
             /* If an empty object is returned then the store failed */
             if (xwikiObject.getPageId().equals("")) {
-                logger.info(String.format("Server refused to store object. Associated page information: '%s' version %d.%d", object.getPageId(), object.getPageVersion(), object.getPageMinorVersion()));
+                logger.info(String.format(
+                    "Server refused to store object. Associated page information: '%s' version %d.%d", object
+                        .getPageId(), object.getPageVersion(), object.getPageMinorVersion()));
                 return null;
             }
 
             /* Retrieve the page this object was stored to in order to get additional information like the timestamp. */
             XWikiPage page =
-                rpc.getPage(xwikiObject.getPageId(), xwikiObject.getPageVersion(), xwikiObject.getPageMinorVersion());           
-            
-            logger.info(String.format("'%s' stored. Associated page information: %s version %d.%d", object.getGuid(), object.getPageId(), object.getPageVersion(), object.getPageMinorVersion()));
-            
+                rpc.getPage(xwikiObject.getPageId(), xwikiObject.getPageVersion(), xwikiObject.getPageMinorVersion());
+
+            logger.info(String.format("'%s' stored. Associated page information: %s version %d.%d", object.getGuid(),
+                object.getPageId(), object.getPageVersion(), object.getPageMinorVersion()));
+
             clearOrInsert(page.getId(), page.getModified().getTime(), page.getVersion(), page.getMinorVersion());
 
             return new XWootId(page.getId(), page.getModified().getTime(), page.getVersion(), page.getMinorVersion());
@@ -845,21 +867,23 @@ public class XWootContentProvider implements XWootContentProviderInterface
                 page.setVersion(1);
             }
 
-            page = rpc.storePage(page, true);                        
+            page = rpc.storePage(page, true);
 
             /* If an empty page is returned then the store failed */
             if (page.getId().equals("")) {
-                logger.info(String.format("Server refused to store page '%s' version %d.%d", page.getId(), page.getVersion(), page.getMinorVersion()));
+                logger.info(String.format("Server refused to store page '%s' version %d.%d", page.getId(), page
+                    .getVersion(), page.getMinorVersion()));
                 return null;
             }
-            
-            logger.info(String.format("'%s' stored. Stored page info: '%s' version %d.%d", page.getId(), page.getVersion(), page.getMinorVersion()));
+
+            logger.info(String.format("'%s' stored. Stored page info: '%s' version %d.%d", page.getId(), page
+                .getVersion(), page.getMinorVersion()));
 
             clearOrInsert(page.getId(), page.getModified().getTime(), page.getVersion(), page.getMinorVersion());
 
             return new XWootId(page.getId(), page.getModified().getTime(), page.getVersion(), page.getMinorVersion());
         } catch (Exception e) {
-            logger.error(String.format("'%s' not stored due to an exception.", object.getGuid()), e);            
+            logger.error(String.format("'%s' not stored due to an exception.", object.getGuid()), e);
             return null;
         }
     }
