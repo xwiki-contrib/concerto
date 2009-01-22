@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Map;
@@ -213,16 +212,18 @@ public final class PersistencyUtil
     public static void saveObjectToXml(Object object, String xmlFilePath) throws Exception
     {
         XStream xstream = new XStream(new DomDriver());
-        Charset fileEncodingCharset = Charset.forName(System.getProperty("file.encoding"));
+        Charset fileEncodingCharset = Charset.forName("UTF-8");
 
         OutputStreamWriter osw = null;
-        PrintWriter output = null;
+        //PrintWriter output = null;
 
         try {
             osw = new OutputStreamWriter(new FileOutputStream(xmlFilePath), fileEncodingCharset);
-            output = new PrintWriter(osw);
-            output.print(xstream.toXML(object));
-            output.flush();
+            //output = new PrintWriter(osw);
+            //output.print(xstream.toXML(object, osw));
+            //output.flush();
+            xstream.toXML(object, osw);
+            osw.flush();
         } catch (Exception e) {
             throw new Exception("Problems saving an object to xml file " + xmlFilePath, e);
         } finally {
@@ -230,9 +231,9 @@ public final class PersistencyUtil
                 if (osw != null) {
                     osw.close();
                 }
-                if (output != null) {
+                /*if (output != null) {
                     output.close();
-                }
+                }*/
             } catch (Exception e) {
                 throw new Exception("Problems closing the xml file " + xmlFilePath + " after saving an object in it.",
                     e);

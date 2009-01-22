@@ -689,20 +689,27 @@ public class XWoot2 implements XWootAPI
      */
     public synchronized void synchronize() throws XWootException
     {
+        this.logger.info(this.siteId + " : Starting the synchronisation of each managed pages");
+        
         if (!this.isContentManagerConnected()) {
+            this.logger.warn("Content manager not connected. Synchronization aborded.");
             return;
         }
-        this.logger.info(this.siteId + " : Starting the synchronisation of each managed pages");
        
         try {
             if (!this.getContentManager().getModifiedPagesIds().isEmpty()){
                 this.synchronizeFromXWikiToModel(!this.lastModifiedContentIdMap.getCurrentPatchIdMap().isEmpty());
+            } else {
+                this.logger.info("No changes in xwiki => No changes done to the model.");
             }
         } catch (XWootContentProviderException e) {
             throw new XWootException(e);
         }
+        
         if (!this.getLastModifiedContentIdMap().getCurrentPatchIdMap().isEmpty()){
             this.synchronizeFromModelToXWiki();
+        } else {
+            this.logger.info("No changes in the model => No changes done in the xwiki.");
         }
 
         this.logger.info(this.siteId + " : Synchronising OK.");
@@ -1011,6 +1018,7 @@ public class XWoot2 implements XWootAPI
                 throw new XWootException("Problem with login",e);
             }
             this.contentManagerConnected = true;
+            this.logger.info("Content manager connected.");
         }
     }
 
@@ -1021,11 +1029,13 @@ public class XWoot2 implements XWootAPI
 
     public void disconnectFromContentManager() throws XWootException
     {
-        this.logger.info(this.siteId + " : Connect to content provider ");
+        this.logger.info(this.siteId + " : Disconnect from content provider ");
         this.contentManager.logout();
         if (this.isContentManagerConnected()) {
             this.contentManagerConnected = false;
         }
+        
+        this.logger.info(this.siteId + " : Disconnected from content provider ");
     }
 
     public void reconnectToP2PNetwork() throws XWootException

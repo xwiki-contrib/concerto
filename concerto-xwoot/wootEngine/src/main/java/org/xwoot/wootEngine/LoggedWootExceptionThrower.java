@@ -56,7 +56,7 @@ public class LoggedWootExceptionThrower
     public void throwLoggedException(String errorMessage, Throwable wrappedException) throws WootEngineException
     {
         String prefixedErrorMessage = this.wootEngineId + " - " + errorMessage;
-        this.logger.error(prefixedErrorMessage);
+        this.logger.error(prefixedErrorMessage, wrappedException);
         throw new WootEngineException(prefixedErrorMessage + "\n", wrappedException);
     }
 

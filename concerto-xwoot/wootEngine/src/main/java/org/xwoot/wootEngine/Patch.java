@@ -242,4 +242,31 @@ public class Patch implements Serializable
         return this.minorVersion;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public String toString()
+    {
+        String ident = "   ";
+        String newLine = "\n";
+
+        StringBuilder toString = new StringBuilder();
+        toString.append("Patch:\n");
+        toString.append(" PageId: " + this.pageId + " ObjectId: " + objectId + newLine);
+        toString.append(" Timestamp: " + this.timestamp + " Version: " + this.version + " MinorVersion: "
+            + this.minorVersion + newLine);
+        toString.append(" Contents: \n");
+
+        toString.append("  WootOps: \n");
+        for (Object wootOp : this.elements) {
+            toString.append(ident + wootOp.toString() + newLine);
+        }
+
+        toString.append("  TreOps: \n");
+        for (Object treOp : this.mDelements) {
+            toString.append(ident + treOp.toString() + newLine);
+        }
+        toString.append("End Of Patch.");
+
+        return toString.toString();
+    }
 }
