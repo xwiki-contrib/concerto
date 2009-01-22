@@ -257,13 +257,17 @@ public class Patch implements Serializable
         toString.append(" Contents: \n");
 
         toString.append("  WootOps: \n");
-        for (Object wootOp : this.elements) {
-            toString.append(ident + wootOp.toString() + newLine);
+        if (this.elements != null) {
+            for (Object wootOp : this.elements) {
+                toString.append(ident + wootOp.toString() + newLine);
+            }
         }
 
         toString.append("  TreOps: \n");
-        for (Object treOp : this.mDelements) {
-            toString.append(ident + treOp.toString() + newLine);
+        if (this.mDelements != null) {
+            for (Object treOp : this.mDelements) {
+                toString.append(ident + treOp.toString() + newLine);
+            }
         }
         toString.append("End Of Patch.");
 
