@@ -892,7 +892,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
                 return null;
             }
 
-            logger.info(String.format("'%s' stored. Stored page info: '%s' version %d.%d", page.getId(), page
+            logger.info(String.format("'%s' stored. Stored page info: '%s' version %d.%d", page.getId(), page.getId(), page
                 .getVersion(), page.getMinorVersion()));
 
             clearOrInsert(page.getId(), page.getModified().getTime(), page.getVersion(), page.getMinorVersion());
