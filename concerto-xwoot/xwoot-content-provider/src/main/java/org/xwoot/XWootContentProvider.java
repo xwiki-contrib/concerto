@@ -712,6 +712,10 @@ public class XWootContentProvider implements XWootContentProviderInterface
                     extendedId.setParameter(XWikiExtendedId.MINOR_VERSION_PARAMETER, String.format("%d", xwootId
                         .getMinorVersion()));
 
+                    logger.info(String.format("Retrieving object with guid '%s' class '%s' at version %d.%d",
+                        xwikiObjectSummary.getGuid(), xwikiObjectSummary.getClassName(), xwootId.getVersion(), xwootId
+                            .getMinorVersion()));
+
                     XWikiObject xwikiObject = rpc.getObject(extendedId.toString(), xwikiObjectSummary.getGuid());
 
                     XWikiObject previousXWikiObject = null;
@@ -726,6 +730,11 @@ public class XWootContentProvider implements XWootContentProviderInterface
                         extendedId.setParameter(XWikiExtendedId.VERSION_PARAMETER, String.format("%d",
                             previousModification.getVersion()));
                         extendedId.setParameter(XWikiExtendedId.MINOR_VERSION_PARAMETER, String.format("%d",
+                            previousModification.getMinorVersion()));
+
+                        logger.info(String.format(
+                            "Retrieving object with guid '%s' class '%s' at previous version %d.%d", xwikiObjectSummary
+                                .getGuid(), xwikiObjectSummary.getClassName(), previousModification.getVersion(),
                             previousModification.getMinorVersion()));
 
                         previousXWikiObject = rpc.getObject(extendedId.toString(), xwikiObjectSummary.getGuid());
@@ -744,12 +753,17 @@ public class XWootContentProvider implements XWootContentProviderInterface
                             result.add(cleanedUpXWootObject);
                         }
                     } else {
+                        logger.info(String.format(
+                            "Object with guid '%s' class '%s' at previous version %d.%d doesn't exist. Newly created!",
+                            xwikiObjectSummary.getGuid(), xwikiObjectSummary.getClassName(), previousModification
+                                .getVersion(), previousModification.getMinorVersion()));
+
                         result.add(Utils.xwikiObjectToXWootObject(xwikiObject, true, configuration));
                     }
                 }
             }
 
-            logger.info(System.out.format("Got modified entities: %s", result));
+            logger.info(String.format("Got modified entities: %s", result));
 
             return result;
         } catch (Exception e) {
