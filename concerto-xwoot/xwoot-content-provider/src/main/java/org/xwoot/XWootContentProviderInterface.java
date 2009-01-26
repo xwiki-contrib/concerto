@@ -84,4 +84,5 @@ public interface XWootContentProviderInterface
      */
     XWootId store(XWootObject object, XWootId versionAdjustement) throws XWootContentProviderException;
 
+    XWootContentProviderConfiguration getConfiguration();
 }

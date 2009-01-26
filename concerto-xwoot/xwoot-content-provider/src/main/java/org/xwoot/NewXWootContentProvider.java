@@ -66,6 +66,7 @@ public class NewXWootContentProvider implements XWootContentProviderInterface
         logger.info(String.format("Configured from: %s", configurationFileUrl != null ? configurationFileUrl
             : "User provided properties."));
         logger.info(String.format("Ignore patterns: %s", configuration.getIgnorePatterns()));
+        logger.info(String.format("Accept patterns: %s", configuration.getAcceptPatterns()));
         logger.info(String.format("Cumulative classes: %s", configuration.getCumulativeClasses()));
         logger.info(String.format("Wootable properties: %s", configuration.getWootablePropertiesMap()));
     }
@@ -135,6 +136,9 @@ public class NewXWootContentProvider implements XWootContentProviderInterface
         }
 
         try {
+            logger.info(String.format("Updating modification list. Ignore patterns: %s, Accept patterns: %s",
+                configuration.getIgnorePatterns(), configuration.getAcceptPatterns()));
+
             long highestModificationTimestamp = stateManager.getHighestModificationTimestamp();
 
             Map<String, XWootId> pageIdToLatestModificationMap = new HashMap<String, XWootId>();
@@ -145,6 +149,7 @@ public class NewXWootContentProvider implements XWootContentProviderInterface
 
             int ignoredEntries = 0;
             Set<String> ignoredPages = new HashSet<String>();
+            Set<String> acceptedPages = new HashSet<String>();
 
             while (true) {
                 /* Retrieve the modification list */
@@ -166,6 +171,7 @@ public class NewXWootContentProvider implements XWootContentProviderInterface
                         }
 
                         entriesReceived++;
+                        acceptedPages.add(xphs.getBasePageId());
 
                         /* Keep track of the latest modification received for each single page */
                         XWootId latestModification = pageIdToLatestModificationMap.get(xwootId.getPageId());
@@ -194,8 +200,9 @@ public class NewXWootContentProvider implements XWootContentProviderInterface
             logger.info(String.format(
                 "Modifcations list updated. Received %d entries starting from timestamp %d. %d duplicates.",
                 entriesReceived, highestModificationTimestamp, duplicatedEntries));
-            logger.info(String
-                .format("Modifcations list updated. Ignored %d entries: %s", ignoredEntries, ignoredPages));
+            logger.info(String.format("Modification list updated. Entries received from pages: %s", acceptedPages));
+            logger.info(String.format("Modifcations list updated. Ignored %d entries from pages: %s", ignoredEntries,
+                ignoredPages));
 
             /* For each received page, clear all the modification except the latest one */
             for (String pageId : pageIdToLatestModificationMap.keySet()) {
@@ -211,7 +218,7 @@ public class NewXWootContentProvider implements XWootContentProviderInterface
 
     public void clearAllModifications(XWootId xwootId) throws XWootContentProviderException
     {
-        // TODO Auto-generated method stub
+        throw new XWootContentProviderException("Not implemented");
     }
 
     public void clearAllModifications() throws XWootContentProviderException
@@ -312,9 +319,9 @@ public class NewXWootContentProvider implements XWootContentProviderInterface
                             lastClearedModification.getMinorVersion()));
 
                         logger.info(String.format(
-                            "Retrieving object with guid '%s' class '%s' at last cleared version %d.%d", xwikiObjectSummary
-                                .getGuid(), xwikiObjectSummary.getClassName(), lastClearedModification.getVersion(),
-                            lastClearedModification.getMinorVersion()));
+                            "Retrieving object with guid '%s' class '%s' at last cleared version %d.%d",
+                            xwikiObjectSummary.getGuid(), xwikiObjectSummary.getClassName(), lastClearedModification
+                                .getVersion(), lastClearedModification.getMinorVersion()));
 
                         previousXWikiObject = rpc.getObject(extendedId.toString(), xwikiObjectSummary.getGuid());
                     } catch (Exception e) {
@@ -496,6 +503,11 @@ public class NewXWootContentProvider implements XWootContentProviderInterface
     public XWootContentProviderStateManager getStateManager()
     {
         return stateManager;
+    }
+
+    public XWootContentProviderConfiguration getConfiguration()
+    {
+        return configuration;
     }
 
 }

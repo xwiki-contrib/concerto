@@ -26,6 +26,8 @@ public class XWootContentProviderConfiguration
 
     private static final String IGNORE_PROPERTY = "ignore";
 
+    private static final String ACCEPT_PROPERTY = "accept";
+
     private static final String CUMULATIVE_CLASSES_PROPERTY = "cumulative_classes";
 
     private static final String WOOTABLE_PROPERTIES_SUFFIX = ".wootable_properties";
@@ -37,6 +39,8 @@ public class XWootContentProviderConfiguration
     private Map<String, Set<String>> wootablePropertiesMap;
 
     private ArrayList<Pattern> ignorePatterns;
+
+    private ArrayList<Pattern> acceptPatterns;
 
     public XWootContentProviderConfiguration()
     {
@@ -67,6 +71,16 @@ public class XWootContentProviderConfiguration
             String[] values = ignoreListValue.split(",");
             for (String value : values) {
                 ignorePatterns.add(Pattern.compile(value));
+            }
+        }
+
+        /* Read accept list */
+        acceptPatterns = new ArrayList<Pattern>();
+        String acceptListValue = properties.getProperty(ACCEPT_PROPERTY);
+        if (acceptListValue != null) {
+            String[] values = acceptListValue.split(",");
+            for (String value : values) {
+                acceptPatterns.add(Pattern.compile(value));
             }
         }
 
@@ -120,14 +134,25 @@ public class XWootContentProviderConfiguration
 
     public boolean isIgnored(String pageName)
     {
+        boolean isIgnored = false;
+
         for (Pattern pattern : ignorePatterns) {
             Matcher matcher = pattern.matcher(pageName);
             if (matcher.matches()) {
-                return true;
+                isIgnored = true;
+                break;
             }
         }
 
-        return false;
+        for (Pattern pattern : acceptPatterns) {
+            Matcher matcher = pattern.matcher(pageName);
+            if (matcher.matches()) {
+                isIgnored = false;
+                break;
+            }
+        }
+
+        return isIgnored;
     }
 
     public Set<String> getCumulativeClasses()
@@ -140,14 +165,48 @@ public class XWootContentProviderConfiguration
         return wootablePropertiesMap;
     }
 
-    public ArrayList<Pattern> getIgnorePatterns()
-    {
-        return ignorePatterns;
-    }
-
     public URL getConfigurationFileUrl()
     {
         return configurationFileUrl;
     }
 
+    public ArrayList<Pattern> getAcceptPatterns()
+    {
+        return acceptPatterns;
+    }
+
+    public ArrayList<Pattern> getIgnorePatterns()
+    {
+        return ignorePatterns;
+    }
+
+    public void addIgnorePattern(String pattern)
+    {
+        ignorePatterns.add(Pattern.compile(pattern));
+    }
+
+    public void addAcceptPattern(String pattern)
+    {
+        acceptPatterns.add(Pattern.compile(pattern));
+    }
+
+    public void removeIgnorePattern(String pattern)
+    {
+        for (Pattern p : ignorePatterns) {
+            if (p.toString().equals(pattern)) {
+                ignorePatterns.remove(p);
+                break;
+            }
+        }
+    }
+
+    public void removeAcceptPattern(String pattern)
+    {
+        for (Pattern p : acceptPatterns) {
+            if (p.toString().equals(pattern)) {
+                acceptPatterns.remove(p);
+                break;
+            }
+        }
+    }
 }

@@ -121,7 +121,7 @@ public class XWootContentProviderStateManager
                 throw e;
             }
 
-            /*logger.info(String.format("Modification %s already present in modification list.", xwootId));*/
+            /* logger.info(String.format("Modification %s already present in modification list.", xwootId)); */
 
             /* Return false on duplicated entry */
             return false;
@@ -217,8 +217,10 @@ public class XWootContentProviderStateManager
 
         int rowsUpdated = ps.executeUpdate();
 
-        /* logger.info(String.format("Cleared all pages '%s' with timestamp different from at %d. %d rows updated",
-            xwootId.getPageId(), xwootId.getTimestamp(), rowsUpdated)); */
+        /*
+         * logger.info(String.format("Cleared all pages '%s' with timestamp different from at %d. %d rows updated",
+         * xwootId.getPageId(), xwootId.getTimestamp(), rowsUpdated));
+         */
 
         ps.close();
     }
@@ -328,7 +330,7 @@ public class XWootContentProviderStateManager
     public Set<XWootId> getNonClearedModificationsWithLowestTimestamp() throws Exception
     {
         Set<XWootId> result = new TreeSet<XWootId>(new XWootIdComparatorAscending());
-        
+
         PreparedStatement ps =
             connection
                 .prepareStatement("SELECT pageId, MIN(timestamp) FROM modifications WHERE cleared=0 GROUP BY pageId");

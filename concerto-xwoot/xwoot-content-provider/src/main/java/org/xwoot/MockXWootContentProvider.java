@@ -125,4 +125,10 @@ public class MockXWootContentProvider implements XWootContentProviderInterface
         // TODO
 
     }
+
+    public XWootContentProviderConfiguration getConfiguration()
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

@@ -106,7 +106,7 @@ public class XWootContentProviderTest extends TestCase
         XWikiPage page = new XWikiPage();
         page.setId(pageName);
         page.setContent(content);
-        rpc.storePage(page);                
+        rpc.storePage(page);
 
         Set<XWootId> result = xwc.getModifiedPagesIds();
         System.out.format("Result: %s\n", result);

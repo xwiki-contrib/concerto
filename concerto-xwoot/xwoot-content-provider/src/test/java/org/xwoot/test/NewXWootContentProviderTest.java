@@ -143,15 +143,15 @@ public class NewXWootContentProviderTest extends TestCase
 
         System.out.format("*** testStore()\n");
         xwc.getModifiedPagesIds();
-        xwc.clearAllModifications();        
-       
+        xwc.clearAllModifications();
+
         XWikiPage page = rpc.getPage("Main.WebHome");
         XWootObject xwootObject = Utils.xwikiPageToXWootObject(page, false);
         xwootObject.setFieldValue("content", content);
 
         xwc.store(xwootObject, null);
         page = rpc.getPage("Main.WebHome");
-        System.out.format("XWiki page stored by XWoot. At version %d.%d\n", page.getVersion(), page.getMinorVersion());        
+        System.out.format("XWiki page stored by XWoot. At version %d.%d\n", page.getVersion(), page.getMinorVersion());
 
         Set<XWootId> result = xwc.getModifiedPagesIds();
         System.out.format("%s\n", result);
@@ -187,12 +187,12 @@ public class NewXWootContentProviderTest extends TestCase
         xwc.getModifiedPagesIds();
         List<XWootId> result = xwc.getStateManager().getModificationsFor("Main.WebHome", false);
         System.out.format("Not cleared items for Main.WebHome: %s\n", result);
-        
+
         assertEquals(1, result.size());
         assertEquals(page.getVersion(), result.get(0).getVersion());
         assertEquals(page.getMinorVersion(), result.get(0).getMinorVersion());
 
         System.out.format("*****************************\n\n");
     }
-    
+
 }
