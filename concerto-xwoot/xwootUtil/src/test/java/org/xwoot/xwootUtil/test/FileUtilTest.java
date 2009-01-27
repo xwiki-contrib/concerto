@@ -77,10 +77,17 @@ public class FileUtilTest extends AbstractXwootUtilTestBase
     private static final String SOURCE_CONTENT = "first line\nsecond line\nthird line\n";
 
     /** Test string containing characters with accents. */
-    private static final String ACCENTUATED_STRING = "áàâãäăÁÀÂÃÄéèêëÉÈÊËíìîïÍÌÎÏóòôõöÓÒÔÕÖúùûüÚÙÛÜçÇñÑşŞţŢ";
+    // private static final String ACCENTUATED_STRING = "áàâãäăÁÀÂÃÄéèêëÉÈÊËíìîïÍÌÎÏóòôõöÓÒÔÕÖúùûüÚÙÛÜçÇñÑşŞţŢ";
+    private static final String ACCENTUATED_STRING =
+        "\u00E1\u00E0\u00E2\u00E3\u00E4\u0103\u00C1\u00C0\u00C2"
+            + "\u00C3\u00C4\u00E9\u00E8\u00EA\u00EB\u00C9\u00C8\u00CA\u00CB\u00ED\u00EC\u00EE\u00EF"
+            + "\u00CD\u00CC\u00CE\u00CF\u00F3\u00F2\u00F4\u00F5\u00F6\u00D3\u00D2\u00D4\u00D5\u00D6"
+            + "\u00FA\u00F9\u00FB\u00FC\u00DA\u00D9\u00DB\u00DC\u00E7\u00C7\u00F1\u00D1\u015F\u015E\u0163\u0162";
 
     /** Test string containing the accentuatedString and some extra non-ASCII chars. */
-    private static final String DIRTY_STRING = "قذر" + ACCENTUATED_STRING + "أشياء";
+    // private static final String DIRTY_STRING = "قذر" + ACCENTUATED_STRING + "أشياء";
+    private static final String DIRTY_STRING =
+        "\u0642\u0630\u0631" + ACCENTUATED_STRING + "\u0623\u0634\u064A\u0627\u0621";
 
     /** The clean version of the accentuatedString containing only ASCII characters. */
     private static final String CLEAN_STRING = "aaaaaaAAAAAeeeeEEEEiiiiIIIIoooooOOOOOuuuuUUUUcCnNsStT";

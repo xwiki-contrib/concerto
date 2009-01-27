@@ -248,25 +248,46 @@ public final class FileUtil
      */
     public static String removeAccents(String string)
     {
+        /* @TODO: switch to {@link java.text.Normalizer} when switching to JDK1.6 for better coverage.
+        Example: text = Normalizer.normalize(text, Normalizer.Form.NFD); */ 
+        
         String sSemAcento = string + "";
-        sSemAcento = sSemAcento.replaceAll("[áàâãäă]", "a");
-        sSemAcento = sSemAcento.replaceAll("[ÁÀÂÃÄ]", "A");
-        sSemAcento = sSemAcento.replaceAll("[éèêë]", "e");
-        sSemAcento = sSemAcento.replaceAll("[ÉÈÊË]", "E");
-        sSemAcento = sSemAcento.replaceAll("[íìîï]", "i");
-        sSemAcento = sSemAcento.replaceAll("[ÍÌÎÏ]", "I");
-        sSemAcento = sSemAcento.replaceAll("[óòôõö]", "o");
-        sSemAcento = sSemAcento.replaceAll("[ÓÒÔÕÖ]", "O");
-        sSemAcento = sSemAcento.replaceAll("[úùûü]", "u");
-        sSemAcento = sSemAcento.replaceAll("[ÚÙÛÜ]", "U");
-        sSemAcento = sSemAcento.replaceAll("ç", "c");
-        sSemAcento = sSemAcento.replaceAll("Ç", "C");
-        sSemAcento = sSemAcento.replaceAll("ñ", "n");
-        sSemAcento = sSemAcento.replaceAll("Ñ", "N");
-        sSemAcento = sSemAcento.replaceAll("[ş]", "s");
-        sSemAcento = sSemAcento.replaceAll("[Ş]", "S");
-        sSemAcento = sSemAcento.replaceAll("[ţ]", "t");
-        sSemAcento = sSemAcento.replaceAll("[Ţ]", "T");
+//        sSemAcento = sSemAcento.replaceAll("[áàâãäă]", "a");
+        sSemAcento = sSemAcento.replaceAll("[\u00E1\u00E0\u00E2\u00E3\u00E4\u0103]", "a");
+//        sSemAcento = sSemAcento.replaceAll("[ÁÀÂÃÄ]", "A");
+        sSemAcento = sSemAcento.replaceAll("[\u00C1\u00C0\u00C2\u00C3\u00C4]", "A");
+//        sSemAcento = sSemAcento.replaceAll("[éèêë]", "e");
+        sSemAcento = sSemAcento.replaceAll("[\u00E9\u00E8\u00EA\u00EB]", "e");
+//        sSemAcento = sSemAcento.replaceAll("[ÉÈÊË]", "E");
+        sSemAcento = sSemAcento.replaceAll("[\u00C9\u00C8\u00CA\u00CB]", "E");
+//        sSemAcento = sSemAcento.replaceAll("[íìîï]", "i");
+        sSemAcento = sSemAcento.replaceAll("[\u00ED\u00EC\u00EE\u00EF]", "i");
+//        sSemAcento = sSemAcento.replaceAll("[ÍÌÎÏ]", "I");
+        sSemAcento = sSemAcento.replaceAll("[\u00CD\u00CC\u00CE\u00CF]", "I");
+//        sSemAcento = sSemAcento.replaceAll("[óòôõö]", "o");
+        sSemAcento = sSemAcento.replaceAll("[\u00F3\u00F2\u00F4\u00F5\u00F6]", "o");
+//        sSemAcento = sSemAcento.replaceAll("[ÓÒÔÕÖ]", "O");
+        sSemAcento = sSemAcento.replaceAll("[\u00D3\u00D2\u00D4\u00D5\u00D6]", "O");
+//        sSemAcento = sSemAcento.replaceAll("[úùûü]", "u");
+        sSemAcento = sSemAcento.replaceAll("[\u00FA\u00F9\u00FB\u00FC]", "u");
+//        sSemAcento = sSemAcento.replaceAll("[ÚÙÛÜ]", "U");
+        sSemAcento = sSemAcento.replaceAll("[\u00DA\u00D9\u00DB\u00DC]", "U");
+//        sSemAcento = sSemAcento.replaceAll("ç", "c");
+        sSemAcento = sSemAcento.replaceAll("\u00E7", "c");
+//        sSemAcento = sSemAcento.replaceAll("Ç", "C");
+        sSemAcento = sSemAcento.replaceAll("\u00C7", "C");
+//        sSemAcento = sSemAcento.replaceAll("ñ", "n");
+        sSemAcento = sSemAcento.replaceAll("\u00F1", "n");
+//        sSemAcento = sSemAcento.replaceAll("Ñ", "N");
+        sSemAcento = sSemAcento.replaceAll("\u00D1", "N");
+//        sSemAcento = sSemAcento.replaceAll("[ş]", "s");
+        sSemAcento = sSemAcento.replaceAll("[\u015F]", "s");
+//        sSemAcento = sSemAcento.replaceAll("[Ş]", "S");
+        sSemAcento = sSemAcento.replaceAll("[\u015E]", "S");
+//        sSemAcento = sSemAcento.replaceAll("[ţ]", "t");
+        sSemAcento = sSemAcento.replaceAll("[\u0163]", "t");
+//        sSemAcento = sSemAcento.replaceAll("[Ţ]", "T");
+        sSemAcento = sSemAcento.replaceAll("[\u0162]", "T");
 
         return sSemAcento;
     }
