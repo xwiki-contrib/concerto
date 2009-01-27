@@ -185,9 +185,17 @@ public abstract class AbstractXWootTest
         this.xwiki2 = WikiContentManagerFactory.getMockFactory().createWCM();
         this.xwiki3 = WikiContentManagerFactory.getMockFactory().createWCM();
         
-        this.xwiki21 = XWootContentProviderFactory.getXWootContentProvider(null,null,true,null);//"http://concerto1:8080/xwiki/xmlrpc","xwoot1",true,null);
-        this.xwiki22 = XWootContentProviderFactory.getXWootContentProvider(null,null,true,null);//"http://concerto2:8080/xwiki/xmlrpc","xwoot2",true,null);
-        this.xwiki23 = XWootContentProviderFactory.getXWootContentProvider(null,null,true,null);//"http://concerto3:8080/xwiki/xmlrpc","xwoot3",true,null);
+        // Choose one:
+        
+        // a) Use real content providers.
+//        this.xwiki21 = XWootContentProviderFactory.getXWootContentProvider("http://concerto1.devxwiki.com:8080/xwiki/xmlrpc","xwoot1",true,null);
+//        this.xwiki22 = XWootContentProviderFactory.getXWootContentProvider("http://concerto2.devxwiki.com:8080/xwiki/xmlrpc","xwoot2",true,null);
+//        this.xwiki23 = XWootContentProviderFactory.getXWootContentProvider("http://concerto3.devxwiki.com:8080/xwiki/xmlrpc","xwoot3",true,null);
+        
+        // b) Use mocks for content providers.
+        this.xwiki21 = XWootContentProviderFactory.getXWootContentProvider(null,null,true,null);
+        this.xwiki22 = XWootContentProviderFactory.getXWootContentProvider(null,null,true,null);
+        this.xwiki23 = XWootContentProviderFactory.getXWootContentProvider(null,null,true,null);
 
         this.opClock1 = new Clock(WORKINGDIR + File.separator + "Site1" + File.separator + "WootClock");
         this.opClock2 = new Clock(WORKINGDIR + File.separator + "Site2" + File.separator + "WootClock");

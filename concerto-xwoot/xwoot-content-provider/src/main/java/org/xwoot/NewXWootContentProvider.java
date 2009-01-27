@@ -81,7 +81,9 @@ public class NewXWootContentProvider implements XWootContentProviderInterface
     public void login(String username, String password) throws XWootContentProviderException
     {
         if (rpc != null) {
-            throw new XWootContentProviderException("XWootContentProvider is already logged in.");
+            this.logger.info("XWootContentProvider is already logged in.");
+            //throw new XWootContentProviderException("XWootContentProvider is already logged in.");
+            return;
         }
 
         try {

@@ -115,7 +115,7 @@ public class StateManagement extends HttpServlet
 
         try {
             if (action == StateAction.UPLOAD) {
-                System.out.println("Want to upload state file... ");
+                this.log("Want to upload state file... ");
                 if (requestParameters.containsKey("statefile")) {
                     this.temp = File.createTempFile("state", ".zip");
                     if (this.upload(requestParameters.get("statefile"))) {

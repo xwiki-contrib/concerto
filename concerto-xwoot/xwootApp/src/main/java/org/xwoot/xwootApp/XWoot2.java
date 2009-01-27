@@ -873,34 +873,66 @@ public class XWoot2 implements XWootAPI
             throw new XWootException(this.peerId + " : Problem to get woot engine state \n", e);
         }
         
-        if (wootState!=null){
+        if (wootState!=null && wootState.exists()){
             File copy0 = new File(this.stateDir + File.separatorChar + WootEngine.STATE_FILE_NAME);
-            wootState.renameTo(copy0);
+            
+            if (!wootState.renameTo(copy0)) {
+                this.logger.warn(this.peerId + " : Failed to move the temporary woot state file to the working dir by using File.renameTo. Using fallback.");
+                
+                try {
+                    FileUtil.copyFile(wootState.getPath(), copy0.getPath());
+                } catch (Exception e) {
+                    this.logger.error(this.peerId + " : Failed to replace new state file with old one. State creation process failed.\n", e);
+                    throw new XWootException(this.peerId + " : Failed to replace new state file with old one. State creation process failed.\n", e);
+                }
+                
+                wootState.delete();
+                wootState = copy0;
+            }
+        } else {
+            this.logger.error(this.peerId + " : The Woot state did not compute successfuly.\n");
+            throw new XWootException(this.peerId + " : The Woot state did not compute successfuly.");
         }
 
+        // get TRE state
         try {
-            // get TRE state
             FileUtil.zipDirectory(this.tre.getWorkingDir(), this.stateDir + File.separatorChar
                 + ThomasRuleEngine.TRE_STATE_FILE_NAME);
-
-            String zip=FileUtil.zipDirectory(this.stateDir, File.createTempFile("state", ".zip").getPath());
+        } catch (Exception e) {
+            this.logger.error(this.peerId + " : The TRE state did not compute successfuly.\n", e);
+            throw new XWootException(this.peerId + " : The TRE state did not compute successfuly.\n", e);
+        }
+        
+        // package the WOOT state and the TRE state together.
+        try {
+            String zip=FileUtil.zipDirectory(this.stateDir/*, File.createTempFile("state", ".zip").getPath()*/);
             if (zip!=null){
                 File r = new File(zip);
                 File result = new File(this.stateDir + File.separatorChar + STATEFILENAME);
-                r.renameTo(result);
+                if (!r.renameTo(result)) {
+                    this.logger.warn(this.peerId + " : Failed to move the temporary state file to the state dir. Using fallback.");
+                    
+                    try {
+                        FileUtil.copyFile(r.getPath(), result.getPath());
+                    } catch (Exception e) {
+                        this.logger.error(this.peerId + " : Failed to replace old state file with new one. State creation process failed.\n", e);
+                        throw new XWootException(this.peerId + " : Failed to replace old state file with new one. State creation process failed.\n", e);
+                    }
+                    
+                    r.delete();
+                }
+                
+                // return the package as the state of this XWoot node.
                 return result;
             }
            
             File result = new File(this.getStateFilePath());
             result.createNewFile();
             return null;
-       
-           
-
             
         } catch (IOException e) {
-            this.logger.error(this.peerId + " : Problem to zip xwoot datas \n", e);
-            throw new XWootException(this.peerId + " : Problem to zip xwoot datas \n", e);
+            this.logger.error(this.peerId + " : Problems creating the XWoot state.\n", e);
+            throw new XWootException(this.peerId + " : Problems creating the XWoot state.\n", e);
         }
 
     }
@@ -910,6 +942,7 @@ public class XWoot2 implements XWootAPI
         if (this.isStateComputed()) {
             return new File(this.getStateFilePath());
         }
+        
         return null;
     }
 
