@@ -262,6 +262,8 @@
     <module>xwootUtil</module>
     <!-- Module for XWoot special data. -->
     <module>xwoot-content-provider</module>
+    <!-- Module for P2P communication using the JXTA platform-->
+    <module>jxta</module>
   </modules>
   
   <build>
