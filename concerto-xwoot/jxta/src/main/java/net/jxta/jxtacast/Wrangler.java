@@ -22,8 +22,6 @@ public interface Wrangler {
 	/** Receive a regular 'maintainence' check-in from the TrailBoss thread. */
 	void bossCheck();
 
-	
-
 	/**
 	 * Send the specified block of data out over the wire.
 	 * 

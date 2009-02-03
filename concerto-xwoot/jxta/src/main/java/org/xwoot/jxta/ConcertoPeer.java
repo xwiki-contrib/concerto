@@ -24,6 +24,7 @@ import net.jxta.impl.membership.pse.PSEMembershipService;
 import net.jxta.jxtacast.event.JxtaCastEvent;
 import net.jxta.jxtacast.event.JxtaCastEventListener;
 import net.jxta.peergroup.PeerGroup;
+import net.jxta.platform.NetworkManager.ConfigMode;
 import net.jxta.protocol.PeerAdvertisement;
 import net.jxta.protocol.PeerGroupAdvertisement;
 
@@ -35,20 +36,21 @@ import java.util.List;
 
 /**
  * Proof of Concept TUI application using the JXTA platform trough the implementation
- * {@link JxtaP2PFace} of the interface {@link P2PFace}.
+ * {@link JxtaPeer} of the interface {@link Peer}.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class ConcertoPeer implements JxtaCastEventListener {
 
-	P2PFace jxta;
+	Peer jxta;
 
 	public ConcertoPeer() {
-		jxta = new JxtaP2PFace();
+		jxta = new JxtaPeer();
 	}
 	
 	public void start() throws Exception {
-		jxta.configureNetwork(null);
+		jxta.configureNetwork(null, ConfigMode.EDGE);
+		jxta.getManager().setUseDefaultSeeds(true);
 		jxta.startNetworkAndConnect(this);
 	}
 

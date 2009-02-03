@@ -20,7 +20,6 @@
 
 package org.xwoot.jxta;
 
-import java.net.URI;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import java.io.File;
@@ -33,6 +32,7 @@ import net.jxta.exception.PeerGroupException;
 import net.jxta.exception.ProtocolNotSupportedException;
 import net.jxta.id.ID;
 import net.jxta.id.IDFactory;
+import net.jxta.impl.membership.none.NoneMembershipService;
 import net.jxta.impl.membership.pse.PSEMembershipService;
 import net.jxta.impl.membership.pse.PSEUtils;
 import net.jxta.impl.membership.pse.StringAuthenticator;
@@ -46,6 +46,7 @@ import net.jxta.peer.PeerID;
 import net.jxta.peergroup.*;
 import net.jxta.platform.ModuleClassID;
 import net.jxta.platform.NetworkManager;
+import net.jxta.platform.NetworkManager.ConfigMode;
 import net.jxta.protocol.*;
 import net.jxta.rendezvous.*;
 
@@ -60,10 +61,10 @@ import net.jxta.document.XMLDocument;
 /**
  * Implementation handling the gory details of JXTA. 
  *              
- * @version $Id:$
+ * @version $Id$
  */
 @SuppressWarnings("deprecation")
-public class JxtaP2PFace implements P2PFace, RendezvousListener {
+public class JxtaPeer implements Peer, RendezvousListener {
 
     protected PeerGroup rootGroup;
     protected PeerGroup currentJoinedGroup;
@@ -77,34 +78,41 @@ public class JxtaP2PFace implements P2PFace, RendezvousListener {
 	
 //    /** Constructor - Starts JXTA.
 //     */
-//    public JxtaP2PFace() {
+//    public JxtaPeer() {
 //        //joinedGroups = new Vector<PeerGroup>(20);
 //    }
     
 	/** {@inheritDoc} **/
-    public void configureNetwork(File jxtaCacheDirectoryPath) throws IOException {
-    	
-    	if (jxtaCacheDirectoryPath == null) {
-    		jxtaCacheDirectoryPath = new File(new File(".cache"), "ConcertoPeer"
-					+ UUID.randomUUID().toString());
-    	}
-    	
-		manager = new NetworkManager(NetworkManager.ConfigMode.EDGE,
-				"ConcertoPeer", jxtaCacheDirectoryPath.toURI());
+	public void configureNetwork(File jxtaCacheDirectoryPath, ConfigMode mode) throws IOException
+	{
+	    if (jxtaCacheDirectoryPath == null) {
+            jxtaCacheDirectoryPath = new File(new File(".cache"), "ConcertoPeer"
+                    + UUID.randomUUID().toString());
+        }
+        
+        manager = new NetworkManager(mode, "ConcertoPeer",
+            jxtaCacheDirectoryPath.toURI());
 
-		// Use JXTA default relay/rendezvous servers for now.
-		//manager.setUseDefaultSeeds(true);
-		manager.getConfigurator().addSeedRelay(URI.create("tcp://192.18.37.39:9701"));
-		manager.getConfigurator().addSeedRendezvous(URI.create("tcp://192.18.37.39:9701"));
-		
-		// FIXME: Leave such configurations to be made from outside
-		// after calling this method but before calling startNetworkAndConnect.
-		//NetworkConfigurator config = manager.getConfigurator();
-		manager.getConfigurator().setUseMulticast(false);
-		
-		System.out.println("Infrastructure ID: " + manager.getInfrastructureID());
-		System.out.println("Peer ID: " + manager.getPeerID());
+        // Use JXTA default relay/rendezvous servers for now.
+        // manager.setUseDefaultSeeds(true);
+        //manager.getConfigurator().addSeedRelay(URI.create("tcp://192.18.37.39:9701"));
+        //manager.getConfigurator().addSeedRendezvous(URI.create("tcp://192.18.37.39:9701"));
+        
+        // FIXME: Leave such configurations to be made from outside
+        // after calling this method but before calling startNetworkAndConnect.
+        //NetworkConfigurator config = manager.getConfigurator();
+        //manager.getConfigurator().setUseMulticast(false);
+        
+        System.out.println("Infrastructure ID: " + manager.getInfrastructureID());
+        System.out.println("Peer ID: " + manager.getPeerID());
 	}
+    
+    
+    /** {@inheritDoc} */
+    public NetworkManager getManager()
+    {
+        return this.manager;
+    }
 
     
     /** {@inheritDoc} **/
@@ -137,6 +145,7 @@ public class JxtaP2PFace implements P2PFace, RendezvousListener {
 			System.err
 					.println("Unable to connect to rendezvous server. Stoping.");
 			this.stopNetwork();
+			return;
 		}
 
 		// Register ourselves to detect new RDVs that broadcast their presence.
@@ -154,7 +163,7 @@ public class JxtaP2PFace implements P2PFace, RendezvousListener {
 	
 	/** {@inheritDoc} **/
 	public void stopNetwork() {
-		if (!this.isNetworkConfigured()) {
+		if (this.isNetworkConfigured()) {
 			// Try to leave the current group nicely.
 			try {
 				this.leavePeerGroup(currentJoinedGroup);
@@ -489,11 +498,17 @@ public class JxtaP2PFace implements P2PFace, RendezvousListener {
     
     
     /** {@inheritDoc} **/
+    public PeerGroup createNewGroup(String groupName, String description) throws Exception {
+        return this.createNewGroup(groupName, description, null, null);
+    }
+    
+    
+    /** {@inheritDoc} **/
     public synchronized PeerGroup joinPeerGroup(PeerGroupAdvertisement groupAdv, char[] keystorePassword, char[] groupPassword,
                                                 boolean beRendezvous) throws PeerGroupException, IOException, ProtocolNotSupportedException {
 
         // See if it's a group we've already joined.
-        if (groupAdv.getPeerGroupID().equals(this.currentJoinedGroup.getPeerGroupID())) {
+        if (this.currentJoinedGroup != null && groupAdv.getPeerGroupID().equals(this.currentJoinedGroup.getPeerGroupID())) {
         	System.out.println("Already joined.");
         	return this.currentJoinedGroup;
         }
@@ -514,6 +529,8 @@ public class JxtaP2PFace implements P2PFace, RendezvousListener {
         	throw new PeerGroupException("Authentication failed for joining the group.");
         }
 
+        // TODO: maybe change this to a waitForRendezVous check for the group.
+        
         // Make this peer a RDV for the group in order to enable immediate communication.
         newGroup.getRendezVousService().startRendezVous();
         
@@ -590,17 +607,18 @@ public class JxtaP2PFace implements P2PFace, RendezvousListener {
         // Set the group as JxtaCast's group.
         jc.setPeerGroup(newGroup);
         
-        // Update local cache with peers from this group.
-        /*
-	        // TODO: register a listener and check number of peers/rdvs in group to determine
-	        // if the current peer needs to be a rdv.(should be easy) Does jxta do this auto?
-	        // FIXME: We really need this in order to join empty groups.
-	        // FIXME: HIGH PRIORITY!
-         	FIXED?
-         */
+        // Update local cache with peers and their private pipe advertisements from this group.
         discoverPeers(null, /*groupAdv, */null);
+        discoverAdvertisements(null, null, "Name", jc.getBackChannelPipePrefix() + "*");
 
         return newGroup;
+    }
+    
+    /** {@inheritDoc} */
+    public PeerGroup joinPeerGroup(PeerGroupAdvertisement groupAdv, boolean beRendezvous) throws PeerGroupException,
+        IOException, ProtocolNotSupportedException
+    {
+        return joinPeerGroup(groupAdv, null, null, beRendezvous);
     }
     
     /** {@inheritDoc} **/
@@ -623,6 +641,12 @@ public class JxtaP2PFace implements P2PFace, RendezvousListener {
         if (oldGroup.getPeerGroupID().equals(this.currentJoinedGroup.getPeerGroupID())) {
         	this.currentJoinedGroup = null;
         }
+    }
+    
+    
+    /** {@inheritDoc} **/
+    public void leavePeerGroup() throws PeerGroupException {
+        leavePeerGroup(this.currentJoinedGroup);
     }
     
 
@@ -759,8 +783,19 @@ public class JxtaP2PFace implements P2PFace, RendezvousListener {
     }
     
 
-    /** {@inheritDoc} **/
-    public boolean authenticateMembership(PeerGroup group, char[] keystorePassword, char[] identityPassword) throws PeerGroupException, ProtocolNotSupportedException {
+    /**
+     * Authenticate membership in a peer group using {@link PSEMembershipService}'s \"StringAuthentication\" method.
+     * </p>
+     * If both passwords are not provided, the authentication is made using {@link NoneMembershipService} and no authentication data is provided.
+     * 
+     * @param keystorePassword the password of the local keystore.
+     * @param identityPassword the group's password.
+     * 
+     * @return true if successful, false if the provided passwords were not correct or joining failed.
+     * @throws PeerGroupException if problems occurred joining the group.
+     * @throws ProtocolNotSupportedException if problems occur authenticating credentials.
+     */
+    protected boolean authenticateMembership(PeerGroup group, char[] keystorePassword, char[] identityPassword) throws PeerGroupException, ProtocolNotSupportedException {
     	// FIXME: make authentication based on the actual membershipService of the group, not by the provided passwords.
     	
         // Get the MembershipService from the peer group.
@@ -971,7 +1006,7 @@ public class JxtaP2PFace implements P2PFace, RendezvousListener {
 	
 	/** {@inheritDoc} **/
 	public boolean hasJoinedAGroup() {
-		return !this.currentJoinedGroup.equals(this.rootGroup);
+		return this.currentJoinedGroup != null && !this.currentJoinedGroup.equals(this.rootGroup);
 	}
 	
 	/** {@inheritDoc} **/
