@@ -286,7 +286,7 @@ public class JxtaCast implements PipeMsgListener, Runnable {
      */
     public static void logMsg(String msg) {
         if (logEnabled)
-            System.out.println(msg);
+            System.out.println("[JxtaCast " + new Date() + "] " + msg);
     }
 
 
@@ -402,6 +402,12 @@ public class JxtaCast implements PipeMsgListener, Runnable {
     public String getBackChannelPipePrefix() {
 
         return "FileCastBackChannel." + castName;
+    }
+    
+    
+    /** @return the pipe advertisement used for the "back channel" input pipe. */
+    public PipeAdvertisement getBackChannelPipeAdvertisement() {
+        return privInputPipe.getAdvertisement();
     }
 
 
@@ -746,6 +752,7 @@ public class JxtaCast implements PipeMsgListener, Runnable {
 		this.myPeer = myPeer;
 	}
 	
+	
 	public Wrangler removeWrangler(String key) {
 		if (wranglers != null) {
 			return this.wranglers.remove(key);
@@ -753,4 +760,5 @@ public class JxtaCast implements PipeMsgListener, Runnable {
 		
 		return null;
 	}
+	
 }

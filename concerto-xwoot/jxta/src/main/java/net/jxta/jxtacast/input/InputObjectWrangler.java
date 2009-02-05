@@ -10,7 +10,7 @@ import net.jxta.jxtacast.event.JxtaCastEvent;
 /**
  * Class for receiving an object.
  *
- * @version $Id:$
+ * @version $Id$
  * @see InputWrangler
  */
 public class InputObjectWrangler extends AbstractInputWrangler {
@@ -53,7 +53,7 @@ public class InputObjectWrangler extends AbstractInputWrangler {
 	    	
 	    	result = ois.readObject();
 	    	
-	    	JxtaCast.logMsg("Successfuly reassembled an object of type " + result.getClass());
+	    	JxtaCast.logMsg("Successfuly reassembled " + objectData.length + " bytes into an object of type " + result.getClass());
     	} catch (Exception e) {
     		JxtaCast.logMsg("Failed to reassemble the received message.");
     		e.printStackTrace();

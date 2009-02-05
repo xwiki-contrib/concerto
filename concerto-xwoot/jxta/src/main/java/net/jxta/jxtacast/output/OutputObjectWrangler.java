@@ -55,6 +55,8 @@ public class OutputObjectWrangler extends AbstractOutputWrangler {
 			oos = new ObjectOutputStream(baos);
 			oos.writeObject(object);
 			result = baos.toByteArray();
+			
+			JxtaCast.logMsg("Successfuly dissassembled an object of type " + result.getClass() + " into " + result.length + " bytes.");
 		} catch (Exception e) {
 			JxtaCast
 					.logMsg("Unable to disassemble an object into a byte array.");

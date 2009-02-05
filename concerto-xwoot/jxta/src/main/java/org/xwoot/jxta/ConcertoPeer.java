@@ -19,7 +19,11 @@
  */
 package org.xwoot.jxta;
 
+import net.jxta.document.Advertisement;
+import net.jxta.document.AdvertisementFactory;
+import net.jxta.exception.JxtaException;
 import net.jxta.exception.PeerGroupException;
+import net.jxta.id.ID;
 import net.jxta.impl.membership.pse.PSEMembershipService;
 import net.jxta.jxtacast.event.JxtaCastEvent;
 import net.jxta.jxtacast.event.JxtaCastEventListener;
@@ -27,12 +31,15 @@ import net.jxta.peergroup.PeerGroup;
 import net.jxta.platform.NetworkManager.ConfigMode;
 import net.jxta.protocol.PeerAdvertisement;
 import net.jxta.protocol.PeerGroupAdvertisement;
+import net.jxta.protocol.PipeAdvertisement;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Proof of Concept TUI application using the JXTA platform trough the implementation
@@ -50,7 +57,7 @@ public class ConcertoPeer implements JxtaCastEventListener {
 	
 	public void start() throws Exception {
 		jxta.configureNetwork(null, ConfigMode.EDGE);
-		jxta.getManager().setUseDefaultSeeds(true);
+		//jxta.getManager().setUseDefaultSeeds(true);
 		jxta.startNetworkAndConnect(this);
 	}
 
@@ -82,6 +89,10 @@ public class ConcertoPeer implements JxtaCastEventListener {
 				System.out.println("4. List known peers in the current group.");
 				System.out.println("5. Send a small object to a group.");
 				System.out.println("6. Show jxta status.");
+				System.out.println("7. Send a small object to a single group member through back-channel.");
+				System.out.println("8. Send a large object to a single group member through back-channel.");
+				System.out.println("9. Send my back-channel pipe adv to a single group member through its back-channel and receive a reply.");
+				System.out.println("10. Send my back-channel pipe adv to a single random group member through its back-channel and receive a reply.");
 	
 				BufferedReader bis = new BufferedReader(new InputStreamReader(
 						System.in));
@@ -100,13 +111,21 @@ public class ConcertoPeer implements JxtaCastEventListener {
 				} else if (option == 3) {
 					peer.createAPrivateGroup();
 				} else if (option == 4) {
-					peer.listKnownPeersinCurrentGroup();
+					peer.listKnownPeersInCurrentGroup();
 				} else if (option == 5) {
 					// Send a small message.
 					peer.sendSmallObjectToCurrentGroup();
 				} else if (option == 6) {
 					peer.getStatus();
-				} else {
+				} else if (option == 7) {
+                    peer.sendSmallObjectThroughBackChannel();
+                } else if (option == 8) {
+                    peer.sendLargeObjectThroughBackChannel();
+                } else if (option == 9) {
+                    peer.sendMyPipeAdvertisementThroughBackChannel();
+                } else if (option == 10) {
+                    peer.sendMyPipeAdvertisementThroughBackChannelOfRandomPeer();
+                } else {
 					option = 0;
 					System.out.println("Invalid option. Try again.");
 				}
@@ -212,8 +231,7 @@ public class ConcertoPeer implements JxtaCastEventListener {
 	}
 	
 	
-	
-	public void listKnownPeersinCurrentGroup() {
+	public void listKnownPeersInCurrentGroup() {
 		System.out.println("Current group: " + jxta.getCurrentJoinedPeerGroup().getPeerGroupName());
 		
 		Enumeration<PeerAdvertisement> peers = jxta.getKnownPeers();
@@ -243,6 +261,10 @@ public class ConcertoPeer implements JxtaCastEventListener {
 	
 	public void sendSmallObjectToCurrentGroup() {
 		System.out.println("Current group: " + jxta.getCurrentJoinedPeerGroup().getPeerGroupName());
+		if (!jxta.isConnectedToGroup()) {
+            System.out.println("Join a group first! (other than de default netPeerGroup)");
+            return;
+        }
 		
 		String smallObject = "Small object transfer";
 		
@@ -252,8 +274,217 @@ public class ConcertoPeer implements JxtaCastEventListener {
 			e.printStackTrace();
 		}
 	}
+	
+	public void sendSmallObjectThroughBackChannel() {
+	    System.out.println("Current group: " + jxta.getCurrentJoinedPeerGroup().getPeerGroupName());
+	    if (!jxta.isConnectedToGroup()) {
+            System.out.println("Join a group first! (other than de default netPeerGroup)");
+            return;
+        }
+	    
+	    /*System.out.println("attribute: " + PipeAdvertisement.NameTag);
+	    System.out.println("value: " + PipeAdvertisement.NameTag);*/
+	    Enumeration<Advertisement> en = this.jxta.getKnownAdvertisements(/*null, null*/PipeAdvertisement.NameTag, jxta.getBackChannelPipeNamePrefix() + "*");
+        
+        List<PipeAdvertisement> list = new ArrayList<PipeAdvertisement>();
+        
+        System.out.println("Available group members' pipes:");
+        while (en.hasMoreElements()) {
+            Advertisement adv = en.nextElement();
+            if (!(adv instanceof PipeAdvertisement) || adv.equals(jxta.getMyBackChannelPipeAdvertisement())) {
+                continue;
+            }
+            
+            PipeAdvertisement pipeAdv = (PipeAdvertisement) adv;
+            list.add(pipeAdv);
+            System.out.println(list.size() - 1 + ": " + pipeAdv.getName());
+        }
+        
+        int selection = -1;
+        System.out.println("Select: ");
+        BufferedReader bis = new BufferedReader(new InputStreamReader(
+                System.in));
+
+        try {
+            selection = Integer.parseInt(bis.readLine());
+        } catch (Exception e) {
+            System.out.println("Bad Value, canceled.");
+            selection = -1;
+            return;
+        }
+        
+        String[] messageIds = {"first message id", "second message id"};
+        boolean sent = false;
+        try {
+            sent = jxta.sendObject(messageIds, "anti-entropy request", list.get(selection));
+        } catch (JxtaException je) {
+            System.out.println("Problem sending the message: ");
+            je.printStackTrace();
+        }
+        System.out.println("Message successfuly sent: " + sent);    
+	}
+	
+	public void sendLargeObjectThroughBackChannel() {
+        System.out.println("Current group: " + jxta.getCurrentJoinedPeerGroup().getPeerGroupName());
+        if (!jxta.isConnectedToGroup()) {
+            System.out.println("Join a group first! (other than de default netPeerGroup)");
+            return;
+        }
+        
+        Enumeration<Advertisement> en = this.jxta.getKnownAdvertisements(PipeAdvertisement.NameTag, jxta.getBackChannelPipeNamePrefix() + "*");
+        
+        List<PipeAdvertisement> list = new ArrayList<PipeAdvertisement>();
+        
+        System.out.println("Available group members' pipes:");
+        while (en.hasMoreElements()) {
+            Advertisement adv = en.nextElement();
+            if (!(adv instanceof PipeAdvertisement) || adv.equals(jxta.getMyBackChannelPipeAdvertisement())) {
+                continue;
+            }
+            
+            PipeAdvertisement pipeAdv = (PipeAdvertisement) adv;
+            list.add(pipeAdv);
+            System.out.println(list.size() - 1 + ": " + pipeAdv.getName());
+        }
+        
+        int selection = -1;
+        System.out.println("Select: ");
+        BufferedReader bis = new BufferedReader(new InputStreamReader(
+                System.in));
+
+        try {
+            selection = Integer.parseInt(bis.readLine());
+        } catch (Exception e) {
+            System.out.println("Bad Value, canceled.");
+            selection = -1;
+            return;
+        }
+        
+        List<String> bigObject = new ArrayList<String>();
+        String line = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        StringBuilder addThis = new StringBuilder(line);
+        for(int i=0; i<100; i++) {
+            bigObject.add(addThis.toString());
+            addThis.append(line);
+        }
+        
+        boolean sent = false;
+        try {
+            sent = jxta.sendObject(bigObject.toArray(), "anti-entropy/state request/reply", list.get(selection));
+        } catch (JxtaException je) {
+            System.out.println("Problem sending the message: ");
+            je.printStackTrace();
+        }
+        System.out.println("Message successfuly sent: " + sent); 
+    }
+	
+	public void sendMyPipeAdvertisementThroughBackChannel() {
+        System.out.println("Current group: " + jxta.getCurrentJoinedPeerGroup().getPeerGroupName());
+        if (!jxta.isConnectedToGroup()) {
+            System.out.println("Join a group first! (other than de default netPeerGroup)");
+            return;
+        }
+        
+        Enumeration<Advertisement> en = this.jxta.getKnownAdvertisements(PipeAdvertisement.NameTag, jxta.getBackChannelPipeNamePrefix() + "*");
+        
+        List<PipeAdvertisement> list = new ArrayList<PipeAdvertisement>();
+        
+        System.out.println("Available group members' pipes:");
+        while (en.hasMoreElements()) {
+            Advertisement adv = en.nextElement();
+            if (!(adv instanceof PipeAdvertisement) || adv.equals(jxta.getMyBackChannelPipeAdvertisement())) {
+                continue;
+            }
+            
+            PipeAdvertisement pipeAdv = (PipeAdvertisement) adv;
+            list.add(pipeAdv);
+            System.out.println(list.size() - 1 + ": " + pipeAdv.getName());
+        }
+        
+        int selection = -1;
+        System.out.println("Select: ");
+        BufferedReader bis = new BufferedReader(new InputStreamReader(
+                System.in));
+
+        try {
+            selection = Integer.parseInt(bis.readLine());
+        } catch (Exception e) {
+            System.out.println("Bad Value, canceled.");
+            selection = -1;
+            return;
+        }
+        
+        Map<String, Object> pipeAdvData = new HashMap<String, Object>();
+        pipeAdvData.put("PIPE_ID", jxta.getMyBackChannelPipeAdvertisement().getPipeID());
+        pipeAdvData.put("PIPE_TYPE", jxta.getMyBackChannelPipeAdvertisement().getType());
+        
+        boolean sent = false;
+        try {
+            sent = jxta.sendObject(pipeAdvData, "anti-entropy request", list.get(selection));
+        } catch (JxtaException je) {
+            System.out.println("Problem sending the message: ");
+            je.printStackTrace();
+        }
+        System.out.println("Message successfuly sent: " + sent);    
+    }
+	
+	public void sendMyPipeAdvertisementThroughBackChannelOfRandomPeer() {
+        System.out.println("Current group: " + jxta.getCurrentJoinedPeerGroup().getPeerGroupName());
+        if (!jxta.isConnectedToGroup()) {
+            System.out.println("Join a group first! (other than de default netPeerGroup)");
+            return;
+        }
+        
+        byte nrOfTries = 3;
+        long waitInterval = 3000;
+        boolean succes = false;
+        for(int i=0; i<nrOfTries && !succes; i++) {
+            System.out.println("Try number: " + i);
+            
+            Enumeration<Advertisement> en = this.jxta.getKnownAdvertisements(PipeAdvertisement.NameTag, jxta.getBackChannelPipeNamePrefix() + "*");
+            
+            while (en.hasMoreElements() && !succes) {
+                Advertisement adv = en.nextElement();
+                if (!(adv instanceof PipeAdvertisement) || adv.equals(jxta.getMyBackChannelPipeAdvertisement())) {
+                    continue;
+                }
+                
+                PipeAdvertisement pipeAdv = (PipeAdvertisement) adv;
+                
+                System.out.println("Using this pipe adv: " + pipeAdv);
+                
+                Map<String, Object> pipeAdvData = new HashMap<String, Object>();
+                pipeAdvData.put("PIPE_ID", jxta.getMyBackChannelPipeAdvertisement().getPipeID());
+                pipeAdvData.put("PIPE_TYPE", jxta.getMyBackChannelPipeAdvertisement().getType());
+                
+                try {
+                    succes = jxta.sendObject(pipeAdvData, "anti-entropy request", pipeAdv);
+                } catch (JxtaException je) {
+                    System.out.println("Problem sending the message: ");
+                    je.printStackTrace();
+                }
+            }
+            
+            try {
+                Thread.sleep(waitInterval);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        System.out.println("Message successfuly sent: " + succes);
+    }
 
 	public void jxtaCastProgress(JxtaCastEvent e) {
+	    if (e.transType == JxtaCastEvent.RECV) {
+	        System.out.println("Received: ");
+	    } else {
+	        System.out.println("Sent: ");
+	    }
+	    System.out.println("% complete:" + e.percentDone);
+	    System.out.println("senderID:" + e.senderId);
+	    System.out.println("transferedData: " + e.transferedData);
+	    
 		if (e.percentDone == 100) {
 			System.out.println("[CONCERTO] Transer complete!");
 			if (e.transType == JxtaCastEvent.RECV) {
@@ -262,7 +493,30 @@ public class ConcertoPeer implements JxtaCastEventListener {
 					String data = (String) e.transferedData;
 					System.out.println("Object size: " + data.getBytes().length);
 				}
+				if (e.transferedData instanceof Map) {
+				    System.out.println("Sending back reply...");
+				    
+				    Map<String, Object> pipeAdvData = (Map<String, Object>) e.transferedData;
+				    String pipeType = (String) pipeAdvData.get("PIPE_TYPE");
+				    ID pipeID = (ID) pipeAdvData.get("PIPE_ID");
+				    
+				    PipeAdvertisement pipeAdv = (PipeAdvertisement) AdvertisementFactory.newAdvertisement(PipeAdvertisement.getAdvertisementType());
+                    pipeAdv.setType(pipeType);
+                    pipeAdv.setPipeID(pipeID);
+				    
+				    boolean sent = false;
+			        try {
+			            sent = jxta.sendObject("ok!", "anti-entropy reply", pipeAdv);
+			        } catch (JxtaException je) {
+			            System.out.println("Problem sending the message: ");
+			            je.printStackTrace();
+			        }
+			        System.out.println("Reply successfuly sent: " + sent); 
+				}
 			}
 		}
+		
+		
 	}
+	
 }

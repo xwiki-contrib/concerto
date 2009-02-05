@@ -58,18 +58,22 @@ package org.xwoot.jxta;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Enumeration;
 
 import net.jxta.discovery.DiscoveryListener;
 import net.jxta.document.Advertisement;
+import net.jxta.exception.JxtaException;
 import net.jxta.exception.PeerGroupException;
 import net.jxta.exception.ProtocolNotSupportedException;
 import net.jxta.id.ID;
+import net.jxta.jxtacast.JxtaCast;
 import net.jxta.jxtacast.event.JxtaCastEventListener;
 import net.jxta.platform.NetworkManager;
 import net.jxta.platform.NetworkManager.ConfigMode;
 import net.jxta.protocol.PeerGroupAdvertisement;
 import net.jxta.protocol.PeerAdvertisement;
+import net.jxta.protocol.PipeAdvertisement;
 import net.jxta.peergroup.PeerGroup;
 import net.jxta.rendezvous.RendezvousEvent;
 
@@ -122,6 +126,18 @@ public interface Peer
 
     /** @return advertisement for my peer. */
     PeerAdvertisement getMyPeerAdv();
+    
+    /** @return the pipe name prefix used for the JxtaCast back channel input pipe. */
+    public String getBackChannelPipeNamePrefix();
+    
+    /** @return the pipe advertisement used by this peer for the JxtaCast back channel input pipe. */
+    public PipeAdvertisement getMyBackChannelPipeAdvertisement();
+    
+    /** @return the pipe name used by this peer for the JxtaCast back channel input pipe. */
+    public String getMyBackChannelPipeName();
+    
+    /** @return the {@link JxtaCast} instance associated with this peer. */
+    public JxtaCast getJxtaCastInstance();
 
     /** @return the default (initial) peer group. */
     PeerGroup getDefaultGroup();
@@ -334,9 +350,23 @@ public interface Peer
      * @param object the object to send.
      * @param caption the caption describing the object.
      * @throws PeerGroupException if this peer has not yet joined a group other than NetPeerGroup and contacted its RDV.
+     * @throws IllegalArgumentException if the object does not implement {@link Serializable}.
      * @see net.jxta.jxtacast.JxtaCast#sendObject(java.lang.Object, java.lang.String)
      */
     void sendObject(Object object, String caption) throws PeerGroupException;
+    
+    /**
+     * Send a variable-sized object to a peer.
+     * 
+     * @param object the object to send.
+     * @param caption the caption describing the object.
+     * @param pipeAdv the pipe advertisement where the destination peer listens for messages.
+     * @return true if successfuly sent. false is returned if the message could not be sent due to network over-load but you can try to send it again later.
+     * @throws PeerGroupException if this peer has not yet joined a group other than NetPeerGroup and contacted its RDV.
+     * @throws IllegalArgumentException if the object does not implement {@link Serializable}.
+     * @see net.jxta.jxtacast.JxtaCast#sendObject(java.lang.Object, java.lang.String)
+     */
+    public boolean sendObject(Object object, String caption, PipeAdvertisement pipeAdv) throws JxtaException;
 
     /**
      * Handles RendezVous events in the joined group.

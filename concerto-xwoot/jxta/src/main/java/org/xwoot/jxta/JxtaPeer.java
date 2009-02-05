@@ -20,14 +20,22 @@
 
 package org.xwoot.jxta;
 
+import java.net.URI;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 
 import javax.crypto.EncryptedPrivateKeyInfo;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.xwoot.jxta.util.MessageUtil;
+
 import net.jxta.discovery.*;
+import net.jxta.endpoint.Message;
+import net.jxta.exception.JxtaException;
 import net.jxta.exception.PeerGroupException;
 import net.jxta.exception.ProtocolNotSupportedException;
 import net.jxta.id.ID;
@@ -44,6 +52,8 @@ import net.jxta.membership.Authenticator;
 import net.jxta.membership.MembershipService;
 import net.jxta.peer.PeerID;
 import net.jxta.peergroup.*;
+import net.jxta.pipe.OutputPipe;
+import net.jxta.pipe.PipeService;
 import net.jxta.platform.ModuleClassID;
 import net.jxta.platform.NetworkManager;
 import net.jxta.platform.NetworkManager.ConfigMode;
@@ -72,9 +82,14 @@ public class JxtaPeer implements Peer, RendezvousListener {
     protected NetworkManager manager;
     protected JxtaCast jc;
     protected Credential groupCredential;
+    protected JxtaCastEventListener jxtaCastListener;
+    protected Log logger = LogFactory.getLog(this.getClass());
     
     /** The pipe name to be used when broadcasting messages. Interested peers will look for this. */
 	public static final String PIPE_ADVERTISEMENT_NAME = "ConcertoMessageBroadcast";
+	
+	/** Number of ms to wait for the output pipe to be resolved when directly communicating through the back-channel. */
+	public static final long BACK_CHANNEL_OUTPUT_PIPE_RESOLVE_TIMEOUT = 5000;
 	
 //    /** Constructor - Starts JXTA.
 //     */
@@ -95,16 +110,16 @@ public class JxtaPeer implements Peer, RendezvousListener {
 
         // Use JXTA default relay/rendezvous servers for now.
         // manager.setUseDefaultSeeds(true);
-        //manager.getConfigurator().addSeedRelay(URI.create("tcp://192.18.37.39:9701"));
-        //manager.getConfigurator().addSeedRendezvous(URI.create("tcp://192.18.37.39:9701"));
+        manager.getConfigurator().addSeedRelay(URI.create("tcp://192.18.37.39:9701"));
+        manager.getConfigurator().addSeedRendezvous(URI.create("tcp://192.18.37.39:9701"));
         
         // FIXME: Leave such configurations to be made from outside
         // after calling this method but before calling startNetworkAndConnect.
         //NetworkConfigurator config = manager.getConfigurator();
         //manager.getConfigurator().setUseMulticast(false);
         
-        System.out.println("Infrastructure ID: " + manager.getInfrastructureID());
-        System.out.println("Peer ID: " + manager.getPeerID());
+        logger.info("Infrastructure ID: " + manager.getInfrastructureID());
+        logger.info("Peer ID: " + manager.getPeerID());
 	}
     
     
@@ -124,7 +139,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
 		}
 		
 		if (this.isConnectedToNetwork()) {
-			System.out.println("Already connected to the network.");
+		    logger.warn("Already connected to the network.");
 			return;
 		}
 
@@ -142,14 +157,16 @@ public class JxtaPeer implements Peer, RendezvousListener {
 
 		// Connect to the Network entry-point (Rendezvous).
 		if (!manager.waitForRendezvousConnection(120000)) {
-			System.err
-					.println("Unable to connect to rendezvous server. Stoping.");
+		    logger.error("Unable to connect to rendezvous server. Stoping.");
 			this.stopNetwork();
 			return;
 		}
 
 		// Register ourselves to detect new RDVs that broadcast their presence.
 		this.rootGroup.getRendezVousService().addListener(this);
+		
+		// Save the jxtaCastListener.
+		this.jxtaCastListener = jxtaCastListener;
 		
 //		// Init JxtaCast with the rootGroup.
 //		this.jc = new JxtaCast(this.getMyPeerAdv(), this.rootGroup, PIPE_ADVERTISEMENT_NAME);
@@ -201,6 +218,29 @@ public class JxtaPeer implements Peer, RendezvousListener {
         return rootGroup.getPeerAdvertisement();
     }
 
+
+    /** {@inheritDoc} **/
+    public String getBackChannelPipeNamePrefix() {
+        return jc.getBackChannelPipePrefix();
+    }
+    
+    
+    /** {@inheritDoc} **/
+    public PipeAdvertisement getMyBackChannelPipeAdvertisement() {
+        return jc.getBackChannelPipeAdvertisement();
+    }
+    
+    
+    /** {@inheritDoc} **/
+    public String getMyBackChannelPipeName() {
+        return jc.getBackChannelPipeName();
+    }
+
+    
+    /** {@inheritDoc} **/
+    public JxtaCast getJxtaCastInstance() {
+        return jc;
+    }
 
     /** {@inheritDoc} **/
     public void discoverGroups(String targetPeerId, DiscoveryListener discoListener) {
@@ -295,7 +335,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
 	public Enumeration<PeerGroupAdvertisement> getKnownGroups() {
 
 		if (!this.isConnectedToNetwork()) {
-    		System.out.println("Warning: Not conencted to network.");
+    		logger.warn("Not conencted to network.");
     		return null;
     	}
     	
@@ -305,8 +345,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
         try {
             en = disco.getLocalAdvertisements(DiscoveryService.GROUP, null, null);
         } catch (Exception e) {
-            System.err.println("Failed to get local group advertisements.\n");
-            e.printStackTrace();
+            logger.warn("Failed to get local group advertisements.\n", e);
         }
         
         // Look for new groups to add to the local repository.
@@ -329,7 +368,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
             return null;*/
     	
     	if (!this.isConnectedToNetwork()) {
-    		System.out.println("Warning: Not conencted to network.");
+    	    logger.warn("Not conencted to network.");
     		return null;
     	}
 
@@ -339,8 +378,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
         try {
             en = disco.getLocalAdvertisements(DiscoveryService.PEER, null, null);
         } catch (Exception e) {
-            System.err.println("Failed to get locally stored known peers.\n");
-            e.printStackTrace();
+            logger.warn("Failed to get locally stored known peers.\n", e);
         }
         
         discoverPeers(null, null);
@@ -363,7 +401,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
 //            return null;
     	
     	if (!this.isConnectedToNetwork()) {
-    		System.out.println("Warning: Not conencted to network.");
+    	    logger.warn("Not conencted to network.");
     		return null;
     	}
 
@@ -373,8 +411,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
         try {
             en = disco.getLocalAdvertisements(DiscoveryService.ADV, attribute, value);
         } catch (Exception e) {
-            System.err.println("Failed to get locally stored known advertisements.\n");
-            e.printStackTrace();
+            logger.warn("Failed to get locally stored known advertisements.\n", e);
         }
         
         discoverAdvertisements(null, null, attribute, value);
@@ -487,6 +524,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
         // Init JxtaCast if null.
         if (jc == null ) {
         	jc = new JxtaCast(currentJoinedGroup.getPeerAdvertisement(), currentJoinedGroup, PIPE_ADVERTISEMENT_NAME);
+        	jc.addJxtaCastEventListener(this.jxtaCastListener);
         	JxtaCast.logEnabled = true;
         }
         
@@ -509,7 +547,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
 
         // See if it's a group we've already joined.
         if (this.currentJoinedGroup != null && groupAdv.getPeerGroupID().equals(this.currentJoinedGroup.getPeerGroupID())) {
-        	System.out.println("Already joined.");
+            logger.warn("Already joined.");
         	return this.currentJoinedGroup;
         }
         	
@@ -520,8 +558,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
     	try {
     		newGroup = rootGroup.newGroup(groupAdv);
     	} catch (PeerGroupException e) {
-    		System.err.println("Failed to get the group from pgadv.");
-    		e.printStackTrace();
+    	    logger.error("Failed to get the group from peer group advertisement.", e);
     		throw e;
     	}
     	
@@ -529,7 +566,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
         	throw new PeerGroupException("Authentication failed for joining the group.");
         }
 
-        // TODO: maybe change this to a waitForRendezVous check for the group.
+        // TODO: maybe change this to a waitForRendezVous check for the group rather than preventively becoming RDV.
         
         // Make this peer a RDV for the group in order to enable immediate communication.
         newGroup.getRendezVousService().startRendezVous();
@@ -601,6 +638,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
         // Init JxtaCast if null.
         if (jc == null ) {
         	jc = new JxtaCast(currentJoinedGroup.getPeerAdvertisement(), currentJoinedGroup, PIPE_ADVERTISEMENT_NAME);
+        	jc.addJxtaCastEventListener(this.jxtaCastListener);
         	JxtaCast.logEnabled = true;
         }
         
@@ -641,6 +679,8 @@ public class JxtaPeer implements Peer, RendezvousListener {
         if (oldGroup.getPeerGroupID().equals(this.currentJoinedGroup.getPeerGroupID())) {
         	this.currentJoinedGroup = null;
         }
+        
+        // FIXME: Watch out for jxtaCast object's state when leaving a group and not joining another one. It should be eliminated, but only in this case.
     }
     
     
@@ -801,7 +841,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
         // Get the MembershipService from the peer group.
         MembershipService membership = group.getMembershipService();
         
-        System.out.println("Current Membership service: " + membership);
+        this.logger.info("Current Membership service: " + membership);
     	
         //StructuredDocument creds = null;
         Authenticator memberAuthenticator = null;
@@ -822,7 +862,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
 	        memberAuthenticator = membership.apply(authCred);
         
         } catch (ProtocolNotSupportedException noAuthenticator) {
-        	System.err.println("Could not create authenticator: " + noAuthenticator.getMessage());
+            this.logger.error("Could not create authenticator:\n", noAuthenticator);
         	return false;
         }
 
@@ -838,15 +878,14 @@ public class JxtaPeer implements Peer, RendezvousListener {
         if (memberAuthenticator.isReadyForJoin()) {
         	try {
         		this.groupCredential = membership.join(memberAuthenticator);
-        		System.out.println("Member authentication successful.");
+        		this.logger.info("Member authentication successful.");
         	} catch (PeerGroupException failed) {
-        		System.err.println("Member authentication failed: " + failed.getMessage());
-        		failed.printStackTrace();
+        	    this.logger.error("Member authentication failed:\n", failed);
         		return false;
         	}
         }
         else {
-        	System.err.println("Can't join the group yet. Authentication data incorrent or incomplete.");
+            this.logger.error("Can't join the group yet. Authentication data incorrent or incomplete.");
             return false;
         }
 
@@ -973,7 +1012,69 @@ public class JxtaPeer implements Peer, RendezvousListener {
 			throw new PeerGroupException("The peer has not yet joined a group and contacted a RDV peer.");
 		}
 		
+		if (!(object instanceof Serializable)) {
+            throw new IllegalArgumentException("The object does not implement the interface java.io.Serializable and can not be sent.");
+        }
+		
 		jc.sendObject(object, caption);
+	}
+	
+	/** {@inheritDoc} **/
+	public boolean sendObject(Object object, String caption, PipeAdvertisement pipeAdv) throws JxtaException {
+	    if (!this.isConnectedToGroup()) {
+            throw new PeerGroupException("The peer has not yet joined a group and contacted a RDV peer.");
+        }
+	    
+	    if (!(object instanceof Serializable)) {
+	        throw new IllegalArgumentException("The object does not implement the interface java.io.Serializable and can not be sent.");
+	    }
+	    
+	    // Create a message, fill it with our standard headers.
+        Message msg = new Message();
+        JxtaCast.setMsgString(msg, JxtaCast.MESSAGETYPE, JxtaCast.MSG_OBJECT);
+        JxtaCast
+                .setMsgString(msg, JxtaCast.SENDERNAME, this.getMyPeerName());
+        JxtaCast.setMsgString(msg, JxtaCast.SENDERID, this.getMyPeerAdv().getPeerID()
+                .toString());
+        JxtaCast.setMsgString(msg, JxtaCast.VERSION, JxtaCast.version);
+        JxtaCast.setMsgString(msg, JxtaCast.TRANSACTION_KEY, UUID.randomUUID().toString());
+        JxtaCast.setMsgString(msg, JxtaCast.FILENAME, caption);
+        
+        JxtaCast.setMsgString(msg, JxtaCast.CAPTION, caption);
+        
+        // Place the object's data in the message.
+        try {
+            MessageUtil.addObjectToMessage(msg, null, JxtaCast.DATABLOCK, object);
+        } catch (Exception e) {
+            throw new JxtaException("Error serializing the object.", e);
+        }
+
+        // Place the block info in the message.
+        JxtaCast.setMsgString(msg, JxtaCast.BLOCKNUM, String
+                .valueOf(0));
+        JxtaCast.setMsgString(msg, JxtaCast.TOTALBLOCKS, String
+                .valueOf(1));
+        
+        long dataSize = msg.getMessageElement(JxtaCast.DATABLOCK).getByteLength();
+        
+        JxtaCast.setMsgString(msg, JxtaCast.FILESIZE, String.valueOf(dataSize));
+        JxtaCast.setMsgString(msg, JxtaCast.BLOCKSIZE, String.valueOf(dataSize));
+
+        // Send the message.
+        this.logger.info("Sending message...");
+        
+        PipeService pipeService = currentJoinedGroup.getPipeService();
+        OutputPipe output = null;
+        try {
+            output = pipeService.createOutputPipe(pipeAdv, BACK_CHANNEL_OUTPUT_PIPE_RESOLVE_TIMEOUT);
+            return output.send(msg);
+        } catch (Exception e) {
+            throw new JxtaException("Error sending the message:\n", e);
+        } finally {
+            if (output != null) {
+                output.close();
+            }
+        }
 	}
 
 	/** {@inheritDoc} **/
