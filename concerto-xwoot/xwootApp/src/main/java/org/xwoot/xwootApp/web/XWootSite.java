@@ -44,6 +44,9 @@
 
 package org.xwoot.xwootApp.web;
 
+import net.jxta.exception.JxtaException;
+import net.jxta.platform.NetworkManager.ConfigMode;
+
 import org.apache.commons.lang.StringUtils;
 import org.xwoot.XWootContentProviderException;
 import org.xwoot.XWootContentProviderFactory;
@@ -53,8 +56,8 @@ import org.xwoot.antiEntropy.AntiEntropyException;
 import org.xwoot.clockEngine.Clock;
 import org.xwoot.clockEngine.ClockException;
 
-import org.xwoot.lpbcast.sender.httpservletlpbcast.HttpServletLpbCast;
-import org.xwoot.lpbcast.sender.httpservletlpbcast.HttpServletLpbCastException;
+import org.xwoot.jxta.Peer;
+import org.xwoot.jxta.PeerFactory;
 
 import org.xwoot.thomasRuleEngine.ThomasRuleEngine;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngineException;
@@ -64,9 +67,10 @@ import org.xwoot.wikiContentManager.WikiContentManagerException;
 import org.xwoot.wootEngine.WootEngine;
 import org.xwoot.wootEngine.WootEngineException;
 
-import org.xwoot.xwootApp.XWoot2;
+import org.xwoot.xwootApp.XWoot3;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.XWootException;
+import org.xwoot.xwootUtil.FileUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -93,11 +97,13 @@ public class XWootSite
 
     private boolean started = false;
 
-    private XWootAPI xWootEngine;
+    private XWootAPI XWootEngine;
 
     public static final String XWIKI_PROPERTIES_FILENAME = "xwiki.properties";
 
     public static final String XWOOT_PROPERTIES_FILENAME = "xwoot.properties";
+    
+    public static final String CONTENT_MANAGER_PROPERTIES_FILENAME = "xwoot-content-provider.properties";
 
     public static final String XWIKI_ENDPOINT = "xwiki_endpoint";
 
@@ -121,7 +127,7 @@ public class XWootSite
 
     private static final String WOOT_CLOCK_DIR_NAME = "wootclock";
 
-    private static final String PBCAST_DIR_NAME = "pbCast";
+    private static final String JXTA_DIR_NAME = "jxta";
 
     private static final String WOOTENGINE_DIR_NAME = "wootEngine";
 
@@ -131,12 +137,7 @@ public class XWootSite
 
     private static final String XWOOT_DIR_NAME = "xwoot";
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
-     */
+    /** @return the singleton instance. */
     public static synchronized XWootSite getInstance()
     {
         if (XWootSite.instance == null) {
@@ -159,99 +160,89 @@ public class XWootSite
         return p;
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     */
+    /** @return the XWoot engine managed by this XWoot site. */
     public XWootAPI getXWootEngine()
     {
-        return this.xWootEngine;
+        return this.XWootEngine;
     }
 
     /**
-     * DOCUMENT ME!
      * 
-     * @param siteId DOCUMENT ME!
-     * @param peerId DOCUMENT ME!
-     * @param wikiPropertiesPath DOCUMENT ME!
-     * @param workingDirPath DOCUMENT ME!
-     * @param messagesRound DOCUMENT ME!
-     * @param maxNeighbors DOCUMENT ME!
-     * @throws RuntimeException DOCUMENT ME!
-     * @throws ClockException 
-     * @throws WikiContentManagerException 
-     * @throws WootEngineException 
-     * @throws HttpServletLpbCastException 
-     * @throws AntiEntropyException 
-     * @throws XWootException 
-     * @throws ThomasRuleEngineException 
-     * @throws XWootContentProviderException 
+     * @param siteId
+     * @param siteName
+     * @param workingDirPath
+     * @param contentProviderXmlRpcUrl
+     * @param contentProviderLogin
+     * @param contentProviderPassword
+     * @param contenProviderPropertiesFilePath
+     * @throws RuntimeException
+     * @throws ClockException
+     * @throws WikiContentManagerException
+     * @throws WootEngineException
+     * @throws JxtaException
+     * @throws AntiEntropyException
+     * @throws XWootException
+     * @throws ThomasRuleEngineException
+     * @throws XWootContentProviderException
      */
-    public void init(int siteId, String peerId, String workingDirPath, int messagesRound, /* int logDelay, */
-    int maxNeighbors, String url, String login, String pwd,String xwcpPath) throws RuntimeException, ClockException, WikiContentManagerException, WootEngineException, HttpServletLpbCastException, AntiEntropyException, XWootException, ThomasRuleEngineException, XWootContentProviderException
+    public void init(int siteId, String siteName, String workingDirPath, String contentProviderXmlRpcUrl, String contentProviderLogin, String contentProviderPassword, String contenProviderPropertiesFilePath) throws RuntimeException, ClockException, WikiContentManagerException, WootEngineException, JxtaException, AntiEntropyException, XWootException, ThomasRuleEngineException, XWootContentProviderException
     {
-
-        File pbCastDir = new File(workingDirPath + File.separator + PBCAST_DIR_NAME);
+        // Module directories.
+        File jxtaDir = new File(workingDirPath + File.separator + JXTA_DIR_NAME);
         File wootEngineDir = new File(workingDirPath + File.separator + WOOTENGINE_DIR_NAME);
         File wootEngineClockDir = new File(workingDirPath + File.separator + WOOT_CLOCK_DIR_NAME);
         File treDir = new File(workingDirPath + File.separator + TRE_DIR_NAME);
         File aeDir = new File(workingDirPath + File.separator + AE_DIR_NAME);
         File xwootDir = new File(workingDirPath + File.separator + XWOOT_DIR_NAME);
 
-        if (!wootEngineDir.exists() && !wootEngineDir.mkdir()) {
-            throw new RuntimeException("Can't create wootEngine directory: " + wootEngineDir);
+        try {
+            // Check and/or create the working dir.
+            FileUtil.checkDirectoryPath(workingDirPath);
+            
+            // Do the same for all the components.
+            FileUtil.checkDirectoryPath(jxtaDir.toString());
+            FileUtil.checkDirectoryPath(wootEngineDir.toString());
+            FileUtil.checkDirectoryPath(wootEngineClockDir.toString());
+            FileUtil.checkDirectoryPath(treDir.toString());
+            FileUtil.checkDirectoryPath(aeDir.toString());
+            FileUtil.checkDirectoryPath(xwootDir.toString());
+        } catch (Exception e) {
+            throw new RuntimeException("The provided working directory is not usable.", e);
         }
 
-        if (!wootEngineClockDir.exists() && !wootEngineClockDir.mkdir()) {
-            throw new RuntimeException("Can't create wootEngine clocks directory: " + wootEngineClockDir);
-        }
-
-        if (!pbCastDir.exists() && !pbCastDir.mkdir()) {
-            throw new RuntimeException("Can't create pbCast directory: " + pbCastDir);
-        }
-
-        if (!treDir.exists() && !treDir.mkdir()) {
-            throw new RuntimeException("Can't create tre directory: " + treDir);
-        }
-
-        if (!aeDir.exists() && !aeDir.mkdir()) {
-            throw new RuntimeException("Can't create tre directory: " + aeDir);
-        }
-
-        if (!xwootDir.exists() && !xwootDir.mkdir()) {
-            throw new RuntimeException("Can't create tre directory: " + xwootDir);
-        }
-
+        // Init modules.
         Clock wootEngineClock = new Clock(wootEngineClockDir.toString());
         
-        //TODO better properties management 
-        Properties p=this.getProperties(xwcpPath);
-        System.out.println(p);
-      
+        AntiEntropy ae = new AntiEntropy(aeDir.toString());
         
-        XWootContentProviderInterface xwiki=XWootContentProviderFactory.getXWootContentProvider(url,String.valueOf(siteId),true,p);
+        Peer peer = PeerFactory.createPeer();
+        // FIXME: Use a properties file or something similar to store the current group, it's password, the keystore password in order to automatically start communicating after a reboot.
+        // FIXME: This behavior opens a possible security hole. The group's password is no longer protected by the keystore. Find a solution.
+        peer.configureNetwork(jxtaDir, ConfigMode.EDGE);
+        peer.getManager().setInstanceName(siteName);
+        
+        //TODO better properties management 
+        Properties contentProviderProperties=this.getProperties(contenProviderPropertiesFilePath);
+        System.out.println(contentProviderProperties);
+        
+        String peerName = peer.getManager().getInstanceName();
+        XWootContentProviderInterface xwiki = XWootContentProviderFactory.getXWootContentProvider(contentProviderXmlRpcUrl, peerName, true, contentProviderProperties);
         //WikiContentManager wiki = WikiContentManagerFactory.getSwizzleFactory().createWCM(url, login, pwd);
+        
+        // FIXME: use peerId for wootEngine and for TreEngine as well.
         WootEngine wootEngine = new WootEngine(siteId, wootEngineDir.toString(), wootEngineClock);
-        HttpServletLpbCast lpbCast =
-            new HttpServletLpbCast(pbCastDir.toString(), messagesRound, maxNeighbors, Integer.valueOf(siteId));
 
         ThomasRuleEngine tre = new ThomasRuleEngine(siteId, treDir.toString());
+        
+        this.XWootEngine =
+            new XWoot3(xwiki, wootEngine, peer, xwootDir.toString(), tre, ae);
 
-        AntiEntropy ae = new AntiEntropy(aeDir.toString());
-        this.xWootEngine =
-            new XWoot2(xwiki, wootEngine, lpbCast, xwootDir.toString(), peerId, Integer.valueOf(siteId), tre, ae);
-
+        // Mark as started.
         this.started = true;
-        System.out.println("Site " + this.xWootEngine.getXWootPeerId() + " initialisation");
+        System.out.println("Site " + this.XWootEngine.getXWootPeerId() + " initialisation");
     }
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @return DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
-     */
+    /** @return true if this instance is initialized. */
     public boolean isStarted()
     {
         return this.started;
@@ -271,20 +262,20 @@ public class XWootSite
         String xwootPropertiesPath) throws IOException
     {
         String result = "";
-        Properties p;
+        Properties properties;
 
         // Update XWiki connection properties.
-        p = updateXWikiPropertiesFromRequest(request, xwikiPropertiesPath);
-        result += this.validateXWikiProperties(p);
+        properties = updateXWikiPropertiesFromRequest(request, xwikiPropertiesPath);
+        result += this.validateXWikiProperties(properties);
         if (result.equals("")) {
-            this.savePropertiesInFile(xwikiPropertiesPath, " -- XWiki XML-RPC connection properties --", p);
+            this.savePropertiesInFile(xwikiPropertiesPath, " -- XWiki XML-RPC connection properties --", properties);
         }
 
         // Update XWoot properties.
-        p = updateXWootPropertiesFromRequest(request, xwootPropertiesPath);
-        result += this.validateXWootProperties(p);
+        properties = updateXWootPropertiesFromRequest(request, xwootPropertiesPath);
+        result += this.validateXWootProperties(properties);
         if (result.equals("")) {
-            this.savePropertiesInFile(xwootPropertiesPath, " -- XWoot properties --", p);
+            this.savePropertiesInFile(xwootPropertiesPath, " -- XWoot properties --", properties);
         }
         return result;
     }
@@ -335,23 +326,23 @@ public class XWootSite
      * Checks that the XWiki connection configuration is good: the connection URL is a valid URL, and the username and
      * password are provided.
      * 
-     * @param p The configuration to validate.
+     * @param properties The configuration to validate.
      * @return A list of error messages to display to the user, as a <code>String</code>. If the configuration is good,
      *         then an <string>empty <code>String</code></strong> is returned.
      * @todo Message localization.
      * @todo Make a simple call to the wiki to verify that there is a wiki at that address, and that the
      *       username/password are valid.
      */
-    private final String validateXWikiProperties(Properties p)
+    private final String validateXWikiProperties(Properties properties)
     {
         String result = "";
 
         // Check that the XWiki endpoint is a valid URL.
-        if (p.get(XWootSite.XWIKI_ENDPOINT) == null) {
+        if (properties.get(XWootSite.XWIKI_ENDPOINT) == null) {
             result += "Please enter a non-empty XWiki endpoint URL.\n";
         } else {
             try {
-                new URL((String) p.get(XWootSite.XWIKI_ENDPOINT));
+                new URL((String) properties.get(XWootSite.XWIKI_ENDPOINT));
             } catch (MalformedURLException e) {
                 result += "Please enter a valid XWiki endpoint URL (the given URL is malformed)\n";
             }
@@ -359,11 +350,11 @@ public class XWootSite
         }
 
         // Check that the username and password are provided.
-        if (p.get(XWootSite.XWIKI_USERNAME) == null) {
+        if (properties.get(XWootSite.XWIKI_USERNAME) == null) {
             result += "Please enter a non-empty username.\n";
         }
 
-        if (p.get(XWootSite.XWIKI_PASSWORD) == null) {
+        if (properties.get(XWootSite.XWIKI_PASSWORD) == null) {
             result += "Please enter a non-empty password.\n";
         }
 
@@ -373,21 +364,21 @@ public class XWootSite
     /**
      * Checks that the XWoot configuration is good.
      * 
-     * @param p The configuration to validate.
+     * @param properties The configuration to validate.
      * @return A list of error messages to display to the user, as a <code>String</code>. If the configuration is good,
-     *         then an <string>empty <code>String</code></strong> is returned.
+     *         then an <string>empty <code>String</code></string> is returned.
      * @todo Message localization.
      */
-    private String validateXWootProperties(Properties p)
+    private String validateXWootProperties(Properties properties)
     {
         String result = "";
 
         // Check that the directory for storing data is valid and writable.
-        if (p.get(XWootSite.XWOOT_WORKING_DIR) == null) {
+        if (properties.get(XWootSite.XWOOT_WORKING_DIR) == null) {
             result += "Please enter a non-empty " + XWootSite.XWOOT_WORKING_DIR + " field.\n";
         } else {
             try {
-                File f = new File((String) p.get(XWootSite.XWOOT_WORKING_DIR));
+                File f = new File((String) properties.get(XWootSite.XWOOT_WORKING_DIR));
                 if (!f.exists()) {
                     if (!f.mkdirs()) {
                         result +=
@@ -402,11 +393,11 @@ public class XWootSite
         }
 
         // Check that the site ID is a valid positive integer.
-        if (p.get(XWootSite.XWOOT_SITE_ID) == null) {
+        if (properties.get(XWootSite.XWOOT_SITE_ID) == null) {
             result += "Please enter a non-empty ID.\n";
         } else {
             try {
-                int i = Integer.parseInt((String) p.get(XWootSite.XWOOT_SITE_ID));
+                int i = Integer.parseInt((String) properties.get(XWootSite.XWOOT_SITE_ID));
                 if (i <= 0) {
                     result += "Please enter a positive integer for the XWoot ID.\n";
                 }
@@ -417,11 +408,11 @@ public class XWootSite
         }
 
         // Check that the XWoot URL is valid.
-        if (p.get(XWootSite.XWOOT_SERVER_URL) == null) {
+        if (properties.get(XWootSite.XWOOT_SERVER_URL) == null) {
             result += "Please enter a non-empty XWoot address.\n";
         } else {
             try {
-                new URL((String) p.get(XWootSite.XWOOT_SERVER_URL));
+                new URL((String) properties.get(XWootSite.XWOOT_SERVER_URL));
             } catch (MalformedURLException e) {
                 result += "Please enter a valid XWoot address (the given URL is malformed)\n";
             }
@@ -429,16 +420,16 @@ public class XWootSite
         }
 
         // Check the server name
-        if (p.get(XWootSite.XWOOT_SERVER_NAME) == null) {
+        if (properties.get(XWootSite.XWOOT_SERVER_NAME) == null) {
             result += "Please enter a non-empty server name.\n";
         }
 
         // Check the refresh period.
-        if (p.get(XWootSite.XWOOT_REFRESH_LOG_DELAY) == null) {
+        if (properties.get(XWootSite.XWOOT_REFRESH_LOG_DELAY) == null) {
             result += "Please enter a non-empty " + XWootSite.XWOOT_REFRESH_LOG_DELAY + " field.\n";
         } else {
             try {
-                int i = Integer.parseInt((String) p.get(XWootSite.XWOOT_REFRESH_LOG_DELAY));
+                int i = Integer.parseInt((String) properties.get(XWootSite.XWOOT_REFRESH_LOG_DELAY));
                 if (i <= 0) {
                     result += "Please enter a positive integer for the refresh period.\n";
                 }
@@ -448,11 +439,11 @@ public class XWootSite
         }
 
         // Check the neighbor list.
-        if (p.get(XWootSite.XWOOT_NEIGHBORS_LIST_SIZE) == null) {
+        if (properties.get(XWootSite.XWOOT_NEIGHBORS_LIST_SIZE) == null) {
             result += "Please enter a non-empty neighbor list size.\n";
         } else {
             try {
-                int i = Integer.parseInt((String) p.get(XWootSite.XWOOT_NEIGHBORS_LIST_SIZE));
+                int i = Integer.parseInt((String) properties.get(XWootSite.XWOOT_NEIGHBORS_LIST_SIZE));
                 if (i <= 0) {
                     result += "Please enter a positive integer value for the neighbor list size.\n";
                 }
@@ -462,11 +453,11 @@ public class XWootSite
         }
 
         // Check the number of broadcasting rounds.
-        if (p.get(XWootSite.XWOOT_PBCAST_ROUND) == null) {
+        if (properties.get(XWootSite.XWOOT_PBCAST_ROUND) == null) {
             result += "Please enter a non-empty number of propagation rounds.\n";
         } else {
             try {
-                int i = Integer.parseInt((String) p.get(XWootSite.XWOOT_PBCAST_ROUND));
+                int i = Integer.parseInt((String) properties.get(XWootSite.XWOOT_PBCAST_ROUND));
                 if (i <= 0) {
                     result += "Please enter a positive integer value for propagation rounds.\n";
                 }

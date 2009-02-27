@@ -8,7 +8,7 @@ import net.jxta.jxtacast.event.JxtaCastEvent;
 /**
  * Abstract output wrangler implementation.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public abstract class AbstractOutputWrangler extends AbstractWrangler implements
 		OutputWrangler {
@@ -57,15 +57,17 @@ public abstract class AbstractOutputWrangler extends AbstractWrangler implements
 		if (blocksSent > 0
 				&& blocksSent < totalBlocks
 				&& System.currentTimeMillis() - lastActivity > jc.trailBossPeriod + 500) {
-			JxtaCast.logMsg("bossCheck sending block.");
+			JxtaCast.logMsg("bossCheck sending block for wrangler " + this.key + "." );
 			sendBlock(blocksSent++, this.messageType);
 			updateProgress();
 		}
 
 		// If this wrangler has been inactive for a long time, remove it from
 		// JxtaCast's collection.
-		if (System.currentTimeMillis() - lastActivity > jc.outWranglerLifetime)
+		if (System.currentTimeMillis() - lastActivity > jc.outWranglerLifetime) {
 			jc.removeWrangler(key);
+			JxtaCast.logMsg("Wrangler " + this.key + " removed for inactivity.");
+		}
 	}
 
 	/** {@inheritDoc} */

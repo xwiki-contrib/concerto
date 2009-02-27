@@ -855,11 +855,20 @@ public class XWoot implements XWootAPI
      * @param receivedMessage DOCUMENT ME!
      * @throws XWootException
      */
-    public synchronized void receivePatch(Message message) throws XWootException
+    public synchronized Object receiveMessage(Object aMessage) throws XWootException
     {
-        if (!this.isConnectedToP2PNetwork()) {
-            return;
+        if (!(aMessage instanceof Message)) {
+            logger.warn("Not and instance of org.xwoot.jxta.Message. Dropping message.");
+            return null;
         }
+        
+        if (!this.isConnectedToP2PNetwork()) {
+            logger.warn("Not conencted to network. Dropping message.");
+            return null;
+        }
+        
+        Message message = (Message) aMessage;
+        
         String randNeighbor = (String) message.getRandNeighbor();
         this.logger.info(this.siteId + " : received message...");
         switch (message.getAction()) {
@@ -942,6 +951,8 @@ public class XWoot implements XWootAPI
         if (randNeighbor != null && !this.getNeighborsList().contains(randNeighbor) && this.addNeighbour(randNeighbor)) {
             this.doAntiEntropy(randNeighbor);
         }
+        
+        return null;
     }
 
     public boolean isConnectedToP2PNetwork()
@@ -1117,7 +1128,7 @@ public class XWoot implements XWootAPI
      * @param neighbor DOCUMENT ME!
      * @throws XWootException
      */
-    synchronized public void doAntiEntropy(String neighborURL) throws XWootException
+    synchronized public void doAntiEntropy(Object neighborURL) throws XWootException
     {
         if (!this.isConnectedToP2PNetwork())
             return;
@@ -1243,7 +1254,9 @@ public class XWoot implements XWootAPI
             output.flush();
             output.close();
 
-            File r = new File(FileUtil.zipDirectory(this.stateDir, File.createTempFile("state", ".zip").getPath()));
+            File r = File.createTempFile("state", ".zip");
+            FileUtil.zipDirectory(this.stateDir, r.toString());
+            
             File result = new File(this.stateDir + File.separatorChar + STATEFILENAME);
             r.renameTo(result);
 
@@ -1676,6 +1689,12 @@ public class XWoot implements XWootAPI
         while (i.hasNext()) {
             this.lastModifiedPageNames.get(i.next()).add(pageName);
         }
+    }
+
+    /** {@inheritDoc} **/
+    public boolean isConnectedToP2PGroup()
+    {
+        return this.isConnectedToP2PNetwork();
     }
 
 }

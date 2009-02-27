@@ -676,7 +676,7 @@ public class TestXWoot2 extends AbstractXWootTest
         mess.setOriginalPeerId("test_Peer");
         mess.setRound(1);
 
-        this.xwoot21.receivePatch(mess);
+        this.xwoot21.receiveMessage(mess);
 
         // verify no-wootables fields
         Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot21.getTre().getValue(
@@ -825,8 +825,8 @@ public class TestXWoot2 extends AbstractXWootTest
         mess.setOriginalPeerId("test_Peer");
         mess.setRound(1);
 
-        this.xwoot21.receivePatch(mess);
-        this.xwoot22.receivePatch(mess);
+        this.xwoot21.receiveMessage(mess);
+        this.xwoot22.receiveMessage(mess);
 
         Assert.assertEquals(result1, this.wootEngine1.getContentManager().getContent(pageId, pageGuid, "content"));
         Assert.assertEquals(this.wootEngine1.getContentManager().getContent(pageId, pageGuid, "content"),

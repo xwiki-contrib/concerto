@@ -20,21 +20,25 @@
 
 package org.xwoot.jxta;
 
-import java.net.URI;
 import java.security.cert.X509Certificate;
 import java.util.*;
+import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
+import java.net.Socket;
+import java.net.SocketException;
 
 import javax.crypto.EncryptedPrivateKeyInfo;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.xwoot.jxta.util.MessageUtil;
 
 import net.jxta.discovery.*;
-import net.jxta.endpoint.Message;
 import net.jxta.exception.JxtaException;
 import net.jxta.exception.PeerGroupException;
 import net.jxta.exception.ProtocolNotSupportedException;
@@ -52,13 +56,15 @@ import net.jxta.membership.Authenticator;
 import net.jxta.membership.MembershipService;
 import net.jxta.peer.PeerID;
 import net.jxta.peergroup.*;
-import net.jxta.pipe.OutputPipe;
+import net.jxta.pipe.PipeID;
 import net.jxta.pipe.PipeService;
 import net.jxta.platform.ModuleClassID;
 import net.jxta.platform.NetworkManager;
 import net.jxta.platform.NetworkManager.ConfigMode;
 import net.jxta.protocol.*;
 import net.jxta.rendezvous.*;
+import net.jxta.socket.JxtaServerSocket;
+import net.jxta.socket.JxtaSocket;
 
 import net.jxta.credential.AuthenticationCredential;
 import net.jxta.credential.Credential;
@@ -83,13 +89,26 @@ public class JxtaPeer implements Peer, RendezvousListener {
     protected JxtaCast jc;
     protected Credential groupCredential;
     protected JxtaCastEventListener jxtaCastListener;
+    protected DirectMessageReceiver directMessageReceiver;
     protected Log logger = LogFactory.getLog(this.getClass());
     
     /** The pipe name to be used when broadcasting messages. Interested peers will look for this. */
-	public static final String PIPE_ADVERTISEMENT_NAME = "ConcertoMessageBroadcast";
+	public static final String PROPAGATE_PIPE_ADVERTISEMENT_NAME = "ConcertoMessageBroadcast";
 	
 	/** Number of ms to wait for the output pipe to be resolved when directly communicating through the back-channel. */
 	public static final long BACK_CHANNEL_OUTPUT_PIPE_RESOLVE_TIMEOUT = 5000;
+	
+	/** Number of ms to wait between tries to discover pipe ADVs in a group and send an object to one of them. */ 
+	public static final long WAIT_INTERVAL_BETWEEN_TRIES = 5000;
+	
+	/** Number tries to discover pipe ADVs in a group and send an object to one of them. */
+	public static final int NUMBER_OF_TRIES = 5;
+	
+	/** Number of ms to wait for a rdv connection to a group. */ 
+    public static final long WAIT_FOR_RDV_CONNECTION_PERIOD = 120000;
+	
+	/** Server socket used to accept incoming direct messages in a reliable way. This could also be made secure.*/
+	protected JxtaServerSocket serverSocket;
 	
 //    /** Constructor - Starts JXTA.
 //     */
@@ -98,20 +117,27 @@ public class JxtaPeer implements Peer, RendezvousListener {
 //    }
     
 	/** {@inheritDoc} **/
-	public void configureNetwork(File jxtaCacheDirectoryPath, ConfigMode mode) throws IOException
+	public void configureNetwork(File jxtaCacheDirectoryPath, ConfigMode mode) throws JxtaException
 	{
 	    if (jxtaCacheDirectoryPath == null) {
             jxtaCacheDirectoryPath = new File(new File(".cache"), "ConcertoPeer"
                     + UUID.randomUUID().toString());
         }
         
-        manager = new NetworkManager(mode, "ConcertoPeer",
-            jxtaCacheDirectoryPath.toURI());
+	    try {
+	        manager = new NetworkManager(mode, "ConcertoPeer",
+	            jxtaCacheDirectoryPath.toURI());
+	    } catch (Exception e) {
+	        throw new JxtaException("Failed to initialize peer.\n", e);
+	    }
+	    
+	    // Make sure the jxta platform will shut down tidely when the JVM does.
+	    manager.registerShutdownHook();
 
         // Use JXTA default relay/rendezvous servers for now.
         // manager.setUseDefaultSeeds(true);
-        manager.getConfigurator().addSeedRelay(URI.create("tcp://192.18.37.39:9701"));
-        manager.getConfigurator().addSeedRendezvous(URI.create("tcp://192.18.37.39:9701"));
+        //manager.getConfigurator().addSeedRelay(URI.create("tcp://192.18.37.39:9701"));
+        //manager.getConfigurator().addSeedRendezvous(URI.create("tcp://192.18.37.39:9701"));
         
         // FIXME: Leave such configurations to be made from outside
         // after calling this method but before calling startNetworkAndConnect.
@@ -131,8 +157,11 @@ public class JxtaPeer implements Peer, RendezvousListener {
 
     
     /** {@inheritDoc} **/
-	public void startNetworkAndConnect(JxtaCastEventListener jxtaCastListener) throws IllegalStateException,
-			PeerGroupException, IOException {
+	public void startNetworkAndConnect(JxtaCastEventListener jxtaCastListener, DirectMessageReceiver directMessageReceiver) throws IllegalStateException,
+			PeerGroupException, IOException, JxtaException {
+	    
+	    this.logger.info("Starting network.");
+	    
 		if (!this.isNetworkConfigured()) {
 			throw new IllegalStateException(
 					"The manager has not yet been instantiated and configured. Call configureNetwork() first.");
@@ -152,26 +181,22 @@ public class JxtaPeer implements Peer, RendezvousListener {
 		//this.joinedGroups.add(this.rootGroup);
 		this.currentJoinedGroup = this.rootGroup;
 
-		// Contribute to the network's conectivity.
-		this.rootGroup.getRendezVousService().setAutoStart(true);
-
 		// Connect to the Network entry-point (Rendezvous).
-		if (!manager.waitForRendezvousConnection(120000)) {
-		    logger.error("Unable to connect to rendezvous server. Stoping.");
+		if (!this.waitForRendezVousConnection(this.rootGroup, 120000)) {
+		    logger.error("Unable to connect to rendezvous server. Stopping.");
 			this.stopNetwork();
-			return;
+			throw new JxtaException("Unable to connect to rendezvous server. Network stopped.");
 		}
+		
+		// Contribute to the network's connectivity.
+        this.rootGroup.getRendezVousService().setAutoStart(true);
 
-		// Register ourselves to detect new RDVs that broadcast their presence.
-		this.rootGroup.getRendezVousService().addListener(this);
+		// Register ourselves to detect new RDVs that broadcast their presence and resources.
+		// FIXME: reenable this . this.rootGroup.getRendezVousService().addListener(this);
 		
-		// Save the jxtaCastListener.
+		// Save the listeners.
 		this.jxtaCastListener = jxtaCastListener;
-		
-//		// Init JxtaCast with the rootGroup.
-//		this.jc = new JxtaCast(this.getMyPeerAdv(), this.rootGroup, PIPE_ADVERTISEMENT_NAME);
-//		this.jc.addJxtaCastEventListener(jxtaCastListener);
-//		JxtaCast.logEnabled = true;
+		this.directMessageReceiver = directMessageReceiver;
 		
 		// Do a discovery for available groups.
 		discoverGroups(null, null);
@@ -180,7 +205,11 @@ public class JxtaPeer implements Peer, RendezvousListener {
 	
 	/** {@inheritDoc} **/
 	public void stopNetwork() {
-		if (this.isNetworkConfigured()) {
+	    this.logger.info("Stopping network.");
+	    
+		if (this.isConnectedToNetwork()) {
+		    //PeerGroup currentGroup = this.currentJoinedGroup;
+		    
 			// Try to leave the current group nicely.
 			try {
 				this.leavePeerGroup(currentJoinedGroup);
@@ -188,9 +217,23 @@ public class JxtaPeer implements Peer, RendezvousListener {
 				// ignore, we are shutting down anyway.
 			}
 			
-			manager.stopNetwork();
-			this.rootGroup = null;
+//			currentGroup.stopApp();
+//			currentGroup.unref();
+//			currentGroup = null;
+			
 			this.currentJoinedGroup = null;
+			
+//			this.rootGroup.stopApp();
+//			this.rootGroup.unref();
+			this.rootGroup = null;
+			
+			manager.stopNetwork();
+			
+			System.runFinalization();
+			System.gc();
+			
+		} else {
+		    this.logger.warn("Network already stopped.");
 		}
 	}
 
@@ -209,38 +252,131 @@ public class JxtaPeer implements Peer, RendezvousListener {
     
     /** {@inheritDoc} **/
     public String getMyPeerName() {
-        return this.getMyPeerAdv().getName();
+        return this.manager.getInstanceName();
     }
     
+    /** {@inheritDoc} **/
+    public void setMyPeerName(String peerName)
+    {
+        this.manager.setInstanceName(peerName);
+    }
+    
+    /** {@inheritDoc} **/
+    public PeerID getMyPeerID()
+    {
+        return this.manager.getPeerID();
+    }
     
     /** {@inheritDoc} **/
     public PeerAdvertisement getMyPeerAdv() {
         return rootGroup.getPeerAdvertisement();
     }
 
+//    /** {@inheritDoc} **/
+//    public String getBackChannelPipeNamePrefix() {
+//        return jc.getBackChannelPipePrefix();
+//    }
+//    
+//    
+//    /** {@inheritDoc} **/
+//    public PipeAdvertisement getMyBackChannelPipeAdvertisement() {
+//        return jc.getBackChannelPipeAdvertisement();
+//    }
+//    
+//    
+//    /** {@inheritDoc} **/
+//    public String getMyBackChannelPipeName() {
+//        return jc.getBackChannelPipeName();
+//    }
 
-    /** {@inheritDoc} **/
-    public String getBackChannelPipeNamePrefix() {
-        return jc.getBackChannelPipePrefix();
-    }
     
-    
-    /** {@inheritDoc} **/
-    public PipeAdvertisement getMyBackChannelPipeAdvertisement() {
-        return jc.getBackChannelPipeAdvertisement();
-    }
-    
-    
-    /** {@inheritDoc} **/
-    public String getMyBackChannelPipeName() {
-        return jc.getBackChannelPipeName();
-    }
+    /** {@inheritDoc} */
+    public String getMyDirectCommunicationPipeName() {
 
+        // Use a complex delimiter to mark off the peer name and ID.
+        // We need to parse this string later, so we need something that's
+        // unlikely to appear in a peer name.  (A simple period is too risky.)
+        //
+        String name = getDirectCommunicationPipeNamePrefix() + JxtaCast.DELIM +
+                      this.getMyPeerName()            + JxtaCast.DELIM +
+                      this.getMyPeerID().toString();
+
+        return name;
+    }
+    
+
+    /** {@inheritDoc} */
+    public String getDirectCommunicationPipeNamePrefix() {
+
+        return "ConcertoPeerDirectCommunication." + this.getClass().getSimpleName();
+    }
+    
+    
+    /** {@inheritDoc} */
+    public PipeAdvertisement getMyDirectCommunicationPipeAdvertisement() {
+        if (this.serverSocket != null) {
+            return this.serverSocket.getPipeAdv();
+        }
+        
+        this.logger.warn("Server socket not instantiated. Returning null pipe advertisement.");
+        return null;
+    }
+    
+    
+    /** {@inheritDoc} */
+    public String getMyDirectCommunicationPipeIDAsString()
+    {
+        PipeAdvertisement pipeAdv = this.getMyDirectCommunicationPipeAdvertisement();
+        if (pipeAdv != null) {
+            return pipeAdv.getPipeID().toString();
+        }
+        
+        this.logger.warn("Server socket not instantiated. Returning null pipe ID.");
+        
+        return null;
+    }
+    
+
+    /** @return the name of the peer from a direct communication pipe name. */
+    public static String getPeerNameFromBackChannelPipeName(String pipeName) {
+
+        // The peer name is located between the first and second delimiters.
+        int start = pipeName.indexOf(JxtaCast.DELIM);
+        if (start < 0)
+            return null;
+
+        int end = pipeName.indexOf(JxtaCast.DELIM, start + 1);
+        if (end < 0)
+            return null;
+
+        // Extract the peer name.
+        start += JxtaCast.DELIM.length();
+        if (start > end)
+            return null;
+        return pipeName.substring(start, end);
+    }
+    
+    
+    /** @return the peer ID of the peer from a direct communication pipe name. */
+    public static String getPeerIdFromBackChannelPipeName(String pipeName) {
+
+        // The peer ID is located after the second delimiter.
+        int pos = pipeName.indexOf(JxtaCast.DELIM);
+        if (pos < 0)
+            return null;
+        pos = pipeName.indexOf(JxtaCast.DELIM, ++pos);
+        if (pos < 0)
+            return null;
+
+        return pipeName.substring(pos + JxtaCast.DELIM.length());
+    }
+    
     
     /** {@inheritDoc} **/
     public JxtaCast getJxtaCastInstance() {
         return jc;
     }
+    
 
     /** {@inheritDoc} **/
     public void discoverGroups(String targetPeerId, DiscoveryListener discoListener) {
@@ -336,7 +472,8 @@ public class JxtaPeer implements Peer, RendezvousListener {
 
 		if (!this.isConnectedToNetwork()) {
     		logger.warn("Not conencted to network.");
-    		return null;
+    		// return empty enumeration.
+            return Collections.enumeration(new ArrayList<PeerGroupAdvertisement>());
     	}
     	
         Enumeration en = null;
@@ -346,6 +483,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
             en = disco.getLocalAdvertisements(DiscoveryService.GROUP, null, null);
         } catch (Exception e) {
             logger.warn("Failed to get local group advertisements.\n", e);
+            return Collections.enumeration(new ArrayList<PeerGroupAdvertisement>());
         }
         
         // Look for new groups to add to the local repository.
@@ -369,7 +507,8 @@ public class JxtaPeer implements Peer, RendezvousListener {
     	
     	if (!this.isConnectedToNetwork()) {
     	    logger.warn("Not conencted to network.");
-    		return null;
+    	    // return empty enumeration.
+            return Collections.enumeration(new ArrayList<PeerAdvertisement>());
     	}
 
         Enumeration en = null;
@@ -379,6 +518,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
             en = disco.getLocalAdvertisements(DiscoveryService.PEER, null, null);
         } catch (Exception e) {
             logger.warn("Failed to get locally stored known peers.\n", e);
+            return Collections.enumeration(new ArrayList<PeerAdvertisement>());
         }
         
         discoverPeers(null, null);
@@ -402,21 +542,60 @@ public class JxtaPeer implements Peer, RendezvousListener {
     	
     	if (!this.isConnectedToNetwork()) {
     	    logger.warn("Not conencted to network.");
-    		return null;
+    	    // return empty enumeration.
+    		return Collections.enumeration(new ArrayList<Advertisement>());
     	}
 
-        Enumeration<Advertisement> en = null;
+        Enumeration<Advertisement> en = Collections.enumeration(new ArrayList<Advertisement>());
         DiscoveryService disco = this.currentJoinedGroup.getDiscoveryService();
 
         try {
             en = disco.getLocalAdvertisements(DiscoveryService.ADV, attribute, value);
         } catch (Exception e) {
             logger.warn("Failed to get locally stored known advertisements.\n", e);
+            return Collections.enumeration(new ArrayList<Advertisement>());
         }
         
+        // Flush advertisements to always be up to date.
+        /*while(en.hasMoreElements()) {
+            Advertisement adv = en.nextElement();
+            try {
+                disco.flushAdvertisement(adv);
+            } catch (Exception e) {
+                logger.warn("Failed to flush advertisement:\n" + adv, e);
+            }
+        }*/
+        
+        // Rediscover advertisements to always be up to date.
         discoverAdvertisements(null, null, attribute, value);
 
         return en;
+    }
+    
+    /** {@inheritDoc} **/
+    public Enumeration<Advertisement> getKnownDirectCommunicationPipeAdvertisements()
+    {
+
+        Enumeration<Advertisement> en = this.getKnownAdvertisements(PipeAdvertisement.NameTag, this.getDirectCommunicationPipeNamePrefix() + "*");
+        
+        ArrayList<Advertisement> pipeAdvs = new ArrayList<Advertisement>();
+        
+        while (en.hasMoreElements()) {
+            Advertisement adv = en.nextElement();
+            // Get only PipeAdvertisements that are different from this peer's.
+            if (adv instanceof PipeAdvertisement) {
+                PipeAdvertisement pipeAdv = (PipeAdvertisement) adv;
+                System.out.println(pipeAdv + "\nvs\n" + this.getMyDirectCommunicationPipeAdvertisement());
+                if (!pipeAdv.equals(this.getMyDirectCommunicationPipeAdvertisement())) {
+                    System.out.println("ok!");
+                    pipeAdvs.add(adv);
+                } else {
+                    System.out.println("not ok!");
+                }
+            }
+        }
+        
+        return Collections.enumeration(pipeAdvs);
     }
     
     
@@ -523,13 +702,16 @@ public class JxtaPeer implements Peer, RendezvousListener {
         
         // Init JxtaCast if null.
         if (jc == null ) {
-        	jc = new JxtaCast(currentJoinedGroup.getPeerAdvertisement(), currentJoinedGroup, PIPE_ADVERTISEMENT_NAME);
+        	jc = new JxtaCast(currentJoinedGroup.getPeerAdvertisement(), currentJoinedGroup, PROPAGATE_PIPE_ADVERTISEMENT_NAME);
         	jc.addJxtaCastEventListener(this.jxtaCastListener);
         	JxtaCast.logEnabled = true;
         }
         
         // Set as JxtaCast peer group.
         jc.setPeerGroup(pg);
+        
+        // Init direct communication for this group and register the listener.
+        this.createDirectCommunicationServerSocket();
 
         return pg;
     }
@@ -565,43 +747,22 @@ public class JxtaPeer implements Peer, RendezvousListener {
         if (!authenticateMembership(newGroup, keystorePassword, groupPassword)) {
         	throw new PeerGroupException("Authentication failed for joining the group.");
         }
-
-        // TODO: maybe change this to a waitForRendezVous check for the group rather than preventively becoming RDV.
         
-        // Make this peer a RDV for the group in order to enable immediate communication.
-        newGroup.getRendezVousService().startRendezVous();
-        
-        // If this peer is not intended to be a full-time RDV, let jxta determine when to demote it back to a simple EDGE. (when the network can support this)
-        if (!beRendezvous) {
-        	newGroup.getRendezVousService().setAutoStart(true);
-        }
-        
-        /*
-        // We'll be a rendezvous in the new group, if explicitly requested.
         if (beRendezvous) {
             newGroup.getRendezVousService().startRendezVous();
         } else {
-        	
-        	// immediately intensively check if there is a need for RDVs in this group.
-        	newGroup.getRendezVousService().setAutoStart(true, 10);
-        	
-        	// Reset the auto-start check to it's default value after one minute of intensive checking.
-        	final PeerGroup theGroup = newGroup;
-        	new Timer().schedule(new TimerTask(){
-
-				@Override
-				public void run() {
-					System.out.println("Reset autostart check.");
-					theGroup.getRendezVousService().setAutoStart(true);
-					
-				}
-        		
-        	}, 1 * 60 * 1000L);
-        	
-        	
+            // Wait for a connection to a RDV of this group.
+            if (!waitForRendezVousConnection(newGroup, 60000)) {
+                // If none found, make this peer a RDV for the group in order to enable immediate communication.
+                this.logger.debug("Could not connect to any RDV peer in this group. Promoting this peer to RDV.");
+                newGroup.getRendezVousService().startRendezVous();
+            } else {
+                this.logger.debug("RDV connection established for this group.");
+            }
+            
+            // Let jxta decide when to promote edge peers to rdvs.
+            newGroup.getRendezVousService().setAutoStart(true);
         }
-        
-        */
         
         // Leave the old peer group.
         this.leavePeerGroup(currentJoinedGroup);
@@ -637,7 +798,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
         
         // Init JxtaCast if null.
         if (jc == null ) {
-        	jc = new JxtaCast(currentJoinedGroup.getPeerAdvertisement(), currentJoinedGroup, PIPE_ADVERTISEMENT_NAME);
+        	jc = new JxtaCast(currentJoinedGroup.getPeerAdvertisement(), currentJoinedGroup, PROPAGATE_PIPE_ADVERTISEMENT_NAME);
         	jc.addJxtaCastEventListener(this.jxtaCastListener);
         	JxtaCast.logEnabled = true;
         }
@@ -645,11 +806,65 @@ public class JxtaPeer implements Peer, RendezvousListener {
         // Set the group as JxtaCast's group.
         jc.setPeerGroup(newGroup);
         
+        // Init direct communication for this group and register the listener.
+        this.createDirectCommunicationServerSocket();
+        
         // Update local cache with peers and their private pipe advertisements from this group.
         discoverPeers(null, /*groupAdv, */null);
-        discoverAdvertisements(null, null, "Name", jc.getBackChannelPipePrefix() + "*");
+        discoverAdvertisements(null, null, PipeAdvertisement.NameTag, this.getDirectCommunicationPipeNamePrefix() + "*");
 
         return newGroup;
+    }
+    
+    /**
+     * Wait for a rendezvous connection to any group, including NetPeerGroup if given.
+     * 
+     * @param group the group
+     * @param delay the time in ms to wait for a connection. 0 for forever.
+     * @return true if a connection has been established in the default wait time period.
+     * @throws PeerGroupException if problems occur while waiting.
+     * @see #WAIT_FOR_RDV_CONNECTION_PERIOD
+     */
+    public boolean waitForRendezVousConnection(PeerGroup group, long delay) throws PeerGroupException
+    {
+        if (group == null) {
+            throw new NullPointerException("Null group given.");
+        }
+        
+        if (delay < 0) {
+            throw new IllegalArgumentException("Negative delay given.");
+        }
+        
+        this.logger.debug("Waiting for rdv connection of group " + group.getPeerGroupName());
+        
+        RendezVousService rdvService = group.getRendezVousService();
+        if (rdvService == null) {
+            throw new PeerGroupException("Failed to get the RendezVousService for this group.");
+        }
+        
+        long stopNow = System.currentTimeMillis();
+        if (delay == 0) {
+            stopNow = Long.MAX_VALUE;
+        } else {
+            stopNow += delay;
+        }
+        
+        // TODO: Vulnerable to time changes to the past? quite unlikely.
+        while (System.currentTimeMillis() < stopNow) {
+            if (rdvService.isConnectedToRendezVous() || rdvService.isRendezVous()) {
+                this.logger.debug("Successfuly connected to RDV peer of group " + group.getPeerGroupName());
+                return true;
+            }
+            
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                // just log.
+                this.logger.debug("Interrupt received while waiting for RDV connection. Ignoring.");
+            }
+        }
+        
+        return false;
     }
     
     /** {@inheritDoc} */
@@ -659,25 +874,192 @@ public class JxtaPeer implements Peer, RendezvousListener {
         return joinPeerGroup(groupAdv, null, null, beRendezvous);
     }
     
+    protected void createDirectCommunicationServerSocket() throws IOException
+    {
+        this.logger.debug("Creating direct communication server socket.");
+        
+        if (!this.isConnectedToGroup()) {
+            this.logger.warn("Not connected to any group. Aborting.");
+            return;
+        }
+        
+        this.closeExistingDirectCommunicationServerSocket();
+        
+        DiscoveryService discoveryService = this.currentJoinedGroup.getDiscoveryService();
+        
+        PipeAdvertisement pipeAdv = (PipeAdvertisement)AdvertisementFactory.newAdvertisement(
+            PipeAdvertisement.getAdvertisementType());
+
+        PipeID id = (PipeID)IDFactory.newPipeID(currentJoinedGroup.getPeerGroupID());
+        pipeAdv.setPipeID(id);
+        pipeAdv.setName(getMyDirectCommunicationPipeName());
+        pipeAdv.setType(PipeService.UnicastType);
+
+        this.logger.debug("Publishing pipe advertisement.");
+        discoveryService.publish(pipeAdv);
+        discoveryService.remotePublish(pipeAdv);
+        
+        // If no listener registered, there is no point in starting a server socket and a connection handler thread.
+        if (this.directMessageReceiver != null) {
+            this.serverSocket = new JxtaServerSocket(this.currentJoinedGroup, pipeAdv);
+            
+            // Block waiting for connections indefinitely.
+            this.serverSocket.setSoTimeout(0);
+        
+            new ConnectionHandler(this.serverSocket, directMessageReceiver).start();
+        } else {
+            this.logger.warn("There is no listener registered. Direct communication server socket will not be created.");
+        }
+    }
+    
+    protected void closeExistingDirectCommunicationServerSocket() throws IOException
+    {
+        this.logger.debug("Closing existing direct communication server socket.");
+        
+        if (this.serverSocket != null) {
+            this.serverSocket.close();
+            this.serverSocket = null;
+        }
+    }
+    
+    // Daemon
+    class ConnectionHandler extends Thread
+    {
+        JxtaServerSocket serverSocket;
+        DirectMessageReceiver receiver;
+        
+        ConnectionHandler(JxtaServerSocket serverSocket, DirectMessageReceiver receiver)
+        {
+            this.serverSocket = serverSocket;
+            this.receiver = receiver;
+        }
+        
+        /** {@inheritDoc} **/
+        @Override
+        public void run()
+        {
+            while (true) {
+                try {
+                    Socket socket = this.serverSocket.accept();
+                    new ConnectionThread(socket, this.receiver).start();
+                } catch (SocketException closed) {
+                    this.receiver.getLog().debug("Socket server got closed. Stopping this ConnectionHandler thread.", closed);
+                    return;
+                } catch (IOException e) {
+                    this.receiver.getLog().error("Error: Failed to accept connection from client.", e);
+                } 
+            }
+        }
+    }
+    
+    // One thread per connection.
+    class ConnectionThread extends Thread
+    {
+        Socket socket;
+        DirectMessageReceiver receiver;
+        
+        ConnectionThread(Socket socket, DirectMessageReceiver receiver)
+        {
+            this.socket = socket;
+            this.receiver = receiver;
+        }
+        
+        /** {@inheritDoc} **/
+        @Override
+        public void run()
+        {
+            InputStream is = null;
+            OutputStream os = null;
+            ObjectInputStream ois = null;
+            ObjectOutputStream oos = null;
+            try {
+                is = this.socket.getInputStream();
+                os = this.socket.getOutputStream();
+                ois = new ObjectInputStream(is);
+                oos = new ObjectOutputStream(os);
+                
+                Object message = ois.readObject();
+                receiver.receiveDirectMessage(message, oos);
+                
+                // Make sure to flush in case receiver did not.
+                oos.flush();
+                os.flush();
+            } catch (Exception e) {
+                this.receiver.getLog().error("Failed to receive message or to send reply.", e);
+            } finally {
+                try{
+                    if (ois != null) {
+                        ois.close();
+                    }
+                    if (is != null) {
+                        is.close();
+                    }
+                    
+                    if (oos != null) {
+                        oos.close();
+                    }
+                    if (os != null) {
+                        os.close();
+                    }
+                    
+                    if (this.socket != null) {
+                        socket.close();
+                    }
+                } catch (Exception e) {
+                    // Just log it.
+                    this.receiver.getLog().warn("Failed to close streams for this conenction.");
+                }
+            }
+            
+            // die.
+        }
+    }
+    
     /** {@inheritDoc} **/
     public void leavePeerGroup(PeerGroup oldGroup) throws PeerGroupException {
 
-    	// If not connected to the network or group is null there is nothing to leave from.
-        if (!this.isConnectedToNetwork() || oldGroup == null) {
+        this.logger.debug("Leaving peer group: " + oldGroup);
+        
+        if (oldGroup == null) {
+           this.logger.warn("Null group provided. Ignoring request.");
+           return; 
+        }
+        
+    	// If not connected to the network there is nothing to leave from.
+        if (!this.isConnectedToNetwork()) {
+            this.logger.warn("Not connected to network. Ignoring request.");
         	return;
         }
         
         // See if it's the default group. Don`t think you can leave that.
         if (oldGroup.getPeerGroupID().equals(this.rootGroup.getPeerGroupID())) {
+            this.logger.warn("Asked to leave the default NetPeerGroup. Ignoring request.");
         	return;
         }
         
+        // Stop being rdv for the gorup.
+        RendezVousService oldGroupRendezvousService = oldGroup.getRendezVousService();
+        oldGroupRendezvousService.stopRendezVous();
+        
+        // Resign from the group.
         MembershipService oldGroupMembershipService = oldGroup.getMembershipService();
         oldGroupMembershipService.resign();
-    	
+        
     	// See if it was the current joined group.
-        if (oldGroup.getPeerGroupID().equals(this.currentJoinedGroup.getPeerGroupID())) {
-        	this.currentJoinedGroup = null;
+        if (this.currentJoinedGroup != null && oldGroup.getPeerGroupID().equals(this.currentJoinedGroup.getPeerGroupID())) {
+        	this.currentJoinedGroup = this.rootGroup;
+        }
+        
+        oldGroup.stopApp();
+        oldGroup.unref();
+        oldGroup = null;
+        
+        try {
+            this.closeExistingDirectCommunicationServerSocket();
+        } catch (IOException e) {
+            // This will never happen in the current implementation but it's best to be sure.
+            // Just log it.
+            this.logger.warn("Failed to close existing direct communciation server socket after leaving a group.", e);
         }
         
         // FIXME: Watch out for jxtaCast object's state when leaving a group and not joining another one. It should be eliminated, but only in this case.
@@ -800,7 +1182,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
     		ModuleImplAdvertisement pseImpl, X509Certificate[] certificateChain, EncryptedPrivateKeyInfo encryptedGroupPrivateKey) {
     	
     	// TODO:The invitation based group join should be investigated deeper. It could provide a nicer solution than the
-    	// simple password based authentication.
+    	// (not-necesarily) simple password based authentication.
     	
         PeerGroupAdvertisement newPGAdv = (PeerGroupAdvertisement) AdvertisementFactory.newAdvertisement(
                 PeerGroupAdvertisement.getAdvertisementType());
@@ -1016,11 +1398,13 @@ public class JxtaPeer implements Peer, RendezvousListener {
             throw new IllegalArgumentException("The object does not implement the interface java.io.Serializable and can not be sent.");
         }
 		
+		this.logger.debug("Sending object of type " + object.getClass() + " to group. Caption: " + caption);
+		
 		jc.sendObject(object, caption);
 	}
 	
 	/** {@inheritDoc} **/
-	public boolean sendObject(Object object, String caption, PipeAdvertisement pipeAdv) throws JxtaException {
+	public Object sendObject(Object object, PipeAdvertisement pipeAdv) throws JxtaException {
 	    if (!this.isConnectedToGroup()) {
             throw new PeerGroupException("The peer has not yet joined a group and contacted a RDV peer.");
         }
@@ -1028,7 +1412,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
 	    if (!(object instanceof Serializable)) {
 	        throw new IllegalArgumentException("The object does not implement the interface java.io.Serializable and can not be sent.");
 	    }
-	    
+	 /*
 	    // Create a message, fill it with our standard headers.
         Message msg = new Message();
         JxtaCast.setMsgString(msg, JxtaCast.MESSAGETYPE, JxtaCast.MSG_OBJECT);
@@ -1075,22 +1459,165 @@ public class JxtaPeer implements Peer, RendezvousListener {
                 output.close();
             }
         }
+*/
+	    boolean failed = false;
+	    
+	    Socket socket = null;
+	    
+	    InputStream is = null;
+        OutputStream os = null;
+        ObjectInputStream ois = null;
+        ObjectOutputStream oos = null;
+        try {
+            socket = new JxtaSocket(this.currentJoinedGroup, pipeAdv);            
+        } catch (Exception e) {
+            throw new JxtaException("Failed to create a direct connection using the provided pipe advertisement.", e);
+        }
+        
+        try {
+            os = socket.getOutputStream();
+            oos = new ObjectOutputStream(os);
+            
+            oos.writeObject(object);
+            
+            oos.flush();
+            os.flush();
+        } catch (Exception e) {
+            failed = true;
+            throw new JxtaException("Failed to send an object through a direct connection using the provided pipe advertisement.", e);
+        } finally {
+            try {                
+                if (oos != null) {
+                    oos.close();
+                }
+                if (os != null) {
+                    os.close();
+                }
+                
+                // Close the socket only if this step has failed.
+                if (failed && socket != null) {
+                    socket.close();
+                }
+            } catch (Exception e) {
+                // Just log it.
+                this.logger.warn("Failed to close streams for this conenction.");
+            }
+        }
+        
+        Object replyMessage = null;
+        try {
+            is = socket.getInputStream();
+            ois = new ObjectInputStream(is);
+            
+            replyMessage = ois.readObject(); 
+            
+        } catch (EOFException eof) {
+            this.logger.debug("There is no reply to this message. Returning null.");
+            replyMessage = null;
+        } catch (Exception e) {
+            throw new JxtaException("Failed to receive reply message.", e);
+        } finally {
+            try{
+                if (ois != null) {
+                    ois.close();
+                }
+                if (is != null) {
+                    is.close();
+                }
+                
+                // Close the socket, we are done.
+                if (socket != null) {
+                    socket.close();
+                }
+            } catch (Exception e) {
+                // Just log it.
+                this.logger.warn("Failed to close streams for this conenction.");
+            }
+        }
+        
+        return replyMessage;
 	}
+	
+	/*public boolean sendObject(Object object, String caption, String pipeID) throws JxtaException {
+	    PipeID.create(pipeID);
+	    //PipeAdvertisement pipeAdv = AdvertisementFactory.newAdvertisement(PipeAdvertisement.getAdvertisementType());
+	    //pipeAdv.setPipeID()
+	}*/
+	
+	/** {@inheritDoc} **/
+	public Object sendObjectToRandomPeerInGroup(Object object) throws PeerGroupException, IllegalArgumentException, JxtaException {
+	    if (!this.isConnectedToGroup()) {
+            throw new PeerGroupException("The peer has not yet joined a group and contacted a group RDV peer.");
+        }
+        
+        if (!(object instanceof Serializable)) {
+            throw new IllegalArgumentException("The object does not implement the interface java.io.Serializable and can not be sent.");
+        }
+        
+        this.logger.info("Trying to send an object to a random peer in the group.");
+        
+        Object reply = null;
+        PipeAdvertisement myPipeAdvertisement = getMyDirectCommunicationPipeAdvertisement();
+        boolean success = false;
+        
+        for(int i=0; i<NUMBER_OF_TRIES && !success; i++) {
+            this.logger.info("Try number: " + i);
+            
+            Enumeration<Advertisement> en = this.getKnownAdvertisements(PipeAdvertisement.NameTag, this.getDirectCommunicationPipeNamePrefix() + "*");
+            
+            // Try all available pipe ADVs until one succeeds.
+            while (en.hasMoreElements() && !success) {
+                Advertisement adv = en.nextElement();
+                
+                if (!(adv instanceof PipeAdvertisement) || adv.equals(myPipeAdvertisement)) {
+                    // Not interested, skip.
+                    continue;
+                }
+                
+                PipeAdvertisement pipeAdv = (PipeAdvertisement) adv;
+                
+                this.logger.info("Trying to send through this pipe advertisement:\n" + pipeAdv);
+                
+                try {
+                    reply = this.sendObject(object, pipeAdv);
+                } catch (Exception e) {
+                    this.logger.error("Failed to send object to this peer.\n", e);
+                    continue;
+                }
+                
+                success = true;
+            }
+            
+            // Wait for advertisement discovery to get more possible pipe advs.
+            try {
+                Thread.sleep(WAIT_INTERVAL_BETWEEN_TRIES);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        this.logger.info("Object successfuly sent: " + success);
+        if (!success) {
+            throw new JxtaException("Failed to send message. No peer group member found or none of them could receive it. Try again later.");
+        }
+        
+        return reply;
+    }
 
 	/** {@inheritDoc} **/
 	public void rendezvousEvent(RendezvousEvent event) {
+	    // If we've connected to a new RDV or just disconnected from one.  Launch discovery,
+        // so we can see any ADVs (peers, groups, peer back-channel ADVs.) this RDV knows or used to know.
+	    
 		if (event.getType() == RendezvousEvent.RDVCONNECT    ||
         event.getType() == RendezvousEvent.RDVRECONNECT  ||
         event.getType() == RendezvousEvent.RDVDISCONNECT ||
-        event.getType() == RendezvousEvent.RDVFAILED) {
-	
-	        // If we've connected to a new rdv or just disconencted from one.  Launch discovery,
-	        // so we can see any peers and groups this rdv knows or used to know.
-	        if (event.getType() == RendezvousEvent.RDVCONNECT || event.getType() == RendezvousEvent.RDVDISCONNECT) {
-	            this.discoverGroups(event.getPeer(), null);
-	            
-	            this.discoverPeers(event.getPeer(), null);
-	        }
+        event.getType() == RendezvousEvent.RDVFAILED ||
+        event.getType() == RendezvousEvent.BECAMERDV) {
+		    
+		    this.discoverGroups(event.getPeer(), null);
+            this.discoverPeers(event.getPeer(), null);
+            this.discoverAdvertisements(event.getPeer(), null, PipeAdvertisement.NameTag, this.getDirectCommunicationPipeNamePrefix() + "*");
 		}
 		
 	}
@@ -1112,7 +1639,8 @@ public class JxtaPeer implements Peer, RendezvousListener {
 	
 	/** {@inheritDoc} **/
 	public boolean isConnectedToNetwork() {
-		return this.isNetworkRendezVous() || this.isConnectedToNetworkRendezVous(); 
+		return (this.isNetworkRendezVous() && (this.getManager().getMode().equals(ConfigMode.RENDEZVOUS_RELAY) || this.getManager().getMode().equals(ConfigMode.RENDEZVOUS))) ||
+		    this.isConnectedToNetworkRendezVous(); 
 	}
 	
 	/** {@inheritDoc} **/
@@ -1144,4 +1672,45 @@ public class JxtaPeer implements Peer, RendezvousListener {
 	public boolean isNetworkConfigured() {
 		return this.manager != null;
 	}
+
+//
+//    /**
+//     * @return the directMessageReceiver
+//     */
+//    public DirectMessageReceiver getDirectMessageReceiver()
+//    {
+//        return this.directMessageReceiver;
+//    }
+//
+//
+//    /**
+//     * To be used from the outside.
+//     * 
+//     * @param directMessageReceiver the directMessageReceiver to set
+//     */
+//    public void setDirectMessageReceiver(DirectMessageReceiver directMessageReceiver) throws JxtaException
+//    {
+//        // If this is an unset (unregister), kill the connection handler thread.
+//        if (directMessageReceiver == null) {
+//            try {
+//                this.closeExistingDirectCommunicationServerSocket();
+//            } catch (IOException e) {
+//                throw new JxtaException("Unable to unregister the listener.", e);
+//            }
+//        } else {
+//            
+//            // If this is the first time a listener registers, create the connection handler thread.
+//            if (this.directMessageReceiver == null && this.serverSocket == null) {
+//                try {
+//                    this.directMessageReceiver = directMessageReceiver;
+//                    this.createDirectCommunicationServerSocket();
+//                } catch (IOException e) {
+//                    throw new JxtaException("Unable to register the listener.", e);
+//                }
+//            }
+//        }
+//        
+//        this.directMessageReceiver = directMessageReceiver;
+//    }
+
 }

@@ -45,7 +45,7 @@
 package org.xwoot.xwootApp.web.filters;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
+//import java.net.URISyntaxException;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -57,9 +57,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
-import org.xwoot.lpbcast.util.NetUtil;
-import org.xwoot.xwootApp.XWoot2;
-import org.xwoot.xwootApp.XWootException;
+//import org.apache.commons.logging.Log;
+//import org.apache.commons.logging.LogFactory;
+//import org.xwoot.lpbcast.util.NetUtil;
+//import org.xwoot.xwootApp.XWoot2;
+//import org.xwoot.xwootApp.XWootException;
 import org.xwoot.xwootApp.web.XWootSite;
 
 /**
@@ -91,16 +93,14 @@ public class BaseFilter implements Filter
         this.config = null;
     }
 
-    /**
-     * {@inheritDoc}
-     * 
-     * @see Filter#doFilter(ServletRequest, ServletResponse, FilterChain)
-     */
+    /** {@inheritDoc} */
     public void doFilter(ServletRequest srequest, ServletResponse sresponse, FilterChain chain) throws IOException,
         ServletException
     {
         HttpServletRequest request = (HttpServletRequest) srequest;
         HttpServletResponse response = (HttpServletResponse) sresponse;
+        
+        this.config.getServletContext().log("[FILTER] Request from : " + request.getHeader("referer") + " to : " + request.getRequestURL());
 
         // System.out.println("#######################");
         // System.out.println("# BaseFilter ");
@@ -116,7 +116,7 @@ public class BaseFilter implements Filter
         // + request.getRequestedSessionId());
         // System.out.println("#######################");
 
-        try {
+        //try {
             // Changing the skin.
             if (request.getParameter("skin") != null) {
                 request.getSession().setAttribute("skin", request.getParameter("skin"));
@@ -124,26 +124,27 @@ public class BaseFilter implements Filter
 
             // Always display the wizard when the peer is not initialized.
             if (!XWootSite.getInstance().isStarted()) {
-                System.out.println("Site is not started yet, starting the wizard.");
+                this.config.getServletContext().log("Site is not started yet, starting the wizard.");
                 if (!StringUtils.equals(request.getServletPath(), "/bootstrap.do")) {
                     response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrap.do"));
                     return;
                 }
             } else {
+                // TODO: remove?
                 request.setAttribute("serverUrl", XWootSite.getInstance().getXWootEngine().getXWootPeerId());
-
-                // Service gestion : if another xwoot send his url
-                String neighbor = request.getParameter("url");
-
-                if (!StringUtils.isBlank(neighbor)
-                    && XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork()) {
-                    System.out.println("Site " + XWootSite.getInstance().getXWootEngine().getXWootPeerId()
-                        + " : Base servlet - another xwoot send his url : " + NetUtil.normalize(neighbor) + " -");
-                    if (!XWootSite.getInstance().getXWootEngine().getNeighborsList().contains(neighbor)
-                        && ((XWoot2) XWootSite.getInstance().getXWootEngine()).forceAddNeighbour(neighbor)) {
-                        XWootSite.getInstance().getXWootEngine().doAntiEntropy(neighbor);
-                    }
-                }
+//
+//                // Service gestion : if another xwoot send his url
+//                String neighbor = request.getParameter("url");
+//
+//                if (!StringUtils.isBlank(neighbor)
+//                    && XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork()) {
+//                    System.out.println("Site " + XWootSite.getInstance().getXWootEngine().getXWootPeerId()
+//                        + " : Base servlet - another xwoot send his url : " + NetUtil.normalize(neighbor) + " -");
+//                    if (!XWootSite.getInstance().getXWootEngine().getNeighborsList().contains(neighbor)
+//                        && ((XWoot2) XWootSite.getInstance().getXWootEngine()).forceAddNeighbour(neighbor)) {
+//                        XWootSite.getInstance().getXWootEngine().doAntiEntropy(neighbor);
+//                    }
+//                }
             }
 
             // Add a header to inform about the presence of the xwoot service.
@@ -153,11 +154,11 @@ public class BaseFilter implements Filter
 
             // Let the request be further processed.
             chain.doFilter(request, response);
-        } catch (URISyntaxException e) {
-            throw new ServletException(e);
-        } catch (XWootException e) {
-            throw new ServletException(e);
-        }
+//        } catch (URISyntaxException e) {
+//            throw new ServletException(e);
+//        } catch (XWootException e) {
+//            throw new ServletException(e);
+//        }
     }
 
     /**

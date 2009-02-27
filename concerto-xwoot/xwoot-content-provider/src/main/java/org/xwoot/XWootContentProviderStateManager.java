@@ -27,7 +27,8 @@ public class XWootContentProviderStateManager
 
     public XWootContentProviderStateManager(String dbName, boolean createDB) throws Exception
     {
-        Class.forName(DB_DRIVER).newInstance();
+        Thread.currentThread().getContextClassLoader().loadClass(DB_DRIVER).newInstance();
+        // FIXME: define a working directory and set the database to that absolute path.
         this.connection = DriverManager.getConnection(String.format("%s%s;create=true", DB_PROTOCOL, dbName));
         this.connection.setAutoCommit(true);
 

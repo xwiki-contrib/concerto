@@ -232,11 +232,20 @@ public class XWoot2 implements XWootAPI
      * @param receivedMessage DOCUMENT ME!
      * @throws XWootException
      */
-    public synchronized void receivePatch(Message message) throws XWootException
+    public synchronized Object receiveMessage(Object aMessage) throws XWootException
     {
-        if (!this.isConnectedToP2PNetwork()) {
-            return;
+        if (!(aMessage instanceof Message)) {
+            logger.warn("Not and instance of org.xwoot.jxta.Message. Dropping message.");
+            return null;
         }
+        
+        if (!this.isConnectedToP2PNetwork()) {
+            logger.warn("Not conencted to network. Dropping message.");
+            return null;
+        }
+        
+        Message message = (Message) aMessage;
+        
         String randNeighbor = (String) message.getRandNeighbor();
         this.logger.info(this.siteId + " : received message...");
         switch (message.getAction()) {
@@ -319,6 +328,8 @@ public class XWoot2 implements XWootAPI
         if (randNeighbor != null && !this.getNeighborsList().contains(randNeighbor) && this.addNeighbour(randNeighbor)) {
             this.doAntiEntropy(randNeighbor);
         }
+        
+        return null;
     }
 
     private void treatePatch(Patch patch) throws XWootException
@@ -1015,7 +1026,7 @@ public class XWoot2 implements XWootAPI
      * @param neighbor DOCUMENT ME!
      * @throws XWootException
      */
-    synchronized public void doAntiEntropy(String neighborURL) throws XWootException
+    synchronized public void doAntiEntropy(Object neighborURL) throws XWootException
     {
         if (!this.isConnectedToP2PNetwork())
             return;
@@ -1213,6 +1224,12 @@ public class XWoot2 implements XWootAPI
     {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    /** {@inheritDoc} **/
+    public boolean isConnectedToP2PGroup()
+    {
+        return this.isConnectedToP2PNetwork();
     }
 
 }

@@ -21,10 +21,11 @@
 package org.xwoot.jxta.test;
 
 import java.io.File;
+import java.net.URI;
 
 import net.jxta.platform.NetworkManager.ConfigMode;
 
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.xwoot.jxta.Peer;
 import org.xwoot.jxta.PeerFactory;
@@ -35,7 +36,7 @@ import org.xwoot.xwootUtil.FileUtil;
  * <p>
  * Just add tests to subclasses.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public abstract class AbstractJxtaTestBase
 {
@@ -57,7 +58,7 @@ public abstract class AbstractJxtaTestBase
      * @throws Exception if problems occur.
      */
     @BeforeClass
-    public static void init() throws Exception
+    public static void createAndConnect() throws Exception
     {
         if (peer == null) {
             FileUtil.deleteDirectory(WORKING_DIR);
@@ -69,23 +70,41 @@ public abstract class AbstractJxtaTestBase
     
             // We have not choice if JXTA has a singleton architecture and we can
             // not start multiple peers inside one JVM.
-            peer.getManager().setUseDefaultSeeds(true);
+            //peer.getManager().setUseDefaultSeeds(true);
+
+            peer.getManager().getConfigurator().addSeedRendezvous(new URI("tcp://192.18.37.39:9701"));
+            peer.getManager().getConfigurator().addSeedRelay(new URI("tcp://192.18.37.39:9701"));
+            peer.getManager().getConfigurator().addSeedRendezvous(new URI("http://192.18.37.39:9700"));
+            peer.getManager().getConfigurator().addSeedRelay(new URI("http://192.18.37.39:9700"));
+            
+            peer.getManager().getConfigurator().addSeedRendezvous(new URI("tcp://192.18.37.38:9701"));
+            peer.getManager().getConfigurator().addSeedRelay(new URI("tcp://192.18.37.38:9701"));
+            peer.getManager().getConfigurator().addSeedRendezvous(new URI("http://192.18.37.38:9700"));
+            peer.getManager().getConfigurator().addSeedRelay(new URI("http://192.18.37.38:9700"));
+            
+            peer.getManager().getConfigurator().addSeedRendezvous(new URI("tcp://192.18.37.36:9701"));
+            peer.getManager().getConfigurator().addSeedRelay(new URI("tcp://192.18.37.36:9701"));
+            peer.getManager().getConfigurator().addSeedRendezvous(new URI("http://192.18.37.36:9700"));
+            peer.getManager().getConfigurator().addSeedRelay(new URI("http://192.18.37.36:9700"));
+            
+            peer.getManager().getConfigurator().setUseMulticast(false);
     
             // Connect to the network.
-            peer.startNetworkAndConnect(null);
+            peer.startNetworkAndConnect(null, null);
         }
     }
 
     /**
-     * Leave any joined peer group.
+     * Stop the network.
      * 
      * @throws Exception if problems occur.
      */
-    @After
-    public void clean() throws Exception
+    @AfterClass
+    public static void clean() throws Exception
     {
         if (peer != null) {
-            peer.leavePeerGroup();
+            peer.stopNetwork();
+            FileUtil.deleteDirectory(WORKING_DIR);
         }
     }
 }

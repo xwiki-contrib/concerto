@@ -60,7 +60,8 @@ import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.lang.StringUtils;
+import org.xwoot.xwootApp.XWoot3;
+import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.web.XWootSite;
 
 /**
@@ -90,6 +91,8 @@ public class StateManagement extends HttpServlet
     {
         Map<String, FileItem> requestParameters = parseMultipartParameters(request);
 
+        XWootAPI xwootEngine = XWootSite.getInstance().getXWootEngine();
+        
         StateAction action = null;
         if (request.getParameter("action_upload") != null || requestParameters.containsKey("action_upload")) {
             action = StateAction.UPLOAD;
@@ -99,11 +102,28 @@ public class StateManagement extends HttpServlet
             action = StateAction.RETRIEVE;
         }
         System.out.println("Performing action: " + action);
-
+        
         boolean uploadSuccessful = false;
+        
         // The result of the action
         String currentState = null;
+        String exceptionMessage = null;
+        
+        // Check if this should be auto-join and this xwoot node already has the state of this group.
+        if (action == null) {
+            // If we have the state of this group.
+            if (xwootEngine.isStateComputed()) {
+                // Try to import it and replace the current internal model (if any).
+                try {
+                    xwootEngine.importState(xwootEngine.getState());
+                } catch (Exception e) {
+                    this.log("Failed to import the existing state for this group.", e);
+                    currentState = "Failed to import the existing state for this group. Please get the group's state again." + " (Details: " + e.getMessage() + ")";
+                }
+            }
+        }
 
+        /*
         // The peer specified as the network contact point.
         String neighbor = (String) request.getSession().getAttribute("neighbor");
         if (StringUtils.isBlank(neighbor)) {
@@ -111,7 +131,7 @@ public class StateManagement extends HttpServlet
             System.out.println("No neighbor provided");
         } else {
             System.out.println("Neighbor: " + neighbor);
-        }
+        }*/
 
         try {
             if (action == StateAction.UPLOAD) {
@@ -128,38 +148,40 @@ public class StateManagement extends HttpServlet
                     }
                 }
             } else if (action == StateAction.RETRIEVE) {
-                if (neighbor != null && !neighbor.equals("")) {
-                    System.out.println("Asking state from: " + neighbor);
-                    XWootSite.getInstance().getXWootEngine().joinNetwork(neighbor);
-                }
+                this.getServletContext().log("Retrieving state from group.");
+                File newStateFile = ((XWoot3) xwootEngine).askStateToGroup();
+                xwootEngine.importState(newStateFile);
             } else if (action == StateAction.CREATE) {
-                System.out.println("Want to compute state");
+                this.log("Want to compute state");
                 XWootSite.getInstance().getXWootEngine().connectToContentManager();
                 XWootSite.getInstance().getXWootEngine().computeState();
             }
         } catch (Exception e) {
-            throw new ServletException(e);
-        }
-
-        if (XWootSite.getInstance().getXWootEngine().isStateComputed()) {
-            response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/synchronize.do"));
-            return;
+            exceptionMessage = e.getMessage();
+            this.log("Problem with state: " + e.getMessage(), e);
         }
 
         if (action != null) {
+            // If successful.
+            if (XWootSite.getInstance().getXWootEngine().isStateComputed()) {
+                response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/synchronize.do"));
+                return;
+            }
+            
+            // Otherwise
             switch (action) {
                 case UPLOAD:
                     if (uploadSuccessful) {
-                        currentState = "Problem with state: can't import selected file.";
+                        currentState = "Problem with state: can't import selected file." + "\n(Details: "+exceptionMessage+")";
                     } else {
                         currentState = "Problem with state: please select a state file to upload.";
                     }
                     break;
                 case CREATE:
-                    currentState = "Problem with state: can't compute a new state.";
+                    currentState = "Problem with state: can't compute a new state." + "\n(Details: "+exceptionMessage+")";;
                     break;
                 case RETRIEVE:
-                    currentState = "Problem with state: can't import the state from the given peer.";
+                    currentState = "Problem with state: can't import the state from the given peer." + "\n(Details: "+exceptionMessage+")";;
                     break;
                 default:
                     // First request, there's no error yet
@@ -169,7 +191,7 @@ public class StateManagement extends HttpServlet
 
         request.setAttribute("xwiki_url", XWootSite.getInstance().getXWootEngine().getContentManagerURL());
         request.setAttribute("errors", currentState);
-        request.setAttribute("neighbor", neighbor);
+        request.setAttribute("groupCreator", ((XWoot3)xwootEngine).isGroupCreator());
 
         request.getRequestDispatcher("/pages/StateManagement.jsp").forward(request, response);
         return;

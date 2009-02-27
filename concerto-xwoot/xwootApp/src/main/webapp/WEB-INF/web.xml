@@ -49,6 +49,16 @@
         <url-pattern>/bootstrapNetwork.do</url-pattern>
     </servlet-mapping>    
     
+<!-- bootstrapGroup -->
+    <servlet>
+        <servlet-name>bootstrapGroup</servlet-name>
+        <servlet-class>org.xwoot.xwootApp.web.servlets.BootstrapGroup</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>bootstrapGroup</servlet-name>
+        <url-pattern>/bootstrapGroup.do</url-pattern>
+    </servlet-mapping>  
+    
 <!-- stateManagement -->
     <servlet>
         <servlet-name>stateManagement</servlet-name>

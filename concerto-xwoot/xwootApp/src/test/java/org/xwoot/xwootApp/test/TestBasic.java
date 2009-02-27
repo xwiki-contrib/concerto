@@ -281,7 +281,7 @@ public class TestBasic extends AbstractXWootTest
         mess.setOriginalPeerId("test_Peer");
         mess.setRound(1);
 
-        this.xwoot1.receivePatch(mess);
+        this.xwoot1.receiveMessage(mess);
 
         Assert.assertEquals("titi\ntoto\n", this.wootEngine1.getContentManager().getContent(page.getPageName(),
             XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID));

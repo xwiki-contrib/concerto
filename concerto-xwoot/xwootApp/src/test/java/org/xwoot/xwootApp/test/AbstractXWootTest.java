@@ -44,12 +44,16 @@
 
 package org.xwoot.xwootApp.test;
 
+import net.jxta.platform.NetworkManager.ConfigMode;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.xwoot.XWootContentProviderFactory;
 import org.xwoot.XWootContentProviderInterface;
 import org.xwoot.antiEntropy.AntiEntropy;
 import org.xwoot.clockEngine.Clock;
+import org.xwoot.jxta.Peer;
+import org.xwoot.jxta.PeerFactory;
 import org.xwoot.lpbcast.sender.LpbCastAPI;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngine;
 import org.xwoot.wikiContentManager.WikiContentManager;
@@ -57,6 +61,8 @@ import org.xwoot.wikiContentManager.WikiContentManagerFactory;
 import org.xwoot.wootEngine.WootEngine;
 import org.xwoot.xwootApp.XWoot;
 import org.xwoot.xwootApp.XWoot2;
+import org.xwoot.xwootApp.XWoot3;
+import org.xwoot.xwootUtil.FileUtil;
 
 import java.io.File;
 
@@ -128,47 +134,45 @@ public abstract class AbstractXWootTest
 
     ThomasRuleEngine tre3;
 
+    XWoot3 xwoot31;
+
+    XWoot3 xwoot32;
+
+    XWoot3 xwoot33;
+
+    Peer peer1;
+
+    Peer peer2;
+
+    Peer peer3;
+    
+    String peer1Name = "Concerto1";
+    String peer2Name = "Concerto2";
+    String peer3Name = "Concerto3";
+    
+    String xwoot1DirectoryName = "Site1";
+    String xwoot2DirectoryName = "Site2";
+    String xwoot3DirectoryName = "Site3";
+    
+    File xwoot1Directory;
+    File xwoot2Directory;
+    File xwoot3Directory;
+    
     @Before
     public void setup() throws Exception
     {
 
         // Configure working dir for temporary files
-        this.cleanTests(WORKINGDIR);
-        this.cleanTests(WORKINGDIR + File.separatorChar + "Site1");
-        this.cleanTests(WORKINGDIR + File.separatorChar + "Site2");
-        this.cleanTests(WORKINGDIR + File.separatorChar + "Site3");
+        FileUtil.deleteDirectory(WORKINGDIR);
+        FileUtil.checkDirectoryPath(WORKINGDIR);
 
-        File working = new File(WORKINGDIR);
-
-        if (!working.exists()) {
-            if (!working.mkdir()) {
-                throw new RuntimeException("Can't create working directory: " + WORKINGDIR);
-            }
-        }
-
-        File site1 = new File(WORKINGDIR + File.separator + "Site1");
-
-        if (!site1.exists()) {
-            if (!site1.mkdir()) {
-                throw new RuntimeException("Can't create working directory: " + site1);
-            }
-        }
-
-        File site2 = new File(WORKINGDIR + File.separator + "Site2");
-
-        if (!site2.exists()) {
-            if (!site2.mkdir()) {
-                throw new RuntimeException("Can't create working directory: " + site2);
-            }
-        }
-
-        File site3 = new File(WORKINGDIR + File.separator + "Site3");
-
-        if (!site3.exists()) {
-            if (!site3.mkdir()) {
-                throw new RuntimeException("Can't create working directory: " + site3);
-            }
-        }
+        this.xwoot1Directory = new File(WORKINGDIR, xwoot1DirectoryName);
+        this.xwoot2Directory = new File(WORKINGDIR, xwoot2DirectoryName);
+        this.xwoot3Directory = new File(WORKINGDIR, xwoot3DirectoryName);
+        
+        FileUtil.checkDirectoryPath(xwoot1Directory);
+        FileUtil.checkDirectoryPath(xwoot2Directory);
+        FileUtil.checkDirectoryPath(xwoot3Directory);
         
         //        
         // this.xwiki1 =
@@ -201,13 +205,27 @@ public abstract class AbstractXWootTest
         this.opClock2 = new Clock(WORKINGDIR + File.separator + "Site2" + File.separator + "WootClock");
         this.opClock3 = new Clock(WORKINGDIR + File.separator + "Site3" + File.separator + "WootClock");
 
+        // 3 peers for 3 xwoots
+        this.peer1 = PeerFactory.createMockPeer();
+        this.peer1.configureNetwork(new File(xwoot1Directory, this.peer1Name), ConfigMode.EDGE);
+        this.peer1.setMyPeerName("Concerto1");
+        
+        this.peer2 = PeerFactory.createMockPeer();
+        this.peer2.configureNetwork(new File(xwoot2Directory, this.peer2Name), ConfigMode.EDGE);
+        this.peer2.setMyPeerName("Concerto2");
+        
+        this.peer3 = PeerFactory.createMockPeer();
+        this.peer3.configureNetwork(new File(xwoot3Directory, this.peer3Name), ConfigMode.EDGE);
+        this.peer3.setMyPeerName("Concerto3");
+        
+        //FIXME: use peerID.
         // 3 wootEngines
         this.wootEngine1 =
-            new WootEngine(1, WORKINGDIR + File.separator + "Site1" + File.separator + "wootEngine", this.opClock1);
+            new WootEngine(1, new File(this.xwoot1Directory, "wootEngine").toString(), this.opClock1);
         this.wootEngine2 =
-            new WootEngine(2, WORKINGDIR + File.separator + "Site2" + File.separator + "wootEngine", this.opClock2);
+            new WootEngine(2, new File(this.xwoot2Directory, "wootEngine").toString(), this.opClock2);
         this.wootEngine3 =
-            new WootEngine(3, WORKINGDIR + File.separator + "Site3" + File.separator + "wootEngine", this.opClock3);
+            new WootEngine(3, new File(this.xwoot3Directory, "wootEngine").toString(), this.opClock3);
 
         // 3 sender for 3 xwoot
         this.lpbCast1 =
@@ -228,6 +246,7 @@ public abstract class AbstractXWootTest
         this.ae2 = new AntiEntropy(WORKINGDIR + File.separator + "Site2" + File.separator + "ae");
         this.ae3 = new AntiEntropy(WORKINGDIR + File.separator + "Site3" + File.separator + "ae");
 
+        // FIXME: use peerID
         // 3 tre
         this.tre1 = new ThomasRuleEngine(1, WORKINGDIR + File.separator + "Site1" + File.separator + "tre");
         this.tre2 = new ThomasRuleEngine(2, WORKINGDIR + File.separator + "Site2" + File.separator + "tre");
@@ -238,7 +257,6 @@ public abstract class AbstractXWootTest
         this.xwoot1 =
             new XWoot(this.xwiki1, this.wootEngine1, this.lpbCast1, WORKINGDIR + File.separator + "Site1", "Site1",
                 new Integer(1), this.tre1, this.ae1);
-
         this.xwoot2 =
             new XWoot(this.xwiki2, this.wootEngine2, this.lpbCast2, WORKINGDIR + File.separator + "Site2", "Site2",
                 new Integer(2), this.tre2, this.ae2);
@@ -249,13 +267,20 @@ public abstract class AbstractXWootTest
         this.xwoot21 =
             new XWoot2(this.xwiki21, this.wootEngine1, this.lpbCast1, WORKINGDIR + File.separator + "Site1", "Site1",
                 new Integer(1), this.tre1, this.ae1);
-
         this.xwoot22 =
             new XWoot2(this.xwiki22, this.wootEngine2, this.lpbCast2, WORKINGDIR + File.separator + "Site2", "Site2",
                 new Integer(2), this.tre2, this.ae2);
         this.xwoot23 =
             new XWoot2(this.xwiki23, this.wootEngine3, this.lpbCast3, WORKINGDIR + File.separator + "Site3", "Site3",
                 new Integer(3), this.tre3, this.ae3);
+        this.cleanXWikis();
+        
+        this.xwoot31 =
+            new XWoot3(this.xwiki21, this.wootEngine1, this.peer1, WORKINGDIR + File.separator + "Site1", this.tre1, this.ae1);
+        this.xwoot32 =
+            new XWoot3(this.xwiki22, this.wootEngine2, this.peer2, WORKINGDIR + File.separator + "Site2", this.tre2, this.ae2);
+        this.xwoot33 =
+            new XWoot3(this.xwiki23, this.wootEngine3, this.peer3, WORKINGDIR + File.separator + "Site3", this.tre3, this.ae3);
         this.cleanXWikis();
     }
 
@@ -270,27 +295,6 @@ public abstract class AbstractXWootTest
 
         if (!new File(WORKINGDIR).exists()) {
             new File(WORKINGDIR).mkdirs();
-        }
-    }
-
-    protected void cleanTests(String directory) throws Exception
-    {
-        File rootDir = new File(directory);
-
-        if (rootDir.exists()) {
-            String[] children = rootDir.list();
-
-            for (String s : children) {
-                File toErase = new File(directory, s);
-
-                if (toErase.isDirectory()) {
-                    this.cleanTests(toErase.toString());
-                } else {
-                    toErase.delete();
-                }
-            }
-
-            rootDir.delete();
         }
     }
 

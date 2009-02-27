@@ -74,6 +74,7 @@ import net.jxta.platform.NetworkManager.ConfigMode;
 import net.jxta.protocol.PeerGroupAdvertisement;
 import net.jxta.protocol.PeerAdvertisement;
 import net.jxta.protocol.PipeAdvertisement;
+import net.jxta.peer.PeerID;
 import net.jxta.peergroup.PeerGroup;
 import net.jxta.rendezvous.RendezvousEvent;
 
@@ -94,7 +95,7 @@ public interface Peer
      * @see ConfigMode
      * @throws IOException if problems occur while initializing.
      **/
-    void configureNetwork(File jxtaCacheDirectoryPath, ConfigMode mode) throws IOException;
+    void configureNetwork(File jxtaCacheDirectoryPath, ConfigMode mode) throws JxtaException;
 
     /**
      * @return the NetworkManager instance created by {@link #configureNetwork(File)} that allows tweaking the peer's
@@ -106,12 +107,14 @@ public interface Peer
      * Start the network, connect to a RDV and set some parameters.
      * 
      * @param jxtaCastListener event listener interested in {@link JxtaCastEvent}s.
+     * @param directMessageReceiver event listener interested in Objects directly sent to this peer only.
+     * @throws JxtaException if could not contact any RDV peers to join the network.
      * @throws IllegalStateException if this is called before {@link #configureNetwork(File)}.
      * @throws PeerGroupException if problems occur while starting the Jxta platform.
      * @throws IOException if problems occur while starting the Jxta platform.
      **/
-    void startNetworkAndConnect(JxtaCastEventListener jxtaCastListener) throws IllegalStateException,
-        PeerGroupException, IOException;
+    void startNetworkAndConnect(JxtaCastEventListener jxtaCastListener, DirectMessageReceiver directMessageReceiver)
+        throws IllegalStateException, PeerGroupException, IOException, JxtaException;
 
     /**
      * Stops the JXTA platform and disconnects from the network.
@@ -120,24 +123,37 @@ public interface Peer
 
     /** @return my own peer name. */
     String getMyPeerName();
+    
+    /** @param peerName the name to set for this peer. */
+    void setMyPeerName(String peerName);
+    
+    /** @return my own peer ID. */
+    PeerID getMyPeerID();
 
     /** @return advertisement for the default (initial) peer group. */
     PeerGroupAdvertisement getDefaultAdv();
 
     /** @return advertisement for my peer. */
     PeerAdvertisement getMyPeerAdv();
-    
-    /** @return the pipe name prefix used for the JxtaCast back channel input pipe. */
-    public String getBackChannelPipeNamePrefix();
-    
-    /** @return the pipe advertisement used by this peer for the JxtaCast back channel input pipe. */
-    public PipeAdvertisement getMyBackChannelPipeAdvertisement();
-    
-    /** @return the pipe name used by this peer for the JxtaCast back channel input pipe. */
-    public String getMyBackChannelPipeName();
-    
+
+    /** @return the pipe name prefix used for the direct communication server socket. */
+    String getDirectCommunicationPipeNamePrefix();
+
+    /**
+     * @return the pipe advertisement used by this peer for the direct communication server socket. {@code null} is
+     *         returned if the peer has not yet joined a group or if he did but does not have a direct communication
+     *         listener registered.
+     */
+    PipeAdvertisement getMyDirectCommunicationPipeAdvertisement();
+
+    /** @return the String value of this peer's Pipe ID used for direct communication. */
+    public String getMyDirectCommunicationPipeIDAsString();
+
+    /** @return the pipe name used by this peer for the direct communication server socket. */
+    String getMyDirectCommunicationPipeName();
+
     /** @return the {@link JxtaCast} instance associated with this peer. */
-    public JxtaCast getJxtaCastInstance();
+    JxtaCast getJxtaCastInstance();
 
     /** @return the default (initial) peer group. */
     PeerGroup getDefaultGroup();
@@ -179,28 +195,40 @@ public interface Peer
     void discoverAdvertisements(String targetPeerId, DiscoveryListener discoListener, String attribute, String value);
 
     /**
-     * @return PeerGroupAdvertisement objects representing the groups known so far or {@code null} if this peer is not
-     *         connected to the network. <b>Note:</b> this doesn't include the default "NetPeerGroup" advertisement.
+     * @return PeerGroupAdvertisement objects representing the groups known so far or an empty enumeration if this peer
+     *         is not connected to the network. <b>Note:</b> this doesn't include the default "NetPeerGroup"
+     *         advertisement.
      * @see #isConnectedToNetwork()
      */
     Enumeration<PeerGroupAdvertisement> getKnownGroups();
 
     /**
      * @return an enumerator to an array of PeerAdvertisement objects representing the peers known so far for the
-     *         currently joined group or {@code null} if this peer did not join a group or has not contacted a RDV peer.
+     *         currently joined group or an empty enumeration if this peer did not join a group or has not contacted a
+     *         RDV peer.
      * @see #isConnectedToNetwork()
      */
     Enumeration<PeerAdvertisement> getKnownPeers();
 
     /**
-     * @return Advertisement objects representing the advs known so far, that were created within the joined peer group.
-     *         The list can be narrowed to advs matching an attribute/value pair.
+     * @return Advertisement objects representing the advs known so far, that were created within the joined peer group
+     *         or an empty enumeration if this peer has not joined a group. The list can be narrowed to advs matching an
+     *         attribute/value pair.
      * @param attribute - Limit responses to advertisements with this attribute/value pair. Set to null to place no
      *            limit.
      * @param value - See 'attribute', above.
      * @see #isConnectedToGroup()
      */
     Enumeration<Advertisement> getKnownAdvertisements(String attribute, String value);
+    
+    /**
+     * Convenience method for returning just direct communication pipe advertisements in the current group.
+     * <p>
+     * It can be used to see and communicate with other peers in the current group.
+     * 
+     * @return {@link PipeAdvertisement}s representing group members' direct communication channels excluding this peer's pipe advertisement..
+     */
+    Enumeration<Advertisement> getKnownDirectCommunicationPipeAdvertisements();
 
     /**
      * @return an enumeration of connected RDV ids or null if this peer is not connected to a group.
@@ -245,7 +273,9 @@ public interface Peer
      * support this but will also be promoted back to RDV when the network will need it.
      * <p>
      * If keystorePassword and identityPassword parameters are not null or empty, the new group will be a secure group
-     * using  {@link NetworkManager.. {@link net.jxta.impl.membership.pse.PSEMembershipService PSEMPSEMembershipService}, else it will be a public group and use {@link net.jxta.impl.membership.none.NoneMembershipService NoneMembershipService}.
+     * using {@link NetworkManager.. {@link net.jxta.impl.membership.pse.PSEMembershipService PSEMPSEMembershipService}
+     * , else it will be a public group and use {@link net.jxta.impl.membership.none.NoneMembershipService
+     * NoneMembershipService}.
      * 
      * @param groupAdv Advertisement of the group to join.
      * @param keystorePassword The local keystore password.
@@ -253,7 +283,7 @@ public interface Peer
      * @param beRendezvous If true, act as a rendezvous for this group, else the peer will be automatically promoted to
      *            a RDV or demoted back to an EDGE peer when needed.
      * @return PeerGroup if we were successfully able to join the group, or if we had already joined it. null if we were
-     *         unable to join the group. 
+     *         unable to join the group.
      * @throws PeerGroupException if the group could not be joined.
      * @throws IOException if problems occur publishing the group.
      * @throws ProtocolNotSupportedException if problems occur while authenticating.
@@ -293,12 +323,11 @@ public interface Peer
      * @throws PeerGroupException if problems occur while leaving the group.
      */
     void leavePeerGroup(PeerGroup oldGroup) throws PeerGroupException;
-    
+
     /**
      * Convenince method to leave the joined peer group.
      * 
      * @see #leavePeerGroup(PeerGroup)
-     * 
      * @throws PeerGroupException if problems occur while leaving the group.
      */
     void leavePeerGroup() throws PeerGroupException;
@@ -354,19 +383,34 @@ public interface Peer
      * @see net.jxta.jxtacast.JxtaCast#sendObject(java.lang.Object, java.lang.String)
      */
     void sendObject(Object object, String caption) throws PeerGroupException;
-    
+
     /**
      * Send a variable-sized object to a peer.
      * 
      * @param object the object to send.
-     * @param caption the caption describing the object.
      * @param pipeAdv the pipe advertisement where the destination peer listens for messages.
-     * @return true if successfuly sent. false is returned if the message could not be sent due to network over-load but you can try to send it again later.
+     * @return the object replied by the destination peer or null if it did not reply anything.
      * @throws PeerGroupException if this peer has not yet joined a group other than NetPeerGroup and contacted its RDV.
      * @throws IllegalArgumentException if the object does not implement {@link Serializable}.
      * @see net.jxta.jxtacast.JxtaCast#sendObject(java.lang.Object, java.lang.String)
      */
-    public boolean sendObject(Object object, String caption, PipeAdvertisement pipeAdv) throws JxtaException;
+    Object sendObject(Object object, PipeAdvertisement pipeAdv) throws JxtaException;
+
+    /**
+     * Send a variable-sized object to a random peer in the currently joined group.
+     * 
+     * @param object the object to send.
+     * @return true if successfully sent. false is returned if no other peers are in the current group except you. false
+     *         is also returned if the message could not be sent due to network over-load. In both cases, when false is
+     *         returned, you can try to send the object again later.
+     * @throws JxtaException if the message could not be sent after {@link JxtaPeer#NUMBER_OF_TRIES}, either because of
+     *             transfer problems or because there was no peer in the group to receive it.
+     * @throws PeerGroupException if this peer has not yet joined a group other than NetPeerGroup and contacted its RDV.
+     * @throws IllegalArgumentException if the object does not implement {@link Serializable}.
+     * @see net.jxta.jxtacast.JxtaCast#sendObject(java.lang.Object, java.lang.String)
+     */
+    Object sendObjectToRandomPeerInGroup(Object object) throws PeerGroupException, IllegalArgumentException,
+        JxtaException;
 
     /**
      * Handles RendezVous events in the joined group.

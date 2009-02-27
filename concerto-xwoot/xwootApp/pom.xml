@@ -39,6 +39,11 @@
 		</dependency>
 		<dependency>
 			<groupId>org.xwoot</groupId>
+			<artifactId>jxta</artifactId>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.xwoot</groupId>
 			<artifactId>wikiContentManager</artifactId>
 			<version>${pom.version}</version>
 		</dependency>

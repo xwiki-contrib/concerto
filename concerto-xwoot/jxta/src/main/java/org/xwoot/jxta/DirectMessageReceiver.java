@@ -20,23 +20,25 @@
 
 package org.xwoot.jxta;
 
-import org.xwoot.jxta.mock.MockJxtaPeer;
+import java.io.ObjectOutputStream;
+
+import org.apache.commons.logging.Log;
 
 /**
- * Factory class for Peer objects.
- *
- * @version $Id$
+ * Describes the structure of a receiver for direct messages from other peer group members.
+ * 
+ * @version $Id:$
  */
-public class PeerFactory
+public interface DirectMessageReceiver
 {
-    /** @return an new {@link Peer} instance. */
-    public static Peer createPeer() {
-        return new JxtaPeer();
-    }
+    /**
+     * Receive a direct message from a peer.
+     * 
+     * @param message the received message.
+     * @param oos the ObjectOutputStream that can be used to immediately reply.
+     */
+    void receiveDirectMessage(Object message, ObjectOutputStream oos);
 
-    /** @return a mock instance for {@link Peer}. */
-    public static Peer createMockPeer()
-    {
-        return new MockJxtaPeer();
-    }
+    /** @return the log object the connection threads can use to log events. */
+    Log getLog();
 }

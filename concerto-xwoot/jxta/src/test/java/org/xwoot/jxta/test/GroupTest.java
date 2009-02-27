@@ -27,13 +27,14 @@ import junit.framework.Assert;
 import net.jxta.impl.membership.none.NoneMembershipService;
 import net.jxta.impl.membership.pse.PSEMembershipService;
 import net.jxta.peergroup.PeerGroup;
+import net.jxta.protocol.PeerGroupAdvertisement;
 
 import org.junit.Test;
 
 /**
  * Test group actions, like create/join/leave.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class GroupTest extends AbstractJxtaTestBase
 {
@@ -96,22 +97,25 @@ public class GroupTest extends AbstractJxtaTestBase
         // Make sure the group is public.
         Assert.assertTrue(group.getMembershipService() instanceof NoneMembershipService);
 
+        // Save the peer group advertisement in order to join again. 
+        PeerGroupAdvertisement groupAdv = group.getPeerGroupAdvertisement();
+        
         // Leave the group so we can join it again with the joinPeerGroup method.
         peer.leavePeerGroup(group);
 
         // Make sure we have successfully left the group.
         Assert.assertFalse(peer.hasJoinedAGroup());
-        Assert.assertEquals(null, peer.getCurrentJoinedPeerGroup());
+        Assert.assertEquals(peer.getDefaultGroup(), peer.getCurrentJoinedPeerGroup());
 
-        PeerGroup joinedGroup = peer.joinPeerGroup(group.getPeerGroupAdvertisement(), false);
+        PeerGroup joinedGroup = peer.joinPeerGroup(groupAdv, false);
 
         // Make sure we successfully joined the group.
         Assert.assertTrue(peer.hasJoinedAGroup());
         Assert.assertTrue(peer.isConnectedToGroup());
 
         // Make sure we joined the right group.
-        Assert.assertEquals(group, joinedGroup);
-        Assert.assertEquals(joinedGroup, peer.getCurrentJoinedPeerGroup());
+        Assert.assertEquals(groupAdv.getPeerGroupID(), joinedGroup.getPeerGroupID());
+        Assert.assertEquals(joinedGroup.getPeerGroupID(), peer.getCurrentJoinedPeerGroup().getPeerGroupID());
     }
 
     /**
@@ -161,22 +165,25 @@ public class GroupTest extends AbstractJxtaTestBase
         // Make sure the group is private.
         Assert.assertTrue(group.getMembershipService() instanceof PSEMembershipService);
 
+        // Save the peer group advertisement in order to join again. 
+        PeerGroupAdvertisement groupAdv = group.getPeerGroupAdvertisement();
+        
         // Leave the group so we can join it again.
         peer.leavePeerGroup(group);
 
         // Make sure we have successfully left the group.
         Assert.assertFalse(peer.hasJoinedAGroup());
-        Assert.assertEquals(null, peer.getCurrentJoinedPeerGroup());
+        Assert.assertEquals(peer.getDefaultGroup(), peer.getCurrentJoinedPeerGroup());
 
         PeerGroup joinedGroup =
-            peer.joinPeerGroup(group.getPeerGroupAdvertisement(), KEYSTORE_PASSWORD, GROUP_PASSWORD, false);
+            peer.joinPeerGroup(groupAdv, KEYSTORE_PASSWORD, GROUP_PASSWORD, false);
 
         // Make sure we successfully joined the group.
         Assert.assertTrue(peer.hasJoinedAGroup());
         Assert.assertTrue(peer.isConnectedToGroup());
 
         // Make sure we joined the right group.
-        Assert.assertEquals(group, joinedGroup);
-        Assert.assertEquals(joinedGroup, peer.getCurrentJoinedPeerGroup());
+        Assert.assertEquals(groupAdv.getPeerGroupID(), joinedGroup.getPeerGroupID());
+        Assert.assertEquals(joinedGroup.getPeerGroupID(), peer.getCurrentJoinedPeerGroup().getPeerGroupID());
     }
 }

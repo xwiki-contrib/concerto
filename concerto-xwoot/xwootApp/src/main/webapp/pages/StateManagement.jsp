@@ -10,13 +10,13 @@
             <input type="file" name="statefile" size="20"/>
             <input type="submit" value="Import" name="action_upload"/>
             or
-            <c:if test="${neighbor eq null}">
+            <c:if test="${groupCreator eq true}">
               <input type="submit" value="Compute new state" name="action_create"/>
             </c:if>
-            <c:if test="${neighbor ne null}">
-              <inout type="hidden" name="neighbor" value="${neighbor}"/>
-              <input type="submit" value="Ask state to neighbor" name="action_retrieve"/>
+            <c:if test="${groupCreator ne true}">
+              <input type="submit" value="Ask state from group" name="action_retrieve"/>
             </c:if>
+            <%-- TODO: if state is computed, automatically skip this step --%>
             <c:if test="${hasState eq true}">
               <c:if test="${currentState ne null}">
                 <br/> == Current state : ${currentState} ==

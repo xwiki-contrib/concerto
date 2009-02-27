@@ -90,7 +90,7 @@ public class ReceiveMessage extends AbstractHttpServletReceiver
     public void receive(Message message) throws ReceiverException
     {
         try {
-            ((XWoot2) XWootSite.getInstance().getXWootEngine()).receivePatch(message);
+            ((XWoot2) XWootSite.getInstance().getXWootEngine()).receiveMessage(message);
         } catch (XWootException e) {
            throw new ReceiverException("Problem to receive message \n",e);
         }

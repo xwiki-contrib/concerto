@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
-import org.xwoot.lpbcast.message.Message;
 
 public interface XWootAPI
 {
@@ -33,7 +32,7 @@ public interface XWootAPI
 
     boolean isStateComputed();
 
-    void doAntiEntropy(String neighborURL) throws XWootException;
+    void doAntiEntropy(Object neighbor) throws XWootException;
 
     void doAntiEntropyWithAllNeighbors() throws XWootException;
 
@@ -52,10 +51,12 @@ public interface XWootAPI
     void disconnectFromP2PNetwork() throws XWootException;
 
     boolean isConnectedToP2PNetwork();
+    
+    boolean isConnectedToP2PGroup();
 
     boolean addNeighbour(String neighborURL);
 
-    Collection<String> getNeighborsList() throws XWootException;
+    Collection getNeighborsList() throws XWootException;
 
     void removeNeighbor(String neighborURL) throws XWootException;
 
@@ -67,5 +68,5 @@ public interface XWootAPI
 
     String getContentManagerURL();
 
-    void receivePatch(Message toSend) throws XWootException;
+    Object receiveMessage(Object message) throws XWootException;
 }

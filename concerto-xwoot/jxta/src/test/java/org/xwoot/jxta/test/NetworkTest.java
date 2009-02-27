@@ -22,6 +22,11 @@ package org.xwoot.jxta.test;
 
 import junit.framework.Assert;
 
+import net.jxta.exception.JxtaException;
+import net.jxta.platform.NetworkConfigurator;
+
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.xwoot.jxta.Peer;
 import org.xwoot.jxta.PeerFactory;
@@ -29,10 +34,24 @@ import org.xwoot.jxta.PeerFactory;
 /**
  * Test the network.
  *
- * @version $Id:$
+ * @version $Id$
  */
 public class NetworkTest extends AbstractJxtaTestBase
 {
+    @Before
+    public void init() throws Exception
+    {
+        if (!peer.isConnectedToNetwork()) {
+            peer.startNetworkAndConnect(null, null);
+        }
+    }
+    
+    @After
+    public void destroy() throws Exception
+    {
+        peer.leavePeerGroup();
+    }
+    
     /**
      * Can't start network before we configure our network and local settings.
      * 
@@ -42,7 +61,13 @@ public class NetworkTest extends AbstractJxtaTestBase
     public void testStartNetwork() throws Exception
     {
         Peer aPeer = PeerFactory.createPeer();
-        aPeer.startNetworkAndConnect(null);
+        try {
+            aPeer.startNetworkAndConnect(null, null);
+        } finally {
+            if (aPeer != null) {
+                aPeer.stopNetwork();
+            }
+        }
     }
     
     /**
@@ -55,4 +80,71 @@ public class NetworkTest extends AbstractJxtaTestBase
     {
         Assert.assertTrue(peer.isConnectedToNetwork());
     }
+    
+    
+    /**
+     * Connect to a network, disconnect and then reconnect.
+     * 
+     * @throws Exception if problems occur.
+     */
+    @Test
+    public void testReConnectToNetwork() throws Exception
+    {
+        //System.out.println("Connection test.");
+        Assert.assertTrue(peer.isConnectedToNetwork());
+        
+        //System.out.println("STOP");
+        peer.stopNetwork();
+//        System.out.println("Connection test.");
+//        System.out.println("Status: ");
+//        System.out.println("jxta.isNetworkConfigured() : " + peer.isNetworkConfigured());
+//        System.out.println("jxta.isJxtaStarted() : " + peer.isJxtaStarted()); 
+//        System.out.println("jxta.isConnectedToNetworkRendezVous() : " + peer.isConnectedToNetworkRendezVous());
+//        System.out.println("jxta.isConnectedToNetwork() : " + peer.isConnectedToNetwork());
+//        System.out.println("jxta.hasJoinedAGroup() : " + peer.hasJoinedAGroup());
+//        System.out.println("jxta.isGroupRendezVous() : " + peer.isGroupRendezVous());
+//        System.out.println("jxta.isConnectedToGroupRendezVous() : " + peer.isConnectedToGroupRendezVous());
+//        System.out.println("jxta.isConnectedToGroup() : " + peer.isConnectedToGroup());
+        Assert.assertFalse(peer.isConnectedToNetwork());
+        
+//        System.out.println("START");
+        peer.startNetworkAndConnect(null, null);
+//        System.out.println("Connection test.");
+        Assert.assertTrue(peer.isConnectedToNetwork());
+    }
+    
+    /**
+     * Fail to connect because seed did not respond or no seed was provided.
+     * Result: a {@link JxtaException} will be thrown.
+     * 
+     * @throws Exception if problems occur.
+     */
+    /*FIXME: jxta 2.5 bug affects this too. Try 2.6-snapshot
+     * @Test(expected = JxtaException.class)
+    public void testFailConnectToNetwork() throws Exception
+    {
+        Assert.assertTrue(peer.isConnectedToNetwork());
+        
+        // disconnect.
+        peer.stopNetwork();
+        Assert.assertFalse(peer.isConnectedToNetwork());
+        
+        // remove any seeds.
+        NetworkConfigurator networkConfig = peer.getManager().getConfigurator();
+        networkConfig.clearRelaySeedingURIs();
+        networkConfig.clearRelaySeeds();
+        networkConfig.clearRendezvousSeedingURIs();
+        networkConfig.clearRendezvousSeeds();
+        
+        peer.getManager().setUseDefaultSeeds(false);
+        
+        try {
+            // try to connect to nothing and fail.
+            peer.startNetworkAndConnect(null, null);
+        } catch(Exception e) {
+            Assert.assertFalse(peer.isJxtaStarted());
+            Assert.assertFalse(peer.isConnectedToNetwork());
+            throw e;
+        }
+    }*/
 }

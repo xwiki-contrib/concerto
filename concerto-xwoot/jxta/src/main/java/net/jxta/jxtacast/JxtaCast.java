@@ -255,11 +255,15 @@ public class JxtaCast implements PipeMsgListener, Runnable {
     public boolean setPeerGroup(PeerGroup group) {
 
         boolean rc = false;
-
+        
+        if (group == null) {
+            return false;
+        }
+        
         // If the new group is the same group we already have, it's a no-op.
-        if (this.group != null  &&
-            group.getPeerGroupID().equals(this.group.getPeerGroupID()))
+        if (group == this.group) {
             return true;
+        }
 
         // By synchronizing on the wranglers object, we ensure that the
         // trailboss thread is not trying to use the current pipes while
@@ -617,6 +621,8 @@ public class JxtaCast implements PipeMsgListener, Runnable {
         //
         OutputObjectWrangler wrangler = new OutputObjectWrangler(this, object, caption);
         sendQueue.add(wrangler);
+        
+        JxtaCast.logMsg("OutputObjectWrangler created for this object and added to send queue.");
     }
 
 
@@ -678,8 +684,13 @@ public class JxtaCast implements PipeMsgListener, Runnable {
             return;
         wrangler = sendQueue.remove(0);
         if (wrangler != null) {
+            JxtaCast.logMsg("Processing wrangler " + wrangler.getKey() + " in send queue...");
+            
             wranglers.put(wrangler.getKey(), wrangler);
             wrangler.send();
+            
+            JxtaCast.logMsg("Wrangler " + wrangler.getKey() + " processed and transfer started.");
+            
             wrangler = null;
         }
     }

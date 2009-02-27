@@ -70,6 +70,12 @@ public class WootEngine extends LoggedWootExceptionThrower
 {
     /** The name of the output file containing the zipped state. */
     public static final String STATE_FILE_NAME = "woot.zip";
+    
+    /** The name prefix of the output file containing the zipped state. */
+    public static final String STATE_FILE_NAME_PREFIX = "wootState";
+    
+    /** The file extension of the output file containing the zipped state. */
+    public static final String STATE_FILE_EXTENSION = ".zip";
 
     /** The directory where the WootEngine stores it's data. */
     private String workingDirPath;

@@ -83,6 +83,7 @@ public class OutputObjectWrangler extends AbstractOutputWrangler {
 	public String composeKey(String senderId, Object object) {
 		// The key is a combination of the sender's PeerId, the object's class name,
 		// the object's hashcode and a timestamp.
+	    // FIXME: switch to a simple uuid?
 		String keyStr = senderId + "+" + object.getClass().getName() + "+" + object.hashCode() + "+"
 				+ String.valueOf(System.currentTimeMillis());
 

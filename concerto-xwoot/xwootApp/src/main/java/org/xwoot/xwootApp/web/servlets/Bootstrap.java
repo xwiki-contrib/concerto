@@ -69,9 +69,11 @@ public class Bootstrap extends HttpServlet
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException,
         IOException
     {
+        this.getServletContext().log("Bootstrap opened.");
+        
         try {
             if (XWootSite.getInstance().isStarted()) {
-                System.out.println("Site: " + XWootSite.getInstance().getXWootEngine().getXWootPeerId()
+                this.getServletContext().log("Site: " + XWootSite.getInstance().getXWootEngine().getXWootPeerId()
                     + " Bootstrap - instance already started");
                 response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/synchronize.do"));
                 return;
@@ -83,38 +85,50 @@ public class Bootstrap extends HttpServlet
             String xwootPropertiesFile =
                 request.getSession().getServletContext().getRealPath(XWootSite.XWOOT_PROPERTIES_FILENAME);
           //TODO better properties management 
-            String xwcopPath=request.getSession().getServletContext().getRealPath("xwoot-content-provider.properties");
+            String contentManagerPropertiesFile = 
+                request.getSession().getServletContext().getRealPath(XWootSite.CONTENT_MANAGER_PROPERTIES_FILENAME);
 
+            // If filled the bootstrap form, process the values and move on if all ok.
             if (request.getParameter("update") != null) {
+                this.getServletContext().log("Processing data.");
+                
                 errors =
                     XWootSite.getInstance().updatePropertiesFiles(request, xwikiPropertiesFile, xwootPropertiesFile);
 
                 // Start the XWoot server if the properties were correctly
                 // saved.
                 if (StringUtils.isBlank(errors)) {
+                    this.getServletContext().log("No errors found.");
+                    
                     Properties p_xwiki = XWootSite.getInstance().getProperties(xwikiPropertiesFile);
                     Properties p_xwoot = XWootSite.getInstance().getProperties(xwootPropertiesFile);
+                    
+                    this.getServletContext().log("Bootstrap - starting instance -");
                     XWootSite.getInstance().init(Integer.parseInt((String) p_xwoot.get(XWootSite.XWOOT_SITE_ID)),
-                        (String) p_xwoot.get(XWootSite.XWOOT_SERVER_URL),
+                        (String) p_xwoot.get(XWootSite.XWOOT_SERVER_NAME),
                         (String) p_xwoot.get(XWootSite.XWOOT_WORKING_DIR),
-                        Integer.parseInt((String) p_xwoot.get(XWootSite.XWOOT_PBCAST_ROUND)),
-                        Integer.parseInt((String) p_xwoot.get(XWootSite.XWOOT_NEIGHBORS_LIST_SIZE)),
-                        (String) p_xwiki.get(XWootSite.XWIKI_ENDPOINT), (String) p_xwiki.get(XWootSite.XWIKI_USERNAME),
+                        (String) p_xwiki.get(XWootSite.XWIKI_ENDPOINT),
+                        (String) p_xwiki.get(XWootSite.XWIKI_USERNAME),
                         (String) p_xwiki.get(XWootSite.XWIKI_PASSWORD),
-                        xwcopPath);
+                        contentManagerPropertiesFile);
 
-                    System.out.println("Site :" + XWootSite.getInstance().getXWootEngine().getXWootPeerId()
-                        + " Bootstrap - starting instance -");
+                    this.getServletContext().log("Site :" + XWootSite.getInstance().getXWootEngine().getXWootPeerId()
+                        + " Bootstrap - moving on to network bootstrap -");
                     response
                         .sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapNetwork.do"));
                     return;
+                } else {
+                    this.getServletContext().log("Errors found.");
                 }
 
                 // There are errors, display the bootstrap page again.
                 errors = errors.replaceAll("\n", "<br/>");
                 request.setAttribute("errors", errors);
+            } else {
+                this.getServletContext().log("Bootstrap page just opened.");
             }
 
+            // If just opened the bootstrap form, init the form fields with default data found in the properties files.
             if (!StringUtils.isBlank(xwikiPropertiesFile) && !StringUtils.isBlank(xwootPropertiesFile)) {
                 Properties p_xwiki =
                     XWootSite.getInstance().updateXWikiPropertiesFromRequest(request, xwikiPropertiesFile);
@@ -130,8 +144,7 @@ public class Bootstrap extends HttpServlet
             request.getRequestDispatcher("/pages/Bootstrap.jsp").forward(request, response);
             return;
         } catch (Exception e) {
-            System.out.println("EXCEPTION catched !!");
-            e.printStackTrace();
+            this.getServletContext().log("Bootstrap failed:\n", e);
             request.setAttribute("error", e.getMessage());
             request.getRequestDispatcher("/pages/Bootstrap.jsp").forward(request, response);
             return;

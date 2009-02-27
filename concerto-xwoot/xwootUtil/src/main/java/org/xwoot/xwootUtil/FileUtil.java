@@ -248,48 +248,68 @@ public final class FileUtil
      */
     public static String removeAccents(String string)
     {
-        /* @TODO: switch to {@link java.text.Normalizer} when switching to JDK1.6 for better coverage.
-        Example: text = Normalizer.normalize(text, Normalizer.Form.NFD); */ 
-        
+        /*
+         * @TODO: switch to {@link java.text.Normalizer} when switching to JDK1.6 for better coverage. Example: text =
+         * Normalizer.normalize(text, Normalizer.Form.NFD);
+         */
+
         String sSemAcento = string + "";
-//        sSemAcento = sSemAcento.replaceAll("[áàâãäă]", "a");
+        // sSemAcento = sSemAcento.replaceAll("[áàâãäă]", "a");
         sSemAcento = sSemAcento.replaceAll("[\u00E1\u00E0\u00E2\u00E3\u00E4\u0103]", "a");
-//        sSemAcento = sSemAcento.replaceAll("[ÁÀÂÃÄ]", "A");
+        // sSemAcento = sSemAcento.replaceAll("[ÁÀÂÃÄ]", "A");
         sSemAcento = sSemAcento.replaceAll("[\u00C1\u00C0\u00C2\u00C3\u00C4]", "A");
-//        sSemAcento = sSemAcento.replaceAll("[éèêë]", "e");
+        // sSemAcento = sSemAcento.replaceAll("[éèêë]", "e");
         sSemAcento = sSemAcento.replaceAll("[\u00E9\u00E8\u00EA\u00EB]", "e");
-//        sSemAcento = sSemAcento.replaceAll("[ÉÈÊË]", "E");
+        // sSemAcento = sSemAcento.replaceAll("[ÉÈÊË]", "E");
         sSemAcento = sSemAcento.replaceAll("[\u00C9\u00C8\u00CA\u00CB]", "E");
-//        sSemAcento = sSemAcento.replaceAll("[íìîï]", "i");
+        // sSemAcento = sSemAcento.replaceAll("[íìîï]", "i");
         sSemAcento = sSemAcento.replaceAll("[\u00ED\u00EC\u00EE\u00EF]", "i");
-//        sSemAcento = sSemAcento.replaceAll("[ÍÌÎÏ]", "I");
+        // sSemAcento = sSemAcento.replaceAll("[ÍÌÎÏ]", "I");
         sSemAcento = sSemAcento.replaceAll("[\u00CD\u00CC\u00CE\u00CF]", "I");
-//        sSemAcento = sSemAcento.replaceAll("[óòôõö]", "o");
+        // sSemAcento = sSemAcento.replaceAll("[óòôõö]", "o");
         sSemAcento = sSemAcento.replaceAll("[\u00F3\u00F2\u00F4\u00F5\u00F6]", "o");
-//        sSemAcento = sSemAcento.replaceAll("[ÓÒÔÕÖ]", "O");
+        // sSemAcento = sSemAcento.replaceAll("[ÓÒÔÕÖ]", "O");
         sSemAcento = sSemAcento.replaceAll("[\u00D3\u00D2\u00D4\u00D5\u00D6]", "O");
-//        sSemAcento = sSemAcento.replaceAll("[úùûü]", "u");
+        // sSemAcento = sSemAcento.replaceAll("[úùûü]", "u");
         sSemAcento = sSemAcento.replaceAll("[\u00FA\u00F9\u00FB\u00FC]", "u");
-//        sSemAcento = sSemAcento.replaceAll("[ÚÙÛÜ]", "U");
+        // sSemAcento = sSemAcento.replaceAll("[ÚÙÛÜ]", "U");
         sSemAcento = sSemAcento.replaceAll("[\u00DA\u00D9\u00DB\u00DC]", "U");
-//        sSemAcento = sSemAcento.replaceAll("ç", "c");
+        // sSemAcento = sSemAcento.replaceAll("ç", "c");
         sSemAcento = sSemAcento.replaceAll("\u00E7", "c");
-//        sSemAcento = sSemAcento.replaceAll("Ç", "C");
+        // sSemAcento = sSemAcento.replaceAll("Ç", "C");
         sSemAcento = sSemAcento.replaceAll("\u00C7", "C");
-//        sSemAcento = sSemAcento.replaceAll("ñ", "n");
+        // sSemAcento = sSemAcento.replaceAll("ñ", "n");
         sSemAcento = sSemAcento.replaceAll("\u00F1", "n");
-//        sSemAcento = sSemAcento.replaceAll("Ñ", "N");
+        // sSemAcento = sSemAcento.replaceAll("Ñ", "N");
         sSemAcento = sSemAcento.replaceAll("\u00D1", "N");
-//        sSemAcento = sSemAcento.replaceAll("[ş]", "s");
+        // sSemAcento = sSemAcento.replaceAll("[ş]", "s");
         sSemAcento = sSemAcento.replaceAll("[\u015F]", "s");
-//        sSemAcento = sSemAcento.replaceAll("[Ş]", "S");
+        // sSemAcento = sSemAcento.replaceAll("[Ş]", "S");
         sSemAcento = sSemAcento.replaceAll("[\u015E]", "S");
-//        sSemAcento = sSemAcento.replaceAll("[ţ]", "t");
+        // sSemAcento = sSemAcento.replaceAll("[ţ]", "t");
         sSemAcento = sSemAcento.replaceAll("[\u0163]", "t");
-//        sSemAcento = sSemAcento.replaceAll("[Ţ]", "T");
+        // sSemAcento = sSemAcento.replaceAll("[Ţ]", "T");
         sSemAcento = sSemAcento.replaceAll("[\u0162]", "T");
 
         return sSemAcento;
+    }
+
+    /**
+     * Zips a directory's first level files and saves the resulting file in the temporary directory. The file will be
+     * named "&lt;directory_name&gt;.zip".
+     * 
+     * @param directoryPath the directory to zip.
+     * @return the actual location of the resulting temporary zip file.
+     * @throws IOException if problems occur.
+     * @see ZipOutputStream
+     */
+    public static String zipDirectory(String directoryPath) throws IOException
+    {
+        File tempFile = File.createTempFile(new File(directoryPath).getName(), ".zip");
+
+        zipDirectory(directoryPath, tempFile.toString());
+
+        return tempFile.toString();
     }
 
     /**
@@ -297,38 +317,56 @@ public final class FileUtil
      * 
      * @param dirPath the path of the directory to zip.
      * @param resultFilePath the destination zip file.
-     * @return the location of the resulting zip archive or null if the directory contains no files to zip.
      * @throws IOException if problems occur with file operations.
      * @see ZipOutputStream
      */
-    public static String zipDirectory(String dirPath, String resultFilePath) throws IOException
+    public static void zipDirectory(String dirPath, String resultFilePath) throws IOException
     {
         File dir = new File(dirPath);
-        String[] files = dir.list();
+        File[] files = dir.listFiles();
 
-        if (files.length < 1) {
-            return null;
+        zipFiles(files, resultFilePath);
+    }
+
+    /**
+     * Zip an array of files. Each file in the array must reflect a file on disk. If a file represents a directory on
+     * disk, it will be skipped.
+     * 
+     * @param files the files to be zipped.
+     * @param zippedFileDestinationPath the location of the zip file that will result.
+     * @throws IOException if problems occur.
+     */
+    public static void zipFiles(File[] files, String zippedFileDestinationPath) throws IOException
+    {
+        if (files == null || zippedFileDestinationPath == null) {
+            throw new NullPointerException("Null paramenters. filePaths: " + files + " zippedFileDestinationPath: "
+                + zippedFileDestinationPath);
         }
 
-        File file = new File(resultFilePath);
+        FileUtil.checkDirectoryPath(new File(zippedFileDestinationPath).getParent());
+
+        if (files.length < 1) {
+            return;
+        }
+
         FileOutputStream fos = null;
         BufferedOutputStream bos = null;
         ZipOutputStream zos = null;
 
         try {
-            fos = new FileOutputStream(file);
+            fos = new FileOutputStream(zippedFileDestinationPath);
             bos = new BufferedOutputStream(fos);
-            zos = new ZipOutputStream(bos);
+            zos = new ZipOutputStream(fos);
 
             zos.setMethod(ZipOutputStream.DEFLATED);
             zos.setLevel(Deflater.BEST_COMPRESSION);
 
-            for (String aFile : files) {
-                zipFiletoZipOutputStream(dir, aFile, zos);
+            for (File aFile : files) {
+                zipFiletoZipOutputStream(aFile.getParentFile(), aFile.getName(), zos);
             }
 
-        } catch (IOException ioe) {
-            throw new IOException("IO problems: " + ioe.getMessage());
+        } catch (Exception e) {
+            throw new IOException("Failed to zip files: (" + e.getClass() + ") " + e.getMessage());
         } finally {
             try {
                 if (zos != null) {
@@ -344,8 +382,6 @@ public final class FileUtil
                 throw new IOException("Problem closing streams. Reason: " + e.getMessage());
             }
         }
-
-        return file.getAbsolutePath();
     }
 
     /**
@@ -391,22 +427,6 @@ public final class FileUtil
     }
 
     /**
-     * Zips a directory's first level files and saves the resulting file in the temporary directory. The file will be
-     * named "&lt;directory_name&gt;.zip".
-     * 
-     * @param directoryPath the directory to zip.
-     * @return the actual location of the resulting temporary zip file.
-     * @throws IOException if problems occur.
-     * @see ZipOutputStream
-     */
-    public static String zipDirectory(String directoryPath) throws IOException
-    {
-        File tempFile = File.createTempFile(new File(directoryPath).getName(), ".zip");
-
-        return zipDirectory(directoryPath, tempFile.toString());
-    }
-
-    /**
      * Convenience method.
      * 
      * @param zippedFilePath the location of the zip file.
@@ -420,10 +440,10 @@ public final class FileUtil
     public static List<String> unzipInDirectory(String zippedFilePath, String destinationDirPath) throws IOException
     {
         FileUtil.checkDirectoryPath(destinationDirPath);
-        
+
         return FileUtil.unzipInDirectory(new ZipFile(zippedFilePath), destinationDirPath);
     }
-    
+
     /**
      * Extracts a zip file file to a directory.
      * <p>
@@ -440,7 +460,7 @@ public final class FileUtil
     public static List<String> unzipInDirectory(ZipFile zipFile, String destinationDirPath) throws IOException
     {
         FileUtil.checkDirectoryPath(destinationDirPath);
-        
+
         List<String> result = new ArrayList<String>();
 
         InputStream currentZipEntryInputStream = null;
@@ -492,7 +512,7 @@ public final class FileUtil
      * Checks if the given directory path exists and if it's a valid and writable directory. If it doesn't exist, it is
      * created.
      * 
-     * @param directoryPath : the path to check.
+     * @param directoryPath the path to check.
      * @throws IOException if the directory did not exist and can not be created. It is also thrown if the path is valid
      *             but not writable.
      * @throws InvalidParameterException if the given path is valid but it points to a file instead of pointing to a
@@ -516,6 +536,25 @@ public final class FileUtil
         } else if (!directory.canWrite()) {
             throw new IOException(directoryPath + " -- isn't writable");
         }
+    }
+    
+    /**
+     * Convenience method.
+     * 
+     * @param directory the directory to check.
+     * @throws IOException if the directory did not exist and can not be created. It is also thrown if the path is valid
+     *             but not writable.
+     * @throws InvalidParameterException if the given path is valid but it points to a file instead of pointing to a
+     *             directory.
+     * @see #checkDirectoryPath(String)
+     */
+    public static void checkDirectoryPath(File directory) throws IOException, InvalidParameterException
+    {
+        if (directory == null) {
+            throw new NullPointerException("The provided directory is null.");
+        }
+        
+        FileUtil.checkDirectoryPath(directory.toString());
     }
 
     /**

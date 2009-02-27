@@ -289,7 +289,7 @@ public class MockLpbCast implements LpbCastAPI, Serializable
             return;
         }
         try {
-            receiver.receivePatch((Message) toSend);
+            receiver.receiveMessage((Message) toSend);
         } catch (Exception e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
@@ -305,7 +305,7 @@ public class MockLpbCast implements LpbCastAPI, Serializable
     {
         for (int i = 0; i < this.receivers.size(); i++) {
             try {
-                this.receivers.get(i).receivePatch((Message) message);
+                this.receivers.get(i).receiveMessage((Message) message);
             } catch (Exception e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

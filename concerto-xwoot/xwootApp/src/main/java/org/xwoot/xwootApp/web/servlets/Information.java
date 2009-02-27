@@ -55,6 +55,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.jxta.protocol.PipeAdvertisement;
+
 import org.apache.commons.lang.StringUtils;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.web.XWootSite;
@@ -128,7 +130,7 @@ public class Information extends HttpServlet
                         }
                     } else if (info.equals("listPeers")) {
                         result.append("<peers>\n");
-                        for (String peer : xwoot.getNeighborsList()) {
+                        for (Object peer : xwoot.getNeighborsList()) {
                             result.append("  <peer connected=\"" + getConnectionStatus(peer) + "\">" + peer
                                 + "</peer>\n");
                         }
@@ -166,18 +168,25 @@ public class Information extends HttpServlet
      * @param peer The peer HTTP address.
      * @return <code>true</code> if the peer is reachable and has its P2P network enabled, <code>false</code> otherwise.
      */
-    private boolean getConnectionStatus(String peer)
+    private boolean getConnectionStatus(Object peer)
     {
-        try {
-            URL testAddress = new URL(peer + "/synchronize.do?test=true");
-            HttpURLConnection connection = (HttpURLConnection) testAddress.openConnection();
-            connection.setConnectTimeout(CONNECTION_TIMEOUT);
-            connection.setReadTimeout(CONNECTION_TIMEOUT);
-            connection.setUseCaches(false);
-            connection.setRequestMethod("GET");
-            return connection.getResponseMessage().contains("OK");
-        } catch (Exception ex) {
-            return false;
+        if (peer instanceof String) {
+            try {
+                URL testAddress = new URL(peer + "/synchronize.do?test=true");
+                HttpURLConnection connection = (HttpURLConnection) testAddress.openConnection();
+                connection.setConnectTimeout(CONNECTION_TIMEOUT);
+                connection.setReadTimeout(CONNECTION_TIMEOUT);
+                connection.setUseCaches(false);
+                connection.setRequestMethod("GET");
+                return connection.getResponseMessage().contains("OK");
+            } catch (Exception ex) {
+                return false;
+            }
+        } else if (peer instanceof PipeAdvertisement) {
+            // TODO: Ping peer through pipe.
+            return true;
         }
+        
+        return false;
     }
 }

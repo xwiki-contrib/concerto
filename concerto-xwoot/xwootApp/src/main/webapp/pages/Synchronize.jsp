@@ -174,15 +174,15 @@
                         <li>
                             <table cellpadding="0" cellspacing="0" border="0">
                                 <tr>
-                                    <td><a href="synchronize.do?action=removeNeighbor&neighbor=${neighbor.key}" title="delete ${neighbor.key}"><img class="small_icon" src="images/delete.png" /></a></td>
+                                    <%-- <td><a href="synchronize.do?action=removeNeighbor&neighbor=${neighbor.key}" title="delete ${neighbor.key}"><img class="small_icon" src="images/delete.png" /></a></td> --%>
                                     <c:if test="${neighbor.value eq true}">
-                                        <td><a href="synchronize.do?action=antiEntropy&neighbor=${neighbor.key}" title="start anti-entropy with ${neighbor.key}"><img class="small_icon" src="images/anti-entropy.png" /></a></td>
-                                        <td><a href="${neighbor.key}" title="go to ${neighbor.key}">${neighbor.key}</a></td>
+                                        <td><a href="synchronize.do?action=antiEntropy&neighbor=${neighbor.key.pipeID}" title="start anti-entropy with ${neighbor.key.name}"><img class="small_icon" src="images/anti-entropy.png" /></a></td>
+                                        <td><%-- <a href="${neighbor.key}" title="go to ${neighbor.key}"> --%>${neighbor.key.name}<%--</a> --%></td>
                                     </c:if>
                                     <c:if test="${neighbor.value eq false}">
                                         <td><img class="small_icon" src="images/anti-entropy_grey.png" /></td>
-                                        <td><img class="small_icon" src="images/state_grey.png" /></td>
-                                        <td id="deconnected_neighbor">${neighbor.key}</td>
+                                        <%--<td><img class="small_icon" src="images/state_grey.png" /></td>--%>
+                                        <td id="deconnected_neighbor">${neighbor.key.name}</td>
                                     </c:if>
                                 </tr>
                             </table>
