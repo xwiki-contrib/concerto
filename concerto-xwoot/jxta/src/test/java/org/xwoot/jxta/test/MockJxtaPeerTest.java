@@ -46,7 +46,7 @@ import org.xwoot.xwootUtil.FileUtil;
 /**
  * TODO DOCUMENT ME!
  *
- * @version $Id:$
+ * @version $Id$
  */
 public class MockJxtaPeerTest
 {
@@ -76,16 +76,13 @@ public class MockJxtaPeerTest
         }
         
         peer1 = PeerFactory.createMockPeer();
-        peer1.configureNetwork(null, null);
-        peer1.setMyPeerName(peerName1);
+        peer1.configureNetwork(peerName1, null, null);
         
         peer2 = PeerFactory.createMockPeer();
-        peer2.configureNetwork(null, null);
-        peer2.setMyPeerName(peerName2);
+        peer2.configureNetwork(peerName2, null, null);
         
         peer3 = PeerFactory.createMockPeer();
-        peer3.configureNetwork(null, null);
-        peer3.setMyPeerName(peerName3);
+        peer3.configureNetwork(peerName3, null, null);
     }
     
     @After

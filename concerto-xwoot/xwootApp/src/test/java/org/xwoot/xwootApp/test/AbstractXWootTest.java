@@ -207,16 +207,13 @@ public abstract class AbstractXWootTest
 
         // 3 peers for 3 xwoots
         this.peer1 = PeerFactory.createMockPeer();
-        this.peer1.configureNetwork(new File(xwoot1Directory, this.peer1Name), ConfigMode.EDGE);
-        this.peer1.setMyPeerName("Concerto1");
+        this.peer1.configureNetwork(this.peer1Name, xwoot1Directory, ConfigMode.EDGE);
         
         this.peer2 = PeerFactory.createMockPeer();
-        this.peer2.configureNetwork(new File(xwoot2Directory, this.peer2Name), ConfigMode.EDGE);
-        this.peer2.setMyPeerName("Concerto2");
+        this.peer2.configureNetwork(this.peer2Name, xwoot2Directory, ConfigMode.EDGE);
         
         this.peer3 = PeerFactory.createMockPeer();
-        this.peer3.configureNetwork(new File(xwoot3Directory, this.peer3Name), ConfigMode.EDGE);
-        this.peer3.setMyPeerName("Concerto3");
+        this.peer3.configureNetwork(this.peer3Name, xwoot3Directory, ConfigMode.EDGE);
         
         //FIXME: use peerID.
         // 3 wootEngines

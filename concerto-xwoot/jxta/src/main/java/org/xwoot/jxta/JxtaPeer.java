@@ -117,15 +117,18 @@ public class JxtaPeer implements Peer, RendezvousListener {
 //    }
     
 	/** {@inheritDoc} **/
-	public void configureNetwork(File jxtaCacheDirectoryPath, ConfigMode mode) throws JxtaException
+	public void configureNetwork(String peerName, File jxtaCacheDirectoryPath, ConfigMode mode) throws JxtaException
 	{
+	    if (peerName == null || peerName.length() == 0) {
+	        peerName = Peer.DEFAULT_PEER_NAME;
+	    }
+	    
 	    if (jxtaCacheDirectoryPath == null) {
-            jxtaCacheDirectoryPath = new File(new File(".cache"), "ConcertoPeer"
-                    + UUID.randomUUID().toString());
+            jxtaCacheDirectoryPath = new File(new File(Peer.DEFAULT_DIR_NAME), peerName);
         }
         
 	    try {
-	        manager = new NetworkManager(mode, "ConcertoPeer",
+	        manager = new NetworkManager(mode, peerName,
 	            jxtaCacheDirectoryPath.toURI());
 	    } catch (Exception e) {
 	        throw new JxtaException("Failed to initialize peer.\n", e);
@@ -188,8 +191,13 @@ public class JxtaPeer implements Peer, RendezvousListener {
 			throw new JxtaException("Unable to connect to rendezvous server. Network stopped.");
 		}
 		
-		// Contribute to the network's connectivity.
-        this.rootGroup.getRendezVousService().setAutoStart(true);
+		// Contribute to the network's connectivity if we don`t already.
+		if (!(manager.getMode().equals(ConfigMode.RENDEZVOUS) || 
+		    manager.getMode().equals(ConfigMode.RENDEZVOUS_RELAY) || 
+		    manager.getMode().equals(ConfigMode.SUPER))) {
+		    
+		    this.rootGroup.getRendezVousService().setAutoStart(true);
+		}
 
 		// Register ourselves to detect new RDVs that broadcast their presence and resources.
 		// FIXME: reenable this . this.rootGroup.getRendezVousService().addListener(this);

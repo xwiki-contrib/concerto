@@ -37,7 +37,7 @@ import org.xwoot.xwootUtil.FileUtil;
 /**
  * TODO DOCUMENT ME!
  *
- * @version $Id:$
+ * @version $Id$
  */
 public abstract class AbstractMultiplePeersTestCase implements MultiplePeersTestCase, JxtaCastEventListener, DirectMessageReceiver
 {
@@ -62,8 +62,7 @@ public abstract class AbstractMultiplePeersTestCase implements MultiplePeersTest
         
         try {
             FileUtil.checkDirectoryPath(peerHome.getPath());
-            this.peer.configureNetwork(peerHome, (networkCreator ? ConfigMode.RENDEZVOUS_RELAY : ConfigMode.EDGE));
-            this.peer.setMyPeerName(peerName);
+            this.peer.configureNetwork(peerName, new File(AbstractJxtaTestBase.WORKING_DIR), (networkCreator ? ConfigMode.RENDEZVOUS_RELAY : ConfigMode.EDGE));
         } catch (Exception e) {
             e.printStackTrace();
             return Boolean.FALSE;

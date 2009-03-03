@@ -218,8 +218,7 @@ public class XWootSite
         Peer peer = PeerFactory.createPeer();
         // FIXME: Use a properties file or something similar to store the current group, it's password, the keystore password in order to automatically start communicating after a reboot.
         // FIXME: This behavior opens a possible security hole. The group's password is no longer protected by the keystore. Find a solution.
-        peer.configureNetwork(jxtaDir, ConfigMode.EDGE);
-        peer.getManager().setInstanceName(siteName);
+        peer.configureNetwork(siteName, jxtaDir, ConfigMode.EDGE);
         
         //TODO better properties management 
         Properties contentProviderProperties=this.getProperties(contenProviderPropertiesFilePath);

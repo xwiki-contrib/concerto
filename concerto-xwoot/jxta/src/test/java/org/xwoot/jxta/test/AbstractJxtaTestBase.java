@@ -47,7 +47,7 @@ public abstract class AbstractJxtaTestBase
     protected static String peerName = "concerto1";
 
     /** Local repository for test peer. */
-    protected static File jxtaHome = new File(WORKING_DIR, peerName);
+    protected static File jxtaHome = new File(WORKING_DIR);
 
     /** The test peer. */
     protected static Peer peer;
@@ -65,7 +65,7 @@ public abstract class AbstractJxtaTestBase
             FileUtil.checkDirectoryPath(WORKING_DIR);
     
             peer = PeerFactory.createPeer();
-            peer.configureNetwork(jxtaHome, ConfigMode.EDGE);
+            peer.configureNetwork(peerName, jxtaHome, ConfigMode.EDGE);
             peer.getManager().setInstanceName(peerName);
     
             // We have not choice if JXTA has a singleton architecture and we can

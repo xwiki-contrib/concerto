@@ -128,11 +128,13 @@ public class BootstrapNetwork extends HttpServlet
                     networkConfig.setTcpIncoming(true);
                     networkConfig.setTcpOutgoing(true);
                     networkConfig.setTcpPort(Integer.parseInt(tcpPort));
+                    
+                    String tcpPublicAddress = externalIp;
                     if (useExternalIpBoolean) {
-                        if (!externalIp.contains(":")) {
-                            externalIp += ":" + tcpPort;
+                        if (!tcpPublicAddress.contains(":")) {
+                            tcpPublicAddress += ":" + tcpPort;
                         }
-                        networkConfig.setTcpPublicAddress(externalIp, useOnlyExternalIpBoolean);
+                        networkConfig.setTcpPublicAddress(tcpPublicAddress, useOnlyExternalIpBoolean);
                     }
                 }
                 
@@ -142,11 +144,13 @@ public class BootstrapNetwork extends HttpServlet
                     networkConfig.setHttpIncoming(true);
                     networkConfig.setHttpOutgoing(true);
                     networkConfig.setHttpPort(Integer.parseInt(httpPort));
+                    
+                    String httpPublicAddress = externalIp;
                     if (useExternalIpBoolean) {
-                        if (!externalIp.contains(":")) {
-                            externalIp += ":" + httpPort;
+                        if (!httpPublicAddress.contains(":")) {
+                            httpPublicAddress += ":" + httpPort;
                         }
-                        networkConfig.setHttpPublicAddress(externalIp, useOnlyExternalIpBoolean);
+                        networkConfig.setHttpPublicAddress(httpPublicAddress, useOnlyExternalIpBoolean);
                     }
                 }
                 

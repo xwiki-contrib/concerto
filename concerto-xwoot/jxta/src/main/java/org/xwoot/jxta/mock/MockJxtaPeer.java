@@ -167,8 +167,9 @@ public class MockJxtaPeer implements Peer, RendezvousListener {
     
     
 	/** {@inheritDoc} **/
-	public void configureNetwork(File jxtaCacheDirectoryPath, ConfigMode mode) throws JxtaException
+	public void configureNetwork(String peerName, File jxtaCacheDirectoryPath, ConfigMode mode) throws JxtaException
 	{
+	    this.myPeerAdv.setName(peerName);
 	    this.networkConfigured  = true;
 	    /*
 	    if (jxtaCacheDirectoryPath == null) {

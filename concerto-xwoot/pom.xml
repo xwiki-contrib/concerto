@@ -264,6 +264,8 @@
     <module>xwoot-content-provider</module>
     <!-- Module for P2P communication using the JXTA platform-->
     <module>jxta</module>
+    <!-- Module for a P2P server peer. -->
+    <module>xwootServerPeer</module> 
   </modules>
   
   <build>

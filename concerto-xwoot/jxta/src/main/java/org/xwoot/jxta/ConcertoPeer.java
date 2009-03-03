@@ -40,6 +40,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -62,7 +63,7 @@ public class ConcertoPeer implements JxtaCastEventListener, DirectMessageReceive
 	}
 	
 	public void startNetwork() throws Exception {
-		jxta.configureNetwork(null, ConfigMode.EDGE);
+		jxta.configureNetwork("ConcertoPeer"+UUID.randomUUID().toString(), null, ConfigMode.EDGE);
 		jxta.getManager().setUseDefaultSeeds(true);
 		jxta.startNetworkAndConnect(this, this);
 	}
@@ -463,7 +464,6 @@ public class ConcertoPeer implements JxtaCastEventListener, DirectMessageReceive
 	    this.sendMyPipeAdvertisementThroughDirectCommunicationWithRandomPeer();
 	}
 
-	@SuppressWarnings("unchecked")
     public void jxtaCastProgress(JxtaCastEvent e) {
 	    if (e.transType == JxtaCastEvent.RECV) {
 	        System.out.println("Received: ");

@@ -86,16 +86,25 @@ import net.jxta.rendezvous.RendezvousEvent;
  */
 public interface Peer
 {
-
+    /** The default name for a peer. */
+    final String DEFAULT_PEER_NAME = "ConcertoPeer";
+    
+    /** The default jxta related cache directory name. */
+    final String DEFAULT_DIR_NAME = ".cache";
+    
     /**
      * Configure the network.
      * 
-     * @param jxtaCacheDirectoryPath The location on where to save jxta related information for this peer.
+     * @param peerName the name of this peer. If none provided, the default will be used. Default is "ConcertoPeer"
+     * @param jxtaCacheDirectoryPath The location on drive where to save the directory containing jxta related
+     *            information for this peer. The jxta directory will have the name of the peer or the default name if
+     *            none provided. If this parameter is null, the default value is a subdir in the current directory by
+     *            the name of \".cache\"
      * @param mode The mode in which this peer will be running.
      * @see ConfigMode
      * @throws IOException if problems occur while initializing.
      **/
-    void configureNetwork(File jxtaCacheDirectoryPath, ConfigMode mode) throws JxtaException;
+    void configureNetwork(String peerName, File jxtaCacheDirectoryPath, ConfigMode mode) throws JxtaException;
 
     /**
      * @return the NetworkManager instance created by {@link #configureNetwork(File)} that allows tweaking the peer's
@@ -123,10 +132,10 @@ public interface Peer
 
     /** @return my own peer name. */
     String getMyPeerName();
-    
+
     /** @param peerName the name to set for this peer. */
     void setMyPeerName(String peerName);
-    
+
     /** @return my own peer ID. */
     PeerID getMyPeerID();
 
@@ -220,13 +229,14 @@ public interface Peer
      * @see #isConnectedToGroup()
      */
     Enumeration<Advertisement> getKnownAdvertisements(String attribute, String value);
-    
+
     /**
      * Convenience method for returning just direct communication pipe advertisements in the current group.
      * <p>
      * It can be used to see and communicate with other peers in the current group.
      * 
-     * @return {@link PipeAdvertisement}s representing group members' direct communication channels excluding this peer's pipe advertisement..
+     * @return {@link PipeAdvertisement}s representing group members' direct communication channels excluding this
+     *         peer's pipe advertisement..
      */
     Enumeration<Advertisement> getKnownDirectCommunicationPipeAdvertisements();
 
