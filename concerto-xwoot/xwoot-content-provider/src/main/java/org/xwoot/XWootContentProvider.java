@@ -124,7 +124,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
     private void init(String dbName, boolean createDB) throws InstantiationException, IllegalAccessException,
         ClassNotFoundException, SQLException
     {
-        Class.forName(DB_DRIVER).newInstance();
+        Thread.currentThread().getContextClassLoader().loadClass(DB_DRIVER).newInstance();
         connection = DriverManager.getConnection(String.format("%s%s;create=true", DB_PROTOCOL, dbName));
         connection.setAutoCommit(true);
 
