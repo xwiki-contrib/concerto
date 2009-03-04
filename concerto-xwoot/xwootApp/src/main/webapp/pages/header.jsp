@@ -8,7 +8,7 @@
   <meta name="robots" content="all"/>
   <title>XWoot</title>
   <style type="text/css" media="screen" title="currentStyle">
-    @import "style/${(skin==null or skin=='')?'grey':skin}_style.css";
+    @import "style/grey_style.css";
   </style>
   <link rel="Shortcut Icon" type="image/x-icon" href="images/xwoot.ico"/>        
 </head>

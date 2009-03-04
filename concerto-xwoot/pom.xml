@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <!-- general project informations -->
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.xwoot</groupId>
@@ -266,6 +264,8 @@
     <module>jxta</module>
     <!-- Module for a P2P server peer. -->
     <module>xwootServerPeer</module> 
+    <!-- Module for additional resources needed for the standalone distribution. -->
+    <module>xwootApp-jetty-resources</module>
   </modules>
   
   <build>

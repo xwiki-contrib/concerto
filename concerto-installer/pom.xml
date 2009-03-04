@@ -105,10 +105,18 @@
                   <groupId>com.xpn.xwiki.platform.tools</groupId>
                   <artifactId>xwiki-jetty-resources</artifactId>
                   <version>${platform.tool.jetty.version}</version>
-                  <outputDirectory>${xwiki.container}/jetty</outputDirectory>
+                  <type>zip</type>
+                  <outputDirectory>${xwiki.container}</outputDirectory>
                   <!-- Note: This the Dependency plugin doesn't support includes/excludes we
                        copy all the jetty resources in the jetty/ dir and then using the AntRun
                        plugin below we move all shell scripts file into the root. -->
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.xwoot</groupId>
+                  <artifactId>xwootApp-jetty-resources</artifactId>
+                  <version>${pom.version}</version>
+                  <type>zip</type>
+                  <outputDirectory>${xwiki.container}</outputDirectory>
                 </artifactItem>
                 <artifactItem>
                   <groupId>org.xwoot</groupId>
@@ -130,6 +138,13 @@
                   <version>${pom.version}</version>
                   <type>zip</type>
                   <outputDirectory>${xwiki.database}</outputDirectory>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.xpn.xwiki.platform.tools</groupId>
+                  <artifactId>xwiki-rootwebapp</artifactId>
+                  <version>${platform.tool.rootwebapp.version}</version>
+                  <type>war</type>
+                  <outputDirectory>${xwiki.container}/webapps/root</outputDirectory>
                 </artifactItem>
               </artifactItems>
             </configuration>
@@ -209,8 +224,9 @@
   </build>
   <properties>
     <platform.tool.configuration.version>1.16</platform.tool.configuration.version>
-    <platform.tool.jetty.version>1.10</platform.tool.jetty.version>
-    <xwiki.webapp.version>1.5.2</xwiki.webapp.version>
+    <platform.tool.jetty.version>1.14-SNAPSHOT</platform.tool.jetty.version>
+    <platform.tool.rootwebapp.version>1.1-SNAPSHOT</platform.tool.rootwebapp.version>
+    <xwiki.webapp.version>1.8-SNAPSHOT</xwiki.webapp.version>
     <xwiki.hibernate>${project.build.directory}/maven-shared-archive-resources/hibernate.cfg.xml</xwiki.hibernate>
     <xwoot.license>${project.build.directory}/classes/LICENCE.txt</xwoot.license>
     <xwoot.readme>${project.build.directory}/classes/README.html</xwoot.readme>
