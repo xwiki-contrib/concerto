@@ -20,91 +20,73 @@
 
 package org.xwoot.jxta.test;
 
-import java.io.File;
-import java.net.URI;
-
-import net.jxta.platform.NetworkManager.ConfigMode;
+import java.lang.reflect.Method;
+import java.util.Map;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.xwoot.jxta.Peer;
-import org.xwoot.jxta.PeerFactory;
+import org.xwoot.jxta.test.multiplePeers.ServerPeerUsedForTests;
+import org.xwoot.jxta.test.util.TestCaseLauncher;
 import org.xwoot.xwootUtil.FileUtil;
 
 /**
- * Common behavior for jxta tests.
+ * Base implementation for every jxta test.
  * <p>
- * Just add tests to subclasses.
+ * It starts a concurrent thread running a jxta peer that creates a network. Other peers that are contained in the tests
+ * will not be able to connect to localhost instead of using the public jxta network.
  * 
- * @version $Id$
+ * @version $Id:$
  */
 public abstract class AbstractJxtaTestBase
 {
     /** Working dir for tests. */
     public static final String WORKING_DIR = FileUtil.getTestsWorkingDirectoryPathForModule("jxta");
 
-    /** Name of test peer. */
-    protected static String peerName = "concerto1";
-
-    /** Local repository for test peer. */
-    protected static File jxtaHome = new File(WORKING_DIR);
-
-    /** The test peer. */
-    protected static Peer peer;
+    /**
+     * The methods from the classloader used to launch the "server peer". We need to be able to stop the peer when we
+     * are done.
+     */
+    private static Map<String, Object[]> networkPeerTestCase;
 
     /**
-     * Initializes the working directory.
+     * Cleans the tests directory and starts the "server peer".
      * 
      * @throws Exception if problems occur.
      */
     @BeforeClass
-    public static void createAndConnect() throws Exception
+    public static void startNetwork() throws Exception
     {
-        if (peer == null) {
-            FileUtil.deleteDirectory(WORKING_DIR);
-            FileUtil.checkDirectoryPath(WORKING_DIR);
-    
-            peer = PeerFactory.createPeer();
-            peer.configureNetwork(peerName, jxtaHome, ConfigMode.EDGE);
-            peer.getManager().setInstanceName(peerName);
-    
-            // We have not choice if JXTA has a singleton architecture and we can
-            // not start multiple peers inside one JVM.
-            //peer.getManager().setUseDefaultSeeds(true);
+        // Cleanup.
+        FileUtil.deleteDirectory(WORKING_DIR);
+        FileUtil.checkDirectoryPath(WORKING_DIR);
 
-            peer.getManager().getConfigurator().addSeedRendezvous(new URI("tcp://192.18.37.39:9701"));
-            peer.getManager().getConfigurator().addSeedRelay(new URI("tcp://192.18.37.39:9701"));
-            peer.getManager().getConfigurator().addSeedRendezvous(new URI("http://192.18.37.39:9700"));
-            peer.getManager().getConfigurator().addSeedRelay(new URI("http://192.18.37.39:9700"));
-            
-            peer.getManager().getConfigurator().addSeedRendezvous(new URI("tcp://192.18.37.38:9701"));
-            peer.getManager().getConfigurator().addSeedRelay(new URI("tcp://192.18.37.38:9701"));
-            peer.getManager().getConfigurator().addSeedRendezvous(new URI("http://192.18.37.38:9700"));
-            peer.getManager().getConfigurator().addSeedRelay(new URI("http://192.18.37.38:9700"));
-            
-            peer.getManager().getConfigurator().addSeedRendezvous(new URI("tcp://192.18.37.36:9701"));
-            peer.getManager().getConfigurator().addSeedRelay(new URI("tcp://192.18.37.36:9701"));
-            peer.getManager().getConfigurator().addSeedRendezvous(new URI("http://192.18.37.36:9700"));
-            peer.getManager().getConfigurator().addSeedRelay(new URI("http://192.18.37.36:9700"));
-            
-            peer.getManager().getConfigurator().setUseMulticast(false);
-    
-            // Connect to the network.
-            peer.startNetworkAndConnect(null, null);
-        }
+        System.out.println("Starting Serv0rPeer.");
+        
+        // Start the supporting peer.
+        networkPeerTestCase = TestCaseLauncher.launchTest(ServerPeerUsedForTests.class.getName(), 1, "Serv0rPeer");
+        
+        System.out.println("Serv0rPeer started.");
     }
 
     /**
-     * Stop the network.
+     * Stops the server peer and cleans the tests directory.
      * 
      * @throws Exception if problems occur.
      */
     @AfterClass
-    public static void clean() throws Exception
+    public static void stopNetwork() throws Exception
     {
-        if (peer != null) {
-            peer.stopNetwork();
-            FileUtil.deleteDirectory(WORKING_DIR);
-        }
+        System.out.println("Stopping Serv0rPeer.");
+        
+        // Stop the supporting peer.
+        Method disconnectMethod =
+            (Method) ((Object[]) networkPeerTestCase.get(TestCaseLauncher.DISCONNECT_METHODS_VALUE))[0];
+        Object instance = (Object) ((Object[]) networkPeerTestCase.get(TestCaseLauncher.TEST_CASES_VALUE))[0];
+        disconnectMethod.invoke(instance, TestCaseLauncher.VOID_PARAMETERS);
+        
+        System.out.println("Serv0rPeer stopped.");
+
+        // Cleanup.
+        FileUtil.deleteDirectory(WORKING_DIR);
     }
 }

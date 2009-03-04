@@ -28,7 +28,6 @@ import junit.framework.Assert;
 import net.jxta.jxtacast.event.JxtaCastEvent;
 import net.jxta.jxtacast.event.JxtaCastEventListener;
 import net.jxta.peergroup.PeerGroup;
-import net.jxta.platform.NetworkManager.ConfigMode;
 import net.jxta.protocol.PeerGroupAdvertisement;
 
 import org.apache.commons.logging.Log;
@@ -44,7 +43,7 @@ import org.xwoot.jxta.mock.MockJxtaPeer;
 import org.xwoot.xwootUtil.FileUtil;
 
 /**
- * TODO DOCUMENT ME!
+ * Tests for the jxta module mockup(fake).
  *
  * @version $Id$
  */

@@ -18,32 +18,44 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.xwoot.jxta.test;
+package org.xwoot.jxta.test.util;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.UUID;
 
 import junit.framework.Assert;
-
 import net.jxta.protocol.PeerGroupAdvertisement;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.xwoot.jxta.test.multiplePeers.BroadcastMessageToGroup;
-import org.xwoot.jxta.test.multiplePeers.DiscoverPeersInGroup;
-import org.xwoot.jxta.test.util.PeerClassLoader;
+import org.xwoot.jxta.test.multiplePeers.MultiplePeersTestCase;
 import org.xwoot.xwootUtil.FileUtil;
 
 /**
- * TODO DOCUMENT ME!
+ * Utility class for launching tests that are instances of {@link MultiplePeersTestCase}.
+ *
+ * @version $Id:$
  */
-public class MultiplePeersTest
+public class TestCaseLauncher
 {
+    /** TODO DOCUMENT ME! */
+    public static final String DISCONNECT_METHODS_VALUE = "disconnectMethods";
+
+    /** TODO DOCUMENT ME! */
+    public static final String START_METHODS_VALUE = "startMethods";
+
+    /** TODO DOCUMENT ME! */
+    public static final String CONNECT_METHODS_VALUE = "connectMethods";
+
+    /** TODO DOCUMENT ME! */
+    public static final String INIT_METHODS_VALUE = "initMethods";
+
+    /** TODO DOCUMENT ME! */
+    public static final String TEST_CASES_VALUE = "testCases";
+
     /** Working dir for tests. */
     public static final String WORKING_DIR = FileUtil.getTestsWorkingDirectoryPathForModule("jxta");
 
@@ -57,7 +69,7 @@ public class MultiplePeersTest
 
     public static final String classpath = getClassPath();
 
-    public static final String pathElement[] = MultiplePeersTest.split(classpath);
+    public static final String pathElement[] = TestCaseLauncher.split(classpath);
 
     public static final Class[] VOID_PARAMETERS_TYPE = new Class[0];
 
@@ -76,43 +88,18 @@ public class MultiplePeersTest
     public static final char[] KEYSTORE_PASSWORD = "keystorePass".toCharArray();
 
     public static final char[] GROUP_PASSWORD = "groupPass".toCharArray();
-    
-    @BeforeClass
-    public static void initTests()
-    {
-        FileUtil.deleteDirectory(WORKING_DIR);
-    }
 
-    @Before
-    public void init() throws Exception
+    public static Map<String, Object[]> launchTest(String className, int numberOfPeers, String peerName) throws Exception
     {
-        FileUtil.checkDirectoryPath(WORKING_DIR);
-    }
-    
-    @After
-    public void cleanUp()
-    {
-        FileUtil.deleteDirectory(WORKING_DIR);
-    }
-    
-    @Test
-    public void testDiscoverPeersInGroup() throws Exception
-    {
-        this.launchTest(DiscoverPeersInGroup.class.getName(), 2);
-    }
-
-    @Test
-    public void testBroadcastMessageToGroup() throws Exception
-    {
-        this.launchTest(BroadcastMessageToGroup.class.getName(), 2);
-    }
-
-    private void launchTest(String className, int numberOfPeers) throws Exception
-    {
-        Object[] testCase = new Object[numberOfPeers];
-        Method[] initMethodTestCase = new Method[numberOfPeers];
-        Method[] connectMethodTestCase = new Method[numberOfPeers];
-        Method[] startMethodTestCase = new Method[numberOfPeers];
+        boolean specialInstance = numberOfPeers == 1 && peerName != null && peerName.length() != 0;
+        
+        Map<String, Object[]> testCasesAndMethods = new HashMap<String, Object[]>();
+        
+        Object[] testCases = new Object[numberOfPeers];
+        Method[] initMethods = new Method[numberOfPeers];
+        Method[] connectMethods = new Method[numberOfPeers];
+        Method[] startMethods = new Method[numberOfPeers];
+        Method[] disconnectMethods = new Method[numberOfPeers];
 
         String groupName = TEST_GROUP_PREFIX + UUID.randomUUID().toString();
 
@@ -122,35 +109,54 @@ public class MultiplePeersTest
             Class discoverTestPeerClass = peerLoader.loadClass(className);
 
             Constructor constructor = discoverTestPeerClass.getConstructor(VOID_PARAMETERS_TYPE);
-            testCase[i] = constructor.newInstance(VOID_PARAMETERS);
+            testCases[i] = constructor.newInstance(VOID_PARAMETERS);
 
-            initMethodTestCase[i] = discoverTestPeerClass.getMethod("init", initMethodParametersTypes);
-            Object[] initParameters = new Object[] {String.valueOf(i), Boolean.FALSE};
-            Boolean inited = (Boolean) initMethodTestCase[i].invoke(testCase[i], initParameters);
+            initMethods[i] = discoverTestPeerClass.getMethod("init", initMethodParametersTypes);
+            String thisPeersName = (specialInstance ? peerName : String.valueOf(i));
+            Boolean networkCreator = (specialInstance ? Boolean.TRUE : Boolean.FALSE);
+            Object[] initParameters = new Object[] {thisPeersName, networkCreator};
+            Boolean inited = (Boolean) initMethods[i].invoke(testCases[i], initParameters);
             Assert.assertTrue(inited.booleanValue());
 
-            connectMethodTestCase[i] = discoverTestPeerClass.getMethod("connect", VOID_PARAMETERS_TYPE);
-            Boolean connected = (Boolean) connectMethodTestCase[i].invoke(testCase[i], VOID_PARAMETERS);
+            connectMethods[i] = discoverTestPeerClass.getMethod("connect", VOID_PARAMETERS_TYPE);
+            Boolean connected = (Boolean) connectMethods[i].invoke(testCases[i], VOID_PARAMETERS);
             Assert.assertTrue(connected.booleanValue());
 
-            startMethodTestCase[i] = discoverTestPeerClass.getMethod("start", startMethodParametersTypes);
+            startMethods[i] = discoverTestPeerClass.getMethod("start", startMethodParametersTypes);
             Object[] startParameters = new Object[] {(i == 0 ? Boolean.TRUE : Boolean.FALSE), groupName};
-            Boolean started = (Boolean) startMethodTestCase[i].invoke(testCase[i], startParameters);
+            Boolean started = (Boolean) startMethods[i].invoke(testCases[i], startParameters);
             Assert.assertTrue(started.booleanValue());
+            
+            disconnectMethods[i] = discoverTestPeerClass.getMethod("disconnect", VOID_PARAMETERS_TYPE);
         }
 
         // check if we had errors before waiting.
-        checkForErrors();
+        TestCaseLauncher.checkForErrors();
 
-        System.out.println("Keeping main thread alive for max 2 minutes.");
-
-        synchronized (MAIN_THREAD_LOCK) {
-            MAIN_THREAD_LOCK.wait(120000);
-            System.out.println("(possibly) A peer finished.");
-
-            checkForErrors();
-            checkForSuccess();
+        if (!specialInstance) {
+            System.out.println("Keeping main thread alive for max 2 minutes.");
+            
+            synchronized (MAIN_THREAD_LOCK) {
+                MAIN_THREAD_LOCK.wait(120000);
+                System.out.println("(possibly) A peer finished.");
+    
+                TestCaseLauncher.checkForErrors();
+                TestCaseLauncher.checkForSuccess();
+            }
         }
+        
+        testCasesAndMethods.put(TEST_CASES_VALUE, testCases);
+        testCasesAndMethods.put(INIT_METHODS_VALUE, initMethods);
+        testCasesAndMethods.put(CONNECT_METHODS_VALUE, connectMethods);
+        testCasesAndMethods.put(START_METHODS_VALUE, startMethods);
+        testCasesAndMethods.put(DISCONNECT_METHODS_VALUE, disconnectMethods);
+        
+        return testCasesAndMethods;
+    }
+    
+    public static Map<String, Object[]> launchTest(String className, int numberOfPeers) throws Exception
+    {
+        return TestCaseLauncher.launchTest(className, numberOfPeers, null);
     }
 
     private static String[] split(String classpath)
@@ -163,14 +169,14 @@ public class MultiplePeersTest
         return pathElement;
     }
 
-    private void checkForErrors()
+    private static void checkForErrors()
     {
         String errors = System.getProperty(ERRORS_PROPERTY_NAME);
         System.out.println("Errors: " + errors);
         Assert.assertNull(errors);
     }
 
-    private void checkForSuccess()
+    private static void checkForSuccess()
     {
         String success = System.getProperty(SUCCESS_PROPERTY_NAME);
         Assert.assertNotNull(success);

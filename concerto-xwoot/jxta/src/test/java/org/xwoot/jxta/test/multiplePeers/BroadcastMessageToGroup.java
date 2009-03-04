@@ -42,14 +42,14 @@ import org.xwoot.jxta.Peer;
 import org.xwoot.jxta.PeerFactory;
 import org.xwoot.jxta.message.Message;
 import org.xwoot.jxta.message.MessageFactory;
-import org.xwoot.jxta.test.AbstractJxtaTestBase;
-import org.xwoot.jxta.test.MultiplePeersTest;
+import org.xwoot.jxta.test.singlePeer.AbstractSinglePeerTestBase;
+import org.xwoot.jxta.test.util.TestCaseLauncher;
 import org.xwoot.xwootUtil.FileUtil;
 
 /**
  * TODO DOCUMENT ME!
  *
- * @version $Id:$
+ * @version $Id$
  */
 public class BroadcastMessageToGroup extends AbstractMultiplePeersTestCase
 { 
@@ -58,7 +58,7 @@ public class BroadcastMessageToGroup extends AbstractMultiplePeersTestCase
     public static final String MESSAGE_ID_PROPERTY_NAME = "broadcastedMessageID";
 
     /** {@inheritDoc} **/
-    public Boolean init(String peerName, Boolean networkCreator)
+    /*public Boolean init(String peerName, Boolean networkCreator)
     {
         Boolean defaultInit = super.init(peerName, networkCreator);
         
@@ -80,7 +80,7 @@ public class BroadcastMessageToGroup extends AbstractMultiplePeersTestCase
         }
         
         return Boolean.TRUE;
-    }
+    }*/
 
     /** {@inheritDoc} **/
     public void run()
@@ -90,7 +90,7 @@ public class BroadcastMessageToGroup extends AbstractMultiplePeersTestCase
         if (this.groupCreator) {
             PeerGroup group = null;
             try {
-                group = this.peer.createNewGroup(this.groupName, "A test group.", MultiplePeersTest.KEYSTORE_PASSWORD, MultiplePeersTest.GROUP_PASSWORD);
+                group = this.peer.createNewGroup(this.groupName, "A test group.", TestCaseLauncher.KEYSTORE_PASSWORD, TestCaseLauncher.GROUP_PASSWORD);
             } catch (Exception e) {
                 System.out.println(this.peerName + " : Thread Failed. Stopping.");
                 e.printStackTrace();
@@ -100,9 +100,9 @@ public class BroadcastMessageToGroup extends AbstractMultiplePeersTestCase
             
             System.out.println(this.peerName + " : group created. : " + group.getPeerGroupName());
             
-            synchronized (MultiplePeersTest.GROUP_ADV_LOCK) {
+            synchronized (TestCaseLauncher.GROUP_ADV_LOCK) {
                 // notify other peers that the group adv has been published.
-                MultiplePeersTest.GROUP_ADV_LOCK.notifyAll();
+                TestCaseLauncher.GROUP_ADV_LOCK.notifyAll();
                 System.out.println(this.peerName + " : Listeners notified.");
             }
             
@@ -125,7 +125,7 @@ public class BroadcastMessageToGroup extends AbstractMultiplePeersTestCase
             
             PeerGroup group = null;
             try {
-                group = this.peer.joinPeerGroup(joinGroupAdv, MultiplePeersTest.KEYSTORE_PASSWORD, MultiplePeersTest.GROUP_PASSWORD, false);
+                group = this.peer.joinPeerGroup(joinGroupAdv, TestCaseLauncher.KEYSTORE_PASSWORD, TestCaseLauncher.GROUP_PASSWORD, false);
             } catch (Exception e) {
                 e.printStackTrace();
                 this.fail("Failed to join group: " + e.getMessage());

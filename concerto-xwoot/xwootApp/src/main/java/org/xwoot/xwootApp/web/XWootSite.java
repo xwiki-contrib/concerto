@@ -136,6 +136,8 @@ public class XWootSite
     private static final String AE_DIR_NAME = "antientropy";
 
     private static final String XWOOT_DIR_NAME = "xwoot";
+    
+    private static final String CONTENT_PROVIDER_DIR_NAME = "contentProvider";
 
     /** @return the singleton instance. */
     public static synchronized XWootSite getInstance()
@@ -188,12 +190,13 @@ public class XWootSite
     public void init(int siteId, String siteName, String workingDirPath, String contentProviderXmlRpcUrl, String contentProviderLogin, String contentProviderPassword, String contenProviderPropertiesFilePath) throws RuntimeException, ClockException, WikiContentManagerException, WootEngineException, JxtaException, AntiEntropyException, XWootException, ThomasRuleEngineException, XWootContentProviderException
     {
         // Module directories.
-        File jxtaDir = new File(workingDirPath + File.separator + JXTA_DIR_NAME);
-        File wootEngineDir = new File(workingDirPath + File.separator + WOOTENGINE_DIR_NAME);
-        File wootEngineClockDir = new File(workingDirPath + File.separator + WOOT_CLOCK_DIR_NAME);
-        File treDir = new File(workingDirPath + File.separator + TRE_DIR_NAME);
-        File aeDir = new File(workingDirPath + File.separator + AE_DIR_NAME);
-        File xwootDir = new File(workingDirPath + File.separator + XWOOT_DIR_NAME);
+        File jxtaDir = new File(workingDirPath, JXTA_DIR_NAME);
+        File wootEngineDir = new File(workingDirPath, WOOTENGINE_DIR_NAME);
+        File wootEngineClockDir = new File(workingDirPath, WOOT_CLOCK_DIR_NAME);
+        File treDir = new File(workingDirPath, TRE_DIR_NAME);
+        File aeDir = new File(workingDirPath, AE_DIR_NAME);
+        File xwootDir = new File(workingDirPath, XWOOT_DIR_NAME);
+        File contentProviderDir = new File(workingDirPath, CONTENT_PROVIDER_DIR_NAME);
 
         try {
             // Check and/or create the working dir.
@@ -225,7 +228,8 @@ public class XWootSite
         System.out.println(contentProviderProperties);
         
         String peerName = peer.getManager().getInstanceName();
-        XWootContentProviderInterface xwiki = XWootContentProviderFactory.getXWootContentProvider(contentProviderXmlRpcUrl, peerName, true, contentProviderProperties);
+        String dbLocation = new File(contentProviderDir, peerName).toString();
+        XWootContentProviderInterface xwiki = XWootContentProviderFactory.getXWootContentProvider(contentProviderXmlRpcUrl, dbLocation, true, contentProviderProperties);
         //WikiContentManager wiki = WikiContentManagerFactory.getSwizzleFactory().createWCM(url, login, pwd);
         
         // FIXME: use peerId for wootEngine and for TreEngine as well.

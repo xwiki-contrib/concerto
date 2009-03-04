@@ -18,12 +18,9 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.xwoot.jxta.test;
+package org.xwoot.jxta.test.singlePeer;
 
 import junit.framework.Assert;
-
-import net.jxta.exception.JxtaException;
-import net.jxta.platform.NetworkConfigurator;
 
 import org.junit.After;
 import org.junit.Before;
@@ -36,20 +33,20 @@ import org.xwoot.jxta.PeerFactory;
  *
  * @version $Id$
  */
-public class NetworkTest extends AbstractJxtaTestBase
+public class NetworkTest extends AbstractSinglePeerTestBase
 {
     @Before
     public void init() throws Exception
     {
-        if (!peer.isConnectedToNetwork()) {
-            peer.startNetworkAndConnect(null, null);
+        if (!PEER.isConnectedToNetwork()) {
+            PEER.startNetworkAndConnect(null, null);
         }
     }
     
     @After
     public void destroy() throws Exception
     {
-        peer.leavePeerGroup();
+        PEER.leavePeerGroup();
     }
     
     /**
@@ -78,7 +75,7 @@ public class NetworkTest extends AbstractJxtaTestBase
     @Test
     public void testConnectToNetwork() throws Exception
     {
-        Assert.assertTrue(peer.isConnectedToNetwork());
+        Assert.assertTrue(PEER.isConnectedToNetwork());
     }
     
     
@@ -91,10 +88,10 @@ public class NetworkTest extends AbstractJxtaTestBase
     public void testReConnectToNetwork() throws Exception
     {
         //System.out.println("Connection test.");
-        Assert.assertTrue(peer.isConnectedToNetwork());
+        Assert.assertTrue(PEER.isConnectedToNetwork());
         
         //System.out.println("STOP");
-        peer.stopNetwork();
+        PEER.stopNetwork();
 //        System.out.println("Connection test.");
 //        System.out.println("Status: ");
 //        System.out.println("jxta.isNetworkConfigured() : " + peer.isNetworkConfigured());
@@ -105,12 +102,12 @@ public class NetworkTest extends AbstractJxtaTestBase
 //        System.out.println("jxta.isGroupRendezVous() : " + peer.isGroupRendezVous());
 //        System.out.println("jxta.isConnectedToGroupRendezVous() : " + peer.isConnectedToGroupRendezVous());
 //        System.out.println("jxta.isConnectedToGroup() : " + peer.isConnectedToGroup());
-        Assert.assertFalse(peer.isConnectedToNetwork());
+        Assert.assertFalse(PEER.isConnectedToNetwork());
         
 //        System.out.println("START");
-        peer.startNetworkAndConnect(null, null);
+        PEER.startNetworkAndConnect(null, null);
 //        System.out.println("Connection test.");
-        Assert.assertTrue(peer.isConnectedToNetwork());
+        Assert.assertTrue(PEER.isConnectedToNetwork());
     }
     
     /**

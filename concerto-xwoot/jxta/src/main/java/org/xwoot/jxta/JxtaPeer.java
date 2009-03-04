@@ -119,12 +119,16 @@ public class JxtaPeer implements Peer, RendezvousListener {
 	/** {@inheritDoc} **/
 	public void configureNetwork(String peerName, File jxtaCacheDirectoryPath, ConfigMode mode) throws JxtaException
 	{
+	    // FIXME: normalize the peerName before setting it as directory name. Some names could cause filesystem problems.
+	    
 	    if (peerName == null || peerName.length() == 0) {
 	        peerName = Peer.DEFAULT_PEER_NAME;
 	    }
 	    
 	    if (jxtaCacheDirectoryPath == null) {
             jxtaCacheDirectoryPath = new File(new File(Peer.DEFAULT_DIR_NAME), peerName);
+        } else {
+            jxtaCacheDirectoryPath = new File(jxtaCacheDirectoryPath, peerName);
         }
         
 	    try {
@@ -136,16 +140,6 @@ public class JxtaPeer implements Peer, RendezvousListener {
 	    
 	    // Make sure the jxta platform will shut down tidely when the JVM does.
 	    manager.registerShutdownHook();
-
-        // Use JXTA default relay/rendezvous servers for now.
-        // manager.setUseDefaultSeeds(true);
-        //manager.getConfigurator().addSeedRelay(URI.create("tcp://192.18.37.39:9701"));
-        //manager.getConfigurator().addSeedRendezvous(URI.create("tcp://192.18.37.39:9701"));
-        
-        // FIXME: Leave such configurations to be made from outside
-        // after calling this method but before calling startNetworkAndConnect.
-        //NetworkConfigurator config = manager.getConfigurator();
-        //manager.getConfigurator().setUseMulticast(false);
         
         logger.info("Infrastructure ID: " + manager.getInfrastructureID());
         logger.info("Peer ID: " + manager.getPeerID());

@@ -18,7 +18,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.xwoot.jxta.test;
+package org.xwoot.jxta.test.singlePeer;
 
 import java.util.UUID;
 
@@ -36,7 +36,7 @@ import org.junit.Test;
  * 
  * @version $Id$
  */
-public class GroupTest extends AbstractJxtaTestBase
+public class GroupTest extends AbstractSinglePeerTestBase
 {
     /** Name prefix for test groups. */
     protected static final String GROUP_NAME_PREFIX = "testGroup";
@@ -59,16 +59,16 @@ public class GroupTest extends AbstractJxtaTestBase
     public void testCreatePublicGroup() throws Exception
     {
         // Make sure we are connected to the network.
-        Assert.assertTrue(peer.isConnectedToNetwork());
+        Assert.assertTrue(PEER.isConnectedToNetwork());
 
         String groupName = GROUP_NAME_PREFIX + UUID.randomUUID().toString();
 
-        PeerGroup group = peer.createNewGroup(groupName, GROUP_DESCRIPTION);
+        PeerGroup group = PEER.createNewGroup(groupName, GROUP_DESCRIPTION);
 
         // Make sure we successfully joined the group.
-        Assert.assertTrue(peer.hasJoinedAGroup());
-        Assert.assertTrue(peer.isConnectedToGroup());
-        Assert.assertEquals(group, peer.getCurrentJoinedPeerGroup());
+        Assert.assertTrue(PEER.hasJoinedAGroup());
+        Assert.assertTrue(PEER.isConnectedToGroup());
+        Assert.assertEquals(group, PEER.getCurrentJoinedPeerGroup());
 
         // Make sure the group is public.
         Assert.assertTrue(group.getMembershipService() instanceof NoneMembershipService);
@@ -83,16 +83,16 @@ public class GroupTest extends AbstractJxtaTestBase
     public void testJoinPublicGroup() throws Exception
     {
         // Make sure we are connected to the network.
-        Assert.assertTrue(peer.isConnectedToNetwork());
+        Assert.assertTrue(PEER.isConnectedToNetwork());
 
         String groupName = GROUP_NAME_PREFIX + UUID.randomUUID().toString();
 
-        PeerGroup group = peer.createNewGroup(groupName, GROUP_DESCRIPTION);
+        PeerGroup group = PEER.createNewGroup(groupName, GROUP_DESCRIPTION);
 
         // Make sure we successfully joined the group.
-        Assert.assertTrue(peer.hasJoinedAGroup());
-        Assert.assertTrue(peer.isConnectedToGroup());
-        Assert.assertEquals(group, peer.getCurrentJoinedPeerGroup());
+        Assert.assertTrue(PEER.hasJoinedAGroup());
+        Assert.assertTrue(PEER.isConnectedToGroup());
+        Assert.assertEquals(group, PEER.getCurrentJoinedPeerGroup());
 
         // Make sure the group is public.
         Assert.assertTrue(group.getMembershipService() instanceof NoneMembershipService);
@@ -101,21 +101,21 @@ public class GroupTest extends AbstractJxtaTestBase
         PeerGroupAdvertisement groupAdv = group.getPeerGroupAdvertisement();
         
         // Leave the group so we can join it again with the joinPeerGroup method.
-        peer.leavePeerGroup(group);
+        PEER.leavePeerGroup(group);
 
         // Make sure we have successfully left the group.
-        Assert.assertFalse(peer.hasJoinedAGroup());
-        Assert.assertEquals(peer.getDefaultGroup(), peer.getCurrentJoinedPeerGroup());
+        Assert.assertFalse(PEER.hasJoinedAGroup());
+        Assert.assertEquals(PEER.getDefaultGroup(), PEER.getCurrentJoinedPeerGroup());
 
-        PeerGroup joinedGroup = peer.joinPeerGroup(groupAdv, false);
+        PeerGroup joinedGroup = PEER.joinPeerGroup(groupAdv, false);
 
         // Make sure we successfully joined the group.
-        Assert.assertTrue(peer.hasJoinedAGroup());
-        Assert.assertTrue(peer.isConnectedToGroup());
+        Assert.assertTrue(PEER.hasJoinedAGroup());
+        Assert.assertTrue(PEER.isConnectedToGroup());
 
         // Make sure we joined the right group.
         Assert.assertEquals(groupAdv.getPeerGroupID(), joinedGroup.getPeerGroupID());
-        Assert.assertEquals(joinedGroup.getPeerGroupID(), peer.getCurrentJoinedPeerGroup().getPeerGroupID());
+        Assert.assertEquals(joinedGroup.getPeerGroupID(), PEER.getCurrentJoinedPeerGroup().getPeerGroupID());
     }
 
     /**
@@ -127,16 +127,16 @@ public class GroupTest extends AbstractJxtaTestBase
     public void testCreatePrivateGroup() throws Exception
     {
         // Make sure we are connected to the network.
-        Assert.assertTrue(peer.isConnectedToNetwork());
+        Assert.assertTrue(PEER.isConnectedToNetwork());
 
         String groupName = GROUP_NAME_PREFIX + UUID.randomUUID().toString();
 
-        PeerGroup group = peer.createNewGroup(groupName, GROUP_DESCRIPTION, KEYSTORE_PASSWORD, GROUP_PASSWORD);
+        PeerGroup group = PEER.createNewGroup(groupName, GROUP_DESCRIPTION, KEYSTORE_PASSWORD, GROUP_PASSWORD);
 
         // Make sure we successfully joined the group.
-        Assert.assertTrue(peer.hasJoinedAGroup());
-        Assert.assertTrue(peer.isConnectedToGroup());
-        Assert.assertEquals(group, peer.getCurrentJoinedPeerGroup());
+        Assert.assertTrue(PEER.hasJoinedAGroup());
+        Assert.assertTrue(PEER.isConnectedToGroup());
+        Assert.assertEquals(group, PEER.getCurrentJoinedPeerGroup());
 
         // Make sure the group is private.
         Assert.assertTrue(group.getMembershipService() instanceof PSEMembershipService);
@@ -151,16 +151,16 @@ public class GroupTest extends AbstractJxtaTestBase
     public void testJoinPrivateGroup() throws Exception
     {
         // Make sure we are connected to the network.
-        Assert.assertTrue(peer.isConnectedToNetwork());
+        Assert.assertTrue(PEER.isConnectedToNetwork());
 
         String groupName = GROUP_NAME_PREFIX + UUID.randomUUID().toString();
 
-        PeerGroup group = peer.createNewGroup(groupName, GROUP_DESCRIPTION, KEYSTORE_PASSWORD, GROUP_PASSWORD);
+        PeerGroup group = PEER.createNewGroup(groupName, GROUP_DESCRIPTION, KEYSTORE_PASSWORD, GROUP_PASSWORD);
 
         // Make sure we successfully joined the group.
-        Assert.assertTrue(peer.hasJoinedAGroup());
-        Assert.assertTrue(peer.isConnectedToGroup());
-        Assert.assertEquals(group, peer.getCurrentJoinedPeerGroup());
+        Assert.assertTrue(PEER.hasJoinedAGroup());
+        Assert.assertTrue(PEER.isConnectedToGroup());
+        Assert.assertEquals(group, PEER.getCurrentJoinedPeerGroup());
 
         // Make sure the group is private.
         Assert.assertTrue(group.getMembershipService() instanceof PSEMembershipService);
@@ -169,21 +169,21 @@ public class GroupTest extends AbstractJxtaTestBase
         PeerGroupAdvertisement groupAdv = group.getPeerGroupAdvertisement();
         
         // Leave the group so we can join it again.
-        peer.leavePeerGroup(group);
+        PEER.leavePeerGroup(group);
 
         // Make sure we have successfully left the group.
-        Assert.assertFalse(peer.hasJoinedAGroup());
-        Assert.assertEquals(peer.getDefaultGroup(), peer.getCurrentJoinedPeerGroup());
+        Assert.assertFalse(PEER.hasJoinedAGroup());
+        Assert.assertEquals(PEER.getDefaultGroup(), PEER.getCurrentJoinedPeerGroup());
 
         PeerGroup joinedGroup =
-            peer.joinPeerGroup(groupAdv, KEYSTORE_PASSWORD, GROUP_PASSWORD, false);
+            PEER.joinPeerGroup(groupAdv, KEYSTORE_PASSWORD, GROUP_PASSWORD, false);
 
         // Make sure we successfully joined the group.
-        Assert.assertTrue(peer.hasJoinedAGroup());
-        Assert.assertTrue(peer.isConnectedToGroup());
+        Assert.assertTrue(PEER.hasJoinedAGroup());
+        Assert.assertTrue(PEER.isConnectedToGroup());
 
         // Make sure we joined the right group.
         Assert.assertEquals(groupAdv.getPeerGroupID(), joinedGroup.getPeerGroupID());
-        Assert.assertEquals(joinedGroup.getPeerGroupID(), peer.getCurrentJoinedPeerGroup().getPeerGroupID());
+        Assert.assertEquals(joinedGroup.getPeerGroupID(), PEER.getCurrentJoinedPeerGroup().getPeerGroupID());
     }
 }

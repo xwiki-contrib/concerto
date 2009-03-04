@@ -67,5 +67,7 @@ public interface MultiplePeersTestCase extends Runnable
 
     public Boolean start(Boolean groupCreator, String groupName);
     
+    public void disconnect();
+    
     public void fail(String message);
 }

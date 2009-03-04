@@ -70,8 +70,6 @@ import jlibdiff.HunkChange;
 import jlibdiff.HunkDel;
 import net.jxta.document.Advertisement;
 import net.jxta.document.AdvertisementFactory;
-import net.jxta.id.IDFactory;
-import net.jxta.impl.protocol.PipeAdv;
 import net.jxta.jxtacast.event.JxtaCastEvent;
 import net.jxta.jxtacast.event.JxtaCastEventListener;
 import net.jxta.peergroup.PeerGroup;
@@ -81,7 +79,6 @@ import net.jxta.platform.NetworkConfigurator;
 import net.jxta.platform.NetworkManager.ConfigMode;
 import net.jxta.protocol.PeerGroupAdvertisement;
 import net.jxta.protocol.PipeAdvertisement;
-import net.jxta.util.AdvertisementUtilities;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
@@ -115,7 +112,7 @@ import org.xwoot.xwootUtil.FileUtil;
 /**
  * DOCUMENT ME!
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageReceiver
 {

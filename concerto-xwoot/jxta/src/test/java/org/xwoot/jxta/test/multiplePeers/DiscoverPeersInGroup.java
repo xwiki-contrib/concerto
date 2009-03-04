@@ -33,18 +33,18 @@ import net.jxta.peergroup.PeerGroup;
 import net.jxta.protocol.PeerGroupAdvertisement;
 
 import org.apache.commons.logging.Log;
-import org.xwoot.jxta.test.MultiplePeersTest;
+import org.xwoot.jxta.test.util.TestCaseLauncher;
 
 /**
  * TODO DOCUMENT ME!
  *
- * @version $Id:$
+ * @version $Id$
  */
 public class DiscoverPeersInGroup extends AbstractMultiplePeersTestCase
 {
 
     /** {@inheritDoc} **/
-    public Boolean init(String peerName, Boolean networkCreator)
+   /* public Boolean init(String peerName, Boolean networkCreator)
     {
         Boolean defaultInit = super.init(peerName, networkCreator);
         
@@ -64,7 +64,7 @@ public class DiscoverPeersInGroup extends AbstractMultiplePeersTestCase
         }
         
         return Boolean.TRUE;
-    }
+    }*/
 
     /** {@inheritDoc} **/
     public void run()
@@ -74,19 +74,19 @@ public class DiscoverPeersInGroup extends AbstractMultiplePeersTestCase
         if (this.groupCreator) {
             PeerGroup group = null;
             try {
-                group = this.peer.createNewGroup(this.groupName, "A test group.", MultiplePeersTest.KEYSTORE_PASSWORD, MultiplePeersTest.GROUP_PASSWORD);
+                group = this.peer.createNewGroup(this.groupName, "A test group.", TestCaseLauncher.KEYSTORE_PASSWORD, TestCaseLauncher.GROUP_PASSWORD);
             } catch (Exception e) {
                 System.out.println(this.peerName + " : Thread Failed. Stopping.");
                 e.printStackTrace();
                 Assert.fail("Failed to crete group: " + e.getMessage());
                 
-                synchronized (MultiplePeersTest.GROUP_ADV_LOCK) {
+                synchronized (TestCaseLauncher.GROUP_ADV_LOCK) {
                     // notify other peers that the group adv will not be published.
-                    MultiplePeersTest.GROUP_ADV_LOCK.notifyAll();
+                    TestCaseLauncher.GROUP_ADV_LOCK.notifyAll();
                 }
-                synchronized (MultiplePeersTest.MAIN_THREAD_LOCK) {
+                synchronized (TestCaseLauncher.MAIN_THREAD_LOCK) {
                     // notify main thread not to wait for this thread anymore.
-                    MultiplePeersTest.MAIN_THREAD_LOCK.notifyAll();
+                    TestCaseLauncher.MAIN_THREAD_LOCK.notifyAll();
                 }
                 // stop this thread
                 return;
@@ -94,9 +94,9 @@ public class DiscoverPeersInGroup extends AbstractMultiplePeersTestCase
             
             System.out.println(this.peerName + " : group created. : " + group.getPeerGroupName());
             
-            synchronized (MultiplePeersTest.GROUP_ADV_LOCK) {
+            synchronized (TestCaseLauncher.GROUP_ADV_LOCK) {
                 // notify other peers that the group adv has been published.
-                MultiplePeersTest.GROUP_ADV_LOCK.notifyAll();
+                TestCaseLauncher.GROUP_ADV_LOCK.notifyAll();
                 System.out.println(this.peerName + " : Listeners notified.");
             }
             
@@ -107,7 +107,7 @@ public class DiscoverPeersInGroup extends AbstractMultiplePeersTestCase
             
             PeerGroup group = null;
             try {
-                group = this.peer.joinPeerGroup(joinGroupAdv, MultiplePeersTest.KEYSTORE_PASSWORD, MultiplePeersTest.GROUP_PASSWORD, false);
+                group = this.peer.joinPeerGroup(joinGroupAdv, TestCaseLauncher.KEYSTORE_PASSWORD, TestCaseLauncher.GROUP_PASSWORD, false);
             } catch (Exception e) {
                 e.printStackTrace();
                 this.fail(e.getMessage());

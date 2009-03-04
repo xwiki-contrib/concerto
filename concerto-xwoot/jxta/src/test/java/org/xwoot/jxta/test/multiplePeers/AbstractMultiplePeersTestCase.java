@@ -21,9 +21,11 @@
 package org.xwoot.jxta.test.multiplePeers;
 
 import java.io.File;
+import java.net.URI;
 import java.util.Enumeration;
 
 import net.jxta.jxtacast.event.JxtaCastEventListener;
+import net.jxta.platform.NetworkConfigurator;
 import net.jxta.platform.NetworkManager.ConfigMode;
 import net.jxta.protocol.PeerGroupAdvertisement;
 
@@ -31,7 +33,7 @@ import org.xwoot.jxta.DirectMessageReceiver;
 import org.xwoot.jxta.Peer;
 import org.xwoot.jxta.PeerFactory;
 import org.xwoot.jxta.test.AbstractJxtaTestBase;
-import org.xwoot.jxta.test.MultiplePeersTest;
+import org.xwoot.jxta.test.util.TestCaseLauncher;
 import org.xwoot.xwootUtil.FileUtil;
 
 /**
@@ -57,12 +59,25 @@ public abstract class AbstractMultiplePeersTestCase implements MultiplePeersTest
         
         this.peer = PeerFactory.createPeer();
         
+        // Clean previous test data.
         File peerHome = new File(AbstractJxtaTestBase.WORKING_DIR, peerName);
         FileUtil.deleteDirectory(peerHome);
         
         try {
             FileUtil.checkDirectoryPath(peerHome.getPath());
             this.peer.configureNetwork(peerName, new File(AbstractJxtaTestBase.WORKING_DIR), (networkCreator ? ConfigMode.RENDEZVOUS_RELAY : ConfigMode.EDGE));
+            
+            this.peer.getManager().setUseDefaultSeeds(false);
+            
+            NetworkConfigurator configurator = this.peer.getManager().getConfigurator();
+            
+            configurator.addSeedRendezvous(new URI("tcp://localhost:9701"));
+            configurator.addSeedRelay(new URI("tcp://localhost:9701"));
+            configurator.addSeedRendezvous(new URI("http://localhost:9700"));
+            configurator.addSeedRelay(new URI("http://localhost:9700"));
+            
+            configurator.setUseMulticast(false);
+            
         } catch (Exception e) {
             e.printStackTrace();
             return Boolean.FALSE;
@@ -99,14 +114,24 @@ public abstract class AbstractMultiplePeersTestCase implements MultiplePeersTest
     }
     
     /** {@inheritDoc} **/
+    public void disconnect()
+    {
+        System.out.println(this.peerName + " : Disconnect requested.");
+        
+        this.peer.stopNetwork();
+        
+        FileUtil.deleteDirectory(this.peer.getManager().getInstanceHome().toString());
+    }
+    
+    /** {@inheritDoc} **/
     public void fail(String message)
     {
         System.out.println(this.peerName + " : Thread Failed. Stopping.");
         System.setProperty("errors", message);
         
-        synchronized (MultiplePeersTest.MAIN_THREAD_LOCK) {
+        synchronized (TestCaseLauncher.MAIN_THREAD_LOCK) {
             // notify main thread not to wait for this thread anymore.
-            MultiplePeersTest.MAIN_THREAD_LOCK.notifyAll();
+            TestCaseLauncher.MAIN_THREAD_LOCK.notifyAll();
         }
         
         throw new RuntimeException(message);
@@ -116,9 +141,9 @@ public abstract class AbstractMultiplePeersTestCase implements MultiplePeersTest
     {
         System.out.println(this.peerName + " : Thread stopped. The network will stop as well.");
         System.setProperty("success", "true");
-        synchronized (MultiplePeersTest.MAIN_THREAD_LOCK) {
+        synchronized (TestCaseLauncher.MAIN_THREAD_LOCK) {
             // notify main thread not to wait for this thread anymore.
-            MultiplePeersTest.MAIN_THREAD_LOCK.notifyAll();
+            TestCaseLauncher.MAIN_THREAD_LOCK.notifyAll();
         }
     }
     
@@ -146,10 +171,10 @@ public abstract class AbstractMultiplePeersTestCase implements MultiplePeersTest
             
             System.out.println(this.peerName + " : Group Not found yet.");
             
-            synchronized (MultiplePeersTest.GROUP_ADV_LOCK) {
+            synchronized (TestCaseLauncher.GROUP_ADV_LOCK) {
                 try {
                     System.out.println(this.peerName + " : waiting.");
-                    MultiplePeersTest.GROUP_ADV_LOCK.wait(10000);
+                    TestCaseLauncher.GROUP_ADV_LOCK.wait(10000);
                     System.out.println(this.peerName + " : 10 seconds passed?.");
                 } catch (InterruptedException ignore) {
                 }
