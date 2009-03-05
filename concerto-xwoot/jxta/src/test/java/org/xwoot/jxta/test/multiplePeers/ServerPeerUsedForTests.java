@@ -27,9 +27,10 @@ import net.jxta.jxtacast.event.JxtaCastEvent;
 import org.apache.commons.logging.Log;
 
 /**
- * TODO DOCUMENT ME!
- *
- * @version $Id:$
+ * This is not really a test, but a support peer that is being started for all tests so that they have a network to
+ * connect to.
+ * 
+ * @version $Id$
  */
 public class ServerPeerUsedForTests extends AbstractMultiplePeersTestCase
 {
@@ -37,29 +38,27 @@ public class ServerPeerUsedForTests extends AbstractMultiplePeersTestCase
     /** {@inheritDoc} **/
     public void run()
     {
-        // TODO Auto-generated method stub
-
+        // Thread does nothing but handle jxta platform specific actions.
+        // Thread dies when tests stop.
     }
 
     /** {@inheritDoc} **/
     public void jxtaCastProgress(JxtaCastEvent e)
     {
-        // TODO Auto-generated method stub
-
+        // Thread does not do communication.
     }
 
     /** {@inheritDoc} **/
     public Log getLog()
     {
-        // TODO Auto-generated method stub
+        // Thread does not do communication.
         return null;
     }
 
     /** {@inheritDoc} **/
     public void receiveDirectMessage(Object message, ObjectOutputStream oos)
     {
-        // TODO Auto-generated method stub
-
+        // Thread does not do communication.
     }
 
 }

@@ -32,14 +32,13 @@ import junit.framework.Assert;
 import net.jxta.protocol.PeerGroupAdvertisement;
 
 import org.xwoot.jxta.test.multiplePeers.MultiplePeersTestCase;
-import org.xwoot.xwootUtil.FileUtil;
 
 /**
  * Utility class for launching tests that are instances of {@link MultiplePeersTestCase}.
  *
- * @version $Id:$
+ * @version $Id$
  */
-public class TestCaseLauncher
+public class MultiplePeersTestCaseLauncher
 {
     /** TODO DOCUMENT ME! */
     public static final String DISCONNECT_METHODS_VALUE = "disconnectMethods";
@@ -56,9 +55,6 @@ public class TestCaseLauncher
     /** TODO DOCUMENT ME! */
     public static final String TEST_CASES_VALUE = "testCases";
 
-    /** Working dir for tests. */
-    public static final String WORKING_DIR = FileUtil.getTestsWorkingDirectoryPathForModule("jxta");
-
     public static final String MAIN_THREAD_LOCK = "wait for peers to finish";
 
     public static PeerGroupAdvertisement GROUP_ADV;
@@ -69,7 +65,7 @@ public class TestCaseLauncher
 
     public static final String classpath = getClassPath();
 
-    public static final String pathElement[] = TestCaseLauncher.split(classpath);
+    public static final String pathElement[] = MultiplePeersTestCaseLauncher.split(classpath);
 
     public static final Class[] VOID_PARAMETERS_TYPE = new Class[0];
 
@@ -131,7 +127,7 @@ public class TestCaseLauncher
         }
 
         // check if we had errors before waiting.
-        TestCaseLauncher.checkForErrors();
+        MultiplePeersTestCaseLauncher.checkForErrors();
 
         if (!specialInstance) {
             System.out.println("Keeping main thread alive for max 2 minutes.");
@@ -140,8 +136,13 @@ public class TestCaseLauncher
                 MAIN_THREAD_LOCK.wait(120000);
                 System.out.println("(possibly) A peer finished.");
     
-                TestCaseLauncher.checkForErrors();
-                TestCaseLauncher.checkForSuccess();
+                MultiplePeersTestCaseLauncher.checkForErrors();
+                MultiplePeersTestCaseLauncher.checkForSuccess();
+            }
+            
+            // stop and disconnect all peers involved in this test.
+            for (int i = 0; i < numberOfPeers; i++) {
+                disconnectMethods[i].invoke(testCases[i], MultiplePeersTestCaseLauncher.VOID_PARAMETERS);
             }
         }
         
@@ -156,7 +157,7 @@ public class TestCaseLauncher
     
     public static Map<String, Object[]> launchTest(String className, int numberOfPeers) throws Exception
     {
-        return TestCaseLauncher.launchTest(className, numberOfPeers, null);
+        return MultiplePeersTestCaseLauncher.launchTest(className, numberOfPeers, null);
     }
 
     private static String[] split(String classpath)

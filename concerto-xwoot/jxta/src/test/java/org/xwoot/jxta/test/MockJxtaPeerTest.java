@@ -20,7 +20,6 @@
 
 package org.xwoot.jxta.test;
 
-import java.io.File;
 import java.io.ObjectOutputStream;
 
 import junit.framework.Assert;
@@ -31,7 +30,6 @@ import net.jxta.peergroup.PeerGroup;
 import net.jxta.protocol.PeerGroupAdvertisement;
 
 import org.apache.commons.logging.Log;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.xwoot.jxta.DirectMessageReceiver;
@@ -40,7 +38,6 @@ import org.xwoot.jxta.PeerFactory;
 import org.xwoot.jxta.message.Message;
 import org.xwoot.jxta.message.MessageFactory;
 import org.xwoot.jxta.mock.MockJxtaPeer;
-import org.xwoot.xwootUtil.FileUtil;
 
 /**
  * Tests for the jxta module mockup(fake).
@@ -48,10 +45,7 @@ import org.xwoot.xwootUtil.FileUtil;
  * @version $Id$
  */
 public class MockJxtaPeerTest
-{
-    /** Working dir for tests. */
-    public static final String WORKING_DIR = FileUtil.getTestsWorkingDirectoryPathForModule("jxta");
-    
+{    
     Peer peer1;
     Peer peer2;
     Peer peer3;
@@ -62,10 +56,7 @@ public class MockJxtaPeerTest
     
     @Before
     public void initPeers() throws Exception
-    {
-        FileUtil.deleteDirectory(new File(WORKING_DIR));
-        FileUtil.checkDirectoryPath(WORKING_DIR);
-        
+    {        
         if (MockJxtaPeer.groupAdvRegistry != null) {
             MockJxtaPeer.groupAdvRegistry.clear();
         }
@@ -83,13 +74,7 @@ public class MockJxtaPeerTest
         peer3 = PeerFactory.createMockPeer();
         peer3.configureNetwork(peerName3, null, null);
     }
-    
-    @After
-    public void clearPeers()
-    {
-        FileUtil.deleteDirectory(new File(WORKING_DIR));
-    }
-    
+       
     @Test
     public void testStartNetwork() throws Exception
     {

@@ -20,92 +20,62 @@
 
 package org.xwoot.jxta.test.multiplePeers;
 
-import java.io.File;
 import java.io.ObjectOutputStream;
-import java.net.URI;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.List;
 
 import junit.framework.Assert;
 
-import net.jxta.document.Advertisement;
 import net.jxta.exception.PeerGroupException;
-import net.jxta.jxtacast.JxtaCast;
 import net.jxta.jxtacast.event.JxtaCastEvent;
 import net.jxta.peergroup.PeerGroup;
-import net.jxta.platform.NetworkManager.ConfigMode;
 import net.jxta.protocol.PeerGroupAdvertisement;
 
 import org.apache.commons.logging.Log;
-import org.xwoot.jxta.Peer;
-import org.xwoot.jxta.PeerFactory;
 import org.xwoot.jxta.message.Message;
 import org.xwoot.jxta.message.MessageFactory;
-import org.xwoot.jxta.test.singlePeer.AbstractSinglePeerTestBase;
-import org.xwoot.jxta.test.util.TestCaseLauncher;
-import org.xwoot.xwootUtil.FileUtil;
+import org.xwoot.jxta.test.util.MultiplePeersTestCaseLauncher;
 
 /**
- * TODO DOCUMENT ME!
- *
+ * Test message broadcasting between 2 peers that have joined a group.
+ * 
  * @version $Id$
  */
 public class BroadcastMessageToGroup extends AbstractMultiplePeersTestCase
-{ 
-    String receiveObjectLock = "wait for a propagate message to be received.";
-    
+{
+    /**
+     * The system property to be used by the sending peer to communicate to the destination peer the message id to
+     * expect.
+     */
     public static final String MESSAGE_ID_PROPERTY_NAME = "broadcastedMessageID";
-
-    /** {@inheritDoc} **/
-    /*public Boolean init(String peerName, Boolean networkCreator)
-    {
-        Boolean defaultInit = super.init(peerName, networkCreator);
-        
-        System.clearProperty(BroadcastMessageToGroup.MESSAGE_ID_PROPERTY_NAME);
-        
-        if (defaultInit) {
-            try {
-                //this.peer.getManager().setUseDefaultSeeds(true);
-                this.peer.getManager().getConfigurator().addSeedRendezvous(new URI("tcp://192.18.37.39:9701"));
-                this.peer.getManager().getConfigurator().addSeedRelay(new URI("tcp://192.18.37.39:9701"));
-                this.peer.getManager().getConfigurator().addSeedRendezvous(new URI("http://192.18.37.39:9700"));
-                this.peer.getManager().getConfigurator().addSeedRelay(new URI("http://192.18.37.39:9700"));
-                this.peer.getManager().getConfigurator().setUseMulticast(false);
-            } catch (Exception e) {
-                return Boolean.FALSE;
-            }
-        } else {
-            return Boolean.FALSE;
-        }
-        
-        return Boolean.TRUE;
-    }*/
+    
+    /** Lock to wait for the reception of an object. */
+    private String receiveObjectLock = "wait for a propagate message to be received.";
 
     /** {@inheritDoc} **/
     public void run()
     {
         System.out.println(this.peerName + " : Thread started.");
-        
+
         if (this.groupCreator) {
             PeerGroup group = null;
             try {
-                group = this.peer.createNewGroup(this.groupName, "A test group.", TestCaseLauncher.KEYSTORE_PASSWORD, TestCaseLauncher.GROUP_PASSWORD);
+                group =
+                    this.peer.createNewGroup(this.groupName, "A test group.", MultiplePeersTestCaseLauncher.KEYSTORE_PASSWORD,
+                        MultiplePeersTestCaseLauncher.GROUP_PASSWORD);
             } catch (Exception e) {
                 System.out.println(this.peerName + " : Thread Failed. Stopping.");
                 e.printStackTrace();
-                
+
                 Assert.fail("Failed to create group: " + e.getMessage());
             }
-            
+
             System.out.println(this.peerName + " : group created. : " + group.getPeerGroupName());
-            
-            synchronized (TestCaseLauncher.GROUP_ADV_LOCK) {
+
+            synchronized (MultiplePeersTestCaseLauncher.GROUP_ADV_LOCK) {
                 // notify other peers that the group adv has been published.
-                TestCaseLauncher.GROUP_ADV_LOCK.notifyAll();
+                MultiplePeersTestCaseLauncher.GROUP_ADV_LOCK.notifyAll();
                 System.out.println(this.peerName + " : Listeners notified.");
             }
-            
+
             // lock until the message is received.
             synchronized (receiveObjectLock) {
                 try {
@@ -114,28 +84,32 @@ public class BroadcastMessageToGroup extends AbstractMultiplePeersTestCase
                 } catch (InterruptedException e) {
                 }
             }
-            
-            // if a message is received, this thread will pass as well. 
+
+            // if a message is received, this thread will pass as well.
             this.pass();
 
         } else {
             PeerGroupAdvertisement joinGroupAdv = searchForGroup(this.groupName);
-            
+
             System.out.println(this.peerName + " : Joining group.");
-            
+
             PeerGroup group = null;
             try {
-                group = this.peer.joinPeerGroup(joinGroupAdv, TestCaseLauncher.KEYSTORE_PASSWORD, TestCaseLauncher.GROUP_PASSWORD, false);
+                group =
+                    this.peer.joinPeerGroup(joinGroupAdv, MultiplePeersTestCaseLauncher.KEYSTORE_PASSWORD,
+                        MultiplePeersTestCaseLauncher.GROUP_PASSWORD, false);
             } catch (Exception e) {
                 e.printStackTrace();
                 this.fail("Failed to join group: " + e.getMessage());
             }
-            
+
             System.out.println(this.peerName + " : Joied group " + group.getPeerGroupName() + ".");
-            
-            Message messageToBroadcast = MessageFactory.createMessage(this.peer.getMyDirectCommunicationPipeAdvertisement().getPipeID().toString(), "test broadcasted content", Message.Action.BROADCAST_PATCH);
+
+            Message messageToBroadcast =
+                MessageFactory.createMessage(this.peer.getMyDirectCommunicationPipeAdvertisement().getPipeID()
+                    .toString(), "test broadcasted content", Message.Action.BROADCAST_PATCH);
             System.setProperty(MESSAGE_ID_PROPERTY_NAME, messageToBroadcast.getId().toString());
-            
+
             try {
                 this.peer.sendObject(messageToBroadcast, "a broadcasted message.");
             } catch (PeerGroupException e) {
@@ -143,8 +117,10 @@ public class BroadcastMessageToGroup extends AbstractMultiplePeersTestCase
                 this.fail("Failed to send message : " + e.getMessage());
             }
         }
-        
+
         System.out.println(this.peerName + " : Thread finished.");
+        
+        //this.disconnect();
     }
 
     /** {@inheritDoc} **/
@@ -157,7 +133,7 @@ public class BroadcastMessageToGroup extends AbstractMultiplePeersTestCase
                 if (!receivedMessage.getId().toString().equals(expectedMessageID)) {
                     this.fail("Expected : " + expectedMessageID + " but was : " + receivedMessage.getId().toString());
                 }
-                
+
                 synchronized (receiveObjectLock) {
                     receiveObjectLock.notifyAll();
                 }
@@ -166,7 +142,7 @@ public class BroadcastMessageToGroup extends AbstractMultiplePeersTestCase
             ex.printStackTrace();
             this.fail("Failed to receive message : " + ex.getMessage());
         }
-        
+
     }
 
     /** {@inheritDoc} **/
@@ -181,7 +157,5 @@ public class BroadcastMessageToGroup extends AbstractMultiplePeersTestCase
     {
         // not interested;
     }
-
-    
 
 }

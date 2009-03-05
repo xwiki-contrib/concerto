@@ -61,13 +61,37 @@ package org.xwoot.jxta.test.multiplePeers;
 public interface MultiplePeersTestCase extends Runnable
 {
 
-    public Boolean init(String peerName, Boolean networkCreator);
+    /**
+     * Initialize and configure the peer instance associated to this test.
+     * 
+     * @param peerName the name of the peer.
+     * @param networkCreator if the peer creates a network.
+     * @return {@link Boolean#TRUE} if initialization was successful, {@link Boolean#FALSE} otherwise.
+     */
+    Boolean init(String peerName, Boolean networkCreator);
 
-    public Boolean connect();
+    /** Connects the peer to the network. */
+    Boolean connect();
 
-    public Boolean start(Boolean groupCreator, String groupName);
+    /**
+     * Start test-specific actions in a new thread.
+     * 
+     * @param groupCreator if this peer will be the group creator.
+     * @param groupName the name of the group to join/create. This name has to be unique to avoid collisions.
+     * @return {@link Boolean#TRUE} if start was successful, {@link Boolean#FALSE} otherwise.
+     */
+    Boolean start(Boolean groupCreator, String groupName);
     
-    public void disconnect();
+    /** Disconnects this peer from the network and stops the jxta platform. */
+    void disconnect();
     
-    public void fail(String message);
+    /**
+     * Notify that the test failed at one point.
+     * 
+     * @param message the associated error message.
+     */
+    void fail(String message);
+    
+    /** Notify that the test has successfully completed. */
+    void pass();
 }

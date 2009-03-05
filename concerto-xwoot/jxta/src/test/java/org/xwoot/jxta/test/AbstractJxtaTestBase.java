@@ -20,13 +20,12 @@
 
 package org.xwoot.jxta.test;
 
-import java.lang.reflect.Method;
 import java.util.Map;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.xwoot.jxta.test.multiplePeers.ServerPeerUsedForTests;
-import org.xwoot.jxta.test.util.TestCaseLauncher;
+import org.xwoot.jxta.test.util.MultiplePeersTestCaseLauncher;
 import org.xwoot.xwootUtil.FileUtil;
 
 /**
@@ -35,7 +34,7 @@ import org.xwoot.xwootUtil.FileUtil;
  * It starts a concurrent thread running a jxta peer that creates a network. Other peers that are contained in the tests
  * will not be able to connect to localhost instead of using the public jxta network.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public abstract class AbstractJxtaTestBase
 {
@@ -56,16 +55,20 @@ public abstract class AbstractJxtaTestBase
     @BeforeClass
     public static void startNetwork() throws Exception
     {
-        // Cleanup.
-        FileUtil.deleteDirectory(WORKING_DIR);
-        FileUtil.checkDirectoryPath(WORKING_DIR);
-
-        System.out.println("Starting Serv0rPeer.");
-        
-        // Start the supporting peer.
-        networkPeerTestCase = TestCaseLauncher.launchTest(ServerPeerUsedForTests.class.getName(), 1, "Serv0rPeer");
-        
-        System.out.println("Serv0rPeer started.");
+        if (networkPeerTestCase == null) {
+            // Cleanup.
+            FileUtil.deleteDirectory(WORKING_DIR);
+            FileUtil.checkDirectoryPath(WORKING_DIR);
+    
+            System.out.println("Starting Serv0rPeer.");
+            
+            // Start the supporting peer.
+            networkPeerTestCase = MultiplePeersTestCaseLauncher.launchTest(ServerPeerUsedForTests.class.getName(), 1, "Serv0rPeer");
+            
+            System.out.println("Serv0rPeer started.");
+        } else {
+            System.out.println("Serv0rPeer already started.");
+        }
     }
 
     /**
@@ -76,17 +79,17 @@ public abstract class AbstractJxtaTestBase
     @AfterClass
     public static void stopNetwork() throws Exception
     {
-        System.out.println("Stopping Serv0rPeer.");
+        /*System.out.println("Stopping Serv0rPeer.");
         
         // Stop the supporting peer.
         Method disconnectMethod =
-            (Method) ((Object[]) networkPeerTestCase.get(TestCaseLauncher.DISCONNECT_METHODS_VALUE))[0];
-        Object instance = (Object) ((Object[]) networkPeerTestCase.get(TestCaseLauncher.TEST_CASES_VALUE))[0];
-        disconnectMethod.invoke(instance, TestCaseLauncher.VOID_PARAMETERS);
+            (Method) ((Object[]) networkPeerTestCase.get(MultiplePeersTestCaseLauncher.DISCONNECT_METHODS_VALUE))[0];
+        Object instance = (Object) ((Object[]) networkPeerTestCase.get(MultiplePeersTestCaseLauncher.TEST_CASES_VALUE))[0];
+        disconnectMethod.invoke(instance, MultiplePeersTestCaseLauncher.VOID_PARAMETERS);
         
         System.out.println("Serv0rPeer stopped.");
 
         // Cleanup.
-        FileUtil.deleteDirectory(WORKING_DIR);
+        FileUtil.deleteDirectory(WORKING_DIR);*/
     }
 }
