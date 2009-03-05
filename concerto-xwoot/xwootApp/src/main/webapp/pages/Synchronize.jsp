@@ -12,7 +12,8 @@
     
     <style type="text/css" media="screen" title="currentStyle">
     
-        @import "style/${(skin==null or skin=='')?'grey':skin}_style.css";
+        <%-- @import "style/${(skin==null or skin=='')?'grey':skin}_style.css"; --%>
+        @import "style/grey_style.css";
     
     </style>
     
