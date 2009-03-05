@@ -77,7 +77,8 @@ public class FileUtilTest extends AbstractXwootUtilTestBase
     private static final String SOURCE_CONTENT = "first line\nsecond line\nthird line\n";
 
     /** Test string containing characters with accents. */
-    // private static final String ACCENTUATED_STRING = "áàâãäăÁÀÂÃÄéèêëÉÈÊËíìîïÍÌÎÏóòôõöÓÒÔÕÖúùûüÚÙÛÜçÇñÑşŞţŢ";
+    // private static final String ACCENTUATED_STRING
+    // = "áàâãäăÁÀÂÃÄéèêëÉÈÊËíìîïÍÌÎÏóòôõöÓÒÔÕÖúùûüÚÙÛÜçÇñÑşŞţŢ";
     private static final String ACCENTUATED_STRING =
         "\u00E1\u00E0\u00E2\u00E3\u00E4\u0103\u00C1\u00C0\u00C2"
             + "\u00C3\u00C4\u00E9\u00E8\u00EA\u00EB\u00C9\u00C8\u00CA\u00CB\u00ED\u00EC\u00EE\u00EF"
@@ -313,31 +314,37 @@ public class FileUtilTest extends AbstractXwootUtilTestBase
         // set write permission on root dir to false;
         File testDirRoot = new File(this.workingDir);
         testDirRoot.setReadOnly();
-
-        IOException mustHappen = null;
-        try {
-            FileUtil.checkDirectoryPath(testDir.getPath());
-        } catch (IOException e) {
-            mustHappen = e;
+        
+        // Check if the test is run by a normal user. If it is run by a power user, skip this part.
+        if (!testDirRoot.canWrite()) {
+            IOException mustHappen = null;
+            try {
+                FileUtil.checkDirectoryPath(testDir.getPath());
+            } catch (IOException e) {
+                mustHappen = e;
+            }
+    
+            // if all went well, the dir must have not been able to be created and an exception should have been thrown.
+            Assert.assertFalse(mustHappen == null && testDir.exists());
         }
-
-        // if all went well, the dir must have not been able to be created and an exception should have been thrown.
-        Assert.assertFalse(mustHappen == null && testDir.exists());
 
         // reset the root directory to writable and create the test dir but make it not writable.
         testDirRoot.delete();
         testDirRoot = new File(this.workingDir);
         testDir.mkdirs();
         testDir.setReadOnly();
-
-        // check the direcotry and throw an exception because it is exists byt it's not usable.
-        IOException mustHappenToo = null;
-        try {
-            FileUtil.checkDirectoryPath(testDir.getPath());
-        } catch (IOException e) {
-            mustHappenToo = e;
+        
+        // Check if the test is run by a normal user. If it is run by a power user, skip this part.
+        if (!testDir.canWrite()) {
+            // check the direcotry and throw an exception because it is exists but it's not usable.
+            IOException mustHappenToo = null;
+            try {
+                FileUtil.checkDirectoryPath(testDir.getPath());
+            } catch (IOException e) {
+                mustHappenToo = e;
+            }
+            Assert.assertNotNull(mustHappenToo);
         }
-        Assert.assertNotNull(mustHappenToo);
 
         // create a file and pass it as argument, instead of a directory.
         File testFile = new File(this.workingDir, FILE_NAME);

@@ -57,6 +57,7 @@ import org.xwoot.thomasRuleEngine.mock.MockValue;
 import org.xwoot.xwootUtil.FileUtil;
 
 import java.io.File;
+import java.security.Security;
 
 import junit.framework.Assert;
 
@@ -149,18 +150,31 @@ public class EntriesListTest
     @Test
     public void testConstructor() throws Exception
     {
-        String fakeDirectory = "/this/directory/does/not/exist";
-
-        // Constructor must send an exception if the given working dir don't
-        // exist
-        this.entriesList = null;
-
-        try {
-            this.entriesList = new EntriesList(fakeDirectory, FILENAME);
-        } catch (ThomasRuleEngineException e) {
-            // nothing.
+        File fakeDirectory = new File(EntriesListTest.WORKING_DIR_PATH, "fakeDir");
+        if (fakeDirectory.exists()) {
+            if (fakeDirectory.isFile()) {
+                fakeDirectory.delete();
+            } else {
+                FileUtil.deleteDirectory(fakeDirectory);
+            }
         }
-        Assert.assertNull(this.entriesList);
+        
+        fakeDirectory.mkdir();
+        fakeDirectory.setWritable(false);
+        
+        // If Root/Super user is running the tests. Skip this part because access restrictions do not apply.
+        if (!fakeDirectory.canWrite()) {
+            
+            // Constructor must send an exception if the given working dir is unusable.
+            this.entriesList = null;
+    
+            try {
+                this.entriesList = new EntriesList(fakeDirectory.toString(), FILENAME);
+            } catch (ThomasRuleEngineException e) {
+                // nothing.
+            }
+            Assert.assertNull(this.entriesList);
+        }
 
         // Constructor must make the wanted object
         this.entriesList = new EntriesList(WORKING_DIR_PATH, FILENAME);
