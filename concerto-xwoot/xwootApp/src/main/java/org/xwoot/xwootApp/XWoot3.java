@@ -566,7 +566,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         Message message = this.createMessage(newPatch, Message.Action.BROADCAST_PATCH);
         
         try {
-            // the message must be logged before send it 
+            // the message must be logged before we send it 
             this.getAntiEntropy().logMessage(message.getId(), message); 
             this.logger.debug(this.getXWootName() + " : Message logged in the local log. Sending it to the group.");
             

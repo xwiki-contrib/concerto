@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import net.jxta.peergroup.PeerGroup;
-
 import org.apache.xmlrpc.XmlRpcException;
 import org.junit.After;
 import org.junit.Assert;
@@ -708,9 +706,10 @@ public class TestXWoot3 extends AbstractXWootTest
         // add wootable content in patch
         Patch patch = new Patch();
         List<WootOp> vector = new ArrayList<WootOp>();
-        WootIns op0 = new WootIns(new WootRow(new WootId(0, 0), content2), new WootId(-1, -1), new WootId(-2, -2));
+        WootId wootId = new WootId(0, 0);
+        WootIns op0 = new WootIns(new WootRow(wootId, content2), WootId.FIRST_WOOT_ID, WootId.LAST_WOOT_ID);
         op0.setContentId(new ContentId(PAGE_ID, pageGuid, CONTENT_FIELD_NAME, false));
-        op0.setOpId(new WootId(0, 0));
+        op0.setOpId(wootId);
         vector.add(op0);
         patch.setData(vector);
         patch.setPageId(PAGE_ID);
@@ -863,9 +862,10 @@ public class TestXWoot3 extends AbstractXWootTest
         // position
         Patch patch = new Patch();
         List<WootOp> vector = new ArrayList<WootOp>();
-        WootIns op0 = new WootIns(new WootRow(new WootId(0, 0), content3), new WootId(-1, -1), new WootId(-2, -2));
+        WootId wootId = new WootId(0, 0);
+        WootIns op0 = new WootIns(new WootRow(wootId, content3), WootId.FIRST_WOOT_ID, WootId.LAST_WOOT_ID);
         op0.setContentId(new ContentId(PAGE_ID, pageGuid, "content", false));
-        op0.setOpId(new WootId(0, 0));
+        op0.setOpId(wootId);
         vector.add(op0);
         patch.setData(vector);
         patch.setPageId(PAGE_ID);

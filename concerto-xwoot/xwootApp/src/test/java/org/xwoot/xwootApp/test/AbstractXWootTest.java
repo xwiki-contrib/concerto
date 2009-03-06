@@ -46,6 +46,7 @@ package org.xwoot.xwootApp.test;
 
 import net.jxta.platform.NetworkManager.ConfigMode;
 
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.xwoot.XWootContentProviderFactory;
@@ -260,7 +261,8 @@ public abstract class AbstractXWootTest
         this.xwoot3 =
             new XWoot(this.xwiki3, this.wootEngine3, this.lpbCast3, WORKINGDIR + File.separator + "Site3", "Site3",
                 new Integer(3), this.tre3, this.ae3);
-
+        this.cleanXWikis();
+        
         this.xwoot21 =
             new XWoot2(this.xwiki21, this.wootEngine1, this.lpbCast1, WORKINGDIR + File.separator + "Site1", "Site1",
                 new Integer(1), this.tre1, this.ae1);
@@ -270,7 +272,6 @@ public abstract class AbstractXWootTest
         this.xwoot23 =
             new XWoot2(this.xwiki23, this.wootEngine3, this.lpbCast3, WORKINGDIR + File.separator + "Site3", "Site3",
                 new Integer(3), this.tre3, this.ae3);
-        this.cleanXWikis();
         
         this.xwoot31 =
             new XWoot3(this.xwiki21, this.wootEngine1, this.peer1, WORKINGDIR + File.separator + "Site1", this.tre1, this.ae1);
@@ -278,26 +279,23 @@ public abstract class AbstractXWootTest
             new XWoot3(this.xwiki22, this.wootEngine2, this.peer2, WORKINGDIR + File.separator + "Site2", this.tre2, this.ae2);
         this.xwoot33 =
             new XWoot3(this.xwiki23, this.wootEngine3, this.peer3, WORKINGDIR + File.separator + "Site3", this.tre3, this.ae3);
-        this.cleanXWikis();
     }
 
-    /**
-     * Creates a new AbstractXWootTest object.
-     * 
-     * @param name DOCUMENT ME!
-     */
     @BeforeClass
-    public static void initFile()
+    public static void initFile() throws Exception
     {
-
-        if (!new File(WORKINGDIR).exists()) {
-            new File(WORKINGDIR).mkdirs();
-        }
+        FileUtil.deleteDirectory(WORKINGDIR);
+        FileUtil.checkDirectoryPath(WORKINGDIR);
+    }
+    
+    @AfterClass
+    public static void cleanDirectory() throws Exception
+    {
+        FileUtil.deleteDirectory(WORKINGDIR);
     }
 
     protected void cleanXWikis() throws Exception
     {
-
         this.xwiki1.removePage("test.1");
         this.xwiki1.removePage("test.2");
         this.xwiki2.removePage("test.1");

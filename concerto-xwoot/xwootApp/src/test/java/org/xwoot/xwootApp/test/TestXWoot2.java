@@ -15,7 +15,6 @@ import org.xwiki.xmlrpc.model.XWikiObject;
 import org.xwiki.xmlrpc.model.XWikiPage;
 import org.xwoot.MockXWootContentProvider;
 import org.xwoot.NewXWootContentProvider;
-import org.xwoot.XWootContentProvider;
 import org.xwoot.XWootContentProviderException;
 import org.xwoot.XWootContentProviderInterface;
 import org.xwoot.XWootId;
@@ -648,9 +647,10 @@ public class TestXWoot2 extends AbstractXWootTest
         // add wootable content in patch
         Patch patch = new Patch();
         List<WootOp> vector = new ArrayList<WootOp>();
-        WootIns op0 = new WootIns(new WootRow(new WootId(0, 0), content2), new WootId(-1, -1), new WootId(-2, -2));
+        WootId wootId = new WootId(0, 0);
+        WootIns op0 = new WootIns(new WootRow(wootId, content2), WootId.FIRST_WOOT_ID, wootId.LAST_WOOT_ID);
         op0.setContentId(new ContentId(pageId, pageGuid, "content", false));
-        op0.setOpId(new WootId(0, 0));
+        op0.setOpId(wootId);
         vector.add(op0);
         patch.setData(vector);
         patch.setPageId(pageId);
@@ -797,9 +797,10 @@ public class TestXWoot2 extends AbstractXWootTest
         // position
         Patch patch = new Patch();
         List<WootOp> vector = new ArrayList<WootOp>();
-        WootIns op0 = new WootIns(new WootRow(new WootId(0, 0), content3), new WootId(-1, -1), new WootId(-2, -2));
+        WootId wootId = new WootId(0, 0);
+        WootIns op0 = new WootIns(new WootRow(wootId, content3), WootId.FIRST_WOOT_ID, WootId.LAST_WOOT_ID);
         op0.setContentId(new ContentId(pageId, pageGuid, "content", false));
-        op0.setOpId(new WootId(0, 0));
+        op0.setOpId(wootId);
         vector.add(op0);
         patch.setData(vector);
         patch.setPageId(pageId);
