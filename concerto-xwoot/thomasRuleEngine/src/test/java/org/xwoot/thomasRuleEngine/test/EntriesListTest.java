@@ -160,7 +160,7 @@ public class EntriesListTest
         }
         
         fakeDirectory.mkdir();
-        fakeDirectory.setWritable(false);
+        fakeDirectory.setReadOnly();
         
         // If Root/Super user is running the tests. Skip this part because access restrictions do not apply.
         if (!fakeDirectory.canWrite()) {
