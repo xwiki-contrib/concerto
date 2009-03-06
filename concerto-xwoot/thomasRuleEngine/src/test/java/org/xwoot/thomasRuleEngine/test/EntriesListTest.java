@@ -57,7 +57,6 @@ import org.xwoot.thomasRuleEngine.mock.MockValue;
 import org.xwoot.xwootUtil.FileUtil;
 
 import java.io.File;
-import java.security.Security;
 
 import junit.framework.Assert;
 
