@@ -74,30 +74,32 @@ public class NewXWootContentProviderTest extends TestCase
 
     public void testPageModification() throws Exception
     {
+        final String pageName = "Main.WebHome";
         final String content = String.format("Modified at %s\n", System.currentTimeMillis());
 
         System.out.format("*** testPageModification()\n");
         xwc.getModifiedPagesIds();
         xwc.clearAllModifications();
+
         XWikiXmlRpcClient rpc = xwc.getRpc();
-        XWikiPage page = rpc.getPage("Test.Test");
+        XWikiPage page = rpc.getPage(pageName);
         page.setContent(content);
         page = rpc.storePage(page);
 
         Set<XWootId> result = xwc.getModifiedPagesIds();
+
         assertEquals(1, result.size());
         XWootId xwootId = (XWootId) result.toArray()[0];
         System.out.format("Modification: %s\n", xwootId);
-        assertEquals("Test.Test", xwootId.getPageId());
+        assertEquals(pageName, xwootId.getPageId());
 
         /*
          * Set the last cleared modification to the previous one so that the getModifiedEntities will have a version to
          * which compare the differences
          */
         xwc.getStateManager().clearModification(xwc.getStateManager().getPreviousModification(xwootId));
-
         List<XWootObject> modifiedEntities = xwc.getModifiedEntities(xwootId);
-        assertEquals(1, modifiedEntities.size());
+        assertTrue(modifiedEntities.size() >= 1);
         XWootObject xwootObject = modifiedEntities.get(0);
         System.out.format("%s\n", xwootObject);
         assertTrue(xwootObject.getGuid().startsWith(Constants.PAGE_NAMESPACE));
@@ -113,14 +115,24 @@ public class NewXWootContentProviderTest extends TestCase
         System.out.format("*** testNewPageModification()\n");
         xwc.getModifiedPagesIds();
         xwc.clearAllModifications();
+
         XWikiXmlRpcClient rpc = xwc.getRpc();
         XWikiPage page = new XWikiPage();
         page.setId(pageName);
         page.setContent(content);
         rpc.storePage(page);
 
+        page = rpc.getPage(pageName);
+        assertEquals(pageName, page.getId());
+        assertEquals(content, page.getContent());
+
+        xwc.getStateManager().dumpDbLines();
+
         Set<XWootId> result = xwc.getModifiedPagesIds();
-        System.out.format("Result: %s\n", result);
+
+        xwc.getStateManager().dumpDbLines();
+
+        System.out.format("************** Result: %s\n", result);
         assertEquals(1, result.size());
         XWootId xwootId = (XWootId) result.toArray()[0];
         System.out.format("Modification: %s\n", xwootId);

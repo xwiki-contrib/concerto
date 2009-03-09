@@ -1,7 +1,6 @@
 package org.xwoot;
 
 import java.net.URL;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -82,7 +81,7 @@ public class NewXWootContentProvider implements XWootContentProviderInterface
     {
         if (rpc != null) {
             this.logger.info("XWootContentProvider is already logged in.");
-            //throw new XWootContentProviderException("XWootContentProvider is already logged in.");
+            // throw new XWootContentProviderException("XWootContentProvider is already logged in.");
             return;
         }
 
@@ -203,8 +202,8 @@ public class NewXWootContentProvider implements XWootContentProviderInterface
                 "Modifcations list updated. Received %d entries starting from timestamp %d. %d duplicates.",
                 entriesReceived, highestModificationTimestamp, duplicatedEntries));
             logger.info(String.format("Modification list updated. Entries received from pages: %s", acceptedPages));
-            logger.info(String.format("Modifcations list updated. Ignored %d entries from pages: %s", ignoredEntries,
-                ignoredPages));
+            // logger.info(String.format("Modifcations list updated. Ignored %d entries from pages: %s", ignoredEntries,
+            // ignoredPages));
 
             /* For each received page, clear all the modification except the latest one */
             for (String pageId : pageIdToLatestModificationMap.keySet()) {
