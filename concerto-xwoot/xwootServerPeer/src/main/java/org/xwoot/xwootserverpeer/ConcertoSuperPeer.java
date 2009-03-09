@@ -20,6 +20,7 @@
 
 package org.xwoot.xwootserverpeer;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -33,6 +34,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.xwoot.jxta.Peer;
+import org.xwoot.xwootUtil.FileUtil;
 
 /**
  * Implements a Super peer that will ensure connectivity and for a network.
@@ -99,6 +101,12 @@ public class ConcertoSuperPeer
 
     /** If to use only the external ip in advertisements. */
     public static final String ONLY_EXTERNAL_IP_PARAMETER = "useOnlyExternalIp";
+    
+    /** To clean any existing configuration from the home directory. */
+    public static final String CLEAN_EXISTING_CONFIG_PARAMETER = "clean";
+    
+    /** To enable multicast for LAN communication. */
+    public static final String USE_MULTICAST_PARAMETER = "useMulticast";
 
     /** Name of this peer. */
     private String peerName;
@@ -125,40 +133,48 @@ public class ConcertoSuperPeer
     private boolean modeRelay;
 
     /** The TCP port to use. */
-    private int tcpPort;
+    private int tcpPort = 0;
 
     /** The HTTP port to use. */
-    private int httpPort;
+    private int httpPort = 0;
 
     /** If to use TCP for communication. */
-    private boolean useTcp = true;
+    private boolean useTcp;
 
     /** If to use TCP Incoming connections. */
-    private boolean useTcpIncomming = true;
+    private boolean useTcpIncomming;
 
     /** If to use TCP Outgoing connections. */
-    private boolean useTcpOutgoing = true;
+    private boolean useTcpOutgoing;
 
     /** If to use HTTP for communication. */
-    private boolean useHttp = true;
+    private boolean useHttp;
 
     /** If to use HTTP Incoming connections. */
-    private boolean useHttpIncomming = true;
+    private boolean useHttpIncomming;
 
     /** If to use HTTP Outgoing connections. */
-    private boolean useHttpOutgoing = true;
+    private boolean useHttpOutgoing;
 
     /** If to use only the external ip in advertisements. */
     private boolean useOnlyExternalIp;
 
     /** The external ip to use for this peer. */
     private String externalIp;
+    
+    /** To clean any existing configuration from the home directory. */
+    private boolean clean;
+    
+    /** To enable multicast for LAN communication. */
+    private boolean useMulticast;
 
     /** This super peer instance. */
     private SuperPeer superPeer;
 
     /** Options for command line. */
     private Options options;
+    
+    private HelpFormatter formatter;  
 
     /**
      * Constructor.
@@ -167,6 +183,7 @@ public class ConcertoSuperPeer
     {
         this.options = new Options();
         this.addOptions(options);
+        formatter = new HelpFormatter();
     }
 
     /**
@@ -182,6 +199,7 @@ public class ConcertoSuperPeer
             concertoSuperPeer.parseArgs(args);
         } catch (ParseException e) {
             System.err.println("Error parsing parameters: " + e.getMessage());
+            concertoSuperPeer.showUsage();
             System.exit(-1);
         }
 
@@ -189,6 +207,7 @@ public class ConcertoSuperPeer
             concertoSuperPeer.configureNetwork();
         } catch (JxtaException e) {
             System.err.println("Error configuring the peer's network settings: " + e.getMessage());
+            e.printStackTrace();
             System.exit(-1);
         }
 
@@ -196,7 +215,17 @@ public class ConcertoSuperPeer
             concertoSuperPeer.getSuperPeer().startNetwork();
         } catch (JxtaException e) {
             System.err.println("Error starting the network on this peer: " + e.getMessage());
+            e.printStackTrace();
             System.exit(-1);
+        }
+
+        synchronized (concertoSuperPeer) {
+
+            try {
+                concertoSuperPeer.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -212,14 +241,12 @@ public class ConcertoSuperPeer
         BasicParser parser = new BasicParser();
         CommandLine cl = parser.parse(this.options, args);
 
-        HelpFormatter f = new HelpFormatter();
-
         if (cl.hasOption(HELP_PARAMETER)) {
-            f.printHelp("Available parameters", this.options);
+            showUsage();
         } else {
             String rdvSeedingUriString = cl.getOptionValue(RDV_SEEDING_URI_PARAMETER);
             String relaySeedingUriString = cl.getOptionValue(RELAY_SEEDING_URI_PARAMETER);
-            this.modeRendezvous = cl.hasOption(MODE_RENDEZVOUS_PARAMETER);
+            this.modeRendezvous = (cl.hasOption(MODE_RENDEZVOUS_PARAMETER) != this.modeRendezvous ? cl.hasOption(MODE_RENDEZVOUS_PARAMETER) : this.modeRendezvous);
             this.modeRelay = cl.hasOption(MODE_RELAY_PARAMETER);
             this.peerName = cl.getOptionValue(PEER_NAME_PARAMETER);
             this.homePath = cl.getOptionValue(HOME_PARAMETER);
@@ -238,12 +265,15 @@ public class ConcertoSuperPeer
 
             this.externalIp = cl.getOptionValue(EXTERNAL_IP_PARAMETER);
             this.useOnlyExternalIp = cl.hasOption(ONLY_EXTERNAL_IP_PARAMETER);
+            
+            this.clean = cl.hasOption(CLEAN_EXISTING_CONFIG_PARAMETER);
+            this.useMulticast = cl.hasOption(USE_MULTICAST_PARAMETER);
 
             if (tcpPortString != null) {
                 try {
                     this.tcpPort = Integer.parseInt(tcpPortString);
                 } catch (NumberFormatException e) {
-                    f.printHelp("Available parameters", this.options);
+                    showUsage();
                     throw new ParseException("Invalid TCP port given.");
                 }
             }
@@ -252,13 +282,13 @@ public class ConcertoSuperPeer
                 try {
                     this.httpPort = Integer.parseInt(httpPortString);
                 } catch (NumberFormatException e) {
-                    f.printHelp("Available parameters", this.options);
+                    showUsage();
                     throw new ParseException("Invalid HTTP port given.");
                 }
             }
 
             if (!modeRendezvous && !modeRelay) {
-                f.printHelp("Available parameters", this.options);
+                showUsage();
                 throw new ParseException("This peer must run in relay, rendezvous or both modes.");
             }
 
@@ -271,11 +301,11 @@ public class ConcertoSuperPeer
                 this.relaySeeds = relaySeedsString.split(delimiter);
             }
 
-            if (rdvSeedingUri != null) {
+            if (rdvSeedingUriString != null) {
                 try {
                     this.rdvSeedingUri = new URI(rdvSeedingUriString);
                 } catch (URISyntaxException e) {
-                    f.printHelp("Available parameters", this.options);
+                    showUsage();
                     throw new ParseException("Invalid Rendezvous seeding URI given.");
                 }
             }
@@ -284,7 +314,7 @@ public class ConcertoSuperPeer
                 try {
                     this.relaySeedingUri = new URI(relaySeedingUriString);
                 } catch (URISyntaxException e) {
-                    f.printHelp("Available parameters", this.options);
+                    showUsage();
                     throw new ParseException("Invalid Relay seeding URI given.");
                 }
             }
@@ -326,6 +356,10 @@ public class ConcertoSuperPeer
         options.addOption(EXTERNAL_IP_PARAMETER, true,
             "An un-firewalled/un-NAT-ed IP address or DNS to use for communication instead of the local one.");
         options.addOption(ONLY_EXTERNAL_IP_PARAMETER, false, "To use HTTP protocol for communication.");
+        
+        options.addOption(CLEAN_EXISTING_CONFIG_PARAMETER, false, "To clean any existing configuration from the home directory.");
+        
+        options.addOption(USE_MULTICAST_PARAMETER, false, "To enable multicast for LAN communication.");
     }
 
     /**
@@ -344,6 +378,13 @@ public class ConcertoSuperPeer
             mode = ConfigMode.RELAY;
         }
 
+        if (this.clean) {            
+            String theName = (this.peerName != null ? this.peerName : Peer.DEFAULT_PEER_NAME);
+            File homeLocation = (this.homePath != null ? new File(this.homePath, theName) : new File(Peer.DEFAULT_DIR_NAME, theName));
+            
+            FileUtil.deleteDirectory(homeLocation);
+        }
+            
         this.superPeer = new JxtaSuperPeer(peerName, this.homePath, mode);
 
         NetworkConfigurator networkConfigurator = this.superPeer.getConfigurator();
@@ -355,6 +396,28 @@ public class ConcertoSuperPeer
         if (this.relaySeedingUri != null) {
             networkConfigurator.addRelaySeedingURI(relaySeedingUri);
         }
+        
+        if (this.relaySeeds != null) {
+            for (String seed : relaySeeds) {
+                try {
+                    networkConfigurator.addSeedRelay(new URI(seed));
+                } catch (URISyntaxException e) {
+                    System.err.println("Skipping invalid relay seed: " + seed);
+                    e.printStackTrace();
+                }
+            }
+        }
+        
+        if (this.rdvSeeds != null) {
+            for (String seed : rdvSeeds) {
+                try {
+                    networkConfigurator.addSeedRendezvous(new URI(seed));
+                } catch (URISyntaxException e) {
+                    System.err.println("Skipping invalid rendezvous seed: " + seed);
+                    e.printStackTrace();
+                }
+            }
+        }
 
         String addressPortSeparator = ":";
         if (useTcp) {
@@ -363,12 +426,17 @@ public class ConcertoSuperPeer
             networkConfigurator.setTcpOutgoing(this.useTcpOutgoing);
             networkConfigurator.setTcpPort(tcpPort);
             if (this.externalIp != null) {
+                // disable dynamic ports because we use a fixed ip:port combination now.
+                networkConfigurator.setTcpStartPort(-1);
+                networkConfigurator.setTcpEndPort(-1);
+                
                 String tcpPublicAddress = this.externalIp;
                 if (!tcpPublicAddress.contains(addressPortSeparator)) {
                     tcpPublicAddress += addressPortSeparator + String.valueOf(tcpPort);
                 } else {
 
                 }
+                System.out.println("TCP public address: " + tcpPublicAddress);
                 networkConfigurator.setTcpPublicAddress(tcpPublicAddress, this.useOnlyExternalIp);
             }
         }
@@ -378,15 +446,20 @@ public class ConcertoSuperPeer
             networkConfigurator.setHttpIncoming(this.useHttpIncomming);
             networkConfigurator.setHttpOutgoing(this.useHttpOutgoing);
             networkConfigurator.setHttpPort(httpPort);
-            if (this.externalIp != null) {
+            if (this.externalIp != null) {                
                 String httpPublicAddress = this.externalIp;
                 if (!httpPublicAddress.contains(addressPortSeparator)) {
-                    httpPublicAddress += addressPortSeparator + String.valueOf(tcpPort);
+                    httpPublicAddress += addressPortSeparator + String.valueOf(httpPort);
                 } else {
 
                 }
+                System.out.println("HTTP public address: " + httpPublicAddress);
                 networkConfigurator.setHttpPublicAddress(httpPublicAddress, this.useOnlyExternalIp);
             }
+        }
+        
+        if (this.useMulticast) {
+            this.superPeer.getManager().setUseDefaultSeeds(true);
         }
     }
 
@@ -396,6 +469,11 @@ public class ConcertoSuperPeer
     public SuperPeer getSuperPeer()
     {
         return this.superPeer;
+    }
+    
+    public void showUsage()
+    {
+        this.formatter.printHelp("Available parameters", this.options);
     }
 
 }
