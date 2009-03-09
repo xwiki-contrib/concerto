@@ -61,6 +61,8 @@ public interface XWootAPI
     void removeNeighbor(String neighborURL) throws XWootException;
 
     void synchronize() throws XWootException;
+    
+    void synchronize(boolean generatePatches) throws XWootException;
 
     List<String> getLastPages(String id) throws XWootException;
 

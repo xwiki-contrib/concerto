@@ -166,9 +166,6 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
      */
     private LastPatchAndXWikiXWootId lastModifiedContentIdMap;
 
-    /** Flag to know when to discard generated patches because they were caused by a state import. */
-    private boolean justImportedState;
-
     /**
      * Creates a new XWoot object.
      * 
@@ -559,10 +556,6 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     {
         this.logger.debug(this.getXWootName() + " : Senging new patch");
         
-        if (this.justImportedState) {
-            this.logger.debug(this.getXWootName() + " : Send canceled and message not logged because it was created by a state import.");
-        }
-        
         Message message = this.createMessage(newPatch, Message.Action.BROADCAST_PATCH);
         
         try {
@@ -582,9 +575,9 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         }
     }
     
-    private synchronized void synchronizeFromXWikiToModel(boolean inCopy) throws XWootException
+    private synchronized void synchronizeFromXWikiToModel(boolean inCopy, boolean generatePatches) throws XWootException
     {
-        this.logger.info(this.getXWootName() + " : synchronize From XWiki To Model ("+inCopy+")");
+        this.logger.info(this.getXWootName() + " : synchronize From XWiki To Model ("+inCopy+", " +  generatePatches + ")");
         
         try {
             Set<XWootId> xwootIds = this.contentManager.getModifiedPagesIds();
@@ -624,8 +617,12 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
                                     throw new XWootException("Problem with ThomasRuleEngine");
                                 }
                             }
-                        }                       
-                        this.sendNewPatch(newPatch);
+                        }
+                        
+                        // If this patch is not relevant for the network, send it.
+                        if (generatePatches) {
+                            this.sendNewPatch(newPatch);
+                        }
                     }
                 }
                 xwootIds = this.contentManager.getModifiedPagesIds();
@@ -892,13 +889,19 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         }
     }
 
+    
+    public synchronized void synchronize() throws XWootException
+    {
+        this.synchronize(true);
+    }
+    
     /**
      * DOCUMENT ME!
      * 
      * @throws XWootException
      * @throws WootEngineException
      */
-    public synchronized void synchronize() throws XWootException
+    public synchronized void synchronize(boolean generatePatches) throws XWootException
     {
         this.logger.info(this.getXWootName() + " : Starting the synchronisation of each managed pages");
         
@@ -909,7 +912,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
        
         try {
             if (!this.getContentManager().getModifiedPagesIds().isEmpty()){
-                this.synchronizeFromXWikiToModel(!this.lastModifiedContentIdMap.getCurrentPatchIdMap().isEmpty());
+                this.synchronizeFromXWikiToModel(!this.lastModifiedContentIdMap.getCurrentPatchIdMap().isEmpty(), generatePatches);
             } else {
                 this.logger.info("No changes in xwiki => No changes done to the model.");
             }
@@ -1197,9 +1200,11 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             throw new XWootException("The state directory can not be used to store newly created states.", e);
         }
 
-        // Make sure the internal model is up to date.
-        this.synchronize();
-        this.logger.debug(this.getXWootName() + " : Create state");
+        // Make sure the internal model is up to date but don't generate patches.
+        this.logger.debug(this.getXWootName() + " : Synchronizing with wiki.");
+        this.synchronize(false);
+        
+        this.logger.debug(this.getXWootName() + " : Creating state.");
 
         // TODO: could be better handled and more consistent.
         
@@ -1353,11 +1358,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         // FIXME: HIGH PRIORITY!
         
         // synchronize with the wiki but don`t generate any patches.
-        this.justImportedState = true;
-        this.synchronize();
-        
-        // reset the flag after the first call to synchronize after a state import.
-        this.justImportedState = false;
+        this.synchronize(false);
         
         return true;
     }
@@ -1740,37 +1741,6 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         System.out.println("senderID:" + e.senderId);
         System.out.println("transferedData: " + e.transferedData);*/
         
-//        if (event.percentDone == 100) {
-//            System.out.println("[CONCERTO] Transer complete!");
-//            if (event.transType == JxtaCastEvent.RECV) {
-//                System.out.println("[CONCERTO] Received: " + event.transferedData.getClass());
-//                if (event.transferedData instanceof String) {
-//                    String data = (String) event.transferedData;
-//                    System.out.println("Object size: " + data.getBytes().length);
-//                }
-//                /*if (e.transferedData instanceof Map) {
-//                    System.out.println("Sending back reply...");
-//                    
-//                    Map<String, Object> pipeAdvData = (Map<String, Object>) e.transferedData;
-//                    String pipeType = (String) pipeAdvData.get("PIPE_TYPE");
-//                    ID pipeID = (ID) pipeAdvData.get("PIPE_ID");
-//                    
-//                    PipeAdvertisement pipeAdv = (PipeAdvertisement) AdvertisementFactory.newAdvertisement(PipeAdvertisement.getAdvertisementType());
-//                    pipeAdv.setType(pipeType);
-//                    pipeAdv.setPipeID(pipeID);
-//                    
-//                    boolean sent = false;
-//                    try {
-//                        sent = jxta.sendObject("ok!", "anti-entropy reply", pipeAdv);
-//                    } catch (JxtaException je) {
-//                        System.out.println("Problem sending the message: ");
-//                        je.printStackTrace();
-//                    }
-//                    System.out.println("Reply successfuly sent: " + sent); 
-//                }*/
-//            }
-//        }
-        
         if (event.percentDone == 100) {
             if (event.transType == JxtaCastEvent.RECV) {
                 this.logger.debug(this.getXWootName() + " : Received a broadcasted message.");
@@ -1837,7 +1807,6 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     /** {@inheritDoc} **/
     public Log getLog()
     {
-        // TODO Auto-generated method stub
-        return null;
+        return this.logger;
     }
 }

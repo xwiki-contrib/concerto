@@ -725,6 +725,11 @@ public class XWoot2 implements XWootAPI
 
         this.logger.info(this.siteId + " : Synchronising OK.");
     }
+    
+    public synchronized void synchronize(boolean generatePatches) throws XWootException
+    {
+        this.synchronize();
+    }
 
     public boolean joinNetwork(String neighborURL) throws XWootException
     {
