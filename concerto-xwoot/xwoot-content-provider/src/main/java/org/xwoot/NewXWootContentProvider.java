@@ -142,6 +142,17 @@ public class NewXWootContentProvider implements XWootContentProviderInterface
 
             long highestModificationTimestamp = stateManager.getHighestModificationTimestamp();
 
+            /*
+             * This adjustment is necessary because both XMLRPC and XWiki truncates timestamps to the lower second. So
+             * it might happen that if two stores happens in less than 1 second, and inside the same second time
+             * interval, then the second store is not reported. Case: hmt = 0; store@t, t=15123 -> 15000; now hmt =
+             * 15000; store@t1, t1=15898 -> 15000 getModifiedPageHistory(15000) -> all modifications > 15000. the second
+             * store is not taken into account.
+             */
+            if (highestModificationTimestamp > 1000) {
+                highestModificationTimestamp = highestModificationTimestamp - 1000;
+            }
+
             Map<String, XWootId> pageIdToLatestModificationMap = new HashMap<String, XWootId>();
 
             int entriesReceived = 0;
