@@ -264,7 +264,7 @@ public class TestBasic extends AbstractXWootTest
         // position
         Patch patch = new Patch();
         Vector<WootOp> vector = new Vector<WootOp>();
-        WootId wootId = new WootId(0, 0);
+        WootId wootId = new WootId(String.valueOf(0), 0);
         WootIns op0 = new WootIns(new WootRow(wootId, "titi"), WootId.FIRST_WOOT_ID, WootId.LAST_WOOT_ID);
         op0.setContentId(new ContentId(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID, false));
         op0.setOpId(wootId);
@@ -722,7 +722,7 @@ public class TestBasic extends AbstractXWootTest
         // create patch to change wootEngine model
         Patch patch = new Patch();
         Vector<WootOp> vector = new Vector<WootOp>();
-        WootId wootId = new WootId(0, 0);
+        WootId wootId = new WootId(String.valueOf(0), 0);
         WootIns op0 =
             new WootIns(new WootRow(wootId, "Ligne 1 sur xwiki1"), WootId.FIRST_WOOT_ID, WootId.LAST_WOOT_ID);
         op0.setContentId(new ContentId(page.getPageName(), XWoot.PAGEOBJECTID, XWoot.PAGECONTENTFIELDID, false));

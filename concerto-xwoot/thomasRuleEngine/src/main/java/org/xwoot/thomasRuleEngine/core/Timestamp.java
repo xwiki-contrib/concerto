@@ -64,7 +64,7 @@ public class Timestamp implements Comparable, Serializable
     private long time;
 
     /** The id of the site that generated this ID. */
-    private int siteId;
+    private String siteId;
 
     /**
      * Creates a new Timestamp object.
@@ -72,14 +72,14 @@ public class Timestamp implements Comparable, Serializable
      * @param time the current time in milliseconds.
      * @param siteId the siteId where this id was generated.
      */
-    public Timestamp(long time, int siteId)
+    public Timestamp(long time, String siteId)
     {
         this.time = time;
         this.siteId = siteId;
     }
 
     /** @return the id of the site that generated this ID. */
-    public int getId()
+    public String getId()
     {
         return this.siteId;
     }
@@ -103,7 +103,8 @@ public class Timestamp implements Comparable, Serializable
             return 0;
         }
 
-        if ((this.time > with.getTime()) || ((this.time == with.getTime()) && (this.siteId > with.getId()))) {
+        if ((this.time > with.getTime())
+            || ((this.time == with.getTime()) && (this.siteId.compareTo(with.getId()) > 0))) {
             return 1;
         }
 
@@ -128,7 +129,7 @@ public class Timestamp implements Comparable, Serializable
 
         final Timestamp other = (Timestamp) obj;
 
-        return (this.siteId == other.siteId && this.time == other.time);
+        return (this.siteId.equals(other.siteId) && this.time == other.time);
     }
 
     /** {@inheritDoc} */
@@ -137,7 +138,7 @@ public class Timestamp implements Comparable, Serializable
     {
         final int prime = 31;
         int result = 7;
-        result = prime * result + this.siteId;
+        result = prime * result + this.siteId.hashCode();
         result = prime * result + (int) (this.time ^ (this.time >>> 32));
 
         return result;

@@ -104,8 +104,7 @@ public class Bootstrap extends HttpServlet
                     Properties p_xwoot = XWootSite.getInstance().getProperties(xwootPropertiesFile);
                     
                     this.getServletContext().log("Bootstrap - starting instance -");
-                    XWootSite.getInstance().init(Integer.parseInt((String) p_xwoot.get(XWootSite.XWOOT_SITE_ID)),
-                        (String) p_xwoot.get(XWootSite.XWOOT_SERVER_NAME),
+                    XWootSite.getInstance().init((String) p_xwoot.get(XWootSite.XWOOT_SERVER_NAME),
                         (String) p_xwoot.get(XWootSite.XWOOT_WORKING_DIR),
                         (String) p_xwiki.get(XWootSite.XWIKI_ENDPOINT),
                         (String) p_xwiki.get(XWootSite.XWIKI_USERNAME),

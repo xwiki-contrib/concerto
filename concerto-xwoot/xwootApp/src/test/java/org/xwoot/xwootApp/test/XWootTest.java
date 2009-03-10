@@ -22,7 +22,7 @@ public class XWootTest extends AbstractXWootTest
     {
         this.xwoot1 =
             new XWoot(this.xwiki1, this.wootEngine1, this.lpbCast1, "/cantBecreated" + File.separator + "Site1",
-                "Site 1", new Integer(1), new ThomasRuleEngine(1, WORKINGDIR), this.ae1);
+                "Site 1", new Integer(1), new ThomasRuleEngine(String.valueOf(1), WORKINGDIR), this.ae1);
     }
 
     @Test(expected = RuntimeException.class)
@@ -35,7 +35,7 @@ public class XWootTest extends AbstractXWootTest
         assertTrue(f.exists());
         this.xwoot1 =
             new XWoot(this.xwiki1, this.wootEngine1, this.lpbCast1, f.toString(), "Site 1", new Integer(1),
-                new ThomasRuleEngine(1, WORKINGDIR), this.ae1);
+                new ThomasRuleEngine(String.valueOf(1), WORKINGDIR), this.ae1);
     }
 
     @Test(expected = XWootException.class)
@@ -50,7 +50,7 @@ public class XWootTest extends AbstractXWootTest
         assertFalse(f.canWrite());
         this.xwoot1 =
             new XWoot(this.xwiki1, this.wootEngine1, this.lpbCast1, f.toString(), "Site 1", new Integer(1),
-                new ThomasRuleEngine(1, WORKINGDIR), this.ae1);
+                new ThomasRuleEngine(String.valueOf(1), WORKINGDIR), this.ae1);
     }
 
     @Test
@@ -64,7 +64,7 @@ public class XWootTest extends AbstractXWootTest
         assertTrue(this.lpbCast1.isSenderConnected());
         this.xwoot1 =
             new XWoot(this.xwiki1, this.wootEngine1, this.lpbCast1, f.toString(), f.toString() + File.separator
-                + "Site1", new Integer(1), new ThomasRuleEngine(1, WORKINGDIR), this.ae1);
+                + "Site1", new Integer(1), new ThomasRuleEngine(String.valueOf(1), WORKINGDIR), this.ae1);
         assertNotNull(this.xwoot1);
     }
 

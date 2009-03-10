@@ -134,15 +134,9 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     /** Logging component. */
     private final Log logger = LogFactory.getLog(this.getClass());
 
-    //private String siteName;
-
-    //private boolean p2Pconnected;
-
     private boolean contentManagerConnected;
 
     private String contentManagerURL;
-
-    //private String peerId;
 
     private String stateDirPath;
 
@@ -1047,12 +1041,17 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     
     public void joinGroup(PeerGroupAdvertisement groupAdvertisement, char[] keystorePassword, char[] groupPassword) throws XWootException
     {
+        this.joinGroup(groupAdvertisement, keystorePassword, groupPassword, false);
+    }
+    
+    public void joinGroup(PeerGroupAdvertisement groupAdvertisement, char[] keystorePassword, char[] groupPassword, boolean beRendezVous) throws XWootException
+    {
         if (!this.isConnectedToP2PNetwork()) {
             throw new XWootException(this.getXWootName() + " : Not connected to network.");
         }
         
         try {
-            this.peer.joinPeerGroup(groupAdvertisement, keystorePassword, groupPassword, false);
+            this.peer.joinPeerGroup(groupAdvertisement, keystorePassword, groupPassword, beRendezVous);
         } catch (Exception e) {
             this.logger.error(this.getXWootName() + " : Failed to join the group.", e);
             throw new XWootException("Failed to join the group.", e);
@@ -1161,11 +1160,11 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
 
             return;
         } catch (WootEngineException e) {
-            this.logger.error(this.getXWootPeerId() + " : Problems setting woot engine state \n", e);
-            throw new XWootException(this.getXWootPeerId() + " : Problems setting woot engine state \n", e);
+            this.logger.error(this.getXWootName() + " : Problems setting woot engine state \n", e);
+            throw new XWootException(this.getXWootName() + " : Problems setting woot engine state \n", e);
         } catch (Exception e) {
-            this.logger.error(this.getXWootPeerId() + " : Problems setting the XWoot state \n", e);
-            throw new XWootException(this.getXWootPeerId() + " : Problems setting the XWoot state \n", e);
+            this.logger.error(this.getXWootName() + " : Problems setting the XWoot state \n", e);
+            throw new XWootException(this.getXWootName() + " : Problems setting the XWoot state \n", e);
         }
     }
 
@@ -1213,29 +1212,29 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         try {
             wootState = this.getWootEngine().getState();
         } catch (WootEngineException e) {
-            this.logger.error(this.getXWootPeerId() + " : Problem to get woot engine state \n", e);
-            throw new XWootException(this.getXWootPeerId() + " : Problem to get woot engine state \n", e);
+            this.logger.error(this.getXWootName() + " : Problem to get woot engine state \n", e);
+            throw new XWootException(this.getXWootName() + " : Problem to get woot engine state \n", e);
         }
         
         if (wootState!=null && wootState.exists()){
             File copy0 = new File(this.stateDirPath + File.separatorChar + this.getWootEngineStateFileName());
             
             if (!wootState.renameTo(copy0)) {
-                this.logger.warn(this.getXWootPeerId() + " : Failed to move the temporary woot state file to the working dir by using File.renameTo. Using fallback.");
+                this.logger.warn(this.getXWootName() + " : Failed to move the temporary woot state file to the working dir by using File.renameTo. Using fallback.");
                 
                 try {
                     FileUtil.copyFile(wootState.getPath(), copy0.getPath());
                 } catch (Exception e) {
-                    this.logger.error(this.getXWootPeerId() + " : Failed to replace new state file with old one. State creation process failed.\n", e);
-                    throw new XWootException(this.getXWootPeerId() + " : Failed to replace new state file with old one. State creation process failed.\n", e);
+                    this.logger.error(this.getXWootName() + " : Failed to replace new state file with old one. State creation process failed.\n", e);
+                    throw new XWootException(this.getXWootName() + " : Failed to replace new state file with old one. State creation process failed.\n", e);
                 }
                 
                 wootState.delete();
             }
             wootState = copy0;
         } else {
-            this.logger.error(this.getXWootPeerId() + " : The Woot state did not compute successfuly.\n");
-            throw new XWootException(this.getXWootPeerId() + " : The Woot state did not compute successfuly.");
+            this.logger.error(this.getXWootName() + " : The Woot state did not compute successfuly.\n");
+            throw new XWootException(this.getXWootName() + " : The Woot state did not compute successfuly.");
         }
 
         // get TRE state
@@ -1243,8 +1242,8 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         try {
             FileUtil.zipDirectory(this.tre.getWorkingDir(), treState.toString());
         } catch (Exception e) {
-            this.logger.error(this.getXWootPeerId() + " : The TRE state did not compute successfuly.\n", e);
-            throw new XWootException(this.getXWootPeerId() + " : The TRE state did not compute successfuly.\n", e);
+            this.logger.error(this.getXWootName() + " : The TRE state did not compute successfuly.\n", e);
+            throw new XWootException(this.getXWootName() + " : The TRE state did not compute successfuly.\n", e);
         }
         
         // package the WOOT state and the TRE state together.
@@ -1278,8 +1277,8 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             */
             
         } catch (IOException e) {
-            this.logger.error(this.getXWootPeerId() + " : Problems creating the XWoot state.\n", e);
-            throw new XWootException(this.getXWootPeerId() + " : Problems creating the XWoot state.\n", e);
+            this.logger.error(this.getXWootName() + " : Problems creating the XWoot state.\n", e);
+            throw new XWootException(this.getXWootName() + " : Problems creating the XWoot state.\n", e);
         }
 
         return new File(this.getStateFilePath());
@@ -1331,7 +1330,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         // TODO: make return type void.
         
         if (stateFileToImport == null) {
-            this.logger.warn(this.getXWootPeerId() + " : Tried to import a null state. Operation ignored.");
+            this.logger.warn(this.getXWootName() + " : Tried to import a null state. Operation ignored.");
             return false;
         }
         
@@ -1346,8 +1345,8 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             try {
                 FileUtil.copyFile(stateFileToImport.toString(), currentState.toString());
             } catch (IOException e) {
-                this.logger.error(this.getXWootPeerId() + " : Problem when copying state file ", e);
-                throw new XWootException(this.getXWootPeerId() + " : Problem when copying state file ", e);
+                this.logger.error(this.getXWootName() + " : Problem when copying state file ", e);
+                throw new XWootException(this.getXWootName() + " : Problem when copying state file ", e);
             }
         }
         
@@ -1384,13 +1383,13 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
                 throw new XWootException("A peer was contacted but it did not send back a reply.");
             }
         } catch (XWootException e) {
-            this.logger.error(this.getXWootPeerId() + " : Failed to get the state from the current group.\n", e);
-            throw new XWootException(this.getXWootPeerId() + " : Failed to get the state from the current group.\n", e);
+            this.logger.error(this.getXWootName() + " : Failed to get the state from the current group.\n", e);
+            throw new XWootException(this.getXWootName() + " : Failed to get the state from the current group.\n", e);
         }
         
         if (!(stateReply.getAction().equals(Message.Action.STATE_REPLY))) {
-            this.logger.error(this.getXWootPeerId() + " : Invalid state reply message action (" + stateReply.getAction() + ").");
-            throw new XWootException(this.getXWootPeerId() + " : Invalid state reply message action (" + stateReply.getAction() + ").");
+            this.logger.error(this.getXWootName() + " : Invalid state reply message action (" + stateReply.getAction() + ").");
+            throw new XWootException(this.getXWootName() + " : Invalid state reply message action (" + stateReply.getAction() + ").");
         }
         
         byte[] stateFileData = null;
@@ -1436,8 +1435,8 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         try {
             content = this.antiEntropy.getMessageIdsForAskAntiEntropy();
         } catch (AntiEntropyException e) {
-            this.logger.error(this.getXWootPeerId() + " : Problems getting content for antiEntropy.\n", e);
-            throw new XWootException(this.getXWootPeerId() + " : Problems getting content for antiEntropy.\n", e);
+            this.logger.error(this.getXWootName() + " : Problems getting content for antiEntropy.\n", e);
+            throw new XWootException(this.getXWootName() + " : Problems getting content for antiEntropy.\n", e);
         }
         
         Message message = this.createMessage(content, Message.Action.ANTI_ENTROPY_REQUEST);
@@ -1488,8 +1487,8 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         try {
             content = this.antiEntropy.getMessageIdsForAskAntiEntropy();
         } catch (AntiEntropyException e) {
-            this.logger.error(this.getXWootPeerId() + " : Problems getting content for antiEntropy.\n", e);
-            throw new XWootException(this.getXWootPeerId() + " : Problems getting content for antiEntropy.\n", e);
+            this.logger.error(this.getXWootName() + " : Problems getting content for antiEntropy.\n", e);
+            throw new XWootException(this.getXWootName() + " : Problems getting content for antiEntropy.\n", e);
         }
         
         this.logger.debug(this.getXWootName() + " : New message -- content : log patches -- Action : " + Message.Action.ANTI_ENTROPY_REQUEST.toString());

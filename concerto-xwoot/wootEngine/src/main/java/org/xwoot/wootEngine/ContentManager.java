@@ -61,7 +61,7 @@ public class ContentManager extends LoggedWootExceptionThrower
      * @see WootEngine#getWorkingDir()
      * @see FileUtil#checkDirectoryPath(String)
      */
-    public ContentManager(int wootEngineId, String wootEngineWorkingDirPath) throws WootEngineException
+    public ContentManager(String wootEngineId, String wootEngineWorkingDirPath) throws WootEngineException
     {
         String newContentsDirPath = wootEngineWorkingDirPath + File.separator + CONTENTS_DIRECTORY_NAME;
 

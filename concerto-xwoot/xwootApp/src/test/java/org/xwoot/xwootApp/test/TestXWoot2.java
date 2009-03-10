@@ -647,7 +647,7 @@ public class TestXWoot2 extends AbstractXWootTest
         // add wootable content in patch
         Patch patch = new Patch();
         List<WootOp> vector = new ArrayList<WootOp>();
-        WootId wootId = new WootId(0, 0);
+        WootId wootId = new WootId(String.valueOf(0), 0);
         WootIns op0 = new WootIns(new WootRow(wootId, content2), WootId.FIRST_WOOT_ID, wootId.LAST_WOOT_ID);
         op0.setContentId(new ContentId(pageId, pageGuid, "content", false));
         op0.setOpId(wootId);
@@ -797,7 +797,7 @@ public class TestXWoot2 extends AbstractXWootTest
         // position
         Patch patch = new Patch();
         List<WootOp> vector = new ArrayList<WootOp>();
-        WootId wootId = new WootId(0, 0);
+        WootId wootId = new WootId(String.valueOf(0), 0);
         WootIns op0 = new WootIns(new WootRow(wootId, content3), WootId.FIRST_WOOT_ID, WootId.LAST_WOOT_ID);
         op0.setContentId(new ContentId(pageId, pageGuid, "content", false));
         op0.setOpId(wootId);

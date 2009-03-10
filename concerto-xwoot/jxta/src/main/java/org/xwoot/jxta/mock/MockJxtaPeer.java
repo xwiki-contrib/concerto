@@ -78,7 +78,7 @@ public class MockJxtaPeer implements Peer, RendezvousListener {
 
     protected PeerGroup rootGroup;
     protected PeerGroup currentJoinedGroup;
-    //protected NetworkManager manager;
+    
     protected Credential groupCredential;
     protected JxtaCastEventListener jxtaCastListener;
     protected DirectMessageReceiver directMessageReceiver;
@@ -519,6 +519,7 @@ public class MockJxtaPeer implements Peer, RendezvousListener {
 
 
     /** {@inheritDoc} **/
+    @SuppressWarnings("unchecked")
     public PeerGroup createNewGroup(String groupName, String description, char[] keystorePassword, char[] groupPassword) throws Exception {
         
         PeerGroup pg;               // new peer group
@@ -864,6 +865,7 @@ public class MockJxtaPeer implements Peer, RendezvousListener {
      * @throws PeerGroupException if problems occurred joining the group.
      * @throws ProtocolNotSupportedException if problems occur authenticating credentials.
      */
+    @SuppressWarnings("unchecked")
     protected boolean authenticateMembership(PeerGroup group, char[] keystorePassword, char[] identityPassword) throws PeerGroupException, ProtocolNotSupportedException {
     	// FIXME: make authentication based on the actual membershipService of the group, not by the provided passwords.
     	

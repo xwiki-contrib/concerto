@@ -127,7 +127,7 @@ public abstract class AbstractWootEngineTest
         FileUtil.checkDirectoryPath(engineWorkingDirectoryPath);
 
         Clock clock = new Clock(engineWorkingDirectoryPath);
-        WootEngine wootEngine = new WootEngine(id, engineWorkingDirectoryPath, clock);
+        WootEngine wootEngine = new WootEngine(String.valueOf(id), engineWorkingDirectoryPath, clock);
 
         return wootEngine;
     }

@@ -70,13 +70,7 @@ public class BootstrapNetwork extends HttpServlet
 {
     private static final long serialVersionUID = -3758874922535817475L;
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param request DOCUMENT ME!
-     * @param response DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
     public void service(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
     {
@@ -131,6 +125,10 @@ public class BootstrapNetwork extends HttpServlet
                     
                     String tcpPublicAddress = externalIp;
                     if (useExternalIpBoolean) {
+                        // disable dynamic ports because we use a fixed ip:port combination now.
+                        networkConfig.setTcpStartPort(-1);
+                        networkConfig.setTcpEndPort(-1);
+                        
                         if (!tcpPublicAddress.contains(":")) {
                             tcpPublicAddress += ":" + tcpPort;
                         }

@@ -16,10 +16,10 @@
           <div><label for="xwoot_working_dir">Datas serialization folder (Ex : c:\tmp\xwootDatas ou /home/toto/tmp/xwootDatas)</label></div>
           <input type="text" value="${xwoot_properties.xwoot_working_dir}" name="xwoot_working_dir" size="50" style="margin-left:20px;"/>
 
+<%--
           <div><label for="xwoot_site_id">XWoot unic ID -- Integer value (Ex : 19216801)</label></div>
           <input type="text" value="${xwoot_properties.xwoot_site_id}" name="xwoot_site_id" size="50" style="margin-left:20px;"/>
 
-<%-- 
           <div><label for="xwoot_server_url">XWoot application URL (Ex : http://my.local.dns.fr:8080/xwootApp)</label></div>
           <input type="text" value="${xwoot_properties.xwoot_server_url}" name="xwoot_server_url" size="50" style="margin-left:20px;"/>
 --%>

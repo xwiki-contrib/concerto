@@ -170,7 +170,6 @@ public class XWootSite
 
     /**
      * 
-     * @param siteId
      * @param siteName
      * @param workingDirPath
      * @param contentProviderXmlRpcUrl
@@ -187,7 +186,7 @@ public class XWootSite
      * @throws ThomasRuleEngineException
      * @throws XWootContentProviderException
      */
-    public void init(int siteId, String siteName, String workingDirPath, String contentProviderXmlRpcUrl, String contentProviderLogin, String contentProviderPassword, String contenProviderPropertiesFilePath) throws RuntimeException, ClockException, WikiContentManagerException, WootEngineException, JxtaException, AntiEntropyException, XWootException, ThomasRuleEngineException, XWootContentProviderException
+    public void init(String siteName, String workingDirPath, String contentProviderXmlRpcUrl, String contentProviderLogin, String contentProviderPassword, String contenProviderPropertiesFilePath) throws RuntimeException, ClockException, WikiContentManagerException, WootEngineException, JxtaException, AntiEntropyException, XWootException, ThomasRuleEngineException, XWootContentProviderException
     {
         // Module directories.
         File jxtaDir = new File(workingDirPath, JXTA_DIR_NAME);
@@ -222,20 +221,21 @@ public class XWootSite
         // FIXME: Use a properties file or something similar to store the current group, it's password, the keystore password in order to automatically start communicating after a reboot.
         // FIXME: This behavior opens a possible security hole. The group's password is no longer protected by the keystore. Find a solution.
         peer.configureNetwork(siteName, jxtaDir, ConfigMode.EDGE);
+        String peerName = peer.getMyPeerName();
+        String peerId = peer.getMyPeerID().getUniqueValue().toString();
         
         //TODO better properties management 
         Properties contentProviderProperties=this.getProperties(contenProviderPropertiesFilePath);
         System.out.println(contentProviderProperties);
         
-        String peerName = peer.getManager().getInstanceName();
         String dbLocation = new File(contentProviderDir, peerName).toString();
         XWootContentProviderInterface xwiki = XWootContentProviderFactory.getXWootContentProvider(contentProviderXmlRpcUrl, dbLocation, true, contentProviderProperties);
         //WikiContentManager wiki = WikiContentManagerFactory.getSwizzleFactory().createWCM(url, login, pwd);
         
         // FIXME: use peerId for wootEngine and for TreEngine as well.
-        WootEngine wootEngine = new WootEngine(siteId, wootEngineDir.toString(), wootEngineClock);
+        WootEngine wootEngine = new WootEngine(peerId, wootEngineDir.toString(), wootEngineClock);
 
-        ThomasRuleEngine tre = new ThomasRuleEngine(siteId, treDir.toString());
+        ThomasRuleEngine tre = new ThomasRuleEngine(peerId, treDir.toString());
         
         this.XWootEngine =
             new XWoot3(xwiki, wootEngine, peer, xwootDir.toString(), tre, ae);

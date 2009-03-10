@@ -111,7 +111,6 @@ public class BootstrapGroup extends HttpServlet
             String groupPassword = request.getParameter("createGroupPassword");
             String groupPasswordRetyped = request.getParameter("createGroupPasswordRetyped");
             String keystorePassword = request.getParameter("createKeystorePassword");
-            //String beRendezVous = request.getParameter("beRendezVous");
             
             try {
                 boolean privateGroupBoolean = Boolean.parseBoolean(privateGroup);
@@ -135,6 +134,7 @@ public class BootstrapGroup extends HttpServlet
             //
             String groupPassword = request.getParameter("joinGroupPassword");
             String keystorePassword = request.getParameter("joinGroupKeystorePassword");
+            String beRendezVousString = request.getParameter("beRendezVous");
             
             String groupID = request.getParameter("groupID");
             if (groupID == null || groupID.length() == 0) {
@@ -149,7 +149,10 @@ public class BootstrapGroup extends HttpServlet
                             this.log("Joining group described by this adv:\n" + aGroupAdv);
                             this.log("Using group password: " + groupPassword + " (" + Arrays.toString(groupPassword.toCharArray()) + ")");
                             this.log("Using keystore password: " + keystorePassword + " (" + Arrays.toString(keystorePassword.toCharArray()) + ")");
-                            ((XWoot3) xwootEngine).joinGroup(aGroupAdv, keystorePassword.toCharArray(), groupPassword.toCharArray());
+                            
+                            Boolean beRendezVous = Boolean.parseBoolean(beRendezVousString);
+                            
+                            ((XWoot3) xwootEngine).joinGroup(aGroupAdv, keystorePassword.toCharArray(), groupPassword.toCharArray(), beRendezVous);
                             found = true;
                             break;
                         }

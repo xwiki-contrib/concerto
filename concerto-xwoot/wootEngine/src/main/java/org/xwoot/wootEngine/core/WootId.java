@@ -55,16 +55,16 @@ import java.io.Serializable;
 public class WootId implements Comparable, Serializable, Cloneable
 {
     /** Id of beginning of content. */
-    public static final WootId FIRST_WOOT_ID = new WootId(-1, -1);
+    public static final WootId FIRST_WOOT_ID = new WootId(String.valueOf(-1), -1);
 
     /** Id of end char. */
-    public static final WootId LAST_WOOT_ID = new WootId(-2, -2);
+    public static final WootId LAST_WOOT_ID = new WootId(String.valueOf(-2), -2);
 
     /** Unique ID used for serialization. */
     private static final long serialVersionUID = -471886787872933727L;
 
     /** ID of the P2P Node on which it was created. (of the WootEngine) */
-    private int siteId;
+    private String siteId;
 
     /** Stores the value of the clock when it was created. */
     private int localClock;
@@ -75,7 +75,7 @@ public class WootId implements Comparable, Serializable, Cloneable
      * @param siteId the id of the WootEngine that created it.
      * @param localClock the value of the clock when it was created.
      */
-    public WootId(int siteId, int localClock)
+    public WootId(String siteId, int localClock)
     {
         this.siteId = siteId;
         this.localClock = localClock;
@@ -98,7 +98,7 @@ public class WootId implements Comparable, Serializable, Cloneable
             return this.localClock - id.localClock;
         }
 
-        return this.siteId - id.siteId;
+        return this.siteId.compareTo(id.siteId);
     }
 
     /** {@inheritDoc} */
@@ -115,7 +115,7 @@ public class WootId implements Comparable, Serializable, Cloneable
 
         WootId other = (WootId) obj;
 
-        return (this.siteId == other.siteId) && (this.localClock == other.localClock);
+        return (this.siteId.equals(other.siteId)) && (this.localClock == other.localClock);
     }
 
     /**
@@ -138,7 +138,7 @@ public class WootId implements Comparable, Serializable, Cloneable
     /**
      * @return the ID of the P2P Node on which it was created. (of the WootEngine)
      */
-    public int getSiteid()
+    public String getSiteid()
     {
         return this.siteId;
     }
@@ -147,7 +147,7 @@ public class WootId implements Comparable, Serializable, Cloneable
      * @param siteId the siteId to set.
      * @see #getSiteid()
      */
-    public void setSiteId(int siteId)
+    public void setSiteId(String siteId)
     {
         this.siteId = siteId;
     }
@@ -164,7 +164,7 @@ public class WootId implements Comparable, Serializable, Cloneable
     public int hashCode()
     {
         int hash = 7;
-        hash = 31 * hash + this.siteId;
+        hash = 31 * hash + this.siteId.hashCode();
         hash = 31 * hash + this.localClock;
         return hash;
     }

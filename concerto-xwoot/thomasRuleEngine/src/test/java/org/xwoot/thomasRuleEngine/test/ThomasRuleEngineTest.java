@@ -75,10 +75,10 @@ public class ThomasRuleEngineTest
     private static final String WORKING_DIR_PATH = FileUtil.getTestsWorkingDirectoryPathForModule("thomasRuleEngine");
 
     /** Test treId. */
-    private int treId1 = 1;
+    private String treId1 = String.valueOf(1);
 
     /** Test treId. */
-    private int treId2 = 2;
+    private String treId2 = String.valueOf(2);
 
     /** Test instance. */
     private ThomasRuleEngine tre1;

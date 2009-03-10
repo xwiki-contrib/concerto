@@ -219,11 +219,11 @@ public abstract class AbstractXWootTest
         //FIXME: use peerID.
         // 3 wootEngines
         this.wootEngine1 =
-            new WootEngine(1, new File(this.xwoot1Directory, "wootEngine").toString(), this.opClock1);
+            new WootEngine(String.valueOf(1), new File(this.xwoot1Directory, "wootEngine").toString(), this.opClock1);
         this.wootEngine2 =
-            new WootEngine(2, new File(this.xwoot2Directory, "wootEngine").toString(), this.opClock2);
+            new WootEngine(String.valueOf(2), new File(this.xwoot2Directory, "wootEngine").toString(), this.opClock2);
         this.wootEngine3 =
-            new WootEngine(3, new File(this.xwoot3Directory, "wootEngine").toString(), this.opClock3);
+            new WootEngine(String.valueOf(3), new File(this.xwoot3Directory, "wootEngine").toString(), this.opClock3);
 
         // 3 sender for 3 xwoot
         this.lpbCast1 =
@@ -246,9 +246,9 @@ public abstract class AbstractXWootTest
 
         // FIXME: use peerID
         // 3 tre
-        this.tre1 = new ThomasRuleEngine(1, WORKINGDIR + File.separator + "Site1" + File.separator + "tre");
-        this.tre2 = new ThomasRuleEngine(2, WORKINGDIR + File.separator + "Site2" + File.separator + "tre");
-        this.tre3 = new ThomasRuleEngine(2, WORKINGDIR + File.separator + "Site3" + File.separator + "tre");
+        this.tre1 = new ThomasRuleEngine(String.valueOf(1), WORKINGDIR + File.separator + "Site1" + File.separator + "tre");
+        this.tre2 = new ThomasRuleEngine(String.valueOf(2), WORKINGDIR + File.separator + "Site2" + File.separator + "tre");
+        this.tre3 = new ThomasRuleEngine(String.valueOf(3), WORKINGDIR + File.separator + "Site3" + File.separator + "tre");
 
         // 3 xwoot
 

@@ -100,7 +100,7 @@ public class WootEngine extends LoggedWootExceptionThrower
      * @param opClock {@link Clock} engine component instance.
      * @throws WootEngineException if problems related to directory access occur.
      */
-    public WootEngine(int siteId, String workingDir, Clock opClock) throws WootEngineException
+    public WootEngine(String siteId, String workingDir, Clock opClock) throws WootEngineException
     {
         this.wootEngineId = siteId;
         this.logger = LogFactory.getLog(this.getClass());

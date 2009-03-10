@@ -30,7 +30,7 @@ import org.apache.commons.logging.Log;
 public class LoggedWootExceptionThrower
 {
     /** Unique ID for the WootEngine. */
-    protected int wootEngineId;
+    protected String wootEngineId;
 
     /** Object for logging and debugging events. */
     protected Log logger;
@@ -63,7 +63,7 @@ public class LoggedWootExceptionThrower
     /**
      * @return the wootEngineId of the WootEngine object. Primarily used for logging.
      */
-    public int getWootEngineId()
+    public String getWootEngineId()
     {
         return this.wootEngineId;
     }
@@ -71,7 +71,7 @@ public class LoggedWootExceptionThrower
     /**
      * @param wootEngineId the wootEngineId to set
      */
-    public void setWootEngineId(int wootEngineId)
+    public void setWootEngineId(String wootEngineId)
     {
         this.wootEngineId = wootEngineId;
     }

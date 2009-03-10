@@ -81,7 +81,7 @@ public class ThomasRuleEngine
     public static final String STATE_FILE_EXTENSION = ".zip";
 
     /** @see #getThomasRuleEngineId() */
-    private int thomasRuleEngineId;
+    private String thomasRuleEngineId;
 
     /** The associated EntriesList for managing entries. */
     private EntriesList entriesList;
@@ -96,7 +96,7 @@ public class ThomasRuleEngine
      * @param workingDir working directory where to store the entries.
      * @throws ThomasRuleEngineException if the workingDir is not usable.
      */
-    public ThomasRuleEngine(int thomasRuleEngineId, String workingDir) throws ThomasRuleEngineException
+    public ThomasRuleEngine(String thomasRuleEngineId, String workingDir) throws ThomasRuleEngineException
     {
         this.thomasRuleEngineId = thomasRuleEngineId;
 
@@ -237,7 +237,7 @@ public class ThomasRuleEngine
     /**
      * @return the siteId of the owning node.
      */
-    public int getThomasRuleEngineId()
+    public String getThomasRuleEngineId()
     {
         return this.thomasRuleEngineId;
     }
@@ -246,7 +246,7 @@ public class ThomasRuleEngine
      * @param thomasRuleEngineId the thomasRuleEngineId to set.
      * @see #getThomasRuleEngineId()
      */
-    public void setThomasRuleEngineId(int thomasRuleEngineId)
+    public void setThomasRuleEngineId(String thomasRuleEngineId)
     {
         this.thomasRuleEngineId = thomasRuleEngineId;
     }
