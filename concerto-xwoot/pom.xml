@@ -244,8 +244,6 @@
   <modules>
     <!-- Module of the XWoot web application -->
     <module>xwootApp</module>
-    <!-- to use a wiki application like a content server -->
-    <module>wikiContentManager</module>
     <!-- to synchronize meta data -->
     <module>thomasRuleEngine</module>
     <!-- to make anti-entropy between two network nodes -->

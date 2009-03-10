@@ -57,10 +57,7 @@ import org.xwoot.jxta.Peer;
 import org.xwoot.jxta.PeerFactory;
 import org.xwoot.lpbcast.sender.LpbCastAPI;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngine;
-import org.xwoot.wikiContentManager.WikiContentManager;
-import org.xwoot.wikiContentManager.WikiContentManagerFactory;
 import org.xwoot.wootEngine.WootEngine;
-import org.xwoot.xwootApp.XWoot;
 import org.xwoot.xwootApp.XWoot2;
 import org.xwoot.xwootApp.XWoot3;
 import org.xwoot.xwootUtil.FileUtil;
@@ -82,12 +79,6 @@ public abstract class AbstractXWootTest
     protected int logDelay = 60;
 
     protected int maxNeighbors = 5;
-
-    WikiContentManager xwiki1;
-
-    WikiContentManager xwiki2;
-
-    WikiContentManager xwiki3;
     
     XWootContentProviderInterface xwiki21;
     XWootContentProviderInterface xwiki22;
@@ -110,12 +101,6 @@ public abstract class AbstractXWootTest
     LpbCastAPI lpbCast2;
 
     LpbCastAPI lpbCast3;
-
-    XWoot xwoot1;
-
-    XWoot xwoot2;
-
-    XWoot xwoot3;
 
     XWoot2 xwoot21;
 
@@ -174,21 +159,6 @@ public abstract class AbstractXWootTest
         FileUtil.checkDirectoryPath(xwoot1Directory);
         FileUtil.checkDirectoryPath(xwoot2Directory);
         FileUtil.checkDirectoryPath(xwoot3Directory);
-        
-        //        
-        // this.xwiki1 =
-        // WikiContentManagerFactory.getSwizzleFactory().createWCM(
-        // this.propertiesFile1);
-        // this.xwiki2 =
-        // WikiContentManagerFactory.getSwizzleFactory().createWCM(
-        // this.propertiesFile2);
-        // this.xwiki3 =
-        // WikiContentManagerFactory.getSwizzleFactory().createWCM(
-        // this.propertiesFile3);
-        //        
-        this.xwiki1 = WikiContentManagerFactory.getMockFactory().createWCM();
-        this.xwiki2 = WikiContentManagerFactory.getMockFactory().createWCM();
-        this.xwiki3 = WikiContentManagerFactory.getMockFactory().createWCM();
         
         // Choose one:
         
@@ -251,17 +221,6 @@ public abstract class AbstractXWootTest
         this.tre3 = new ThomasRuleEngine(String.valueOf(3), WORKINGDIR + File.separator + "Site3" + File.separator + "tre");
 
         // 3 xwoot
-
-        this.xwoot1 =
-            new XWoot(this.xwiki1, this.wootEngine1, this.lpbCast1, WORKINGDIR + File.separator + "Site1", "Site1",
-                new Integer(1), this.tre1, this.ae1);
-        this.xwoot2 =
-            new XWoot(this.xwiki2, this.wootEngine2, this.lpbCast2, WORKINGDIR + File.separator + "Site2", "Site2",
-                new Integer(2), this.tre2, this.ae2);
-        this.xwoot3 =
-            new XWoot(this.xwiki3, this.wootEngine3, this.lpbCast3, WORKINGDIR + File.separator + "Site3", "Site3",
-                new Integer(3), this.tre3, this.ae3);
-        this.cleanXWikis();
         
         this.xwoot21 =
             new XWoot2(this.xwiki21, this.wootEngine1, this.lpbCast1, WORKINGDIR + File.separator + "Site1", "Site1",
@@ -292,15 +251,5 @@ public abstract class AbstractXWootTest
     public static void cleanDirectory() throws Exception
     {
         FileUtil.deleteDirectory(WORKINGDIR);
-    }
-
-    protected void cleanXWikis() throws Exception
-    {
-        this.xwiki1.removePage("test.1");
-        this.xwiki1.removePage("test.2");
-        this.xwiki2.removePage("test.1");
-        this.xwiki2.removePage("test.2");
-        this.xwiki3.removePage("test.1");
-        this.xwiki3.removePage("test.2");
     }
 }

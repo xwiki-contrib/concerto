@@ -44,11 +44,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.xwoot</groupId>
-			<artifactId>wikiContentManager</artifactId>
-			<version>${pom.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.xwoot</groupId>
 			<artifactId>xwootUtil</artifactId>
 			<version>${pom.version}</version>
 		</dependency>

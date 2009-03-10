@@ -62,8 +62,6 @@ import org.xwoot.jxta.PeerFactory;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngine;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngineException;
 
-import org.xwoot.wikiContentManager.WikiContentManagerException;
-
 import org.xwoot.wootEngine.WootEngine;
 import org.xwoot.wootEngine.WootEngineException;
 
@@ -186,7 +184,7 @@ public class XWootSite
      * @throws ThomasRuleEngineException
      * @throws XWootContentProviderException
      */
-    public void init(String siteName, String workingDirPath, String contentProviderXmlRpcUrl, String contentProviderLogin, String contentProviderPassword, String contenProviderPropertiesFilePath) throws RuntimeException, ClockException, WikiContentManagerException, WootEngineException, JxtaException, AntiEntropyException, XWootException, ThomasRuleEngineException, XWootContentProviderException
+    public void init(String siteName, String workingDirPath, String contentProviderXmlRpcUrl, String contentProviderLogin, String contentProviderPassword, String contenProviderPropertiesFilePath) throws RuntimeException, ClockException, WootEngineException, JxtaException, AntiEntropyException, XWootException, ThomasRuleEngineException, XWootContentProviderException
     {
         // Module directories.
         File jxtaDir = new File(workingDirPath, JXTA_DIR_NAME);
