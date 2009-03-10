@@ -74,7 +74,7 @@ public class StateManagement extends HttpServlet
 {
     private enum StateAction
     {
-        UPLOAD, CREATE, RETRIEVE
+        UPLOAD, CREATE, RETRIEVE, REIMPORT_EXISTING
     }
 
     private File temp;
@@ -116,9 +116,10 @@ public class StateManagement extends HttpServlet
                 // Try to import it and replace the current internal model (if any).
                 try {
                     xwootEngine.importState(xwootEngine.getState());
+                    action = StateAction.REIMPORT_EXISTING;
                 } catch (Exception e) {
+                    exceptionMessage = e.getMessage();
                     this.log("Failed to import the existing state for this group.", e);
-                    currentState = "Failed to import the existing state for this group. Please get the group's state again." + " (Details: " + e.getMessage() + ")";
                 }
             }
         }
@@ -183,6 +184,8 @@ public class StateManagement extends HttpServlet
                 case RETRIEVE:
                     currentState = "Problem with state: can't import the state from the given peer." + "\n(Details: "+exceptionMessage+")";;
                     break;
+                case REIMPORT_EXISTING:
+                    currentState = "Failed to import the existing state for this group. Please get the group's state again." + " (Details: " + exceptionMessage + ")";
                 default:
                     // First request, there's no error yet
                     break;

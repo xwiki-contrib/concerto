@@ -53,9 +53,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.jxta.document.AdvertisementFactory;
 import net.jxta.protocol.PipeAdvertisement;
 
 import org.apache.commons.lang.StringUtils;
+import org.xwoot.jxta.JxtaPeer;
 import org.xwoot.xwootApp.XWoot3;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.web.XWootSite;
@@ -254,6 +256,12 @@ public class Synchronize extends HttpServlet
                     // skip out pipe adv.
                     continue;
                 }
+                
+                // send to the UI a lighter, copy version having a human-readable name.
+                PipeAdvertisement original = n;
+                n = (PipeAdvertisement) AdvertisementFactory.newAdvertisement(PipeAdvertisement.getAdvertisementType());
+                n.setPipeID(original.getPipeID());
+                n.setName(JxtaPeer.getPeerIdFromBackChannelPipeName(original.getName()));
                 
                 if (!XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork()) {
                     this.log(n + " Site " + n + " is not connected because we are disconnected.");
