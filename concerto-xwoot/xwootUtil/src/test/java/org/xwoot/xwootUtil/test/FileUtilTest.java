@@ -67,6 +67,9 @@ import junit.framework.Assert;
  */
 public class FileUtilTest extends AbstractXwootUtilTestBase
 {
+    /** New line char. */
+    public static final String NEW_LINE = System.getProperty("line.separator");
+
     /** Test file name. */
     private static final String FILE_NAME = "tempFile";
 
@@ -75,6 +78,12 @@ public class FileUtilTest extends AbstractXwootUtilTestBase
 
     /** Content to use for tests as source. */
     private static final String SOURCE_CONTENT = "first line\nsecond line\nthird line\n";
+
+    /** Name of source file. */
+    private static final String SOURCE_FILE_NAME = "source";
+
+    /** Name of destination file. */
+    private static final String DESTINATION_FILE_NAME = "destination";
 
     /** Test string containing characters with accents. */
     // private static final String ACCENTUATED_STRING
@@ -141,8 +150,8 @@ public class FileUtilTest extends AbstractXwootUtilTestBase
     @Test
     public void testCopyFile() throws Exception
     {
-        String sourceFileName = "source";
-        String destinationFileName = "destination";
+        String sourceFileName = SOURCE_FILE_NAME;
+        String destinationFileName = DESTINATION_FILE_NAME;
 
         File sourceFile = new File(this.workingDir, sourceFileName);
         File destinationFile = new File(this.workingDir, destinationFileName);
@@ -159,7 +168,7 @@ public class FileUtilTest extends AbstractXwootUtilTestBase
         String destinationFileContent = "";
         String line = null;
         while ((line = br.readLine()) != null) {
-            destinationFileContent = destinationFileContent + line + "\n";
+            destinationFileContent += line + NEW_LINE;
         }
 
         Assert.assertEquals(SOURCE_CONTENT, destinationFileContent);
@@ -286,6 +295,9 @@ public class FileUtilTest extends AbstractXwootUtilTestBase
 
         // check if the zip was propperly deflated in the output directory.
         Assert.assertEquals(numberOfFiles, directoryToUnzipTo.list().length);
+        
+        // clear the temp zip file.
+        zippedFile.delete();
     }
 
     /**
@@ -314,7 +326,7 @@ public class FileUtilTest extends AbstractXwootUtilTestBase
         // set write permission on root dir to false;
         File testDirRoot = new File(this.workingDir);
         testDirRoot.setReadOnly();
-        
+
         // Check if the test is run by a normal user. If it is run by a power user, skip this part.
         if (!testDirRoot.canWrite()) {
             IOException mustHappen = null;
@@ -323,7 +335,7 @@ public class FileUtilTest extends AbstractXwootUtilTestBase
             } catch (IOException e) {
                 mustHappen = e;
             }
-    
+
             // if all went well, the dir must have not been able to be created and an exception should have been thrown.
             Assert.assertFalse(mustHappen == null && testDir.exists());
         }
@@ -333,7 +345,7 @@ public class FileUtilTest extends AbstractXwootUtilTestBase
         testDirRoot = new File(this.workingDir);
         testDir.mkdirs();
         testDir.setReadOnly();
-        
+
         // Check if the test is run by a normal user. If it is run by a power user, skip this part.
         if (!testDir.canWrite()) {
             // check the direcotry and throw an exception because it is exists but it's not usable.
@@ -358,5 +370,39 @@ public class FileUtilTest extends AbstractXwootUtilTestBase
             fileInsteadOfDirectory = e;
         }
         Assert.assertNotNull(fileInsteadOfDirectory);
+    }
+
+    /**
+     * Test copying a file from a location to another.
+     * <p>
+     * Result: The two files will be identical.
+     * 
+     * @throws Exception if problems occur.
+     */
+    @Test
+    public void testMoveFile() throws Exception
+    {
+        String sourceFileName = SOURCE_FILE_NAME;
+        String destinationFileName = DESTINATION_FILE_NAME;
+
+        File sourceFile = new File(this.workingDir, sourceFileName);
+        File destinationFile = new File(this.workingDir, destinationFileName);
+
+        FileOutputStream fos = new FileOutputStream(sourceFile);
+
+        fos.write(SOURCE_CONTENT.getBytes());
+        fos.close();
+
+        FileUtil.moveFile(sourceFile, destinationFile);
+
+        BufferedReader br = new BufferedReader(new FileReader(destinationFile));
+
+        String destinationFileContent = "";
+        String line = null;
+        while ((line = br.readLine()) != null) {
+            destinationFileContent += line + NEW_LINE;
+        }
+
+        Assert.assertEquals(SOURCE_CONTENT, destinationFileContent);
     }
 }

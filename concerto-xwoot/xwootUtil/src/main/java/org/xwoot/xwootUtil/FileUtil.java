@@ -48,6 +48,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -83,6 +84,9 @@ public final class FileUtil
     /** Directory name where to store tests data. */
     public static final String TESTS_DIRECTORY_NAME = "xwootTests";
 
+    /** Commonly used separator. */
+    public static final String COMMA_SPACE_SEPARATOR = ", ";
+
     /** Disable utility class instantiation. */
     private FileUtil()
     {
@@ -91,18 +95,24 @@ public final class FileUtil
 
     /**
      * Copy a file from one location to another.
+     * <p>
+     * If the destination file exists, it will be overridden.
      * 
-     * @param sourceFilePath the location of the file to copy from.
-     * @param destinationFilePath the location of the file to copy to.
+     * @param sourceFile the file to copy from.
+     * @param destinationFile the file to copy to.
      * @throws IOException if the sourceFilePath is not found or other IO problems occur.
      */
-    public static void copyFile(String sourceFilePath, String destinationFilePath) throws IOException
+    public static void copyFile(File sourceFile, File destinationFile) throws IOException
     {
+        // check destination.
+        FileUtil.checkDirectoryPath(destinationFile.getParentFile());
+
+        // do the actual copy
         FileChannel sourceChannel = null;
         FileChannel destinationChannel = null;
         try {
-            sourceChannel = new FileInputStream(sourceFilePath).getChannel();
-            destinationChannel = new FileOutputStream(destinationFilePath).getChannel();
+            sourceChannel = new FileInputStream(sourceFile).getChannel();
+            destinationChannel = new FileOutputStream(destinationFile).getChannel();
 
             sourceChannel.transferTo(0, sourceChannel.size(), destinationChannel);
         } catch (IOException e) {
@@ -119,6 +129,19 @@ public final class FileUtil
                 throw e;
             }
         }
+    }
+
+    /**
+     * Convenience method to copy a file from one location to another.
+     * 
+     * @param sourceFilePath the location of the file to copy from.
+     * @param destinationFilePath the location of the file to copy to.
+     * @throws IOException if the sourceFilePath is not found or other IO problems occur.
+     * @see #copyFile(File, File)
+     */
+    public static void copyFile(String sourceFilePath, String destinationFilePath) throws IOException
+    {
+        FileUtil.copyFile(new File(sourceFilePath), new File(destinationFilePath));
     }
 
     /**
@@ -204,6 +227,78 @@ public final class FileUtil
         }
 
         deleteDirectory(new File(directoryPath));
+    }
+
+    /**
+     * Move one file from a location to another. Can also be used to rename files.
+     * <p>
+     * The behavior is that renaming the file is first tried. If that fails, the file will be copied to the destination
+     * and the source will be deleted.
+     * 
+     * @param sourceFile the file to move.
+     * @param destinationFile the file to move to.
+     * @return a new {@link File} instance pointing to the new location.
+     * @throws IOException if the destination file's parent directory is not usable. A {@link FileNotFoundException} is
+     *             thrown if the source file does not exist.
+     * @throws IllegalArgumentException if at least one of the source or the destination file is a directory.
+     * @throws NullPointerException if one of the parameters are null.
+     * @see #checkDirectoryPath(File)
+     */
+    public static File moveFile(File sourceFile, File destinationFile) throws IOException, IllegalArgumentException,
+        NullPointerException
+    {
+        if (sourceFile == null || destinationFile == null) {
+            throw new NullPointerException("Null values were provided: " + sourceFile + COMMA_SPACE_SEPARATOR
+                + destinationFile);
+        }
+
+        if (sourceFile.isDirectory() || destinationFile.isDirectory()) {
+            throw new IllegalArgumentException(
+                "Both the source and the destination need to point to files and not directories. (" + sourceFile
+                    + COMMA_SPACE_SEPARATOR + destinationFile + ")");
+        }
+
+        if (!sourceFile.exists()) {
+            throw new FileNotFoundException("Source file does not exist: " + sourceFile);
+        }
+
+        File result = null;
+
+        FileUtil.checkDirectoryPath(destinationFile.getParent());
+
+        if (!sourceFile.renameTo(destinationFile)) {
+            FileUtil.copyFile(sourceFile, destinationFile);
+
+            sourceFile.delete();
+        }
+
+        result = new File(destinationFile.getPath());
+
+        return result;
+    }
+
+    /**
+     * Convenience method to move/rename a file.
+     * 
+     * @param sourceFilePath the location of the file to move.
+     * @param destinationFilePath the location of the file to move to.
+     * @return a new {@link File} instance pointing to the new location.
+     * @throws IOException if the destination file's parent directory is not usable. A {@link FileNotFoundException} is
+     *             thrown if the source file does not exist.
+     * @throws IllegalArgumentException if at least one of the source or the destination file is a directory.
+     * @throws NullPointerException if one of the parameters are null.
+     * @see #checkDirectoryPath(File)
+     * @see #moveFile(File, File)
+     */
+    public static File moveFile(String sourceFilePath, String destinationFilePath) throws IOException,
+        IllegalArgumentException, NullPointerException
+    {
+        if (sourceFilePath == null || destinationFilePath == null) {
+            throw new NullPointerException("Null values provided: " + sourceFilePath + COMMA_SPACE_SEPARATOR
+                + destinationFilePath);
+        }
+
+        return FileUtil.moveFile(new File(sourceFilePath), new File(destinationFilePath));
     }
 
     /**
@@ -439,6 +534,10 @@ public final class FileUtil
      */
     public static List<String> unzipInDirectory(String zippedFilePath, String destinationDirPath) throws IOException
     {
+        if (!new File(zippedFilePath).exists()) {
+            throw new FileNotFoundException(zippedFilePath + " does not exist.");
+        }
+
         FileUtil.checkDirectoryPath(destinationDirPath);
 
         return FileUtil.unzipInDirectory(new ZipFile(zippedFilePath), destinationDirPath);
@@ -537,7 +636,7 @@ public final class FileUtil
             throw new IOException(directoryPath + " -- isn't writable");
         }
     }
-    
+
     /**
      * Convenience method.
      * 
@@ -553,7 +652,7 @@ public final class FileUtil
         if (directory == null) {
             throw new NullPointerException("The provided directory is null.");
         }
-        
+
         FileUtil.checkDirectoryPath(directory.toString());
     }
 

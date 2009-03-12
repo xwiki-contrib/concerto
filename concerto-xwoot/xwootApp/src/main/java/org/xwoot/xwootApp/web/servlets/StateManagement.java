@@ -138,15 +138,24 @@ public class StateManagement extends HttpServlet
             if (action == StateAction.UPLOAD) {
                 this.log("Want to upload state file... ");
                 if (requestParameters.containsKey("statefile")) {
-                    this.temp = File.createTempFile("state", ".zip");
-                    if (this.upload(requestParameters.get("statefile"))) {
+                    this.temp = File.createTempFile("uploadedState", ".zip");
+                    FileItem fileToUpload = requestParameters.get("statefile");
+                    
+                    if (!((XWoot3)xwootEngine).isGroupCreator() && 
+                        !fileToUpload.getName().equals(((XWoot3)xwootEngine).getStateFileName())) {
+                        exceptionMessage = "A state for a different group was provided. Please upload the state of this group if you already have it or ask a new one instead.";
+                    } else if (this.upload(fileToUpload)) {
                         uploadSuccessful = true;
                         try {
                             XWootSite.getInstance().getXWootEngine().importState(this.temp);
                         } catch (Exception e) {
-                            throw new ServletException(e);
+                            exceptionMessage = e.getMessage();
+                            this.log("Problems with the uloaded state.", e);
                         }
                     }
+                    
+                    // remove the temporary uploaded file because it was copied to the right place by importState
+                    this.temp.delete();
                 }
             } else if (action == StateAction.RETRIEVE) {
                 this.getServletContext().log("Retrieving state from group.");
@@ -175,7 +184,7 @@ public class StateManagement extends HttpServlet
                     if (uploadSuccessful) {
                         currentState = "Problem with state: can't import selected file." + "\n(Details: "+exceptionMessage+")";
                     } else {
-                        currentState = "Problem with state: please select a state file to upload.";
+                        currentState = "Problem with state: please select a state file to upload." + (exceptionMessage != null ? "\n(Details: "+exceptionMessage+")" : "");
                     }
                     break;
                 case CREATE:

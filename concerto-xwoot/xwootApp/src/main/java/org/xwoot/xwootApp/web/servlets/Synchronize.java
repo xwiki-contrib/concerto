@@ -261,7 +261,8 @@ public class Synchronize extends HttpServlet
                 PipeAdvertisement original = n;
                 n = (PipeAdvertisement) AdvertisementFactory.newAdvertisement(PipeAdvertisement.getAdvertisementType());
                 n.setPipeID(original.getPipeID());
-                n.setName(JxtaPeer.getPeerIdFromBackChannelPipeName(original.getName()));
+                n.setName(JxtaPeer.getPeerNameFromBackChannelPipeName(original.getName()));
+                n.setType(original.getType());
                 
                 if (!XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork()) {
                     this.log(n + " Site " + n + " is not connected because we are disconnected.");

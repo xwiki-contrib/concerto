@@ -69,7 +69,7 @@ import java.io.IOException;
 public class WootEngine extends LoggedWootExceptionThrower
 {
     /** The name of the output file containing the zipped state. */
-    public static final String STATE_FILE_NAME = "woot.zip";
+    public static final String STATE_FILE_NAME = "wootState.zip";
     
     /** The name prefix of the output file containing the zipped state. */
     public static final String STATE_FILE_NAME_PREFIX = "wootState";

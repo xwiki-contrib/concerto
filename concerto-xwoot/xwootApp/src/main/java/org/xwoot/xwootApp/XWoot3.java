@@ -1117,6 +1117,8 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             throw new XWootException("Invalid state file. Set state aborted.", e);
         }
         
+        File wootState = null;
+        File treState = null;
         try{
             FileUtil.unzipInDirectory(state, this.stateDirPath);
             /*File[] states = new File[2];
@@ -1138,9 +1140,14 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
                     states[j] = new File(this.stateDirPath + File.separatorChar + l[i]);
             }*/
             
-            File wootState = new File(this.stateDirPath, this.getWootEngineStateFileName());
-            File treState = new File(this.stateDirPath, this.getTreStateFileName());
+            wootState = new File(this.stateDirPath, this.getWootEngineStateFileName());
+            treState = new File(this.stateDirPath, this.getTreStateFileName());
+            
+            if (!wootState.exists() || !treState.exists()) {
+                throw new WootEngineException("Expected " + wootState + " and " + treState + " files were not found after unpacking an xwoot state.");
+            }
 
+            // FIXME: delete all previously existing pages
             this.getWootEngine().setState(wootState);
 
             ZipFile mDState = new ZipFile(treState);
@@ -1152,11 +1159,11 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
              */
             FileUtil.unzipInDirectory(mDState, mDFile.getAbsolutePath());
 
-            if (!this.isStateComputed()) {
-                // FIXME: is this still required? (fix if yes)
-                File temp = new File(this.stateDirPath + File.separatorChar + STATEFILENAME);
+            /*if (!this.isStateComputed()) {
+                // FIXME: is this still required? (fix by doing a proper move if yes)
+                File temp = new File(this.getStateFilePath());
                 newState.renameTo(temp);
-            }
+            }*/
 
             return;
         } catch (WootEngineException e) {
@@ -1165,6 +1172,14 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         } catch (Exception e) {
             this.logger.error(this.getXWootName() + " : Problems setting the XWoot state \n", e);
             throw new XWootException(this.getXWootName() + " : Problems setting the XWoot state \n", e);
+        } finally {
+            // delete unzipped states.
+            if (wootState != null && wootState.exists()) {
+                wootState.delete();
+            }
+            if (treState != null && treState.exists()) {
+                treState.delete();
+            }
         }
     }
 
@@ -1217,21 +1232,13 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         }
         
         if (wootState!=null && wootState.exists()){
-            File copy0 = new File(this.stateDirPath + File.separatorChar + this.getWootEngineStateFileName());
-            
-            if (!wootState.renameTo(copy0)) {
-                this.logger.warn(this.getXWootName() + " : Failed to move the temporary woot state file to the working dir by using File.renameTo. Using fallback.");
-                
-                try {
-                    FileUtil.copyFile(wootState.getPath(), copy0.getPath());
-                } catch (Exception e) {
-                    this.logger.error(this.getXWootName() + " : Failed to replace new state file with old one. State creation process failed.\n", e);
-                    throw new XWootException(this.getXWootName() + " : Failed to replace new state file with old one. State creation process failed.\n", e);
-                }
-                
-                wootState.delete();
+            File copy0 = new File(this.stateDirPath, this.getWootEngineStateFileName());
+            try {
+                wootState = FileUtil.moveFile(wootState, copy0);
+            } catch (Exception e) {
+                this.logger.error(this.getXWootName() + " : Failed to replace new state file with old one. State creation process failed.\n", e);
+                throw new XWootException(this.getXWootName() + " : Failed to replace new state file with old one. State creation process failed.\n", e);
             }
-            wootState = copy0;
         } else {
             this.logger.error(this.getXWootName() + " : The Woot state did not compute successfuly.\n");
             throw new XWootException(this.getXWootName() + " : The Woot state did not compute successfuly.");
@@ -1280,6 +1287,10 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             this.logger.error(this.getXWootName() + " : Problems creating the XWoot state.\n", e);
             throw new XWootException(this.getXWootName() + " : Problems creating the XWoot state.\n", e);
         }
+        
+        // delete the 2 state files because they are now packed into the xwoot state.
+        wootState.delete();
+        treState.delete();
 
         return new File(this.getStateFilePath());
     }
@@ -1299,24 +1310,26 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     
     private String getWootEngineStateFileName() 
     {
-        StringBuilder result = new StringBuilder();
+        /*StringBuilder result = new StringBuilder();
         result.append(WootEngine.STATE_FILE_NAME_PREFIX);
         result.append(STATE_FILE_NAME_SEPARATOR);
         result.append(this.peer.getCurrentJoinedPeerGroup().getPeerGroupID().toString());
         result.append(WootEngine.STATE_FILE_EXTENSION);
         
-        return result.toString();
+        return result.toString();*/
+        return WootEngine.STATE_FILE_NAME;
     }
     
     private String getTreStateFileName()
     {
-        StringBuilder result = new StringBuilder();
+        /*StringBuilder result = new StringBuilder();
         result.append(ThomasRuleEngine.STATE_FILE_NAME_PREFIX);
         result.append(STATE_FILE_NAME_SEPARATOR);
         result.append(this.peer.getCurrentJoinedPeerGroup().getPeerGroupID().toString());
         result.append(ThomasRuleEngine.STATE_FILE_EXTENSION);
         
-        return result.toString();
+        return result.toString();*/
+        return ThomasRuleEngine.TRE_STATE_FILE_NAME;
     }    
 
     public boolean isStateComputed()
@@ -1340,8 +1353,11 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
        
         File currentState = new File(this.getStateFilePath());
         
+        // set the state
+        this.setState(stateFileToImport);
+        
         // If it is not a re-import of an existing state, then copy it and make it the current state.
-        if (!stateFileToImport.equals(currentState)) {
+        if (/*!stateFileToImport.equals(currentState) || */!stateFileToImport.getParent().toString().equals(this.workingDir)) {
             try {
                 FileUtil.copyFile(stateFileToImport.toString(), currentState.toString());
             } catch (IOException e) {
@@ -1350,11 +1366,9 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             }
         }
         
-        // set the state
-        this.setState(stateFileToImport);
-        
         // FIXME: completely replace the old content of the xwiki. (for group switching)
         // FIXME: HIGH PRIORITY!
+        //  already done by synchronize() ? check!
         
         // synchronize with the wiki but don`t generate any patches.
         this.synchronize(false);
@@ -1697,12 +1711,8 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     }
 
     public String getStateFilePath()
-    {
-        if (!this.isConnectedToP2PGroup()) {
-            throw new IllegalStateException("Unable to get the state for the currently joined group because this peer has not joined any group yet.");
-        }
-        
-        return this.stateDirPath + File.separatorChar + getStateFileName(this.peer.getCurrentJoinedPeerGroup());
+    {        
+        return this.stateDirPath + File.separatorChar + getStateFileName();
     }
     
     public String getStateFileName(PeerGroup group)
@@ -1712,6 +1722,15 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         }
         
         return STATE_FILE_NAME_PREFIX + STATE_FILE_NAME_SEPARATOR + group.getPeerGroupID().toString() + STATE_FILE_EXTENSION;
+    }
+    
+    public String getStateFileName()
+    {
+        if (!this.isConnectedToP2PGroup()) {
+            throw new IllegalStateException("Unable to get the state for the currently joined group because this peer has not joined any group yet.");
+        }
+        
+        return this.getStateFileName(this.peer.getCurrentJoinedPeerGroup());
     }
 
     /**
@@ -1807,5 +1826,11 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     public Log getLog()
     {
         return this.logger;
+    }
+
+    /** {@inheritDoc} */
+    public String getWorkingDir()
+    {
+        return this.workingDir;
     }
 }

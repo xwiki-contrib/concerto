@@ -71,4 +71,7 @@ public interface XWootAPI
     String getContentManagerURL();
 
     Object receiveMessage(Object message) throws XWootException;
+    
+    /** @return the workingDir */
+    public String getWorkingDir();
 }

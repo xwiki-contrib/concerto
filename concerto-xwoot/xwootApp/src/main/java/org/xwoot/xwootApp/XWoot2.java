@@ -1237,4 +1237,9 @@ public class XWoot2 implements XWootAPI
         return this.isConnectedToP2PNetwork();
     }
 
+    /** {@inheritDoc} */
+    public String getWorkingDir()
+    {
+        return this.workingDir;
+    }
 }

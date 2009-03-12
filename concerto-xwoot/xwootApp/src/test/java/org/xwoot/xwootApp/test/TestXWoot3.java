@@ -406,7 +406,10 @@ public class TestXWoot3 extends AbstractXWootTest
         
         // Compute and import a state from the current data.
         this.xwoot31.computeState();
-        this.xwoot32.importState(this.xwoot32.askStateToGroup());
+        File receivedTemporaryState = this.xwoot32.askStateToGroup();
+        this.xwoot32.importState(receivedTemporaryState);
+        receivedTemporaryState.delete();
+        
         
         // simulate XWiki user page creation (the real test)
         xwootObj = this.simulateXWikiUserModification(mxwcp1, PAGE_ID, content, 1, 0, true);
@@ -518,7 +521,9 @@ public class TestXWoot3 extends AbstractXWootTest
         
         // Compute and import a state from the current data.
         this.xwoot31.computeState();
-        this.xwoot32.importState(this.xwoot32.askStateToGroup());
+        File receivedTemporaryState = this.xwoot32.askStateToGroup();
+        this.xwoot32.importState(receivedTemporaryState);
+        receivedTemporaryState.delete();
         
         // simulate XWiki user create comment on xw1. (the real test data)
         comment1XW1 = this.simulateXWikiUserCreateXWikiComment(this.xwiki21, PAGE_ID, commentContent1, 1, 0, true);
@@ -633,7 +638,9 @@ public class TestXWoot3 extends AbstractXWootTest
         
         // Compute and import a state from the current data.
         this.xwoot31.computeState();
-        this.xwoot32.importState(this.xwoot32.askStateToGroup());
+        File receivedTemporaryState = this.xwoot32.askStateToGroup();
+        this.xwoot32.importState(receivedTemporaryState);
+        receivedTemporaryState.delete();
         
         // simulate XWiki user page creation (real test data)
         xwootObj = this.simulateXWikiUserModification(mxwcp1, PAGE_ID, content, 1, 0, true);
@@ -852,7 +859,9 @@ public class TestXWoot3 extends AbstractXWootTest
         
         // Compute and import a state from the current data.
         this.xwoot31.computeState();
-        this.xwoot32.importState(this.xwoot32.askStateToGroup());
+        File receivedTemporaryState = this.xwoot32.askStateToGroup();
+        this.xwoot32.importState(receivedTemporaryState);
+        receivedTemporaryState.delete();
         
         // simulate XWiki user page creation (real test)
         this.simulateXWikiUserModification(mxwcp1, PAGE_ID, content1, 1, 0, true);
@@ -998,8 +1007,13 @@ public class TestXWoot3 extends AbstractXWootTest
         
         // Compute and import a state from the current data.
         this.xwoot31.computeState();
-        this.xwoot32.importState(this.xwoot32.askStateToGroup());
-        this.xwoot33.importState(this.xwoot33.askStateToGroup());
+        File receivedTemporaryState = this.xwoot32.askStateToGroup();
+        this.xwoot32.importState(receivedTemporaryState);
+        receivedTemporaryState.delete();
+        File receivedTemporaryState2 = this.xwoot33.askStateToGroup();
+        this.xwoot33.importState(receivedTemporaryState2);
+        receivedTemporaryState2.delete();
+        
         
         // Real test
         this.simulateXWikiUserModification(mxwcp1, pageId, content1, 1, 0, true);

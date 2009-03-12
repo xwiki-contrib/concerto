@@ -72,7 +72,7 @@ public class ThomasRuleEngine
     public static final String TRE_FILE_NAME_PREFIX = "EntriesListFile";
 
     /** Used when computing the state of the TRE. */
-    public static final String TRE_STATE_FILE_NAME = "tre.zip";
+    public static final String TRE_STATE_FILE_NAME = "treState.zip";
     
     /** The name prefix of the output file containing the zipped state. */
     public static final String STATE_FILE_NAME_PREFIX = "treState";
