@@ -1,12 +1,16 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.xwoot</groupId>
 	<artifactId>xwootServerPeer</artifactId>
 	<name>xwootServerPeer</name>
-	<version>1.0-SNAPSHOT</version>
 	<description>Server peer designed to work in daemon mode to ensure network connectivity and existence.</description>
-	
+
+	<parent>
+		<artifactId>xwoot</artifactId>
+		<groupId>org.xwoot</groupId>
+		<version>1.0-SNAPSHOT</version>
+	</parent>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.xwoot</groupId>
@@ -90,10 +94,10 @@
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
+				<artifactId>maven-checkstyle-plugin
+				</artifactId>
 				<configuration>
-					<source>1.5</source>
-					<target>1.5</target>
+					<skip>true</skip>
 				</configuration>
 			</plugin>
 
