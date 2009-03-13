@@ -47,11 +47,11 @@
 			<artifactId>xwootUtil</artifactId>
 			<version>${pom.version}</version>
 		</dependency>
-      <dependency>
-        <groupId>org.xwoot</groupId>
-        <artifactId>xwoot-content-provider</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
-      </dependency>
+		<dependency>
+			<groupId>org.xwoot</groupId>
+			<artifactId>xwoot-content-provider</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
 		<dependency>
 			<groupId>fr.loria.ecoo</groupId>
 			<artifactId>JLibDiff</artifactId>
@@ -224,6 +224,15 @@
 				<artifactId>maven-checkstyle-plugin</artifactId>
 				<configuration>
 					<skip>true</skip>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.5</source>
+					<target>1.5</target>
 				</configuration>
 			</plugin>
 
