@@ -9,7 +9,7 @@
           	Create group<br/>
             Name: <input type="text" name="groupName" size="50" /><br/>
             Description: <input type="text" name="groupDescription" size="50" /><br/>
-            <input type="checkbox" name="privateGroup" /> This is a private group.<br/>
+            <input type="checkbox" name="isPrivateGroup" value="true" /> This is a private group.<br/>
             <div id="group_password">
             	Password: <input type="password" name="createGroupPassword" /><br/>
             	Retype Password: <input type="password" name="createGroupPasswordRetyped" /><br/>
@@ -26,7 +26,7 @@
             </select><br/>
             Password: <input type="password" name="joinGroupPassword" /><br/>
             Local Keystore Password: <input type="password" name="joinGroupKeystorePassword" /><br/>
-            <input type="checkbox" name="beRendezVous" /> Route communication for this group<br/>
+            <input type="checkbox" name="beRendezVous" value="true" /> Route communication for this group<br/>
 			<input type="submit" value="Refresh List" name="groupChoice"/>
 			<input type="submit" value="Join" name="groupChoice"/>
           </div>

@@ -46,7 +46,6 @@ package org.xwoot.xwootApp.web.servlets;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 
 import javax.servlet.ServletException;
@@ -56,28 +55,33 @@ import javax.servlet.http.HttpServletResponse;
 
 import net.jxta.protocol.PeerGroupAdvertisement;
 
-import org.apache.commons.lang.StringUtils;
 import org.xwoot.xwootApp.XWoot3;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.web.XWootSite;
 
 /**
- * DOCUMENT ME!
+ * Servlet handling group management.
  * 
- * @author $author$
- * @version $Revision$
+ * @version $Id:$
  */
 public class BootstrapGroup extends HttpServlet
 {
+    /** The request attribute trough which to send the list of groups to the jsp. */
+    private static final String AVAILABLE_GROUPS_ATTRIBUTE = "groups";
+    
+    /** The value of the join group button. */
+    private static final String JOIN_BUTTON = "Join";
+    
+    /** The value of the create group button. */
+    private static final String CREATE_BUTTON = "Create";
+    
+    /** The value of a checked checkbox. */
+    private static final String TRUE = "true";
+    
+    /** Used for serialization. */
     private static final long serialVersionUID = -3758874922535817475L;
 
-    /**
-     * DOCUMENT ME!
-     * 
-     * @param request DOCUMENT ME!
-     * @param response DOCUMENT ME!
-     * @throws Exception DOCUMENT ME!
-     */
+    /** {@inheritDoc} */
     @Override
     public void service(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
     {
@@ -96,25 +100,21 @@ public class BootstrapGroup extends HttpServlet
             response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapNetwork.do"));
             return;
         }
-        /*
-        NetworkManager networkManager = ((XWoot3) xwootEngine).getPeer().getManager();
-        NetworkConfigurator networkConfig = networkManager.getConfigurator();*/
         
         String groupChoice = request.getParameter("groupChoice");
         
-        if (StringUtils.equals(groupChoice, "Create")) {
+        if (CREATE_BUTTON.equals(groupChoice)) {
             this.getServletContext().log("Create group requested.");
             
             String groupName = request.getParameter("groupName");
             String groupDescription = request.getParameter("groupDescription");
-            String privateGroup = request.getParameter("privateGroup");
+            boolean isPrivateGroup = TRUE.equals(request.getParameter("isPrivateGroup"));
             String groupPassword = request.getParameter("createGroupPassword");
             String groupPasswordRetyped = request.getParameter("createGroupPasswordRetyped");
             String keystorePassword = request.getParameter("createKeystorePassword");
             
             try {
-                boolean privateGroupBoolean = Boolean.parseBoolean(privateGroup);
-                if (privateGroupBoolean) {
+                if (isPrivateGroup) {
                     if (groupPassword == null || groupPassword.length() == 0) {
                         throw new IllegalArgumentException("A password must be set for a private group.");
                     }
@@ -123,18 +123,18 @@ public class BootstrapGroup extends HttpServlet
                     }
                 }
                 
-                //boolean beRendezVousBoolean = Boolean.parseBoolean(beRendezVous);
                 ((XWoot3) xwootEngine).createNewGroup(groupName, groupDescription, keystorePassword.toCharArray(), groupPassword.toCharArray());
             } catch (Exception e) {
                 errors += "Can't create group:" + e.getMessage() + "\n";
             }
             
-        } else if (StringUtils.equals(groupChoice, "Join")) {
+        } else if (JOIN_BUTTON.equals(groupChoice)) {
             this.getServletContext().log("Join group requested.");
             //
             String groupPassword = request.getParameter("joinGroupPassword");
             String keystorePassword = request.getParameter("joinGroupKeystorePassword");
-            String beRendezVousString = request.getParameter("beRendezVous");
+            
+            boolean beRendezVous = TRUE.equals(request.getParameter("beRendezVous"));
             
             String groupID = request.getParameter("groupID");
             if (groupID == null || groupID.length() == 0) {
@@ -143,16 +143,24 @@ public class BootstrapGroup extends HttpServlet
                 try {
                     Collection groups = ((XWoot3) xwootEngine).getGroups();
                     boolean found = false;
-                    for(Object group : groups) {
+                    for (Object group : groups) {
                         PeerGroupAdvertisement aGroupAdv = (PeerGroupAdvertisement) group;
                         if (aGroupAdv.getPeerGroupID().toString().equals(groupID)) {
                             this.log("Joining group described by this adv:\n" + aGroupAdv);
-                            this.log("Using group password: " + groupPassword + " (" + Arrays.toString(groupPassword.toCharArray()) + ")");
-                            this.log("Using keystore password: " + keystorePassword + " (" + Arrays.toString(keystorePassword.toCharArray()) + ")");
-                            
-                            Boolean beRendezVous = Boolean.parseBoolean(beRendezVousString);
                             
                             ((XWoot3) xwootEngine).joinGroup(aGroupAdv, keystorePassword.toCharArray(), groupPassword.toCharArray(), beRendezVous);
+                            
+                            // Save the group advertisement to be able to rejoin after a reboot.
+                            // FIXME: save group and keystore password then implement the deletion of the current group
+                            // advertisement file when explicitly leaving a group from the web UI.
+                            // try {
+                            // PersistencyUtil.saveObjectToXml(aGroupAdv, xwootEngine.getWorkingDir() + File.separator
+                            // + "currentGroupAdvertisement.xml");
+                            // } catch (Exception e) {
+                            // this.log("Failed to save the group advertisement. "
+                            // + "Auto-join will not be available on next restart.", e);
+                            // }
+                            
                             found = true;
                             break;
                         }
@@ -174,8 +182,10 @@ public class BootstrapGroup extends HttpServlet
             }
         }
         
-        // If no errors were encountered and successfuly joined/created a network, go to next step.
-        if (errors.length() == 0 && (StringUtils.equals(groupChoice, "Create") || StringUtils.equals(groupChoice, "Join"))) {
+        // FIXME: try to auto-join a group if a group advertisement file is found.
+        
+        // If no errors were encountered and successfully joined/created a network, go to next step.
+        if (errors.length() == 0 && (CREATE_BUTTON.equals(groupChoice) || JOIN_BUTTON.equals(groupChoice))) {
             this.getServletContext().log("No errors occured.");
             response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/stateManagement.do"));
             return;
@@ -184,10 +194,10 @@ public class BootstrapGroup extends HttpServlet
         }
         
         try {
-            request.setAttribute("groups", ((XWoot3) xwootEngine).getGroups());
-            this.getServletContext().log("Available groups: " + request.getAttribute("groups"));
+            request.setAttribute(AVAILABLE_GROUPS_ATTRIBUTE, ((XWoot3) xwootEngine).getGroups());
+            this.getServletContext().log("Available groups: " + request.getAttribute(AVAILABLE_GROUPS_ATTRIBUTE));
         } catch (Exception e) {
-            request.setAttribute("groups", new ArrayList());
+            request.setAttribute(AVAILABLE_GROUPS_ATTRIBUTE, new ArrayList());
             errors += "Failed to list groups: " + e.getMessage();
         }
 

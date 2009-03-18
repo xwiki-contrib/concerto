@@ -20,30 +20,30 @@
 	          	RDV Seeds: <input type="text" name="rdvSeeds" size="50" />(ex: tcp://192.168.1.200:9701, http://192.18.37.36:9700, etc...)<br/>
 	          	Relay Seeds: <input type="text" name="relaySeeds" size="50" />(ex: tcp://192.168.1.200:9701, http://192.18.37.36:9700, etc...)<br/>
 	            
-	            <input type="checkbox" name="beRendezVous" /> Route communication for this network<br/>
-            	<input type="checkbox" name="beRelay" /> Relay communication for Firewalled/NAT-ed peers in this network.<br/>
+	            <input type="checkbox" name="beRendezVous" value="true" /> Route communication for this network (WARNING: can lead to network island if no other seeds are specified or not accessible for a long time!)<br/>
+            	<input type="checkbox" name="beRelay" value="true" /> Relay communication for Firewalled/NAT-ed peers in this network.<br/>
 	            
 				<input type="submit" value="Join" name="networkChoice"/>
 			</div>
 			<div id="common_settings">
 				Common(Advanced) settings<br/>
-				<input type="checkbox" name="useExternalIp"/> Use external IP<br/>
+				<input type="checkbox" name="useExternalIp" value="true" /> Use external IP<br/>
 				<div id="extarnal_ip_settings">
 					External IP: <input type="text" name="externalIp"/> <br/>
-					<input type="checkbox" name="useOnlyExternalIp"/> Use only external IP for all communication<br/>
+					<input type="checkbox" name="useOnlyExternalIp" value="true" /> Use only external IP for all communication<br/>
     			</div>
     			
-    			<input type="checkbox" name="useTcp"/> Use TCP<br/>
+    			<input type="checkbox" name="useTcp" value="true" checked="checked" /> Use TCP<br/>
 				<div id="Tcp_settings">
 					TCP port: <input type="text" name="tcpPort" value="9701" /> (Default is 9701)
     			</div>
     			
-    			<input type="checkbox" name="useHttp"/> Use HTTP<br/>
+    			<input type="checkbox" name="useHttp" value="true" checked="checked" /> Use HTTP<br/>
 				<div id="Http_settings">
 					Http port: <input type="text" name="httpPort" value="9700" />  (Default is 9700. Recommended is 80)
     			</div>
     			
-    			<input type="checkbox" name="useMulticast"/> Use Multicast to discover network members in LAN.<br/>
+    			<input type="checkbox" name="useMulticast" value="true" checked="checked" /> Use TCP Multicast to discover and communicate with network members in LAN.<br/>
 			</div>
           </div>
         </form>        
