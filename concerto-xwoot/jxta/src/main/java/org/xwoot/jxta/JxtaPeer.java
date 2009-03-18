@@ -659,9 +659,6 @@ public class JxtaPeer implements Peer, RendezvousListener {
         							description); // Helpful descr.
         }
         
-        
-        //System.out.println("NEW PEER GROUP ADV:\n" + pg.getPeerGroupAdvertisement());
- 
         // We join the new group as well.
         if (!authenticateMembership(pg, keystorePassword, groupPassword)) {
         	throw new Exception("Authentication failed for the new group!");
@@ -1064,6 +1061,11 @@ public class JxtaPeer implements Peer, RendezvousListener {
         }
         
         // FIXME: Watch out for jxtaCast object's state when leaving a group and not joining another one. It should be eliminated, but only in this case.
+        this.jc.setPeerGroup(null);
+        this.jc = null;
+        
+        System.runFinalization();
+        System.gc();
     }
     
     

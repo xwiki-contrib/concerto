@@ -34,6 +34,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -64,7 +65,16 @@ public class ConcertoPeer implements JxtaCastEventListener, DirectMessageReceive
 	
 	public void startNetwork() throws Exception {
 		jxta.configureNetwork("ConcertoPeer"+UUID.randomUUID().toString(), null, ConfigMode.EDGE);
-		jxta.getManager().setUseDefaultSeeds(true);
+		//jxta.getManager().setUseDefaultSeeds(true);
+		
+		
+		jxta.getManager().getConfigurator().addSeedRendezvous(new URI("tcp://localhost:9701"));
+		jxta.getManager().getConfigurator().addSeedRendezvous(new URI("http://localhost:9700"));
+		
+		jxta.getManager().getConfigurator().addSeedRelay(new URI("tcp://localhost:9701"));
+		jxta.getManager().getConfigurator().addSeedRelay(new URI("http://localhost:9700"));
+		
+		
 		jxta.startNetworkAndConnect(this, this);
 	}
 

@@ -214,6 +214,7 @@ public class JxtaCast implements PipeMsgListener, Runnable {
     
     protected Vector<JxtaCastEventListener> jcListeners;   // Registered JxtaCastEventListener objects.
 
+    public static final String TRAIL_BOSS_LOCK = "sleeping";
 
     /** Constructor
      *
@@ -226,7 +227,7 @@ public class JxtaCast implements PipeMsgListener, Runnable {
 
         this.myPeer = myPeer;
         this.castName = new String(castName);
-        setPeerGroup(group);
+        
 
         // Default destination for saved files is the current directory.
         fileSaveLoc = "." + File.separator;
@@ -234,12 +235,14 @@ public class JxtaCast implements PipeMsgListener, Runnable {
         // Create collection to hold JxtaCastEventListener objects.
         jcListeners = new Vector<JxtaCastEventListener>(10);
 
-        // Create a worker thread to handle file loading and message output.
-        // Also checks thru the list of FileWranglers to give any stalled
-        // file transactions kick in the pants.
-        //
-        Thread trailBossThread = new Thread(this, "JxtaCast:TrailBoss");
-        trailBossThread.start();
+//        // Create a worker thread to handle file loading and message output.
+//        // Also checks thru the list of FileWranglers to give any stalled
+//        // file transactions kick in the pants.
+//        //
+//        Thread trailBossThread = new Thread(this, "JxtaCast:TrailBoss");
+//        trailBossThread.start();
+        
+        setPeerGroup(group);
     }
 
 
@@ -252,12 +255,28 @@ public class JxtaCast implements PipeMsgListener, Runnable {
     /** Change to a new peer group.
      *  @return true if we successfully created the pipes in the new group.
      */
-    public boolean setPeerGroup(PeerGroup group) {
+    public synchronized boolean setPeerGroup(PeerGroup group) {
 
         boolean rc = false;
         
         if (group == null) {
-            return false;
+            
+            // Close any existing pipes.
+            if (inputPipe != null)
+                inputPipe.close();
+            if (outputPipe != null)
+                outputPipe.close();
+            if (privInputPipe != null)
+                privInputPipe.close();
+            
+            this.group = null;
+            
+            // Notify trail boss thread to close.
+            synchronized (TRAIL_BOSS_LOCK) {
+                TRAIL_BOSS_LOCK.notifyAll();
+            }
+            
+            return true;
         }
         
         // If the new group is the same group we already have, it's a no-op.
@@ -278,6 +297,13 @@ public class JxtaCast implements PipeMsgListener, Runnable {
             rc = createPipes(castName);
         }
         
+        // Create a worker thread to handle file loading and message output.
+        // Also checks thru the list of FileWranglers to give any stalled
+        // file transactions kick in the pants.
+        //
+        Thread trailBossThread = new Thread(this, "JxtaCast:TrailBoss");
+        trailBossThread.start();
+        
         JxtaCast.logMsg("Set peer group to: " + group);
 
         return rc;
@@ -293,6 +319,18 @@ public class JxtaCast implements PipeMsgListener, Runnable {
             System.out.println("[JxtaCast " + new Date() + "] " + msg);
     }
 
+    /**
+     * Close any existing pipes.
+     */
+    protected void closePipes()
+    {
+        if (inputPipe != null)
+            inputPipe.close();
+        if (outputPipe != null)
+            outputPipe.close();
+        if (privInputPipe != null)
+            privInputPipe.close();
+    }
 
     /**
      *  Create an input and output pipe to handle the file transfers.
@@ -304,13 +342,8 @@ public class JxtaCast implements PipeMsgListener, Runnable {
     protected boolean createPipes(String castName) {
 
         // Close any existing pipes.
-        if (inputPipe != null)
-            inputPipe.close();
-        if (outputPipe != null)
-            outputPipe.close();
-        if (privInputPipe != null)
-            privInputPipe.close();
-
+        this.closePipes();
+        
         // Create the input and output pipes for the many-to-many "broadcast channel",
         // using propagation pipes.  The broadcast channel is used to send the
         // file data out to all listening peers.  First we cook up an
@@ -631,9 +664,21 @@ public class JxtaCast implements PipeMsgListener, Runnable {
      */
     public void run() {
 
-        while (true) {
-            try {Thread.sleep(trailBossPeriod);} catch (InterruptedException e) {}
+        // While we are connected to a group.
+        while (this.group != null) {
+            synchronized (TRAIL_BOSS_LOCK) {
+                try {
+                    TRAIL_BOSS_LOCK.wait(trailBossPeriod);
+                } catch (InterruptedException e) {}
+            }
 
+            // If we wake up and find that we are no longer connected to a group, stop the thread.
+            if (this.group == null) {
+                JxtaCast.logMsg("Stopping Trail Boss thread named: " + Thread.currentThread().getName());
+                return;
+            }
+            
+            // Check the work in progress.
             synchronized (wranglers) {
 
                 checkWranglers();
