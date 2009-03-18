@@ -142,6 +142,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
         
         logger.info("Infrastructure ID: " + manager.getInfrastructureID());
         logger.info("Peer ID: " + manager.getPeerID());
+        logger.info("Peer Name: " + manager.getInstanceName());
 	}
     
     
@@ -807,6 +808,9 @@ public class JxtaPeer implements Peer, RendezvousListener {
         // Init direct communication for this group and register the listener.
         this.createDirectCommunicationServerSocket();
         
+        // Clean the local cache for this group just in case we have previously joined it.
+        this.flushExistingAdvertisements(newGroup);
+        
         // Update local cache with peers and their private pipe advertisements from this group.
         discoverPeers(null, /*groupAdv, */null);
         discoverAdvertisements(null, null, PipeAdvertisement.NameTag, this.getDirectCommunicationPipeNamePrefix() + "*");
@@ -941,7 +945,12 @@ public class JxtaPeer implements Peer, RendezvousListener {
                     Socket socket = this.serverSocket.accept();
                     new ConnectionThread(socket, this.receiver).start();
                 } catch (SocketException closed) {
-                    this.receiver.getLog().debug("Socket server got closed. Stopping this ConnectionHandler thread.", closed);
+                    // FIXME: can we use JxtaPeer.this.logger instead?
+                    
+                    if (this.receiver.getLog() != null) {
+                        this.receiver.getLog().debug("Socket server got closed. Stopping this ConnectionHandler thread.", closed);
+                    }
+                    
                     return;
                 } catch (IOException e) {
                     this.receiver.getLog().error("Error: Failed to accept connection from client.", e);
@@ -1043,15 +1052,6 @@ public class JxtaPeer implements Peer, RendezvousListener {
         MembershipService oldGroupMembershipService = oldGroup.getMembershipService();
         oldGroupMembershipService.resign();
         
-    	// See if it was the current joined group.
-        if (this.currentJoinedGroup != null && oldGroup.getPeerGroupID().equals(this.currentJoinedGroup.getPeerGroupID())) {
-        	this.currentJoinedGroup = this.rootGroup;
-        }
-        
-        oldGroup.stopApp();
-        oldGroup.unref();
-        oldGroup = null;
-        
         try {
             this.closeExistingDirectCommunicationServerSocket();
         } catch (IOException e) {
@@ -1059,6 +1059,18 @@ public class JxtaPeer implements Peer, RendezvousListener {
             // Just log it.
             this.logger.warn("Failed to close existing direct communciation server socket after leaving a group.", e);
         }
+        
+        // See if it was the current joined group.
+        if (this.currentJoinedGroup != null && oldGroup.getPeerGroupID().equals(this.currentJoinedGroup.getPeerGroupID())) {
+            this.currentJoinedGroup = this.rootGroup;
+        }
+        
+        // Clean the local cache for this group.
+        this.flushExistingAdvertisements(oldGroup);
+        
+        oldGroup.stopApp();
+        oldGroup.unref();
+        oldGroup = null;
         
         // FIXME: Watch out for jxtaCast object's state when leaving a group and not joining another one. It should be eliminated, but only in this case.
         this.jc.setPeerGroup(null);
@@ -1716,4 +1728,46 @@ public class JxtaPeer implements Peer, RendezvousListener {
 //        this.directMessageReceiver = directMessageReceiver;
 //    }
 
+	/**
+	* Quetly flush existing PeerAdvertisements and PipeAdvertisements from a group. Other advertisements get flusshed as well as long as they are not GroupAdvertisements.
+	* 
+	* @param group the group for which to flush advertisements.
+	*/
+	public void flushExistingAdvertisements(PeerGroup group)
+	{
+    	DiscoveryService discoveryService = group.getDiscoveryService();
+    	if (discoveryService == null) {
+    	    this.logger.warn("DiscoveryService for group " + group.getPeerGroupName() + " could not be obtained. Flushing advertisements canceled.");
+    	    return;
+    	}
+    	       
+    	ArrayList<Advertisement> oldAdvertisements = new ArrayList<Advertisement>();
+    	       
+    	Enumeration<Advertisement> peers = null;
+    	try {
+    	    peers = discoveryService.getLocalAdvertisements(DiscoveryService.PEER, null, null);
+    	    oldAdvertisements.addAll(Collections.list(peers));
+    	} catch (Exception e) {
+    	    // just log it.
+    	    this.logger.warn("Failed to get local PEER advertisements for group " + group, e);
+    	}
+    	        
+    	Enumeration<Advertisement> pipes = null;
+    	try {
+    	    pipes = discoveryService.getLocalAdvertisements(DiscoveryService.ADV, null, null);
+    	    oldAdvertisements.addAll(Collections.list(pipes));
+    	} catch (Exception e) {
+    	    // just log it.
+            this.logger.warn("Failed to get local ADV advertisements for group " + group, e);
+    	}
+    	        
+    	for (Advertisement adv : oldAdvertisements) {
+    	    try {
+    	        discoveryService.flushAdvertisement(adv);
+    	    } catch (Exception e) {
+    	        // just log it.
+                this.logger.warn("Failed to flush advertisement:\n" + adv + "\n", e);
+    	    }
+    	}
+	}
 }
