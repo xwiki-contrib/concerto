@@ -24,13 +24,13 @@ import java.io.File;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.xwoot.jxta.NetworkManager;
 import org.xwoot.jxta.Peer;
 import org.xwoot.jxta.PeerFactory;
+import org.xwoot.jxta.NetworkManager.ConfigMode;
 
 import net.jxta.exception.JxtaException;
 import net.jxta.platform.NetworkConfigurator;
-import net.jxta.platform.NetworkManager;
-import net.jxta.platform.NetworkManager.ConfigMode;
 import net.jxta.rendezvous.RendezvousEvent;
 import net.jxta.rendezvous.RendezvousListener;
 
@@ -39,7 +39,7 @@ import net.jxta.rendezvous.RendezvousListener;
  * <p>
  * This peer does nothing except route communication, log events and ensures network existence.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class JxtaSuperPeer implements SuperPeer, RendezvousListener
 {

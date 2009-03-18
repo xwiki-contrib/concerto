@@ -24,8 +24,6 @@ import java.io.ObjectOutputStream;
 import java.util.Collections;
 import java.util.List;
 
-import junit.framework.Assert;
-
 import net.jxta.document.Advertisement;
 import net.jxta.jxtacast.event.JxtaCastEvent;
 import net.jxta.peergroup.PeerGroup;
@@ -54,18 +52,21 @@ public class DiscoverPeersInGroup extends AbstractMultiplePeersTestCase
             } catch (Exception e) {
                 System.out.println(this.peerName + " : Thread Failed. Stopping.");
                 e.printStackTrace();
-                Assert.fail("Failed to crete group: " + e.getMessage());
+                //Assert.fail("Failed to crete group: " + e.getMessage());
                 
                 synchronized (MultiplePeersTestCaseLauncher.GROUP_ADV_LOCK) {
                     // notify other peers that the group adv will not be published.
                     MultiplePeersTestCaseLauncher.GROUP_ADV_LOCK.notifyAll();
                 }
-                synchronized (MultiplePeersTestCaseLauncher.MAIN_THREAD_LOCK) {
+                
+                // stop this thread
+                this.fail("Failed to create group: " + e.getMessage());
+                /*synchronized (MultiplePeersTestCaseLauncher.MAIN_THREAD_LOCK) {
                     // notify main thread not to wait for this thread anymore.
                     MultiplePeersTestCaseLauncher.MAIN_THREAD_LOCK.notifyAll();
                 }
-                // stop this thread
-                return;
+                
+                return;*/
             }
             
             System.out.println(this.peerName + " : group created. : " + group.getPeerGroupName());
@@ -87,6 +88,10 @@ public class DiscoverPeersInGroup extends AbstractMultiplePeersTestCase
             } catch (Exception e) {
                 e.printStackTrace();
                 this.fail(e.getMessage());
+            }
+            
+            if (this.peer.isGroupRendezVous()) {
+                this.fail("Failed to contact existing group rendezvous.");
             }
             
             System.out.println(this.peerName + " : Joied group " + group.getPeerGroupName() + ".");

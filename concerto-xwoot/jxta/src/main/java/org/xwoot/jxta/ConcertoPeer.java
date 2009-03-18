@@ -26,7 +26,6 @@ import net.jxta.impl.membership.pse.PSEMembershipService;
 import net.jxta.jxtacast.event.JxtaCastEvent;
 import net.jxta.jxtacast.event.JxtaCastEventListener;
 import net.jxta.peergroup.PeerGroup;
-import net.jxta.platform.NetworkManager.ConfigMode;
 import net.jxta.protocol.PeerAdvertisement;
 import net.jxta.protocol.PeerGroupAdvertisement;
 import net.jxta.protocol.PipeAdvertisement;
@@ -44,6 +43,7 @@ import java.util.UUID;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.xwoot.jxta.NetworkManager.ConfigMode;
 import org.xwoot.jxta.message.Message;
 
 /**

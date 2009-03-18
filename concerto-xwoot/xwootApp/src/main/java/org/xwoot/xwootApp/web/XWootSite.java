@@ -45,7 +45,6 @@
 package org.xwoot.xwootApp.web;
 
 import net.jxta.exception.JxtaException;
-import net.jxta.platform.NetworkManager.ConfigMode;
 
 import org.apache.commons.lang.StringUtils;
 import org.xwoot.XWootContentProviderException;
@@ -58,6 +57,7 @@ import org.xwoot.clockEngine.ClockException;
 
 import org.xwoot.jxta.Peer;
 import org.xwoot.jxta.PeerFactory;
+import org.xwoot.jxta.NetworkManager.ConfigMode;
 
 import org.xwoot.thomasRuleEngine.ThomasRuleEngine;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngineException;

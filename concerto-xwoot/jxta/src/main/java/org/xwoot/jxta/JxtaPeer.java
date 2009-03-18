@@ -37,6 +37,7 @@ import javax.crypto.EncryptedPrivateKeyInfo;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.xwoot.jxta.NetworkManager.ConfigMode;
 
 import net.jxta.discovery.*;
 import net.jxta.exception.JxtaException;
@@ -59,8 +60,6 @@ import net.jxta.peergroup.*;
 import net.jxta.pipe.PipeID;
 import net.jxta.pipe.PipeService;
 import net.jxta.platform.ModuleClassID;
-import net.jxta.platform.NetworkManager;
-import net.jxta.platform.NetworkManager.ConfigMode;
 import net.jxta.protocol.*;
 import net.jxta.rendezvous.*;
 import net.jxta.socket.JxtaServerSocket;
@@ -209,7 +208,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
 	public void stopNetwork() {
 	    this.logger.info("Stopping network.");
 	    
-		if (this.isConnectedToNetwork()) {
+		if (this.isConnectedToNetwork() || this.isJxtaStarted()) {
 		    //PeerGroup currentGroup = this.currentJoinedGroup;
 		    
 			// Try to leave the current group nicely.

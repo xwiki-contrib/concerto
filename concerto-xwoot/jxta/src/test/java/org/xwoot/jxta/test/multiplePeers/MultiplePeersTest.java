@@ -20,6 +20,7 @@
 
 package org.xwoot.jxta.test.multiplePeers;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.xwoot.jxta.test.AbstractJxtaTestBase;
 import org.xwoot.jxta.test.util.MultiplePeersTestCaseLauncher;
@@ -29,6 +30,14 @@ import org.xwoot.jxta.test.util.MultiplePeersTestCaseLauncher;
  */
 public class MultiplePeersTest extends AbstractJxtaTestBase
 {
+    
+    @Before
+    public void clearSystemProperties()
+    {
+        System.clearProperty(MultiplePeersTestCaseLauncher.ERRORS_PROPERTY_NAME);
+        System.clearProperty(MultiplePeersTestCaseLauncher.SUCCESS_PROPERTY_NAME);
+    }
+    
     @Test
     public void testDiscoverPeersInGroup() throws Exception
     {

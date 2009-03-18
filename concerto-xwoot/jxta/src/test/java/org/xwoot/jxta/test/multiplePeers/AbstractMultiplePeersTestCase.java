@@ -26,12 +26,12 @@ import java.util.Enumeration;
 
 import net.jxta.jxtacast.event.JxtaCastEventListener;
 import net.jxta.platform.NetworkConfigurator;
-import net.jxta.platform.NetworkManager.ConfigMode;
 import net.jxta.protocol.PeerGroupAdvertisement;
 
 import org.xwoot.jxta.DirectMessageReceiver;
 import org.xwoot.jxta.Peer;
 import org.xwoot.jxta.PeerFactory;
+import org.xwoot.jxta.NetworkManager.ConfigMode;
 import org.xwoot.jxta.test.AbstractJxtaTestBase;
 import org.xwoot.jxta.test.util.MultiplePeersTestCaseLauncher;
 import org.xwoot.xwootUtil.FileUtil;
@@ -92,6 +92,9 @@ public abstract class AbstractMultiplePeersTestCase implements MultiplePeersTest
             configurator.addSeedRelay(new URI(httpSeedAddress));
 
             configurator.setUseMulticast(false);
+            
+            configurator.setTcpPort(9711);
+            configurator.setHttpPort(9710);
 
         } catch (Exception e) {
             e.printStackTrace();

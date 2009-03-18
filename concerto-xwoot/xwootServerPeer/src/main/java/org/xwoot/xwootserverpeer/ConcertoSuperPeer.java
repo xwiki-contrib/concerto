@@ -26,7 +26,6 @@ import java.net.URISyntaxException;
 
 import net.jxta.exception.JxtaException;
 import net.jxta.platform.NetworkConfigurator;
-import net.jxta.platform.NetworkManager.ConfigMode;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
@@ -34,6 +33,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.xwoot.jxta.Peer;
+import org.xwoot.jxta.NetworkManager.ConfigMode;
 import org.xwoot.xwootUtil.FileUtil;
 
 /**

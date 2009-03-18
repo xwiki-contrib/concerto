@@ -53,9 +53,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.jxta.platform.NetworkConfigurator;
-import net.jxta.platform.NetworkManager;
-import net.jxta.platform.NetworkManager.ConfigMode;
 
+import org.xwoot.jxta.NetworkManager;
+import org.xwoot.jxta.NetworkManager.ConfigMode;
 import org.xwoot.xwootApp.XWoot3;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.web.XWootSite;

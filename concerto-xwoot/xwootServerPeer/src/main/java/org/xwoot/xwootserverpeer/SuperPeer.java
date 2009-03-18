@@ -20,18 +20,18 @@
 
 package org.xwoot.xwootserverpeer;
 
+import org.xwoot.jxta.NetworkManager;
 import org.xwoot.jxta.Peer;
 
 import net.jxta.exception.JxtaException;
 import net.jxta.platform.NetworkConfigurator;
-import net.jxta.platform.NetworkManager;
 
 /**
  * Defines a Super peer that will ensure connectivity and for a network.
  * <p>
  * This peer does nothing except route communication, log events and ensures network existence.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public interface SuperPeer
 {

@@ -24,11 +24,11 @@ import java.io.File;
 import java.net.URI;
 
 import net.jxta.platform.NetworkConfigurator;
-import net.jxta.platform.NetworkManager.ConfigMode;
 
 import org.junit.BeforeClass;
 import org.xwoot.jxta.Peer;
 import org.xwoot.jxta.PeerFactory;
+import org.xwoot.jxta.NetworkManager.ConfigMode;
 import org.xwoot.jxta.test.AbstractJxtaTestBase;
 import org.xwoot.xwootUtil.FileUtil;
 
@@ -80,8 +80,14 @@ public abstract class AbstractSinglePeerTestBase extends AbstractJxtaTestBase
             configurator.addSeedRelay(new URI("http://localhost:9700"));
 
             configurator.setUseMulticast(false);
+            
+            // Use different ports than the Serv0r peer to avoid conflict
+            configurator.setTcpPort(9711);
+            configurator.setHttpPort(9710);
 
             // Connect to the network.
+            PEER.startNetworkAndConnect(null, null);
+        } else if (!PEER.isConnectedToNetwork()) {
             PEER.startNetworkAndConnect(null, null);
         }
     }

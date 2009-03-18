@@ -61,6 +61,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Enumeration;
 
+import org.xwoot.jxta.NetworkManager.ConfigMode;
+
 import net.jxta.discovery.DiscoveryListener;
 import net.jxta.document.Advertisement;
 import net.jxta.exception.JxtaException;
@@ -69,8 +71,6 @@ import net.jxta.exception.ProtocolNotSupportedException;
 import net.jxta.id.ID;
 import net.jxta.jxtacast.JxtaCast;
 import net.jxta.jxtacast.event.JxtaCastEventListener;
-import net.jxta.platform.NetworkManager;
-import net.jxta.platform.NetworkManager.ConfigMode;
 import net.jxta.protocol.PeerGroupAdvertisement;
 import net.jxta.protocol.PeerAdvertisement;
 import net.jxta.protocol.PipeAdvertisement;

@@ -76,7 +76,6 @@ import net.jxta.peergroup.PeerGroup;
 import net.jxta.pipe.PipeID;
 import net.jxta.pipe.PipeService;
 import net.jxta.platform.NetworkConfigurator;
-import net.jxta.platform.NetworkManager.ConfigMode;
 import net.jxta.protocol.PeerGroupAdvertisement;
 import net.jxta.protocol.PipeAdvertisement;
 
@@ -93,6 +92,7 @@ import org.xwoot.antiEntropy.AntiEntropyException;
 import org.xwoot.clockEngine.ClockException;
 import org.xwoot.jxta.DirectMessageReceiver;
 import org.xwoot.jxta.Peer;
+import org.xwoot.jxta.NetworkManager.ConfigMode;
 import org.xwoot.jxta.message.Message;
 import org.xwoot.jxta.message.MessageFactory;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngine;

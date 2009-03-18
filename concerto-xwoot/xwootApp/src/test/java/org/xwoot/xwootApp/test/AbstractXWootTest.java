@@ -44,8 +44,6 @@
 
 package org.xwoot.xwootApp.test;
 
-import net.jxta.platform.NetworkManager.ConfigMode;
-
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -55,6 +53,7 @@ import org.xwoot.antiEntropy.AntiEntropy;
 import org.xwoot.clockEngine.Clock;
 import org.xwoot.jxta.Peer;
 import org.xwoot.jxta.PeerFactory;
+import org.xwoot.jxta.NetworkManager.ConfigMode;
 import org.xwoot.lpbcast.sender.LpbCastAPI;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngine;
 import org.xwoot.wootEngine.WootEngine;

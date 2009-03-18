@@ -36,7 +36,9 @@ import java.net.Socket;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xwoot.jxta.DirectMessageReceiver;
+import org.xwoot.jxta.NetworkManager;
 import org.xwoot.jxta.Peer;
+import org.xwoot.jxta.NetworkManager.ConfigMode;
 
 import net.jxta.discovery.*;
 import net.jxta.exception.JxtaException;
@@ -56,8 +58,6 @@ import net.jxta.peer.PeerID;
 import net.jxta.peergroup.*;
 import net.jxta.pipe.PipeID;
 import net.jxta.pipe.PipeService;
-import net.jxta.platform.NetworkManager;
-import net.jxta.platform.NetworkManager.ConfigMode;
 import net.jxta.protocol.*;
 import net.jxta.rendezvous.*;
 

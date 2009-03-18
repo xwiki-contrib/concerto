@@ -36,6 +36,21 @@ public class ServerPeerUsedForTests extends AbstractMultiplePeersTestCase
 {
 
     /** {@inheritDoc} **/
+    @Override
+    public Boolean init(String peerName, Boolean networkCreator)
+    {
+    Boolean superInit = super.init(peerName, networkCreator);
+    try {
+        this.peer.getManager().getConfigurator().setTcpPort(9701);
+        this.peer.getManager().getConfigurator().setHttpPort(9700);
+        } catch (Exception e) {
+            return Boolean.FALSE;
+        }
+
+        return superInit;       
+    }
+    
+    /** {@inheritDoc} **/
     public void run()
     {
         // Thread does nothing but handle jxta platform specific actions.
