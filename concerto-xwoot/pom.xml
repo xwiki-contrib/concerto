@@ -58,7 +58,7 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <properties>
-        <var.working.dir>/home/maire/Projet</var.working.dir>
+        <var.working.dir>/tmp/xwootApp</var.working.dir>
         <var.localhost><!--  http://concerto.loria.fr:8080  -->
         				http://localhost:8080
         </var.localhost>
@@ -80,7 +80,7 @@
         <!-- # xwoot properties (file xwoot.properties) # -->
         <!-- ############################################ -->
         <!-- xwiki xml-rpc interface endpoint -->
-        <var.xwiki.endpoint>http://concerto1:8080/xwiki/xmlrpc
+        <var.xwiki.endpoint>http://localhost:8080/xwiki/xmlrpc
         </var.xwiki.endpoint>
         <!-- xwiki user for access (read/write) -->
         <var.xwiki.username>Admin</var.xwiki.username>

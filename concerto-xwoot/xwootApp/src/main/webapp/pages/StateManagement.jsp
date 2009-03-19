@@ -1,7 +1,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ include file="header.jsp" %>
   <div id="boxes">
-    <div id="box-right" class="box"  style="width:780px;">
+    <div id="box-unic" class="box"  style="width:780px;">
       <div id="box_title">-- State Management --</div>
       <div class="menu_margin">
         <form action="" enctype="multipart/form-data" method="post">
