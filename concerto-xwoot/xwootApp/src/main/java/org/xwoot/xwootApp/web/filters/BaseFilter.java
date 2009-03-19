@@ -45,7 +45,6 @@
 package org.xwoot.xwootApp.web.filters;
 
 import java.io.IOException;
-//import java.net.URISyntaxException;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -56,12 +55,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
-//import org.apache.commons.logging.Log;
-//import org.apache.commons.logging.LogFactory;
-//import org.xwoot.lpbcast.util.NetUtil;
-//import org.xwoot.xwootApp.XWoot2;
-//import org.xwoot.xwootApp.XWootException;
+import org.xwoot.xwootApp.XWoot3;
+import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.web.XWootSite;
 
 /**
@@ -82,7 +77,7 @@ public class BaseFilter implements Filter
 
     /** The filter configuration, used for accessing the servlet context. */
     private FilterConfig config = null;
-    
+
     /**
      * {@inheritDoc}
      * 
@@ -99,8 +94,9 @@ public class BaseFilter implements Filter
     {
         HttpServletRequest request = (HttpServletRequest) srequest;
         HttpServletResponse response = (HttpServletResponse) sresponse;
-        
-        this.config.getServletContext().log("[FILTER] Request from : " + request.getHeader("referer") + " to : " + request.getRequestURL());
+
+        this.config.getServletContext().log(
+            "[FILTER] Request from : " + request.getHeader("referer") + " to : " + request.getRequestURL());
 
         // System.out.println("#######################");
         // System.out.println("# BaseFilter ");
@@ -116,49 +112,53 @@ public class BaseFilter implements Filter
         // + request.getRequestedSessionId());
         // System.out.println("#######################");
 
-        //try {
-            // Changing the skin.
-            if (request.getParameter("skin") != null) {
-                request.getSession().setAttribute("skin", request.getParameter("skin"));
+        // Changing the skin.
+        if (request.getParameter("skin") != null) {
+            request.getSession().setAttribute("skin", request.getParameter("skin"));
+        }
+
+        XWootSite site = XWootSite.getInstance();
+        XWootAPI xwoot = site.getXWootEngine();
+
+        // While the XWoot site is not fully configured, ensure the proper flow.
+        if (!XWootSite.getInstance().isStarted()) {
+            this.config.getServletContext().log("Site is not started yet, starting the wizard.");
+            if (!"/bootstrap.do".equals(request.getServletPath())) {
+                response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrap.do"));
+                return;
             }
-
-            // Always display the wizard when the peer is not initialized.
-            if (!XWootSite.getInstance().isStarted()) {
-                this.config.getServletContext().log("Site is not started yet, starting the wizard.");
-                if (!StringUtils.equals(request.getServletPath(), "/bootstrap.do")) {
-                    response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrap.do"));
-                    return;
-                }
-            } else {
-                // TODO: remove?
-                request.setAttribute("serverUrl", XWootSite.getInstance().getXWootEngine().getXWootPeerId());
-//
-//                // Service gestion : if another xwoot send his url
-//                String neighbor = request.getParameter("url");
-//
-//                if (!StringUtils.isBlank(neighbor)
-//                    && XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork()) {
-//                    System.out.println("Site " + XWootSite.getInstance().getXWootEngine().getXWootPeerId()
-//                        + " : Base servlet - another xwoot send his url : " + NetUtil.normalize(neighbor) + " -");
-//                    if (!XWootSite.getInstance().getXWootEngine().getNeighborsList().contains(neighbor)
-//                        && ((XWoot2) XWootSite.getInstance().getXWootEngine()).forceAddNeighbour(neighbor)) {
-//                        XWootSite.getInstance().getXWootEngine().doAntiEntropy(neighbor);
-//                    }
-//                }
+        } else if (!((XWoot3) xwoot).getPeer().isConnectedToNetwork()) {
+            this.config.getServletContext().log("Site is not connected to a network yet, opening network bootstrap.");
+            if (!"/bootstrapNetwork.do".equals(request.getServletPath())) {
+                response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapNetwork.do"));
+                return;
             }
+        } else if (!((XWoot3) xwoot).getPeer().isConnectedToGroup()) {
+            this.config.getServletContext().log("Site is not connected to a grop yet, opening group bootstrap.");
+            if (!"/bootstrapGroup.do".equals(request.getServletPath())) {
+                response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapGroup.do"));
+                return;
+            }
+        } else if (!(xwoot.isStateComputed())) {
+            this.config.getServletContext().log("Site does not have a state yet, opening stateManagement.");
+            if (!"/stateManagement.do".equals(request.getServletPath())) {
+                response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/stateManagement.do"));
+                return;
+            }
+        }
 
-            // Add a header to inform about the presence of the xwoot service.
-            response.addHeader("XWOOT_SERVICE", "xwoot service");
+        // Add a header to inform about the presence of the xwoot service.
+        response.addHeader("XWOOT_SERVICE", "xwoot service");
 
-            this.config.getServletContext().log("Base Filter applied");
+        this.config.getServletContext().log("Base Filter applied");
 
-            // Let the request be further processed.
-            chain.doFilter(request, response);
-//        } catch (URISyntaxException e) {
-//            throw new ServletException(e);
-//        } catch (XWootException e) {
-//            throw new ServletException(e);
-//        }
+        // Let the request be further processed.
+        chain.doFilter(request, response);
+        // } catch (URISyntaxException e) {
+        // throw new ServletException(e);
+        // } catch (XWootException e) {
+        // throw new ServletException(e);
+        // }
     }
 
     /**

@@ -63,7 +63,7 @@ import org.xwoot.xwootApp.web.XWootSite;
 /**
  * Servlet handling network setup.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class BootstrapNetwork extends HttpServlet
 {
@@ -173,7 +173,7 @@ public class BootstrapNetwork extends HttpServlet
             }
         }
 
-        if (CREATE_BUTTON.equals("Create")) {
+        if (CREATE_BUTTON.equals(networkChoice)) {
             this.getServletContext().log("Create network requested.");
 
             try {
@@ -192,8 +192,8 @@ public class BootstrapNetwork extends HttpServlet
             String relaySeedingUri = request.getParameter("relaySeedingUri");
             String rdvSeeds = request.getParameter("rdvSeeds");
             String relaySeeds = request.getParameter("relaySeeds");
-            boolean beRendezVous = "true".equals(request.getParameter("beRendezVous"));
-            boolean beRelay = "true".equals(request.getParameter("beRelay"));
+            boolean beRendezVous = TRUE.equals(request.getParameter("beRendezVous"));
+            boolean beRelay = TRUE.equals(request.getParameter("beRelay"));
 
             String[] rdvSeedsList = rdvSeeds.split("\\s*,\\s*");
             String[] relaySeedsList = relaySeeds.split("\\s*,\\s*");

@@ -935,7 +935,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             networkConfig.clearRendezvousSeedingURIs();
             networkConfig.clearRendezvousSeeds();
             
-            // set the peer mode.
+            this.peer.getManager().setUseDefaultSeeds(false);
             this.peer.getManager().setMode(ConfigMode.RENDEZVOUS_RELAY);
         } catch (Exception e) {
             throw new XWootException(this.getXWootName() + " : Failed to initialize network.", e);
