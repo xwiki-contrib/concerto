@@ -95,7 +95,7 @@ public class WootId implements Comparable<WootId>, Serializable, Cloneable
             return this.localClock - other.localClock;
         }
 
-        return this.siteId.compareTo(id.siteId);
+        return this.siteId.compareTo(other.siteId);
     }
 
     /** {@inheritDoc} */

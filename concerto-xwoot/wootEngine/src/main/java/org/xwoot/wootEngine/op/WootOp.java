@@ -23,7 +23,7 @@ package org.xwoot.wootEngine.op;
 import org.xwoot.wootEngine.core.ContentId;
 import org.xwoot.wootEngine.core.WootId;
 import org.xwoot.wootEngine.core.WootContent;
-
+ 
 /**
  * Describes the structure of a Woot operation that each class implementing this interface will have to provide.
  * 

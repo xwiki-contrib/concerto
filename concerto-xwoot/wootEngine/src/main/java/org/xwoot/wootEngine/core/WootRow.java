@@ -63,6 +63,7 @@ public class WootRow implements Comparable<WootRow>, Serializable, Cloneable
     /** Unique ID used for serialization. */
     private static final long serialVersionUID = 4769231469557831085L;
 
+    /** The format used when converting this row to a string. */
     private static final String STRING_FORMAT = "(wRow {0}, {1}. {2})";
 
     /** The ID of this row. */
