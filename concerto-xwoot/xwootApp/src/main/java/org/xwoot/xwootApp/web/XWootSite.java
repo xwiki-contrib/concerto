@@ -65,6 +65,7 @@ import org.xwoot.thomasRuleEngine.ThomasRuleEngineException;
 import org.xwoot.wootEngine.WootEngine;
 import org.xwoot.wootEngine.WootEngineException;
 
+import org.xwoot.xwootApp.AutoSynchronizationThread;
 import org.xwoot.xwootApp.XWoot3;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.XWootException;
@@ -136,6 +137,11 @@ public class XWootSite
     private static final String XWOOT_DIR_NAME = "xwoot";
     
     private static final String CONTENT_PROVIDER_DIR_NAME = "contentProvider";
+    
+    private AutoSynchronizationThread autoSynchronizationThread;
+    
+    // FIXME: 60 seconds for now. Read this from a properties file.
+    private static final int AUTO_SYNCHRONIZE_INTERVAL = 60000;
 
     /** @return the singleton instance. */
     public static synchronized XWootSite getInstance()
@@ -164,6 +170,11 @@ public class XWootSite
     public XWootAPI getXWootEngine()
     {
         return this.XWootEngine;
+    }
+    
+    public AutoSynchronizationThread getAutoSynchronizationThread()
+    {
+        return this.autoSynchronizationThread;
     }
 
     /**
@@ -237,6 +248,9 @@ public class XWootSite
         
         this.XWootEngine =
             new XWoot3(xwiki, wootEngine, peer, xwootDir.toString(), tre, ae);
+        
+        // FIXME: read the interval from the properties file.
+        this.autoSynchronizationThread = new AutoSynchronizationThread(this.XWootEngine, AUTO_SYNCHRONIZE_INTERVAL);
 
         // Mark as started.
         this.started = true;

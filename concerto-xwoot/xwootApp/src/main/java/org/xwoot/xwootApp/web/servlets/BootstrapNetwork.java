@@ -56,6 +56,7 @@ import net.jxta.platform.NetworkConfigurator;
 
 import org.xwoot.jxta.NetworkManager;
 import org.xwoot.jxta.NetworkManager.ConfigMode;
+import org.xwoot.xwootApp.AutoSynchronizationThread;
 import org.xwoot.xwootApp.XWoot3;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.web.XWootSite;
@@ -290,6 +291,10 @@ public class BootstrapNetwork extends HttpServlet
         // If no errors were encountered and successfully joined/created a network, go to next step.
         if (errors.length() == 0) {
             this.getServletContext().log("No errors occured.");
+            
+            // Stop the autosynch thread if it is running.
+            XWootSite.getInstance().getAutoSynchronizationThread().stopThread();
+            
             response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapGroup.do"));
             return;
         } else {

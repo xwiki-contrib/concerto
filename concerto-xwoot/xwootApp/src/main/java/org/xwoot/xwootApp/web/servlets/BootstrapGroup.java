@@ -62,7 +62,7 @@ import org.xwoot.xwootApp.web.XWootSite;
 /**
  * Servlet handling group management.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class BootstrapGroup extends HttpServlet
 {
@@ -187,6 +187,10 @@ public class BootstrapGroup extends HttpServlet
         // If no errors were encountered and successfully joined/created a network, go to next step.
         if (errors.length() == 0 && (CREATE_BUTTON.equals(groupChoice) || JOIN_BUTTON.equals(groupChoice))) {
             this.getServletContext().log("No errors occured.");
+            
+            // Stop the autosynch thread if it is running.
+            XWootSite.getInstance().getAutoSynchronizationThread().stopThread();
+            
             response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/stateManagement.do"));
             return;
         } else {

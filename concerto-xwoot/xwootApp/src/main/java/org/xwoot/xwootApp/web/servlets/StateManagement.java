@@ -173,7 +173,11 @@ public class StateManagement extends HttpServlet
 
         if (action != null) {
             // If successful.
-            if (XWootSite.getInstance().getXWootEngine().isStateComputed()) {
+            if (exceptionMessage == null && XWootSite.getInstance().getXWootEngine().isStateComputed()) {
+                
+                // Start the auto-synchronization thread
+                XWootSite.getInstance().getAutoSynchronizationThread().startThread();
+                
                 response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/synchronize.do"));
                 return;
             }
