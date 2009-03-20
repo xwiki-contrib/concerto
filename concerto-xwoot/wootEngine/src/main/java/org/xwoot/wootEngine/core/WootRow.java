@@ -45,14 +45,14 @@
 package org.xwoot.wootEngine.core;
 
 import java.io.Serializable;
+import java.text.MessageFormat;
 
 /**
- * Handles the content of a row of text.
+ * Handles the content of a row of text as a WOOT entity.
  * 
  * @version $Id$
  */
-@SuppressWarnings("unchecked")
-public class WootRow implements Comparable, Serializable, Cloneable
+public class WootRow implements Comparable<WootRow>, Serializable, Cloneable
 {
     /** The first row in a content. */
     public static final WootRow FIRST_WOOT_ROW = new WootRow(WootId.FIRST_WOOT_ID, "[", 0);
@@ -62,6 +62,8 @@ public class WootRow implements Comparable, Serializable, Cloneable
 
     /** Unique ID used for serialization. */
     private static final long serialVersionUID = 4769231469557831085L;
+
+    private static final String STRING_FORMAT = "(wRow {0}, {1}. {2})";
 
     /** The ID of this row. */
     private WootId wootId;
@@ -174,6 +176,17 @@ public class WootRow implements Comparable, Serializable, Cloneable
      * @param wootId to set.
      * @see #getWootId()
      */
+    public void setWootId(WootId wootId)
+    {
+        this.wootId = wootId;
+    }
+
+    /**
+     * @param wootId to set.
+     * @see #getWootId()
+     * @deprecated Wrongly named. Use {@link WootRow#setWootId} instead.
+     */
+    @Deprecated
     public void setWid(WootId wootId)
     {
         this.wootId = wootId;
@@ -183,15 +196,12 @@ public class WootRow implements Comparable, Serializable, Cloneable
     @Override
     public String toString()
     {
-        String separator = ", ";
-        return "(wRow " + this.wootId + separator + this.visible + separator + this.content + ")";
+        return MessageFormat.format(STRING_FORMAT, this.wootId, this.visible, this.content);
     }
 
     /** {@inheritDoc} */
-    public int compareTo(Object o)
+    public int compareTo(WootRow other)
     {
-        WootRow other = (WootRow) o;
-
         return this.getWootId().compareTo(other.getWootId());
     }
 

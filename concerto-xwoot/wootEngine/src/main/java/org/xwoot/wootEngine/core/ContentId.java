@@ -21,7 +21,7 @@ public class ContentId implements Serializable
     /** Id of the field containing the content. */
     private String fieldName;
 
-    /** Is the content a copy of an another content. */
+    /** Is the content a copy of another content. */
     private boolean isCopy;
 
     /**
@@ -48,7 +48,7 @@ public class ContentId implements Serializable
     public int hashCode()
     {
         final int prime = 31;
-        int result = 1;
+        int result = 11;
         result = prime * result + ((this.fieldName == null) ? 0 : this.fieldName.hashCode());
         result = prime * result + (this.isCopy ? 1231 : 1237);
         result = prime * result + ((this.objectName == null) ? 0 : this.objectName.hashCode());

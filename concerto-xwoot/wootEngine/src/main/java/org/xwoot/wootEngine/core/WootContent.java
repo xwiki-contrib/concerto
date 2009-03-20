@@ -45,7 +45,6 @@
 package org.xwoot.wootEngine.core;
 
 import java.io.Serializable;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -57,7 +56,6 @@ import java.util.List;
  */
 public class WootContent implements Serializable
 {
-
     /** Unique ID used for serialization. */
     private static final long serialVersionUID = -7726342430092268721L;
 

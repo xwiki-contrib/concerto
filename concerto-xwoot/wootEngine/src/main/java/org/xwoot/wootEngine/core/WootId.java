@@ -51,8 +51,7 @@ import java.io.Serializable;
  * 
  * @version $Id$
  */
-@SuppressWarnings("unchecked")
-public class WootId implements Comparable, Serializable, Cloneable
+public class WootId implements Comparable<WootId>, Serializable, Cloneable
 {
     /** Id of beginning of content. */
     public static final WootId FIRST_WOOT_ID = new WootId(String.valueOf(-1), -1);
@@ -82,20 +81,18 @@ public class WootId implements Comparable, Serializable, Cloneable
     }
 
     /** {@inheritDoc} */
-    public int compareTo(Object o)
+    public int compareTo(WootId other)
     {
-        WootId id = (WootId) o;
-
-        if (this == WootId.FIRST_WOOT_ID || id == WootId.LAST_WOOT_ID) {
+        if (this == WootId.FIRST_WOOT_ID || other == WootId.LAST_WOOT_ID) {
             return -1;
         }
 
-        if (this == WootId.LAST_WOOT_ID || id == WootId.FIRST_WOOT_ID) {
+        if (this == WootId.LAST_WOOT_ID || other == WootId.FIRST_WOOT_ID) {
             return 1;
         }
 
-        if (this.siteId == id.siteId) {
-            return this.localClock - id.localClock;
+        if (this.siteId == other.siteId) {
+            return this.localClock - other.localClock;
         }
 
         return this.siteId.compareTo(id.siteId);
