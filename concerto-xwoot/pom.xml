@@ -2,6 +2,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <!-- general project informations -->
   <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.xwiki.concerto</groupId>
+    <artifactId>concerto</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
   <groupId>org.xwoot</groupId>
   <artifactId>xwoot</artifactId>
   <packaging>pom</packaging>
@@ -16,8 +21,7 @@
   <distributionManagement>
     <site>
       <id>org.xwoot</id>
-      <url>scp://maven2:deploy@toxic.loria.fr:/home/maven2/xwootSite
-      </url>
+      <url>scp://maven2:deploy@toxic.loria.fr:/home/maven2/xwootSite</url>
     </site>
   </distributionManagement>
   <scm>
@@ -27,8 +31,7 @@
     <developerConnection>
       scm:svn:https://svn.xwiki.org/svnroot/xwiki/sandbox/concerto/concerto-xwoot
     </developerConnection>
-    <url>https://svn.xwiki.org/svnroot/xwiki/sandbox/concerto/concerto-xwoot
-    </url>
+    <url>https://svn.xwiki.org/svnroot/xwiki/sandbox/concerto/concerto-xwoot</url>
   </scm>
 
   <!-- developpers informations -->
@@ -39,8 +42,7 @@
       <email>maire@loria.fr</email>
       <url>http://www.loria.fr/~maire</url>
       <organization>INRIA - Loria</organization>
-      <organizationUrl>http://www.loria.fr
-      </organizationUrl>
+      <organizationUrl>http://www.loria.fr</organizationUrl>
       <roles>
         <role>administrateur</role>
         <role>developper</role>
@@ -59,75 +61,58 @@
       </activation>
       <properties>
         <var.working.dir>/tmp/xwootApp</var.working.dir>
-        <var.localhost><!--  http://concerto.loria.fr:8080  -->
-        				http://localhost:8080
-        </var.localhost>
+        <var.localhost>http://localhost:8080</var.localhost>
         <!-- ############################################ -->
-        <!-- # servlet container properties (ex : tomcat) # -->
+        <!-- #       servlet container properties       # -->
         <!-- ############################################ -->
-        <var.servlet.container.manager.url>
-          ${var.localhost}/manager
-        </var.servlet.container.manager.url>
-        <var.servlet.container.home>
-         ${var.working.dir}/apache-tomcat-5.5.20
-        </var.servlet.container.home>
-        <var.servlet.container.user>maven
-        </var.servlet.container.user>
+        <var.servlet.container.manager.url>${var.localhost}/manager</var.servlet.container.manager.url>
+        <var.servlet.container.home>${var.working.dir}/apache-tomcat-5.5.20</var.servlet.container.home>
+        <var.servlet.container.user>maven</var.servlet.container.user>
         <var.servlet.container.pwd>test</var.servlet.container.pwd>
         <var.xwoot.app.context>xwootApp</var.xwoot.app.context>
 
         <!-- ############################################ -->
-        <!-- # xwoot properties (file xwoot.properties) # -->
+        <!-- # XWiki properties (file xwiki.properties) # -->
         <!-- ############################################ -->
         <!-- xwiki xml-rpc interface endpoint -->
-        <var.xwiki.endpoint>http://localhost:8080/xwiki/xmlrpc
-        </var.xwiki.endpoint>
+        <var.xwiki.endpoint>${var.localhost}/xwiki/xmlrpc</var.xwiki.endpoint>
         <!-- xwiki user for access (read/write) -->
         <var.xwiki.username>Admin</var.xwiki.username>
         <!-- xwiki user password for access -->
         <var.xwiki.password>admin</var.xwiki.password>
 
-        <!--############################################-->
-        <!--# xwoot properties (file xwoot.properties) #-->
-        <!--############################################-->
-        <!--
-          choose an existing and writable working directory for xwoot
-          files
-        -->
-        <var.xwoot.working.dir>${var.working.dir}/xwoot_data/${var.xwoot.app.context}
-        </var.xwoot.working.dir>
+        <!-- ############################################ -->
+        <!-- # XWoot properties (file xwoot.properties) # -->
+        <!-- ############################################ -->
+        <!-- choose an existing and writable working directory for xwoot files -->
+        <var.xwoot.working.dir>${var.working.dir}/xwoot_data/${var.xwoot.app.context}</var.xwoot.working.dir>
 
-        <!-- the site id ; must be unique on the the xwoot network -->
-        <var.xwoot.site.id>152811180</var.xwoot.site.id>
+        <!-- the site id ; must be unique on the the xwoot network.
+             If left empty, it will be randomly generated. -->
+        <var.xwoot.site.id></var.xwoot.site.id>
 
         <!-- the server url (do not use localhost) -->
-        <var.xwoot.server.url>${var.localhost}/${var.xwoot.app.context}
-        </var.xwoot.server.url>
+        <var.xwoot.server.url>${var.localhost}/${var.xwoot.app.context}</var.xwoot.server.url>
 
         <!-- the server name (not required) -->
-        <var.xwoot.server.name>Chewbacca
-        </var.xwoot.server.name>
+        <var.xwoot.server.name></var.xwoot.server.name>
 
         <!-- server config -->
         <!--   delay between log refresh (in seconds) -->
         <var.xwoot.refresh.log.delay>60</var.xwoot.refresh.log.delay>
         <!--   max size of neigbors list-->
-        <var.xwoot.neighbors.list.size>10
-        </var.xwoot.neighbors.list.size>
+        <var.xwoot.neighbors.list.size>10</var.xwoot.neighbors.list.size>
         <!--   number of round for messages propagation -->
         <var.xwoot.pbcast.round>2</var.xwoot.pbcast.round>
-        
-         <!--############################################-->
+
+        <!--############################################-->
         <!--# iwoot properties (file iwoot.properties) #-->
         <!--############################################-->
-        
         <var.iwoot.app.context>iwoot</var.iwoot.app.context>
-        
-        <!-- IWoot use 'mock' or 'real' components -->
+        <!-- IWoot can use either 'mock' or 'real' components -->
         <var.iwoot.wcm>mock</var.iwoot.wcm>
         <var.iwoot.xwoot>mock</var.iwoot.xwoot>
-        <var.iwoot.xwoot.real.url> ${var.localhost}/${var.iwoot.app.context}/rest</var.iwoot.xwoot.real.url>
-        
+        <var.iwoot.xwoot.real.url>${var.localhost}/${var.iwoot.app.context}/rest</var.iwoot.xwoot.real.url>
       </properties>
     </profile>
   </profiles>
@@ -136,8 +121,7 @@
     <pluginRepository>
       <id>mc-release</id>
       <name>Local Maven repository of releases</name>
-      <url>http://mc-repo.googlecode.com/svn/maven2/releases
-      </url>
+      <url>http://mc-repo.googlecode.com/svn/maven2/releases</url>
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
@@ -148,8 +132,7 @@
     <pluginRepository>
       <id>mc-snapshot</id>
       <name>Local Maven repository of snapshots</name>
-      <url>http://mc-repo.googlecode.com/svn/maven2/snapshots
-      </url>
+      <url>http://mc-repo.googlecode.com/svn/maven2/snapshots</url>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
@@ -159,10 +142,8 @@
     </pluginRepository>
     <pluginRepository>
       <id>mc-thirdparty</id>
-      <name>Local Maven repository of third party libraries not in
-        maven repo</name>
-      <url>http://mc-repo.googlecode.com/svn/maven2/thirdparty
-      </url>
+      <name>Local Maven repository of third party libraries not in maven repo</name>
+      <url>http://mc-repo.googlecode.com/svn/maven2/thirdparty</url>
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
@@ -180,8 +161,7 @@
     <repository>
       <id>mc-release</id>
       <name>Local Maven repository of releases</name>
-      <url>http://mc-repo.googlecode.com/svn/maven2/releases
-      </url>
+      <url>http://mc-repo.googlecode.com/svn/maven2/releases</url>
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
@@ -192,8 +172,7 @@
     <repository>
       <id>mc-snapshot</id>
       <name>Local Maven repository of snapshots</name>
-      <url>http://mc-repo.googlecode.com/svn/maven2/snapshots
-      </url>
+      <url>http://mc-repo.googlecode.com/svn/maven2/snapshots</url>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
@@ -205,8 +184,7 @@
     <repository>
       <id>xwiki-releases</id>
       <name>XWiki Maven2 Remote Repository for Releases</name>
-      <url>http://maven.xwiki.org/releases
-      </url>
+      <url>http://maven.xwiki.org/releases</url>
       <releases>
         <enabled>true</enabled>
       </releases>
@@ -217,8 +195,7 @@
     <repository>
       <id>xwiki-snapshots</id>
       <name>XWiki Maven2 Remote Repository for Snapshots</name>
-      <url>http://maven.xwiki.org/snapshots
-      </url>
+      <url>http://maven.xwiki.org/snapshots</url>
       <releases>
         <enabled>false</enabled>
       </releases>
@@ -229,8 +206,7 @@
      <repository>
       <id>xwiki-snapshots</id>
       <name>XWiki Maven2 Remote Repository for Snapshots</name>
-      <url>http://maven.xwiki.org/externals
-      </url>
+      <url>http://maven.xwiki.org/externals</url>
       <releases>
         <enabled>false</enabled>
       </releases>
@@ -261,15 +237,13 @@
     <!-- Module for P2P communication using the JXTA platform-->
     <module>jxta</module>
     <!-- Module for a P2P server peer. -->
-    <module>xwootServerPeer</module> 
+    <module>xwootServerPeer</module>
     <!-- Module for additional resources needed for the standalone distribution. -->
     <module>xwootApp-jetty-resources</module>
   </modules>
-  
+
   <build>
-  
     <plugins>
-    
       <plugin>
         <groupId>org.apache.maven.plugins
         </groupId>
@@ -281,8 +255,8 @@
       <!-- to put header of classes -->
       <plugin>
         <groupId>com.mathieucarbou.mojo</groupId>
-        <artifactId>maven-license-plugin
-        </artifactId>
+        <artifactId>maven-license-plugin</artifactId>
+        <version>1.2.2</version>
         <configuration>
           <header>Documentation/header.txt
           </header>
@@ -370,15 +344,11 @@
             </execution>
           </executions>
         </plugin>
-      
     </plugins>
-    
   </build>
-  
+
   <reporting>
-  
     <plugins>
-    
       <!--
         The PMD plugin allows you to automatically run the PMD code
         analysis tool on your project's source code and generate a site
@@ -452,13 +422,10 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
       </plugin>
-      
-      
-    </plugins>
-    
+    </plugins>    
   </reporting>
-  
+
   <properties>
-  	<xwoot.checkstyle.skip>false</xwoot.checkstyle.skip>
+    <xwoot.checkstyle.skip>false</xwoot.checkstyle.skip>
   </properties>
 </project>
