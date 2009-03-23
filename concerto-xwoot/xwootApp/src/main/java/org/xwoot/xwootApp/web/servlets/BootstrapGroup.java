@@ -78,6 +78,9 @@ public class BootstrapGroup extends HttpServlet
     /** The value of a checked checkbox. */
     private static final String TRUE = "true";
     
+    /** The default keystore password for jxta's authentication protocol. */
+    private static final char[] KEYSTORE_PASSWORD = "concerto".toCharArray();
+    
     /** Used for serialization. */
     private static final long serialVersionUID = -3758874922535817475L;
 
@@ -111,7 +114,7 @@ public class BootstrapGroup extends HttpServlet
             boolean isPrivateGroup = TRUE.equals(request.getParameter("isPrivateGroup"));
             String groupPassword = request.getParameter("createGroupPassword");
             String groupPasswordRetyped = request.getParameter("createGroupPasswordRetyped");
-            String keystorePassword = request.getParameter("createKeystorePassword");
+            //String keystorePassword = request.getParameter("createKeystorePassword");
             
             try {
                 if (isPrivateGroup) {
@@ -123,7 +126,7 @@ public class BootstrapGroup extends HttpServlet
                     }
                 }
                 
-                ((XWoot3) xwootEngine).createNewGroup(groupName, groupDescription, keystorePassword.toCharArray(), groupPassword.toCharArray());
+                ((XWoot3) xwootEngine).createNewGroup(groupName, groupDescription, KEYSTORE_PASSWORD/*keystorePassword.toCharArray()*/, groupPassword.toCharArray());
             } catch (Exception e) {
                 errors += "Can't create group:" + e.getMessage() + "\n";
             }
@@ -132,7 +135,7 @@ public class BootstrapGroup extends HttpServlet
             this.getServletContext().log("Join group requested.");
             //
             String groupPassword = request.getParameter("joinGroupPassword");
-            String keystorePassword = request.getParameter("joinGroupKeystorePassword");
+            //String keystorePassword = request.getParameter("joinGroupKeystorePassword");
             
             boolean beRendezVous = TRUE.equals(request.getParameter("beRendezVous"));
             
@@ -148,7 +151,7 @@ public class BootstrapGroup extends HttpServlet
                         if (aGroupAdv.getPeerGroupID().toString().equals(groupID)) {
                             this.log("Joining group described by this adv:\n" + aGroupAdv);
                             
-                            ((XWoot3) xwootEngine).joinGroup(aGroupAdv, keystorePassword.toCharArray(), groupPassword.toCharArray(), beRendezVous);
+                            ((XWoot3) xwootEngine).joinGroup(aGroupAdv, KEYSTORE_PASSWORD/*keystorePassword.toCharArray()*/, groupPassword.toCharArray(), beRendezVous);
                             
                             // Save the group advertisement to be able to rejoin after a reboot.
                             // FIXME: save group and keystore password then implement the deletion of the current group

@@ -200,6 +200,9 @@ public class JxtaPeer implements Peer, RendezvousListener {
 		this.jxtaCastListener = jxtaCastListener;
 		this.directMessageReceiver = directMessageReceiver;
 		
+		// Clean the local cache of known groups.
+		//this.flushExistingAdvertisements(this.rootGroup, DiscoveryService.GROUP);
+		
 		// Do a discovery for available groups.
 		discoverGroups(null, null);
 	}
@@ -216,7 +219,8 @@ public class JxtaPeer implements Peer, RendezvousListener {
 			try {
 				this.leavePeerGroup(currentJoinedGroup);
 			} catch (Exception e) {
-				// ignore, we are shutting down anyway.
+			    // ignore, we are shutting down anyway.
+			    this.logger.warn("Failed to leave group " + this.currentJoinedGroup + " while stopping jxta network.");
 			}
 			
 //			currentGroup.stopApp();
@@ -809,7 +813,8 @@ public class JxtaPeer implements Peer, RendezvousListener {
         this.createDirectCommunicationServerSocket();
         
         // Clean the local cache for this group just in case we have previously joined it.
-        this.flushExistingAdvertisements(newGroup);
+        this.flushExistingAdvertisements(newGroup, DiscoveryService.PEER);
+        this.flushExistingAdvertisements(newGroup, DiscoveryService.ADV);
         
         // Update local cache with peers and their private pipe advertisements from this group.
         discoverPeers(null, /*groupAdv, */null);
@@ -1066,7 +1071,8 @@ public class JxtaPeer implements Peer, RendezvousListener {
         }
         
         // Clean the local cache for this group.
-        this.flushExistingAdvertisements(oldGroup);
+        this.flushExistingAdvertisements(oldGroup, DiscoveryService.PEER);
+        this.flushExistingAdvertisements(oldGroup, DiscoveryService.ADV);
         
         oldGroup.stopApp();
         oldGroup.unref();
@@ -1603,6 +1609,10 @@ public class JxtaPeer implements Peer, RendezvousListener {
                 success = true;
             }
             
+            if (success) {
+                break;
+            }
+            
             // Wait for advertisement discovery to get more possible pipe advs.
             try {
                 Thread.sleep(WAIT_INTERVAL_BETWEEN_TRIES);
@@ -1727,47 +1737,40 @@ public class JxtaPeer implements Peer, RendezvousListener {
 //        
 //        this.directMessageReceiver = directMessageReceiver;
 //    }
-
+	
 	/**
-	* Quetly flush existing PeerAdvertisements and PipeAdvertisements from a group. Other advertisements get flusshed as well as long as they are not GroupAdvertisements.
-	* 
-	* @param group the group for which to flush advertisements.
-	*/
-	public void flushExistingAdvertisements(PeerGroup group)
-	{
-    	DiscoveryService discoveryService = group.getDiscoveryService();
-    	if (discoveryService == null) {
-    	    this.logger.warn("DiscoveryService for group " + group.getPeerGroupName() + " could not be obtained. Flushing advertisements canceled.");
-    	    return;
-    	}
-    	       
-    	ArrayList<Advertisement> oldAdvertisements = new ArrayList<Advertisement>();
-    	       
-    	Enumeration<Advertisement> peers = null;
-    	try {
-    	    peers = discoveryService.getLocalAdvertisements(DiscoveryService.PEER, null, null);
-    	    oldAdvertisements.addAll(Collections.list(peers));
-    	} catch (Exception e) {
-    	    // just log it.
-    	    this.logger.warn("Failed to get local PEER advertisements for group " + group, e);
-    	}
-    	        
-    	Enumeration<Advertisement> pipes = null;
-    	try {
-    	    pipes = discoveryService.getLocalAdvertisements(DiscoveryService.ADV, null, null);
-    	    oldAdvertisements.addAll(Collections.list(pipes));
-    	} catch (Exception e) {
-    	    // just log it.
-            this.logger.warn("Failed to get local ADV advertisements for group " + group, e);
-    	}
-    	        
-    	for (Advertisement adv : oldAdvertisements) {
-    	    try {
-    	        discoveryService.flushAdvertisement(adv);
-    	    } catch (Exception e) {
-    	        // just log it.
+	 * Flush advertisements of a given type for a certain group. If something fails along the way, it will just be
+	 * logged and no exception will be thrown.
+	 *  
+	 * @param group the group whos advertisements to flush.
+	 * @param advertisementType the type of advertisements to flush.
+	 * @see DiscoveryService
+	 */
+    public void flushExistingAdvertisements(PeerGroup group, int advertisementType)
+    {
+        DiscoveryService discoveryService = group.getDiscoveryService();
+        if (discoveryService == null) {
+            this.logger.warn("DiscoveryService for group " + group.getPeerGroupName() + " could not be obtained. Flushing advertisements canceled.");
+            return;
+        }
+                
+        Enumeration<Advertisement> advertiements = null;
+        try {
+            advertiements = discoveryService.getLocalAdvertisements(advertisementType, null, null);
+        } catch (Exception e) {
+            // just log it.
+            this.logger.warn("Failed to get local advertisements of type " + advertisementType + " for group " + group, e);
+            return;
+        }
+             
+        while (advertiements.hasMoreElements()) {
+            Advertisement adv = advertiements.nextElement();
+            try {
+                discoveryService.flushAdvertisement(adv);
+            } catch (Exception e) {
+                // just log it.
                 this.logger.warn("Failed to flush advertisement:\n" + adv + "\n", e);
-    	    }
-    	}
-	}
+            }
+        }
+    }
 }

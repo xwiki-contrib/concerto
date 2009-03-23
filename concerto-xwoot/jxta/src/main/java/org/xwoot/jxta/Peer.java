@@ -410,13 +410,11 @@ public interface Peer
      * Send a variable-sized object to a random peer in the currently joined group.
      * 
      * @param object the object to send.
-     * @return true if successfully sent. false is returned if no other peers are in the current group except you. false
-     *         is also returned if the message could not be sent due to network over-load. In both cases, when false is
-     *         returned, you can try to send the object again later.
+     * @return the replied object returned from the receiving peer. {@code null} can also be returned, depending on the context.
      * @throws JxtaException if the message could not be sent after {@link JxtaPeer#NUMBER_OF_TRIES}, either because of
      *             transfer problems or because there was no peer in the group to receive it.
      * @throws PeerGroupException if this peer has not yet joined a group other than NetPeerGroup and contacted its RDV.
-     * @throws IllegalArgumentException if the object does not implement {@link Serializable}.
+     * @throws IllegalArgumentException if the object does not implement {@link Serializable} or is {@code null}.
      * @see net.jxta.jxtacast.JxtaCast#sendObject(java.lang.Object, java.lang.String)
      */
     Object sendObjectToRandomPeerInGroup(Object object) throws PeerGroupException, IllegalArgumentException,

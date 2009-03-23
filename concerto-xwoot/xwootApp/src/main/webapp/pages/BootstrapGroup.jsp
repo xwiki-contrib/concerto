@@ -13,7 +13,7 @@
             <div id="group_password">
             	Password: <input type="password" name="createGroupPassword" /><br/>
             	Retype Password: <input type="password" name="createGroupPasswordRetyped" /><br/>
-            	Local Keystore Password: <input type="password" name="createKeystorePassword" /><br/>
+            	<!-- Local Keystore Password: <input type="password" name="createKeystorePassword" /><br/>  -->
             </div>
 			<br/>
             <input type="submit" value="Create" name="groupChoice"/>
@@ -26,7 +26,7 @@
             	</c:forEach>
             </select><br/>
             Password: <input type="password" name="joinGroupPassword" /><br/>
-            Local Keystore Password: <input type="password" name="joinGroupKeystorePassword" /><br/>
+            <!-- Local Keystore Password: <input type="password" name="joinGroupKeystorePassword" /><br/>  -->
             <input type="checkbox" name="beRendezVous" value="true" /> Route communication for this group<br/>
 			<br/>
 			<input type="submit" value="Refresh List" name="groupChoice"/>

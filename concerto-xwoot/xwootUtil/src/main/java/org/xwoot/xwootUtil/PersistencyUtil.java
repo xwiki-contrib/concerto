@@ -59,6 +59,8 @@ public final class PersistencyUtil
     {
         FileOutputStream fout = null;
         ObjectOutputStream oos = null;
+        
+        FileUtil.checkDirectoryPath(new File(filePath).getParentFile());
 
         try {
             fout = new FileOutputStream(filePath);

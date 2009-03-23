@@ -44,8 +44,10 @@
 
 package org.xwoot.xwootApp.web.servlets;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -56,10 +58,10 @@ import net.jxta.platform.NetworkConfigurator;
 
 import org.xwoot.jxta.NetworkManager;
 import org.xwoot.jxta.NetworkManager.ConfigMode;
-import org.xwoot.xwootApp.AutoSynchronizationThread;
 import org.xwoot.xwootApp.XWoot3;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.web.XWootSite;
+import org.xwoot.xwootUtil.FileUtil;
 
 /**
  * Servlet handling network setup.
@@ -94,7 +96,7 @@ public class BootstrapNetwork extends HttpServlet
         String errors = "";
 
         NetworkManager networkManager = ((XWoot3) xwootEngine).getPeer().getManager();
-        NetworkConfigurator networkConfig = networkManager.getConfigurator();
+        NetworkConfigurator networkConfig = null;
 
         String networkChoice = request.getParameter("networkChoice");
 
@@ -106,6 +108,52 @@ public class BootstrapNetwork extends HttpServlet
 
         // Common settings.
         if (CREATE_BUTTON.equals(networkChoice) || JOIN_BUTTON.equals(networkChoice)) {
+            
+            // Disconnect from any connected network.
+            if (xwootEngine.isConnectedToP2PNetwork()) {
+                try {
+                    xwootEngine.disconnectFromP2PNetwork();
+                } catch (Exception e) {
+                    // TODO: remove the exception throwing of disconnectFromP2PNetwork.
+                    // This should never happen.
+                    this.log("Failed to disconnect from existing network.", e);
+                }
+            }
+            
+            // Clear previous locally cached configuration.
+            File platformConfig = new File(networkManager.getConfigurator().getHome(), "PlatformConfig");
+            if (platformConfig.exists()) {
+                platformConfig.delete();
+            }
+            
+            // Initialize the proper peer mode.
+            ConfigMode mode = null;
+            if (JOIN_BUTTON.equals(networkChoice)) {
+                boolean beRendezVous = TRUE.equals(request.getParameter("beRendezVous"));
+                boolean beRelay = TRUE.equals(request.getParameter("beRelay"));
+                
+                if (beRendezVous && beRelay) {
+                    mode = ConfigMode.RENDEZVOUS_RELAY;
+                } else if (beRendezVous) {
+                    mode = ConfigMode.RENDEZVOUS;
+                } else if (beRelay) {
+                    mode = ConfigMode.RELAY;
+                }
+            } else if (CREATE_BUTTON.equals(networkChoice)) {
+                mode = ConfigMode.RENDEZVOUS_RELAY;
+            }
+            
+            if (mode != null) {
+                this.log("Setting this peer to " + mode + " mode.");
+                networkManager.setMode(mode);
+            } // else mode remains unchanged as EDGE.
+            
+            // Get the now updated networkConfig or the old one if the mode remained the same.
+            networkConfig = networkManager.getConfigurator();
+            
+            
+            // Continue with common settings.
+            
             boolean useExternalIp = TRUE.equals(request.getParameter("useExternalIp"));
             String externalIp = request.getParameter("externalIp");
             boolean useOnlyExternalIp = TRUE.equals(request.getParameter("useOnlyExternalIp"));
@@ -113,17 +161,12 @@ public class BootstrapNetwork extends HttpServlet
             boolean useTcp = TRUE.equals(request.getParameter("useTcp"));
             String tcpPort = request.getParameter("tcpPort");
 
-            boolean useHttp = "true".equals(request.getParameter("useHttp"));
+            boolean useHttp = TRUE.equals(request.getParameter("useHttp"));
             String httpPort = request.getParameter("httpPort");
 
-            boolean useMulticast = "true".equals(request.getParameter("useMulticast"));
+            boolean useMulticast = TRUE.equals(request.getParameter("useMulticast"));
 
             try {
-                // Disconnect from any connected network.
-                if (xwootEngine.isConnectedToP2PNetwork()) {
-                    xwootEngine.disconnectFromP2PNetwork();
-                }
-
                 networkConfig.setTcpEnabled(useTcp);
 
                 if (useTcp) {
@@ -171,20 +214,33 @@ public class BootstrapNetwork extends HttpServlet
                 this.log("Using Multicast? " + useMulticast);
             } catch (Exception e) {
                 // FIXME: handle errors.
+                this.log("EXCEPTION while parsing common settings!", e);
             }
         }
 
+        // Create network settings.
         if (CREATE_BUTTON.equals(networkChoice)) {
             this.getServletContext().log("Create network requested.");
 
             try {
-                xwootEngine.createNetwork();
+                // Can`t use this because setmode overrides our settings. 
+                //xwootEngine.createNetwork();
+                
+                networkConfig.clearRelaySeedingURIs();
+                networkConfig.clearRelaySeeds();
+                networkConfig.clearRendezvousSeedingURIs();
+                networkConfig.clearRendezvousSeeds();
+                
+                networkManager.setUseDefaultSeeds(false);
+                
+                ((XWoot3) xwootEngine).getPeer().startNetworkAndConnect((XWoot3) xwootEngine, (XWoot3) xwootEngine);
                 // request.getSession().setAttribute("join", Boolean.valueOf(false));
                 // response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/stateManagement.do"));
             } catch (Exception e) {
                 errors += "Can't create network:" + e.getMessage() + "\n";
             }
 
+        // Join Network settings
         } else if (JOIN_BUTTON.equals(networkChoice)) {
             this.getServletContext().log("Join network requested.");
 
@@ -193,8 +249,6 @@ public class BootstrapNetwork extends HttpServlet
             String relaySeedingUri = request.getParameter("relaySeedingUri");
             String rdvSeeds = request.getParameter("rdvSeeds");
             String relaySeeds = request.getParameter("relaySeeds");
-            boolean beRendezVous = TRUE.equals(request.getParameter("beRendezVous"));
-            boolean beRelay = TRUE.equals(request.getParameter("beRelay"));
 
             String[] rdvSeedsList = rdvSeeds.split("\\s*,\\s*");
             String[] relaySeedsList = relaySeeds.split("\\s*,\\s*");
@@ -224,51 +278,50 @@ public class BootstrapNetwork extends HttpServlet
                             networkConfig.addRelaySeedingURI("http://rdv.jxtahosts.net/cgi-bin/relays.cgi");
 
                         } else if (useNetwork.equals("custom")) {
-                            networkConfig.addRdvSeedingURI(rdvSeedingUri);
-                            networkConfig.addRelaySeedingURI(relaySeedingUri);
+                            // Seeding URIs
+                            
+                            try {
+                                networkConfig.addRdvSeedingURI(new URI(rdvSeedingUri));
+                            } catch (URISyntaxException e) {
+                                throw new IllegalArgumentException(rdvSeedingUri + " is not a valid location for retrieving rendezvous seeds.");
+                            }
+                            
+                            try {
+                                networkConfig.addRelaySeedingURI(new URI(relaySeedingUri));
+                            } catch (URISyntaxException e) {
+                                throw new IllegalArgumentException(rdvSeedingUri + " is not a valid location for retrieving relay seeds.");
+                            }
 
                             // Rdv Seeds.
                             for (String rdvSeed : rdvSeedsList) {
+                                URI seedUri = null;
                                 try {
-                                    URI seedUri = new URI(rdvSeed);
+                                    seedUri = new URI(rdvSeed);
                                     if (seedUri.getPort() < 1) {
                                         throw new IllegalArgumentException(rdvSeed + " is an invalid RDV seed.\n");
                                     }
-                                    networkConfig.addSeedRendezvous(seedUri);
                                 } catch (Exception e) {
-                                    // ignore invalid entry.
-                                    continue;
+                                    throw new IllegalArgumentException(rdvSeed + " is not a valid RendezVous seed.");
                                 }
+                                
+                                networkConfig.addSeedRendezvous(seedUri);
                             }
 
                             // Relay Seeds.
                             for (String relaySeed : relaySeedsList) {
+                                URI seedUri = null;
                                 try {
-                                    URI seedUri = new URI(relaySeed);
+                                    seedUri = new URI(relaySeed);
                                     if (seedUri.getPort() < 1) {
                                         throw new IllegalArgumentException(relaySeed + " is an invalid Relay seed.\n");
                                     }
-                                    networkConfig.addSeedRendezvous(seedUri);
                                 } catch (Exception e) {
-                                    // ignore invalid entry.
-                                    continue;
+                                    throw new IllegalArgumentException(relaySeed + " is not a valid Relay seed.");
                                 }
+                                
+                                networkConfig.addSeedRelay(seedUri);
                             }
-                        }
-
-                        ConfigMode mode = null;
-                        if (beRendezVous && beRelay) {
-                            mode = ConfigMode.RENDEZVOUS_RELAY;
-                        } else if (beRendezVous) {
-                            mode = ConfigMode.RENDEZVOUS;
-                        } else if (beRelay) {
-                            mode = ConfigMode.RELAY;
-                        }
-
-                        this.log("Setting this peer to " + mode + " mode.");
-
-                        if (mode != null) {
-                            networkManager.setMode(mode);
+                            
                         }
 
                         xwootEngine.joinNetwork(null);

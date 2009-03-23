@@ -1121,24 +1121,6 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         File treState = null;
         try{
             FileUtil.unzipInDirectory(state, this.stateDirPath);
-            /*File[] states = new File[2];
-            String[] l = new File(this.stateDirPath).list();
-// FIXME: BAD!
-            if (l.length != 3) {
-                return;
-            }
-
-            for (int i = 0; i < l.length; i++) {
-                int j = -1;
-                if (l[i].equals(WootEngine.STATE_FILE_NAME)) {
-                    j = 0;
-                } else if (l[i].equals(ThomasRuleEngine.TRE_STATE_FILE_NAME)) {
-                    j = 1;
-                }
-
-                if (j != -1)
-                    states[j] = new File(this.stateDirPath + File.separatorChar + l[i]);
-            }*/
             
             wootState = new File(this.stateDirPath, this.getWootEngineStateFileName());
             treState = new File(this.stateDirPath, this.getTreStateFileName());
@@ -1147,23 +1129,20 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
                 throw new WootEngineException("Expected " + wootState + " and " + treState + " files were not found after unpacking an xwoot state.");
             }
 
-            // FIXME: delete all previously existing pages
+            // Clear WootEngine data.
+            this.getWootEngine().clearWorkingDir();
+            // Update WootEngine data.
             this.getWootEngine().setState(wootState);
 
+            // Clear ThomasRuleEngine data.
+            //this.getTre().clearWorkingDir();
+            String treWorkingDir = this.getTre().getWorkingDir();
+            FileUtil.deleteDirectory(treWorkingDir);
+            FileUtil.checkDirectoryPath(treWorkingDir);
+            // Update ThomasRuleEngine data.
             ZipFile mDState = new ZipFile(treState);
-
-            // FIXME: delete all previously existing pages
-            File mDFile = new File(this.tre.getWorkingDir());
-            /*
-             * FileUtil.deleteDirectory(mDFile); mDFile.mkdirs();
-             */
+            File mDFile = new File(this.tre.getWorkingDir());            
             FileUtil.unzipInDirectory(mDState, mDFile.getAbsolutePath());
-
-            /*if (!this.isStateComputed()) {
-                // FIXME: is this still required? (fix by doing a proper move if yes)
-                File temp = new File(this.getStateFilePath());
-                newState.renameTo(temp);
-            }*/
 
             return;
         } catch (WootEngineException e) {
@@ -1473,7 +1452,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
      * @throws InvalidParameterException if the given neighbor is not of the correct type.
      * @see #sendMessage(Object, org.xwoot.jxta.message.Message.Action, Object)
      */
-    synchronized public void doAntiEntropy(Object neighbor) throws XWootException
+    public void doAntiEntropy(Object neighbor) throws XWootException
     {        
         if (!this.isConnectedToP2PGroup()) {
             this.logger.warn(this.getXWootName() + " : Not successfuly joined a P2P group yet.");
@@ -1507,8 +1486,8 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         
         this.logger.debug(this.getXWootName() + " : New message -- content : log patches -- Action : " + Message.Action.ANTI_ENTROPY_REQUEST.toString());
         
-        Message reply = this.sendMessage(content, Message.Action.ANTI_ENTROPY_REQUEST, neighorPipeAdvertisement);
-        this.receiveMessage(reply);
+        // The reply will come as a separate message, initiated by the destination peer. This is caused by the broadcast nature of ANTI_ENTROPY_REQUEST messages.
+        this.sendMessage(content, Message.Action.ANTI_ENTROPY_REQUEST, neighorPipeAdvertisement);
     }
 
     public void connectToContentManager() throws XWootException
@@ -1581,10 +1560,20 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         
         if (this.isConnectedToP2PNetwork()) {
             if (this.isContentManagerConnected()) {
-                this.synchronize();
+                try {
+                    this.synchronize();
+                } catch (Exception e) {
+                    // just log it.
+                    this.logger.warn(this.getXWootName() + " : Failed to synchronize before disconnecting from network.");
+                }
             }
             
-            this.doAntiEntropyWithAllNeighbors();
+            try {
+                this.doAntiEntropyWithAllNeighbors();
+            } catch (Exception e) {
+                // just log it.
+                this.logger.warn(this.getXWootName() + " : Failed to do anti-entropy with all neighbors before disconnecting from network.");
+            }
             
             this.peer.stopNetwork();
         } else {
@@ -1785,7 +1774,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     /** {@inheritDoc} **/
     public void receiveDirectMessage(Object aMessage, ObjectOutputStream oos)
     {
-        // FIXME: create the class directMessageEvent and include sender.
+        // TODO: create the class directMessageEvent and include sender.
         this.logger.debug("Directly received a message.");
         if (!(aMessage instanceof Message)) {
             this.logger.warn(this.getXWootName() + " : Discarding unexpected directly sent object of type " + aMessage.getClass() + ".");
