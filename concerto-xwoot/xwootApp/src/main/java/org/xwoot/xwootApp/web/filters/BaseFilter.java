@@ -45,6 +45,7 @@
 package org.xwoot.xwootApp.web.filters;
 
 import java.io.IOException;
+import java.text.MessageFormat;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -55,6 +56,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.xwoot.xwootApp.XWoot3;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.web.XWootSite;
@@ -73,20 +76,11 @@ import org.xwoot.xwootApp.web.XWootSite;
  */
 public class BaseFilter implements Filter
 {
+    /** Logging helper object. */
+    private static final Log LOG = LogFactory.getLog(BaseFilter.class);
+
+    /** Serialization helper object. */
     private static final long serialVersionUID = -8050793384094800122L;
-
-    /** The filter configuration, used for accessing the servlet context. */
-    private FilterConfig config = null;
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see Filter#destroy()
-     */
-    public void destroy()
-    {
-        this.config = null;
-    }
 
     /** {@inheritDoc} */
     public void doFilter(ServletRequest srequest, ServletResponse sresponse, FilterChain chain) throws IOException,
@@ -95,70 +89,43 @@ public class BaseFilter implements Filter
         HttpServletRequest request = (HttpServletRequest) srequest;
         HttpServletResponse response = (HttpServletResponse) sresponse;
 
-        this.config.getServletContext().log(
-            "[FILTER] Request from : " + request.getHeader("referer") + " to : " + request.getRequestURL());
-
-        // System.out.println("#######################");
-        // System.out.println("# BaseFilter ");
-        // System.out.println("# ---------- ");
-        // System.out.println("# Request URI  : " + request.getRequestURI());
-        // System.out.println("# Context Path : " + request.getContextPath());
-        // System.out.println("# Method       : " + request.getMethod());
-        // System.out.println("# Remote Host  : " + request.getRemoteHost());
-        // System.out.println("# Remote Addr  : " + request.getRemoteAddr());
-        // System.out.println("# Remote Port  : " + request.getRemotePort());
-        // System.out.println("# Remote User  : " + request.getRemoteUser());
-        // System.out.println("# Session ID   : "
-        // + request.getRequestedSessionId());
-        // System.out.println("#######################");
-
-        // Changing the skin.
-        if (request.getParameter("skin") != null) {
-            request.getSession().setAttribute("skin", request.getParameter("skin"));
-        }
+        LOG.debug(MessageFormat.format("Received request from {0}@{1} for {2}", request.getRemoteAddr(), request
+            .getRemotePort(), request.getRequestURL()));
 
         XWootSite site = XWootSite.getInstance();
         XWootAPI xwoot = site.getXWootEngine();
 
         // While the XWoot site is not fully configured, ensure the proper flow.
         if (!XWootSite.getInstance().isStarted()) {
-            this.config.getServletContext().log("Site is not started yet, starting the wizard.");
+            LOG.debug("Site is not started yet, starting the wizard.");
             if (!"/bootstrap.do".equals(request.getServletPath())) {
                 response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrap.do"));
-                return;
             }
         } else if (!((XWoot3) xwoot).getPeer().isConnectedToNetwork()) {
-            this.config.getServletContext().log("Site is not connected to a network yet, opening network bootstrap.");
+            LOG.debug("Site is not connected to a network yet, opening network bootstrap.");
             if (!"/bootstrapNetwork.do".equals(request.getServletPath())) {
                 response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapNetwork.do"));
-                return;
             }
         } else if (!((XWoot3) xwoot).getPeer().isConnectedToGroup()) {
-            this.config.getServletContext().log("Site is not connected to a grop yet, opening group bootstrap.");
+            LOG.debug("Site is not connected to a group yet, opening group bootstrap.");
             if (!"/bootstrapGroup.do".equals(request.getServletPath())) {
                 response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapGroup.do"));
-                return;
             }
         } else if (!(xwoot.isStateComputed())) {
-            this.config.getServletContext().log("Site does not have a state yet, opening stateManagement.");
+            LOG.debug("Site does not have a state yet, opening stateManagement.");
             if (!"/stateManagement.do".equals(request.getServletPath())) {
                 response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/stateManagement.do"));
-                return;
             }
+        } else {
+
+            // Add a header to inform about the presence of the xwoot service.
+            response.addHeader("XWOOT_SERVICE", "xwoot service");
+
+            LOG.debug("Base Filter applied");
+
+            // Let the request be further processed.
+            chain.doFilter(request, response);
         }
-
-        // Add a header to inform about the presence of the xwoot service.
-        response.addHeader("XWOOT_SERVICE", "xwoot service");
-
-        this.config.getServletContext().log("Base Filter applied");
-
-        // Let the request be further processed.
-        chain.doFilter(request, response);
-        // } catch (URISyntaxException e) {
-        // throw new ServletException(e);
-        // } catch (XWootException e) {
-        // throw new ServletException(e);
-        // }
     }
 
     /**
@@ -168,7 +135,14 @@ public class BaseFilter implements Filter
      */
     public void init(FilterConfig filterConfig) throws ServletException
     {
-        this.config = filterConfig;
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @see Filter#destroy()
+     */
+    public void destroy()
+    {
+    }
 }
