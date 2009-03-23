@@ -995,7 +995,6 @@ public class XWoot2 implements XWootAPI
 
     public File askState(String from, String to) throws XWootException
     {
-
         try {
             LOG.debug(this.getXWootPeerId() + " Ask state to " + NetUtil.normalize(to));
             URL getNeighborState =

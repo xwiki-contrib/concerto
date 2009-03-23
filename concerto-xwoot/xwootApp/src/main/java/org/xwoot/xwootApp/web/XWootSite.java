@@ -44,9 +44,22 @@
 
 package org.xwoot.xwootApp.web;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Properties;
+
+import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
+
 import net.jxta.exception.JxtaException;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.xwoot.XWootContentProviderException;
 import org.xwoot.XWootContentProviderFactory;
 import org.xwoot.XWootContentProviderInterface;
@@ -54,34 +67,18 @@ import org.xwoot.antiEntropy.AntiEntropy;
 import org.xwoot.antiEntropy.AntiEntropyException;
 import org.xwoot.clockEngine.Clock;
 import org.xwoot.clockEngine.ClockException;
-
 import org.xwoot.jxta.Peer;
 import org.xwoot.jxta.PeerFactory;
 import org.xwoot.jxta.NetworkManager.ConfigMode;
-
 import org.xwoot.thomasRuleEngine.ThomasRuleEngine;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngineException;
-
 import org.xwoot.wootEngine.WootEngine;
 import org.xwoot.wootEngine.WootEngineException;
-
 import org.xwoot.xwootApp.AutoSynchronizationThread;
 import org.xwoot.xwootApp.XWoot3;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.XWootException;
 import org.xwoot.xwootUtil.FileUtil;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Properties;
-
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * DOCUMENT ME!
@@ -91,8 +88,11 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class XWootSite
 {
+    /** Logging helper object. */
+    private static final Log LOG = LogFactory.getLog(XWootSite.class);
+
     // singleton instance
-    private static XWootSite instance;
+    private static XWootSite instance = new XWootSite();
 
     private boolean started = false;
 
@@ -101,7 +101,7 @@ public class XWootSite
     public static final String XWIKI_PROPERTIES_FILENAME = "xwiki.properties";
 
     public static final String XWOOT_PROPERTIES_FILENAME = "xwoot.properties";
-    
+
     public static final String CONTENT_MANAGER_PROPERTIES_FILENAME = "xwoot-content-provider.properties";
 
     public static final String XWIKI_ENDPOINT = "xwiki_endpoint";
@@ -135,22 +135,18 @@ public class XWootSite
     private static final String AE_DIR_NAME = "antientropy";
 
     private static final String XWOOT_DIR_NAME = "xwoot";
-    
+
     private static final String CONTENT_PROVIDER_DIR_NAME = "contentProvider";
-    
+
     private AutoSynchronizationThread autoSynchronizationThread;
-    
+
     // FIXME: 60 seconds for now. Read this from a properties file.
     private static final int AUTO_SYNCHRONIZE_INTERVAL = 60000;
 
     /** @return the singleton instance. */
-    public static synchronized XWootSite getInstance()
+    public static XWootSite getInstance()
     {
-        if (XWootSite.instance == null) {
-            XWootSite.instance = new XWootSite();
-        }
-
-        return XWootSite.instance;
+        return instance;
     }
 
     public Properties getProperties(String path)
@@ -171,14 +167,13 @@ public class XWootSite
     {
         return this.XWootEngine;
     }
-    
+
     public AutoSynchronizationThread getAutoSynchronizationThread()
     {
         return this.autoSynchronizationThread;
     }
 
     /**
-     * 
      * @param siteName
      * @param workingDirPath
      * @param contentProviderXmlRpcUrl
@@ -195,7 +190,10 @@ public class XWootSite
      * @throws ThomasRuleEngineException
      * @throws XWootContentProviderException
      */
-    public void init(String siteName, String workingDirPath, String contentProviderXmlRpcUrl, String contentProviderLogin, String contentProviderPassword, String contenProviderPropertiesFilePath) throws RuntimeException, ClockException, WootEngineException, JxtaException, AntiEntropyException, XWootException, ThomasRuleEngineException, XWootContentProviderException
+    public void init(String siteName, String workingDirPath, String contentProviderXmlRpcUrl,
+        String contentProviderLogin, String contentProviderPassword, String contenProviderPropertiesFilePath)
+        throws RuntimeException, ClockException, WootEngineException, JxtaException, AntiEntropyException,
+        XWootException, ThomasRuleEngineException, XWootContentProviderException
     {
         // Module directories.
         File jxtaDir = new File(workingDirPath, JXTA_DIR_NAME);
@@ -209,7 +207,7 @@ public class XWootSite
         try {
             // Check and/or create the working dir.
             FileUtil.checkDirectoryPath(workingDirPath);
-            
+
             // Do the same for all the components.
             FileUtil.checkDirectoryPath(jxtaDir.toString());
             FileUtil.checkDirectoryPath(wootEngineDir.toString());
@@ -223,38 +221,41 @@ public class XWootSite
 
         // Init modules.
         Clock wootEngineClock = new Clock(wootEngineClockDir.toString());
-        
+
         AntiEntropy ae = new AntiEntropy(aeDir.toString());
-        
+
         Peer peer = PeerFactory.createPeer();
-        // FIXME: Use a properties file or something similar to store the current group, it's password, the keystore password in order to automatically start communicating after a reboot.
-        // FIXME: This behavior opens a possible security hole. The group's password is no longer protected by the keystore. Find a solution.
+        // FIXME: Use a properties file or something similar to store the current group, it's password, the keystore
+        // password in order to automatically start communicating after a reboot.
+        // FIXME: This behavior opens a possible security hole. The group's password is no longer protected by the
+        // keystore. Find a solution.
         peer.configureNetwork(siteName, jxtaDir, ConfigMode.EDGE);
         String peerName = peer.getMyPeerName();
         String peerId = peer.getMyPeerID().getUniqueValue().toString();
-        
-        //TODO better properties management 
-        Properties contentProviderProperties=this.getProperties(contenProviderPropertiesFilePath);
-        System.out.println(contentProviderProperties);
-        
+
+        // TODO better properties management
+        Properties contentProviderProperties = this.getProperties(contenProviderPropertiesFilePath);
+        LOG.debug(contentProviderProperties);
+
         String dbLocation = new File(contentProviderDir, peerName).toString();
-        XWootContentProviderInterface xwiki = XWootContentProviderFactory.getXWootContentProvider(contentProviderXmlRpcUrl, dbLocation, true, contentProviderProperties);
-        //WikiContentManager wiki = WikiContentManagerFactory.getSwizzleFactory().createWCM(url, login, pwd);
-        
+        XWootContentProviderInterface xwiki =
+            XWootContentProviderFactory.getXWootContentProvider(contentProviderXmlRpcUrl, dbLocation, true,
+                contentProviderProperties);
+        // WikiContentManager wiki = WikiContentManagerFactory.getSwizzleFactory().createWCM(url, login, pwd);
+
         // FIXME: use peerId for wootEngine and for TreEngine as well.
         WootEngine wootEngine = new WootEngine(peerId, wootEngineDir.toString(), wootEngineClock);
 
         ThomasRuleEngine tre = new ThomasRuleEngine(peerId, treDir.toString());
-        
-        this.XWootEngine =
-            new XWoot3(xwiki, wootEngine, peer, xwootDir.toString(), tre, ae);
-        
+
+        this.XWootEngine = new XWoot3(xwiki, wootEngine, peer, xwootDir.toString(), tre, ae);
+
         // FIXME: read the interval from the properties file.
         this.autoSynchronizationThread = new AutoSynchronizationThread(this.XWootEngine, AUTO_SYNCHRONIZE_INTERVAL);
 
         // Mark as started.
         this.started = true;
-        System.out.println("Site " + this.XWootEngine.getXWootPeerId() + " initialisation");
+        LOG.debug("Site " + this.XWootEngine.getXWootPeerId() + " initialisation");
     }
 
     /** @return true if this instance is initialized. */
