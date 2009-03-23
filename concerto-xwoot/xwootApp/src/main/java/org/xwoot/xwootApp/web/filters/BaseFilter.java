@@ -116,16 +116,16 @@ public class BaseFilter implements Filter
             if (!"/stateManagement.do".equals(request.getServletPath())) {
                 response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/stateManagement.do"));
             }
-        } else {
-
-            // Add a header to inform about the presence of the xwoot service.
-            response.addHeader("XWOOT_SERVICE", "xwoot service");
-
-            LOG.debug("Base Filter applied");
-
-            // Let the request be further processed.
-            chain.doFilter(request, response);
         }
+        
+        // Add a header to inform about the presence of the xwoot service.
+        response.addHeader("XWOOT_SERVICE", "xwoot service");
+
+        LOG.debug("Base Filter applied");
+
+        // Let the request be further processed.
+        chain.doFilter(request, response);
+        
     }
 
     /**

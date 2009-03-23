@@ -45,7 +45,6 @@ import net.jxta.exception.PeerGroupException;
 import net.jxta.exception.ProtocolNotSupportedException;
 import net.jxta.id.ID;
 import net.jxta.id.IDFactory;
-import net.jxta.impl.membership.none.NoneMembershipService;
 import net.jxta.impl.membership.pse.PSEMembershipService;
 import net.jxta.impl.membership.pse.PSEUtils;
 import net.jxta.impl.membership.pse.StringAuthenticator;
@@ -1229,7 +1228,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
     /**
      * Authenticate membership in a peer group using {@link PSEMembershipService}'s \"StringAuthentication\" method.
      * </p>
-     * If both passwords are not provided, the authentication is made using {@link NoneMembershipService} and no authentication data is provided.
+     * If the group is a private group and uses {@link PSEMembershipService}, the provided passwords will be used. If it is a public group, the passwords will be ignored.
      * 
      * @param keystorePassword the password of the local keystore.
      * @param identityPassword the group's password.
@@ -1239,19 +1238,18 @@ public class JxtaPeer implements Peer, RendezvousListener {
      * @throws ProtocolNotSupportedException if problems occur authenticating credentials.
      */
     protected boolean authenticateMembership(PeerGroup group, char[] keystorePassword, char[] identityPassword) throws PeerGroupException, ProtocolNotSupportedException {
-    	// FIXME: make authentication based on the actual membershipService of the group, not by the provided passwords.
     	
         // Get the MembershipService from the peer group.
-        MembershipService membership = group.getMembershipService();
+        MembershipService membershipService = group.getMembershipService();
         
-        this.logger.info("Current Membership service: " + membership);
+        this.logger.info("Current Membership service: " + membershipService);
     	
         //StructuredDocument creds = null;
         Authenticator memberAuthenticator = null;
         
         String authenticationMethod = null;
         
-        if (keystorePassword != null && identityPassword != null) {
+        if (membershipService instanceof PSEMembershipService/*keystorePassword != null && identityPassword != null*/) {
         	authenticationMethod = "StringAuthentication";
         }
         
@@ -1262,25 +1260,28 @@ public class JxtaPeer implements Peer, RendezvousListener {
 	            new AuthenticationCredential(group, authenticationMethod, null);
 	
 	        // Get the Authenticator from the Authentication creds.
-	        memberAuthenticator = membership.apply(authCred);
+	        memberAuthenticator = membershipService.apply(authCred);
         
         } catch (ProtocolNotSupportedException noAuthenticator) {
             this.logger.error("Could not create authenticator:\n", noAuthenticator);
         	return false;
         }
 
-        if (authenticationMethod != null && authenticationMethod.equals("StringAuthentication")) {
-	        ID identity = group.getPeerID();
+        if (memberAuthenticator instanceof StringAuthenticator) {
+            
+            ID identity = group.getPeerID();
+            
+            StringAuthenticator stringAuthenticator = ((StringAuthenticator) memberAuthenticator);
 	        
-	        ((StringAuthenticator) memberAuthenticator).setAuth1_KeyStorePassword(keystorePassword);
-	        ((StringAuthenticator) memberAuthenticator).setAuth2Identity(identity);
-	        ((StringAuthenticator) memberAuthenticator).setAuth3_IdentityPassword(identityPassword);
+	        stringAuthenticator.setAuth1_KeyStorePassword(keystorePassword);
+	        stringAuthenticator.setAuth2Identity(identity);
+	        stringAuthenticator.setAuth3_IdentityPassword(identityPassword);
         }
         
         // Check if everything is okay to join the group.
         if (memberAuthenticator.isReadyForJoin()) {
         	try {
-        		this.groupCredential = membership.join(memberAuthenticator);
+        		this.groupCredential = membershipService.join(memberAuthenticator);
         		this.logger.info("Member authentication successful.");
         	} catch (PeerGroupException failed) {
         	    this.logger.error("Member authentication failed:\n", failed);
