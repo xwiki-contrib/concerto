@@ -86,33 +86,9 @@
         <!-- ############################################ -->
         <!-- choose an existing and writable working directory for xwoot files -->
         <var.xwoot.working.dir>${var.working.dir}/xwoot_data/${var.xwoot.app.context}</var.xwoot.working.dir>
-
-        <!-- the site id ; must be unique on the the xwoot network.
-             If left empty, it will be randomly generated. -->
-        <var.xwoot.site.id></var.xwoot.site.id>
-
-        <!-- the server url (do not use localhost) -->
-        <var.xwoot.server.url>${var.localhost}/${var.xwoot.app.context}</var.xwoot.server.url>
-
-        <!-- the server name (not required) -->
+        <!-- the server name -->
         <var.xwoot.server.name></var.xwoot.server.name>
-
-        <!-- server config -->
-        <!--   delay between log refresh (in seconds) -->
-        <var.xwoot.refresh.log.delay>60</var.xwoot.refresh.log.delay>
-        <!--   max size of neigbors list-->
-        <var.xwoot.neighbors.list.size>10</var.xwoot.neighbors.list.size>
-        <!--   number of round for messages propagation -->
-        <var.xwoot.pbcast.round>2</var.xwoot.pbcast.round>
-
-        <!--############################################-->
-        <!--# iwoot properties (file iwoot.properties) #-->
-        <!--############################################-->
-        <var.iwoot.app.context>iwoot</var.iwoot.app.context>
-        <!-- IWoot can use either 'mock' or 'real' components -->
-        <var.iwoot.wcm>mock</var.iwoot.wcm>
-        <var.iwoot.xwoot>mock</var.iwoot.xwoot>
-        <var.iwoot.xwoot.real.url>${var.localhost}/${var.iwoot.app.context}/rest</var.iwoot.xwoot.real.url>
+        
       </properties>
     </profile>
   </profiles>

@@ -112,17 +112,7 @@ public class XWootSite
 
     public static final String XWOOT_WORKING_DIR = "xwoot_working_dir";
 
-    public static final String XWOOT_SITE_ID = "xwoot_site_id";
-
-    public static final String XWOOT_SERVER_URL = "xwoot_server_url";
-
     public static final String XWOOT_SERVER_NAME = "xwoot_server_name";
-
-    public static final String XWOOT_REFRESH_LOG_DELAY = "xwoot_refresh_log_delay";
-
-    public static final String XWOOT_NEIGHBORS_LIST_SIZE = "xwoot_neighbors_list_size";
-
-    public static final String XWOOT_PBCAST_ROUND = "xwoot_pbcast_round";
 
     private static final String WOOT_CLOCK_DIR_NAME = "wootclock";
 
@@ -299,42 +289,19 @@ public class XWootSite
     public Properties updateXWikiPropertiesFromRequest(ServletRequest request, String xwikiPropertiesPath)
     {
         Properties p = getProperties(xwikiPropertiesPath);
-        if (!StringUtils.isEmpty(request.getParameter(XWootSite.XWIKI_ENDPOINT))) {
-            p.put(XWootSite.XWIKI_ENDPOINT, request.getParameter(XWootSite.XWIKI_ENDPOINT));
-        }
-        if (!StringUtils.isEmpty(request.getParameter(XWootSite.XWIKI_USERNAME))) {
-            p.put(XWootSite.XWIKI_USERNAME, request.getParameter(XWootSite.XWIKI_USERNAME));
-        }
-        if (!StringUtils.isEmpty(request.getParameter(XWootSite.XWIKI_PASSWORD))) {
-            p.put(XWootSite.XWIKI_PASSWORD, request.getParameter(XWootSite.XWIKI_PASSWORD));
-        }
+        p.put(XWootSite.XWIKI_ENDPOINT, request.getParameter(XWootSite.XWIKI_ENDPOINT));
+        p.put(XWootSite.XWIKI_USERNAME, request.getParameter(XWootSite.XWIKI_USERNAME));
+        p.put(XWootSite.XWIKI_PASSWORD, request.getParameter(XWootSite.XWIKI_PASSWORD));
+        
         return p;
     }
 
     public Properties updateXWootPropertiesFromRequest(ServletRequest request, String xwootPropertiesPath)
     {
         Properties p = getProperties(xwootPropertiesPath);
-        if (!StringUtils.isEmpty(request.getParameter(XWootSite.XWOOT_WORKING_DIR))) {
-            p.put(XWootSite.XWOOT_WORKING_DIR, request.getParameter(XWootSite.XWOOT_WORKING_DIR));
-        }
-        if (!StringUtils.isEmpty(request.getParameter(XWootSite.XWOOT_SITE_ID))) {
-            p.put(XWootSite.XWOOT_SITE_ID, request.getParameter(XWootSite.XWOOT_SITE_ID));
-        }
-        if (!StringUtils.isEmpty(request.getParameter(XWootSite.XWOOT_SERVER_URL))) {
-            p.put(XWootSite.XWOOT_SERVER_URL, request.getParameter(XWootSite.XWOOT_SERVER_URL));
-        }
-        if (!StringUtils.isEmpty(request.getParameter(XWootSite.XWOOT_SERVER_NAME))) {
-            p.put(XWootSite.XWOOT_SERVER_NAME, request.getParameter(XWootSite.XWOOT_SERVER_NAME));
-        }
-        if (!StringUtils.isEmpty(request.getParameter(XWootSite.XWOOT_REFRESH_LOG_DELAY))) {
-            p.put(XWootSite.XWOOT_REFRESH_LOG_DELAY, request.getParameter(XWootSite.XWOOT_REFRESH_LOG_DELAY));
-        }
-        if (!StringUtils.isEmpty(request.getParameter(XWootSite.XWOOT_NEIGHBORS_LIST_SIZE))) {
-            p.put(XWootSite.XWOOT_NEIGHBORS_LIST_SIZE, request.getParameter(XWootSite.XWOOT_NEIGHBORS_LIST_SIZE));
-        }
-        if (!StringUtils.isEmpty(request.getParameter(XWootSite.XWOOT_PBCAST_ROUND))) {
-            p.put(XWootSite.XWOOT_PBCAST_ROUND, request.getParameter(XWootSite.XWOOT_PBCAST_ROUND));
-        }
+        p.put(XWootSite.XWOOT_WORKING_DIR, request.getParameter(XWootSite.XWOOT_WORKING_DIR));
+        p.put(XWootSite.XWOOT_SERVER_NAME, request.getParameter(XWootSite.XWOOT_SERVER_NAME));
+        
         return p;
     }
 
@@ -352,13 +319,16 @@ public class XWootSite
     private final String validateXWikiProperties(Properties properties)
     {
         String result = "";
+        String xwikiEndpoint = properties.getProperty(XWootSite.XWIKI_ENDPOINT);
+        String xwikiUserName = properties.getProperty(XWootSite.XWIKI_USERNAME);
+        String xwikiPassword = properties.getProperty(XWootSite.XWIKI_PASSWORD);
 
         // Check that the XWiki endpoint is a valid URL.
-        if (properties.get(XWootSite.XWIKI_ENDPOINT) == null) {
+        if (xwikiEndpoint == null || xwikiEndpoint.trim().length() == 0) {
             result += "Please enter a non-empty XWiki endpoint URL.\n";
         } else {
             try {
-                new URL((String) properties.get(XWootSite.XWIKI_ENDPOINT));
+                new URL(xwikiEndpoint);
             } catch (MalformedURLException e) {
                 result += "Please enter a valid XWiki endpoint URL (the given URL is malformed)\n";
             }
@@ -366,11 +336,12 @@ public class XWootSite
         }
 
         // Check that the username and password are provided.
-        if (properties.get(XWootSite.XWIKI_USERNAME) == null) {
+        
+        if (xwikiUserName == null || xwikiUserName.trim().length() == 0) {
             result += "Please enter a non-empty username.\n";
         }
 
-        if (properties.get(XWootSite.XWIKI_PASSWORD) == null) {
+        if (xwikiPassword == null || xwikiPassword.length() == 0) {
             result += "Please enter a non-empty password.\n";
         }
 
@@ -388,98 +359,32 @@ public class XWootSite
     private String validateXWootProperties(Properties properties)
     {
         String result = "";
+        String wootWorkingDir = properties.getProperty(XWootSite.XWOOT_WORKING_DIR);
+        String xwootServerName = properties.getProperty(XWootSite.XWOOT_SERVER_NAME);
 
         // Check that the directory for storing data is valid and writable.
-        if (properties.get(XWootSite.XWOOT_WORKING_DIR) == null) {
+        if (wootWorkingDir == null || wootWorkingDir.trim().length() == 0) {
             result += "Please enter a non-empty " + XWootSite.XWOOT_WORKING_DIR + " field.\n";
         } else {
             try {
-                File f = new File((String) properties.get(XWootSite.XWOOT_WORKING_DIR));
-                if (!f.exists()) {
-                    if (!f.mkdirs()) {
-                        result +=
-                            "The provided directory does not exist and cannot be created. Please enter a writable serialization folder.\n";
-                    }
-                } else if (!f.canRead() || !f.canWrite()) {
-                    result += "Please enter a writable serialization folder.\n";
-                }
+                File dir = new File((String) properties.get(XWootSite.XWOOT_WORKING_DIR));
+                FileUtil.checkDirectoryPath(dir);
+//                if (!f.exists()) {
+//                    if (!f.mkdirs()) {
+//                        result +=
+//                            "The provided directory does not exist and cannot be created. Please enter a writable serialization folder.\n";
+//                    }
+//                } else if (!f.canRead() || !f.canWrite()) {
+//                    result += "Please enter a writable serialization folder.\n";
+//                }
             } catch (Exception ex) {
-                result += "The provided directory cannot be accessed. Please enter a writable serialization folder.\n";
+                result += ex.getMessage() + " Please enter a writable serialization folder.\n";
             }
-        }
-
-        // Check that the site ID is a valid positive integer.
-        if (properties.get(XWootSite.XWOOT_SITE_ID) == null) {
-            result += "Please enter a non-empty ID.\n";
-        } else {
-            try {
-                int i = Integer.parseInt((String) properties.get(XWootSite.XWOOT_SITE_ID));
-                if (i <= 0) {
-                    result += "Please enter a positive integer for the XWoot ID.\n";
-                }
-
-            } catch (NumberFormatException e) {
-                result += "Please enter a valid XWoot ID (positive integer value).\n";
-            }
-        }
-
-        // Check that the XWoot URL is valid.
-        if (properties.get(XWootSite.XWOOT_SERVER_URL) == null) {
-            result += "Please enter a non-empty XWoot address.\n";
-        } else {
-            try {
-                new URL((String) properties.get(XWootSite.XWOOT_SERVER_URL));
-            } catch (MalformedURLException e) {
-                result += "Please enter a valid XWoot address (the given URL is malformed)\n";
-            }
-
         }
 
         // Check the server name
-        if (properties.get(XWootSite.XWOOT_SERVER_NAME) == null) {
+        if (xwootServerName == null || xwootServerName.trim().length() == 0) {
             result += "Please enter a non-empty server name.\n";
-        }
-
-        // Check the refresh period.
-        if (properties.get(XWootSite.XWOOT_REFRESH_LOG_DELAY) == null) {
-            result += "Please enter a non-empty " + XWootSite.XWOOT_REFRESH_LOG_DELAY + " field.\n";
-        } else {
-            try {
-                int i = Integer.parseInt((String) properties.get(XWootSite.XWOOT_REFRESH_LOG_DELAY));
-                if (i <= 0) {
-                    result += "Please enter a positive integer for the refresh period.\n";
-                }
-            } catch (NumberFormatException e) {
-                result += "Please enter a valid refresh period (positive integer value).\n";
-            }
-        }
-
-        // Check the neighbor list.
-        if (properties.get(XWootSite.XWOOT_NEIGHBORS_LIST_SIZE) == null) {
-            result += "Please enter a non-empty neighbor list size.\n";
-        } else {
-            try {
-                int i = Integer.parseInt((String) properties.get(XWootSite.XWOOT_NEIGHBORS_LIST_SIZE));
-                if (i <= 0) {
-                    result += "Please enter a positive integer value for the neighbor list size.\n";
-                }
-            } catch (NumberFormatException e) {
-                result += "Please enter a valid neighbor list size (positive integer value).\n";
-            }
-        }
-
-        // Check the number of broadcasting rounds.
-        if (properties.get(XWootSite.XWOOT_PBCAST_ROUND) == null) {
-            result += "Please enter a non-empty number of propagation rounds.\n";
-        } else {
-            try {
-                int i = Integer.parseInt((String) properties.get(XWootSite.XWOOT_PBCAST_ROUND));
-                if (i <= 0) {
-                    result += "Please enter a positive integer value for propagation rounds.\n";
-                }
-            } catch (NumberFormatException e) {
-                result += "Please enter a valid number of propagation rounds (positive integer value).\n";
-            }
         }
 
         return result;

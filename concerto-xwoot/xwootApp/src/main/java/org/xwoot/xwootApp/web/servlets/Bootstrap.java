@@ -53,7 +53,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.math.RandomUtils;
 import org.xwoot.xwootApp.web.XWootSite;
 
 /**
@@ -126,16 +125,14 @@ public class Bootstrap extends HttpServlet
             } else {
                 this.getServletContext().log("Bootstrap page just opened.");
             }
-
-            // If just opened the bootstrap form, init the form fields with default data found in the properties files.
+            
+            // If just opened the bootstrap form or an error occurred, init the form fields with default data found in the properties files.
             if (!StringUtils.isBlank(xwikiPropertiesFile) && !StringUtils.isBlank(xwootPropertiesFile)) {
                 Properties p_xwiki =
-                    XWootSite.getInstance().updateXWikiPropertiesFromRequest(request, xwikiPropertiesFile);
+                    XWootSite.getInstance().getProperties(xwikiPropertiesFile);
                 Properties p_xwoot =
-                    XWootSite.getInstance().updateXWootPropertiesFromRequest(request, xwootPropertiesFile);
-                if (StringUtils.isBlank(p_xwoot.getProperty(XWootSite.XWOOT_SITE_ID))) {
-                    p_xwoot.put(XWootSite.XWOOT_SITE_ID, new Integer(RandomUtils.nextInt(1000000) + 1000000));
-                }
+                    XWootSite.getInstance().getProperties(xwootPropertiesFile);
+                
                 request.setAttribute("xwiki_properties", p_xwiki);
                 request.setAttribute("xwoot_properties", p_xwoot);
             }
