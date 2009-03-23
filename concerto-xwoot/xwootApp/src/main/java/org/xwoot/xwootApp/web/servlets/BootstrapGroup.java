@@ -124,9 +124,13 @@ public class BootstrapGroup extends HttpServlet
                     if (!(groupPassword.equals(groupPasswordRetyped))) {
                         throw new IllegalArgumentException("Passwords do not match.");
                     }
+                    
+                    ((XWoot3) xwootEngine).createNewGroup(groupName, groupDescription, KEYSTORE_PASSWORD/*keystorePassword.toCharArray()*/, groupPassword.toCharArray());
+                } else {
+                    ((XWoot3) xwootEngine).createNewGroup(groupName, groupDescription, null, null);
                 }
                 
-                ((XWoot3) xwootEngine).createNewGroup(groupName, groupDescription, KEYSTORE_PASSWORD/*keystorePassword.toCharArray()*/, groupPassword.toCharArray());
+                
             } catch (Exception e) {
                 errors += "Can't create group:" + e.getMessage() + "\n";
             }
@@ -151,7 +155,11 @@ public class BootstrapGroup extends HttpServlet
                         if (aGroupAdv.getPeerGroupID().toString().equals(groupID)) {
                             this.log("Joining group described by this adv:\n" + aGroupAdv);
                             
-                            ((XWoot3) xwootEngine).joinGroup(aGroupAdv, KEYSTORE_PASSWORD/*keystorePassword.toCharArray()*/, groupPassword.toCharArray(), beRendezVous);
+                            char[] keystorePassword = null;
+                            if (groupPassword != null && groupPassword.length() != 0) {
+                                keystorePassword = KEYSTORE_PASSWORD;
+                            }
+                            ((XWoot3) xwootEngine).joinGroup(aGroupAdv, keystorePassword/*keystorePassword.toCharArray()*/, groupPassword.toCharArray(), beRendezVous);
                             
                             // Save the group advertisement to be able to rejoin after a reboot.
                             // FIXME: save group and keystore password then implement the deletion of the current group
