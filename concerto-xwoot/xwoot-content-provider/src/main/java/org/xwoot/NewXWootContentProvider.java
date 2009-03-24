@@ -22,7 +22,7 @@ import org.xwiki.xmlrpc.model.XWikiPageHistorySummary;
 
 public class NewXWootContentProvider implements XWootContentProviderInterface
 {
-    final Log logger = LogFactory.getLog(XWootContentProvider.class);
+    final Log logger = LogFactory.getLog(NewXWootContentProvider.class);
 
     /**
      * Number of modification results requested for each XMLRPC call, in order to avoid server overload.

@@ -11,7 +11,6 @@ import java.util.regex.Pattern;
 import org.apache.xmlrpc.XmlRpcException;
 import org.xwiki.xmlrpc.XWikiXmlRpcClient;
 import org.xwiki.xmlrpc.model.XWikiObject;
-import org.xwiki.xmlrpc.model.XWikiObjectSummary;
 import org.xwiki.xmlrpc.model.XWikiPage;
 
 /**
