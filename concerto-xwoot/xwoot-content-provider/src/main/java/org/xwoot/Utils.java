@@ -1,6 +1,7 @@
 package org.xwoot;
 
 import java.io.Serializable;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
@@ -282,22 +283,26 @@ public class Utils
             .isNewlyCreated());
     }
 
-    public static List<XWootObject> getXWootObjects(XWikiXmlRpcClient rpcClient, XWootId xwootId)
-        throws XmlRpcException
+    /**
+     * Check if the login data are correct.
+     * 
+     * @param endpoint
+     * @param userName
+     * @param password
+     * @return True if user credentials are accepted, false otherwise.
+     * @throws MalformedURLException If a malformed endpoint is provided.
+     */
+    public static boolean checkLogin(String endpoint, String userName, String password) throws MalformedURLException
     {
-        XWikiPage xwikiPage = rpcClient.getPage(xwootId.getPageId(), xwootId.getVersion(), xwootId.getMinorVersion());
-        List<XWikiObjectSummary> xwikiObjectSummaries =
-            rpcClient.getObjects(xwootId.getPageId(), xwootId.getVersion(), xwootId.getMinorVersion());
+        XWikiXmlRpcClient rpc = new XWikiXmlRpcClient(endpoint);
 
-        List<XWikiObject> xwikiObjects = new ArrayList<XWikiObject>();
-        for (XWikiObjectSummary objectSummary : xwikiObjectSummaries) {
-            XWikiObject xwikiObject =
-                rpcClient.getObject(objectSummary.getPageId(), objectSummary.getClassName(), objectSummary.getId(),
-                    objectSummary.getPageVersion(), objectSummary.getPageMinorVersion());
-            xwikiObjects.add(xwikiObject);
+        try {
+            rpc.login(userName, password);
+            rpc.logout();
+        } catch (XmlRpcException e) {
+            return false;
         }
 
-        return null;
-
+        return true;
     }
 }
