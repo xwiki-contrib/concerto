@@ -16,7 +16,7 @@ public class AllTests extends TestCase
         addTestCase(suite, XWootObjectFieldTest.class);
         addTestCase(suite, XWootContentProviderConfigurationTest.class);
         addTestCase(suite, StateManagerTest.class);
-        addTestCase(suite, NewXWootContentProviderTest.class);
+        addTestCase(suite, XWootContentProviderTest.class);
         return new XWikiTestSetup(suite);
     }
 

@@ -9,21 +9,21 @@ import org.apache.xmlrpc.XmlRpcException;
 import org.xwiki.xmlrpc.XWikiXmlRpcClient;
 import org.xwiki.xmlrpc.model.XWikiPage;
 import org.xwoot.Constants;
-import org.xwoot.NewXWootContentProvider;
+import org.xwoot.XWootContentProvider;
 import org.xwoot.Utils;
 import org.xwoot.XWootContentProviderException;
 import org.xwoot.XWootId;
 import org.xwoot.XWootObject;
 
-public class NewXWootContentProviderTest extends TestCase
+public class XWootContentProviderTest extends TestCase
 {
-    private NewXWootContentProvider xwc;
+    private XWootContentProvider xwc;
 
     @Override
     protected void setUp() throws Exception
     {
         System.out.format("*****************************\n");
-        xwc = new NewXWootContentProvider("http://localhost:8080/xwiki/xmlrpc/confluence", "DB", true, null);
+        xwc = new XWootContentProvider("http://localhost:8080/xwiki/xmlrpc/confluence", "DB", true, null);
         xwc.login("Admin", "admin");
     }
 

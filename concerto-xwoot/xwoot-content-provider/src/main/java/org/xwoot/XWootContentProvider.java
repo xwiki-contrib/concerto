@@ -20,9 +20,9 @@ import org.xwiki.xmlrpc.model.XWikiObjectSummary;
 import org.xwiki.xmlrpc.model.XWikiPage;
 import org.xwiki.xmlrpc.model.XWikiPageHistorySummary;
 
-public class NewXWootContentProvider implements XWootContentProviderInterface
+public class XWootContentProvider implements XWootContentProviderInterface
 {
-    final Log logger = LogFactory.getLog(NewXWootContentProvider.class);
+    final Log logger = LogFactory.getLog(XWootContentProvider.class);
 
     /**
      * Number of modification results requested for each XMLRPC call, in order to avoid server overload.
@@ -46,7 +46,7 @@ public class NewXWootContentProvider implements XWootContentProviderInterface
      * @param configurationProperties Properties used to configure the content provider.
      * @throws XWootContentProviderException
      */
-    public NewXWootContentProvider(String endpoint, String dbName, boolean createDB, Properties configurationProperties)
+    public XWootContentProvider(String endpoint, String dbName, boolean createDB, Properties configurationProperties)
         throws XWootContentProviderException
     {
         try {
