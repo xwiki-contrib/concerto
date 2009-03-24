@@ -60,6 +60,7 @@ import net.jxta.exception.JxtaException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.xwoot.Utils;
 import org.xwoot.XWootContentProviderException;
 import org.xwoot.XWootContentProviderFactory;
 import org.xwoot.XWootContentProviderInterface;
@@ -343,6 +344,18 @@ public class XWootSite
 
         if (xwikiPassword == null || xwikiPassword.length() == 0) {
             result += "Please enter a non-empty password.\n";
+        }
+        
+        if (result != null && result.length() == 0) {
+            boolean authOk = false;
+            try {
+                authOk = Utils.checkLogin(xwikiEndpoint, xwikiUserName, xwikiPassword);
+                if (!authOk) {
+                    result += "The remote XWiki server refused the provided username/password combination.\n";
+                }
+            } catch (Exception e) {
+                result += "Please enter a valid XWiki endpoint URL (the given URL is malformed)\n";
+            }
         }
 
         return result;

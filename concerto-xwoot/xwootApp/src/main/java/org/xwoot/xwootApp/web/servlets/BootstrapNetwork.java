@@ -61,7 +61,6 @@ import org.xwoot.jxta.NetworkManager.ConfigMode;
 import org.xwoot.xwootApp.XWoot3;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.web.XWootSite;
-import org.xwoot.xwootUtil.FileUtil;
 
 /**
  * Servlet handling network setup.
@@ -70,6 +69,15 @@ import org.xwoot.xwootUtil.FileUtil;
  */
 public class BootstrapNetwork extends HttpServlet
 {
+    /** Join custom network option. */
+    private static final String CUSTOM_NETWORK = "custom";
+
+    /** Join public jxta network option. */
+    private static final String PUBLIC_JXTA_NETWORK = "publicJxta";
+
+    /** Join concerto network option. */
+    private static final String CONCERTO_NETWORK = "concerto";
+
     /** Used for serialization. */
     private static final long serialVersionUID = -3758874922535817475L;
 
@@ -89,12 +97,12 @@ public class BootstrapNetwork extends HttpServlet
     @Override
     public void service(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
     {
-        request.setAttribute("xwiki_url", XWootSite.getInstance().getXWootEngine().getContentManagerURL());
+        /*request.setAttribute("xwiki_url", XWootSite.getInstance().getXWootEngine().getContentManagerURL());
         request.getSession().removeAttribute("neighbor");
-        request.getSession().removeAttribute("join");
+        request.getSession().removeAttribute("join");*/
 
         String errors = "";
-
+        
         NetworkManager networkManager = ((XWoot3) xwootEngine).getPeer().getManager();
         NetworkConfigurator networkConfig = null;
 
@@ -102,6 +110,17 @@ public class BootstrapNetwork extends HttpServlet
 
         if (networkChoice == null) {
             // No button clicked yet.
+            request.getRequestDispatcher("/pages/BootstrapNetwork.jsp").forward(request, response);
+            return;
+        }
+        
+        errors += this.validateCommonFormFieldsFromRequest(request);
+        
+        // If we detect errors at this point, don`t go any further.
+        if (errors != null && errors.length() != 0) {
+            errors = errors.replaceAll("\n", "<br />");
+            request.setAttribute("errors", errors);
+
             request.getRequestDispatcher("/pages/BootstrapNetwork.jsp").forward(request, response);
             return;
         }
@@ -159,63 +178,59 @@ public class BootstrapNetwork extends HttpServlet
             boolean useOnlyExternalIp = TRUE.equals(request.getParameter("useOnlyExternalIp"));
 
             boolean useTcp = TRUE.equals(request.getParameter("useTcp"));
-            String tcpPort = request.getParameter("tcpPort");
+            int tcpPort = Integer.parseInt(request.getParameter("tcpPort"));
 
             boolean useHttp = TRUE.equals(request.getParameter("useHttp"));
-            String httpPort = request.getParameter("httpPort");
+            int httpPort = Integer.parseInt(request.getParameter("httpPort"));
 
             boolean useMulticast = TRUE.equals(request.getParameter("useMulticast"));
 
-            try {
-                networkConfig.setTcpEnabled(useTcp);
+            networkConfig.setTcpEnabled(useTcp);
 
-                if (useTcp) {
-                    this.log("Using TCP");
+            if (useTcp) {
+                this.log("Using TCP");
 
-                    networkConfig.setTcpIncoming(true);
-                    networkConfig.setTcpOutgoing(true);
-                    networkConfig.setTcpPort(Integer.parseInt(tcpPort));
+                networkConfig.setTcpIncoming(true);
+                networkConfig.setTcpOutgoing(true);
+                networkConfig.setTcpPort(tcpPort);
 
-                    String tcpPublicAddress = externalIp;
-                    if (useExternalIp) {
-                        // disable dynamic ports because we use a fixed ip:port combination now.
-                        networkConfig.setTcpStartPort(-1);
-                        networkConfig.setTcpEndPort(-1);
+                String tcpPublicAddress = externalIp;
+                if (useExternalIp) {
+                    // disable dynamic ports because we use a fixed ip:port combination now.
+                    networkConfig.setTcpStartPort(-1);
+                    networkConfig.setTcpEndPort(-1);
 
-                        if (!tcpPublicAddress.contains(":")) {
-                            tcpPublicAddress += ":" + tcpPort;
-                        }
-                        networkConfig.setTcpPublicAddress(tcpPublicAddress, useOnlyExternalIp);
-                        this.log("Using TCP External IP : " + tcpPublicAddress + " exclusively? " + useOnlyExternalIp);
+                    if (!tcpPublicAddress.contains(":")) {
+                        tcpPublicAddress += ":" + tcpPort;
                     }
+                    networkConfig.setTcpPublicAddress(tcpPublicAddress, useOnlyExternalIp);
+                    this.log("Using TCP External IP : " + tcpPublicAddress + " exclusively? " + useOnlyExternalIp);
                 }
-
-                networkConfig.setHttpEnabled(useHttp);
-
-                if (useHttp) {
-                    this.log("Using HTTP");
-
-                    networkConfig.setHttpIncoming(true);
-                    networkConfig.setHttpOutgoing(true);
-                    networkConfig.setHttpPort(Integer.parseInt(httpPort));
-
-                    String httpPublicAddress = externalIp;
-                    if (useExternalIp) {
-                        if (!httpPublicAddress.contains(":")) {
-                            httpPublicAddress += ":" + httpPort;
-                        }
-                        networkConfig.setHttpPublicAddress(httpPublicAddress, useOnlyExternalIp);
-                        this
-                            .log("Using HTTP External IP : " + httpPublicAddress + " exclusively? " + useOnlyExternalIp);
-                    }
-                }
-
-                networkConfig.setUseMulticast(useMulticast);
-                this.log("Using Multicast? " + useMulticast);
-            } catch (Exception e) {
-                // FIXME: handle errors.
-                this.log("EXCEPTION while parsing common settings!", e);
             }
+
+            networkConfig.setHttpEnabled(useHttp);
+
+            if (useHttp) {
+                this.log("Using HTTP");
+
+                networkConfig.setHttpIncoming(true);
+                networkConfig.setHttpOutgoing(true);
+                networkConfig.setHttpPort(httpPort);
+
+                String httpPublicAddress = externalIp;
+                if (useExternalIp) {
+                    if (!httpPublicAddress.contains(":")) {
+                        httpPublicAddress += ":" + httpPort;
+                    }
+                    networkConfig.setHttpPublicAddress(httpPublicAddress, useOnlyExternalIp);
+                    this
+                        .log("Using HTTP External IP : " + httpPublicAddress + " exclusively? " + useOnlyExternalIp);
+                }
+            }
+
+            networkConfig.setUseMulticast(useMulticast);
+            this.log("Using Multicast? " + useMulticast);
+            
         }
 
         // Create network settings.
@@ -243,101 +258,72 @@ public class BootstrapNetwork extends HttpServlet
         // Join Network settings
         } else if (JOIN_BUTTON.equals(networkChoice)) {
             this.getServletContext().log("Join network requested.");
+            
+            errors += this.validateJoinFormFieldsFromRequest(request);
+            if (errors == null || errors.length() == 0) {
 
-            String useNetwork = request.getParameter("useNetwork");
-            String rdvSeedingUri = request.getParameter("rdvSeedingUri");
-            String relaySeedingUri = request.getParameter("relaySeedingUri");
-            String rdvSeeds = request.getParameter("rdvSeeds");
-            String relaySeeds = request.getParameter("relaySeeds");
+                String useNetwork = request.getParameter("useNetwork");
+                String rdvSeedingUriString = request.getParameter("rdvSeedingUri");
+                String relaySeedingUriString = request.getParameter("relaySeedingUri");
+                String rdvSeeds = request.getParameter("rdvSeeds");
+                String relaySeeds = request.getParameter("relaySeeds");
+    
+                String[] rdvSeedsList = rdvSeeds.split("\\s*,\\s*");
+                String[] relaySeedsList = relaySeeds.split("\\s*,\\s*");
+            
+                try {
+                    // Clean any previously entered seeds and seedingUris.
+                    networkConfig.clearRendezvousSeeds();
+                    networkConfig.clearRendezvousSeedingURIs();
+                    networkConfig.clearRelaySeeds();
+                    networkConfig.clearRelaySeedingURIs();
 
-            String[] rdvSeedsList = rdvSeeds.split("\\s*,\\s*");
-            String[] relaySeedsList = relaySeeds.split("\\s*,\\s*");
+                    if (CONCERTO_NETWORK.equals(useNetwork)) {
+                        networkConfig.addRdvSeedingURI("http://jxta.concerto.com/rendezvousList.do");
+                        networkConfig.addRelaySeedingURI("http://jxta.concerto.com/relayList.do");
 
-            if (useNetwork != null) {
-                if (useNetwork.equals("custom") && (rdvSeedingUri == null && rdvSeeds == null)) {
-                    errors += "Can not join custom network. No rdvSeedingUri or rdvSeeds supplied.\n";
-                } else {
-                    try {
-                        if (xwootEngine.isConnectedToP2PNetwork()) {
-                            xwootEngine.disconnectFromP2PNetwork();
+                    } else if (PUBLIC_JXTA_NETWORK.equals(useNetwork)) {
+                        networkManager.setUseDefaultSeeds(true);
+                        networkConfig.addRdvSeedingURI("http://rdv.jxtahosts.net/cgi-bin/rendezvous.cgi");
+                        networkConfig.addRelaySeedingURI("http://rdv.jxtahosts.net/cgi-bin/relays.cgi");
+
+                    } else if (CUSTOM_NETWORK.equals(useNetwork)) {
+                        // Seeding URIs
+                        if (rdvSeedingUriString != null && rdvSeedingUriString.trim().length() > 0) {
+                            networkConfig.addRdvSeedingURI(URI.create(rdvSeedingUriString));
+                        }
+                        
+                        if (relaySeedingUriString != null && relaySeedingUriString.trim().length() > 0) {
+                            networkConfig.addRelaySeedingURI(URI.create(relaySeedingUriString));
                         }
 
-                        // Clean any previously entered seeds and seedingUris.
-                        networkConfig.clearRendezvousSeeds();
-                        networkConfig.clearRendezvousSeedingURIs();
-                        networkConfig.clearRelaySeeds();
-                        networkConfig.clearRelaySeedingURIs();
-
-                        if (useNetwork.equals("concerto")) {
-                            networkConfig.addRdvSeedingURI("http://jxta.concerto.com/rendezvousList.do");
-                            networkConfig.addRelaySeedingURI("http://jxta.concerto.com/relayList.do");
-
-                        } else if (useNetwork.equals("publicJxta")) {
-                            networkManager.setUseDefaultSeeds(true);
-                            networkConfig.addRdvSeedingURI("http://rdv.jxtahosts.net/cgi-bin/rendezvous.cgi");
-                            networkConfig.addRelaySeedingURI("http://rdv.jxtahosts.net/cgi-bin/relays.cgi");
-
-                        } else if (useNetwork.equals("custom")) {
-                            // Seeding URIs
-                            
-                            try {
-                                networkConfig.addRdvSeedingURI(new URI(rdvSeedingUri));
-                            } catch (URISyntaxException e) {
-                                throw new IllegalArgumentException(rdvSeedingUri + " is not a valid location for retrieving rendezvous seeds.");
+                        // Rdv Seeds.
+                        for (String rdvSeed : rdvSeedsList) {
+                            if (rdvSeed.trim().length() != 0) {
+                                networkConfig.addSeedRendezvous(URI.create(rdvSeed));
                             }
-                            
-                            try {
-                                networkConfig.addRelaySeedingURI(new URI(relaySeedingUri));
-                            } catch (URISyntaxException e) {
-                                throw new IllegalArgumentException(rdvSeedingUri + " is not a valid location for retrieving relay seeds.");
-                            }
-
-                            // Rdv Seeds.
-                            for (String rdvSeed : rdvSeedsList) {
-                                URI seedUri = null;
-                                try {
-                                    seedUri = new URI(rdvSeed);
-                                    if (seedUri.getPort() < 1) {
-                                        throw new IllegalArgumentException(rdvSeed + " is an invalid RDV seed.\n");
-                                    }
-                                } catch (Exception e) {
-                                    throw new IllegalArgumentException(rdvSeed + " is not a valid RendezVous seed.");
-                                }
-                                
-                                networkConfig.addSeedRendezvous(seedUri);
-                            }
-
-                            // Relay Seeds.
-                            for (String relaySeed : relaySeedsList) {
-                                URI seedUri = null;
-                                try {
-                                    seedUri = new URI(relaySeed);
-                                    if (seedUri.getPort() < 1) {
-                                        throw new IllegalArgumentException(relaySeed + " is an invalid Relay seed.\n");
-                                    }
-                                } catch (Exception e) {
-                                    throw new IllegalArgumentException(relaySeed + " is not a valid Relay seed.");
-                                }
-                                
-                                networkConfig.addSeedRelay(seedUri);
-                            }
-                            
                         }
 
-                        xwootEngine.joinNetwork(null);
-
-                        // Catch silent exceptions jxta is not throwing but just warning about.
-                        if (!xwootEngine.isConnectedToP2PNetwork()) {
-                            errors += "Can't join network. Failed to contact a RendezVous peer for the given network.";
+                        // Relay Seeds.
+                        for (String relaySeed : relaySeedsList) {
+                            if (relaySeed.trim().length() != 0) {
+                                networkConfig.addSeedRelay(URI.create(relaySeed));
+                            }
                         }
-                    } catch (Exception e) {
-                        // If exceptions come along the way or if joinNetwork() fails.
-                        errors += "Can't join network:" + e.getMessage() + "\n";
+                        
                     }
 
+                    xwootEngine.joinNetwork(null);
+
+                    // Catch silent exceptions jxta is not throwing but just warning about.
+                    if (!xwootEngine.isConnectedToP2PNetwork()) {
+                        errors += "Can't join network. Failed to contact a RendezVous peer for the given network.";
+                    }
+                } catch (Exception e) {
+                    // If exceptions come along the way or if joinNetwork() fails.
+                    errors += "Can't join network: " + e.getMessage() + "\n";
                 }
-            } else {
-                errors += "Can't join network. No network sepecified.";
+
             }
         }
 
@@ -355,11 +341,155 @@ public class BootstrapNetwork extends HttpServlet
         }
 
         // If any.
+        errors = errors.replaceAll("\n", "<br/>");
         request.setAttribute("errors", errors);
 
         // No button clicked yet or an error occurred. Display the network boostrap page.
         request.getRequestDispatcher("/pages/BootstrapNetwork.jsp").forward(request, response);
         return;
 
+    }
+    
+    public String validateCommonFormFieldsFromRequest(HttpServletRequest request)
+    {
+        String errors = "";
+        
+        boolean useExternalIp = TRUE.equals(request.getParameter("useExternalIp"));
+        String externalIp = request.getParameter("externalIp");
+
+        boolean useTcp = TRUE.equals(request.getParameter("useTcp"));
+        String tcpPortString = request.getParameter("tcpPort");
+
+        boolean useHttp = TRUE.equals(request.getParameter("useHttp"));
+        String httpPortString = request.getParameter("httpPort");
+        
+        if (useExternalIp) {
+            if (externalIp == null || externalIp.trim().length() == 0) {
+                errors += "No external IP provided.";
+            }
+        }
+        
+        if (!useTcp && !useHttp) {
+            errors += "At least one communication method (TCP and/or HTTP) must be chosen.";
+        } else {
+            if (useTcp) {
+                if (tcpPortString != null && tcpPortString.trim().length() != 0) {
+                    try {
+                        int port = Integer.parseInt(tcpPortString); 
+                        if (port <= 0) {
+                            errors += "TCP port number must be greater than 0.";
+                        }
+                        // TODO: check if port is busy/usable.
+                    } catch (NumberFormatException e) {
+                        errors += "Invalid TCP port.\n";
+                    }
+                } else {
+                    errors += "No TCP port provided.\n";
+                }
+            }
+            
+            if (useHttp) {
+                if (httpPortString != null && httpPortString.trim().length() != 0) {
+                    try {
+                        int port = Integer.parseInt(httpPortString); 
+                        if (port <= 0) {
+                            errors += "HTTP port number must be greater than 0.";
+                        }
+                        // TODO: check if port is busy/usable.
+                    } catch (NumberFormatException e) {
+                        errors += "Invalid HTTP port.\n";
+                    }
+                } else {
+                    errors += "No HTTP port provided.\n";
+                }
+            }
+        }
+        
+        return errors;
+    }
+    
+    public String validateJoinFormFieldsFromRequest(HttpServletRequest request)
+    {
+        String errors = "";
+        
+        String useNetwork = request.getParameter("useNetwork");
+        String rdvSeedingUri = request.getParameter("rdvSeedingUri");
+        String relaySeedingUri = request.getParameter("relaySeedingUri");
+        String rdvSeeds = request.getParameter("rdvSeeds");
+        String relaySeeds = request.getParameter("relaySeeds");
+
+        String[] rdvSeedsList = rdvSeeds.split(",");
+        String[] relaySeedsList = relaySeeds.split(",");
+        
+        if (!CONCERTO_NETWORK.equals(useNetwork) && !PUBLIC_JXTA_NETWORK.equals(useNetwork) && !CUSTOM_NETWORK.equals(useNetwork)) {
+            return "No network specified.\n";
+        }
+        
+        if (rdvSeedingUri != null && rdvSeedingUri.trim().length() > 0) {
+            try {
+                URI uri = new URI(rdvSeedingUri);
+                String scheme = uri.getScheme();
+                String host = uri.getHost();
+                if (host == null || scheme == null) {
+                    errors += rdvSeedingUri + " is not a valid location for retrieving rendezvous seeds.\n";
+                }
+            } catch (URISyntaxException e) {
+                errors += rdvSeedingUri + " is not a valid location for retrieving rendezvous seeds.\n";
+            }
+        } else {
+            // no rdv seeding uri provided.
+            if (rdvSeedsList.length == 0 || (rdvSeedsList.length == 1 && rdvSeedsList[0].length() == 0)) {
+                errors += "Must specify at least one RendezVous seed or RendezVous seeding URI.\n";
+            }
+        }
+        
+        if (relaySeedingUri != null && relaySeedingUri.trim().length() > 0) {
+            try {
+                URI uri = new URI(relaySeedingUri);
+                String scheme = uri.getScheme();
+                String host = uri.getHost();
+                if (host == null || scheme == null) {
+                    errors += rdvSeedingUri + " is not a valid location for retrieving relay seeds.\n";
+                }
+            } catch (URISyntaxException e) {
+                errors += relaySeedingUri + " is not a valid location for retrieving relay seeds.\n";
+            }
+        }
+     
+        for (String rdvSeed : rdvSeedsList) {
+            if (rdvSeed != null && rdvSeed.trim().length() != 0) {
+                try {
+                    URI seedUri = new URI(rdvSeed);
+                    String scheme = seedUri.getScheme();
+                    String host = seedUri.getHost();
+                    if (host == null || scheme == null) {
+                        errors += rdvSeed + " is not a valid RendezVous seed.\n";
+                    } else if (seedUri.getPort() < 1) {
+                        errors += rdvSeed + " has no port specified.\n";
+                    }
+                } catch (Exception e) {
+                    errors += rdvSeed + " is not a valid RendezVous seed.";
+                }
+            }
+        }
+    
+        for (String relaySeed : relaySeedsList) {
+            if (relaySeed != null && relaySeed.trim().length() != 0) {
+                try {
+                    URI seedUri = new URI(relaySeed);
+                    String scheme = seedUri.getScheme();
+                    String host = seedUri.getHost();
+                    if (host == null || scheme == null) {
+                        errors += relaySeed + " is not a valid Relay seed.\n";
+                    } else if (seedUri.getPort() < 1) {
+                        errors += relaySeed + " has no port specified.\n";
+                    }
+                } catch (Exception e) {
+                    errors += relaySeed + " is not a valid Relay seed.\n";
+                }
+            }
+        }
+        
+        return errors;
     }
 }

@@ -14,7 +14,7 @@ import org.xwiki.xmlrpc.XWikiXmlRpcClient;
 import org.xwiki.xmlrpc.model.XWikiObject;
 import org.xwiki.xmlrpc.model.XWikiPage;
 import org.xwoot.MockXWootContentProvider;
-import org.xwoot.NewXWootContentProvider;
+import org.xwoot.XWootContentProvider;
 import org.xwoot.XWootContentProviderException;
 import org.xwoot.XWootContentProviderInterface;
 import org.xwoot.XWootId;
@@ -53,7 +53,7 @@ public class TestXWoot2 extends AbstractXWootTest
     private void initContentProvider(XWootContentProviderInterface i)
     {
         //author : Conan the barbarian 
-        if (i instanceof NewXWootContentProvider) {
+        if (i instanceof XWootContentProvider) {
             /*try {
                 ((XWootContentProvider) i).getRpc().removePage("test.WebHome");
             } catch (XmlRpcException e) {
@@ -81,7 +81,7 @@ public class TestXWoot2 extends AbstractXWootTest
                 System.out.println(i.toString() + " : test.final doesn't exist.");
             }*/
             try {
-                ((NewXWootContentProvider) i).getRpc().removeSpace("test");
+                ((XWootContentProvider) i).getRpc().removeSpace("test");
             } catch (XmlRpcException e) {
                 System.out.println(i.toString() + " : space 'test' doesn't exist.");
             }
@@ -109,8 +109,8 @@ public class TestXWoot2 extends AbstractXWootTest
 
         XWootObject obj = this.createObject(pageId, content, version, minorVersion, isNewlyCreated);
 
-        if (i instanceof NewXWootContentProvider) {
-            XWikiXmlRpcClient rpc = ((NewXWootContentProvider) i).getRpc();
+        if (i instanceof XWootContentProvider) {
+            XWikiXmlRpcClient rpc = ((XWootContentProvider) i).getRpc();
             XWikiPage page = new XWikiPage();
             page.setId(obj.getPageId());
             page.setContent((String) obj.getFieldValue("content"));
@@ -145,8 +145,8 @@ public class TestXWoot2 extends AbstractXWootTest
 
         XWootObject obj = this.createComment(pageId, commentContent, version, minorVersion, isNewlyCreated);
 
-        if (xwiki instanceof NewXWootContentProvider) {
-            NewXWootContentProvider contentProvider = (NewXWootContentProvider) xwiki;
+        if (xwiki instanceof XWootContentProvider) {
+            XWootContentProvider contentProvider = (XWootContentProvider) xwiki;
             XWikiXmlRpcClient rpc = contentProvider.getRpc();
             
             XWikiPage page = null;
