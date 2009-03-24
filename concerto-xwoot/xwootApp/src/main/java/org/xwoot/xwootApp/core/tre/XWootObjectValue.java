@@ -44,8 +44,8 @@
 
 package org.xwoot.xwootApp.core.tre;
 
-import org.xwoot.XWootObject;
-import org.xwoot.XWootObjectField;
+import org.xwoot.contentprovider.XWootObject;
+import org.xwoot.contentprovider.XWootObjectField;
 import org.xwoot.thomasRuleEngine.core.Value;
 
 import java.io.Serializable;

@@ -67,11 +67,11 @@ import jlibdiff.HunkDel;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.xwoot.XWootContentProviderException;
-import org.xwoot.XWootContentProviderInterface;
-import org.xwoot.XWootId;
-import org.xwoot.XWootObject;
-import org.xwoot.XWootObjectField;
+import org.xwoot.contentprovider.XWootContentProviderException;
+import org.xwoot.contentprovider.XWootContentProviderInterface;
+import org.xwoot.contentprovider.XWootId;
+import org.xwoot.contentprovider.XWootObject;
+import org.xwoot.contentprovider.XWootObjectField;
 import org.xwoot.antiEntropy.AntiEntropy;
 import org.xwoot.antiEntropy.AntiEntropyException;
 import org.xwoot.clockEngine.ClockException;

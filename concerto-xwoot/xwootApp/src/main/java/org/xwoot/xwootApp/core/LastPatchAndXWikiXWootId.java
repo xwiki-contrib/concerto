@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.xwoot.XWootId;
+import org.xwoot.contentprovider.XWootId;
 import org.xwoot.xwootApp.XWootException;
 import org.xwoot.xwootUtil.PersistencyUtil;
 

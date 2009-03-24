@@ -6,7 +6,7 @@ import java.util.Set;
 import junit.framework.Assert;
 
 import org.junit.Test;
-import org.xwoot.XWootId;
+import org.xwoot.contentprovider.XWootId;
 import org.xwoot.xwootApp.XWootException;
 import org.xwoot.xwootApp.core.LastPatchAndXWikiXWootId;
 
