@@ -1,4 +1,4 @@
-package org.xwoot.test;
+package org.xwoot.contentprovider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,9 +11,9 @@ import org.xwiki.xmlrpc.XWikiXmlRpcClient;
 import org.xwiki.xmlrpc.model.XWikiObject;
 import org.xwiki.xmlrpc.model.XWikiObjectSummary;
 import org.xwiki.xmlrpc.model.XWikiPage;
-import org.xwoot.Utils;
-import org.xwoot.XWootContentProviderConfiguration;
-import org.xwoot.XWootObject;
+import org.xwoot.contentprovider.Utils;
+import org.xwoot.contentprovider.XWootContentProviderConfiguration;
+import org.xwoot.contentprovider.XWootObject;
 
 public class UtilsTest extends TestCase
 {

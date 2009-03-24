@@ -1,8 +1,8 @@
-package org.xwoot.test;
+package org.xwoot.contentprovider;
 
 import junit.framework.TestCase;
 
-import org.xwoot.XWootObjectField;
+import org.xwoot.contentprovider.XWootObjectField;
 
 public class XWootObjectFieldTest extends TestCase
 {

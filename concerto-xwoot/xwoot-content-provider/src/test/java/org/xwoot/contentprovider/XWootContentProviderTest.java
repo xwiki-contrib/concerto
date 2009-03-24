@@ -1,4 +1,4 @@
-package org.xwoot.test;
+package org.xwoot.contentprovider;
 
 import java.util.List;
 import java.util.Set;
@@ -8,12 +8,12 @@ import junit.framework.TestCase;
 import org.apache.xmlrpc.XmlRpcException;
 import org.xwiki.xmlrpc.XWikiXmlRpcClient;
 import org.xwiki.xmlrpc.model.XWikiPage;
-import org.xwoot.Constants;
-import org.xwoot.XWootContentProvider;
-import org.xwoot.Utils;
-import org.xwoot.XWootContentProviderException;
-import org.xwoot.XWootId;
-import org.xwoot.XWootObject;
+import org.xwoot.contentprovider.Constants;
+import org.xwoot.contentprovider.Utils;
+import org.xwoot.contentprovider.XWootContentProvider;
+import org.xwoot.contentprovider.XWootContentProviderException;
+import org.xwoot.contentprovider.XWootId;
+import org.xwoot.contentprovider.XWootObject;
 
 public class XWootContentProviderTest extends TestCase
 {

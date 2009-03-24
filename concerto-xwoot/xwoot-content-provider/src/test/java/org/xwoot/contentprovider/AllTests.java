@@ -1,4 +1,4 @@
-package org.xwoot.test;
+package org.xwoot.contentprovider;
 
 import junit.framework.Test;
 import junit.framework.TestCase;

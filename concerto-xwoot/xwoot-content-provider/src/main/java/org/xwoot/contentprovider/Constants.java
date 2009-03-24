@@ -1,4 +1,4 @@
-package org.xwoot;
+package org.xwoot.contentprovider;
 
 /**
  * Constants

@@ -1,4 +1,4 @@
-package org.xwoot.test;
+package org.xwoot.contentprovider;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -8,9 +8,9 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 
-import org.xwoot.XWootContentProviderStateManager;
-import org.xwoot.XWootId;
-import org.xwoot.XWootIdComparatorAscending;
+import org.xwoot.contentprovider.XWootContentProviderStateManager;
+import org.xwoot.contentprovider.XWootId;
+import org.xwoot.contentprovider.XWootIdComparatorAscending;
 
 public class StateManagerTest extends TestCase
 {

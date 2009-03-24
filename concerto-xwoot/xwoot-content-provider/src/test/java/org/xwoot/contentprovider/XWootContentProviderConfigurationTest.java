@@ -1,10 +1,10 @@
-package org.xwoot.test;
+package org.xwoot.contentprovider;
 
 import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import org.xwoot.XWootContentProviderConfiguration;
+import org.xwoot.contentprovider.XWootContentProviderConfiguration;
 
 public class XWootContentProviderConfigurationTest extends TestCase
 {
