@@ -48,6 +48,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
@@ -57,7 +58,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import net.jxta.exception.JxtaException;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xwoot.contentprovider.Utils;
@@ -234,7 +234,6 @@ public class XWootSite
                 contentProviderProperties);
         // WikiContentManager wiki = WikiContentManagerFactory.getSwizzleFactory().createWCM(url, login, pwd);
 
-        // FIXME: use peerId for wootEngine and for TreEngine as well.
         WootEngine wootEngine = new WootEngine(peerId, wootEngineDir.toString(), wootEngineClock);
 
         ThomasRuleEngine tre = new ThomasRuleEngine(peerId, treDir.toString());
@@ -347,14 +346,28 @@ public class XWootSite
         }
         
         if (result != null && result.length() == 0) {
-            boolean authOk = false;
+            boolean connectionFailed = false;
             try {
-                authOk = Utils.checkLogin(xwikiEndpoint, xwikiUserName, xwikiPassword);
-                if (!authOk) {
-                    result += "The remote XWiki server refused the provided username/password combination.\n";
+                HttpURLConnection connection = (HttpURLConnection) (new URL(xwikiEndpoint).openConnection());
+                connection.setConnectTimeout(15000);
+                int responseCode = connection.getResponseCode();
+                if (responseCode != HttpURLConnection.HTTP_BAD_METHOD) {
+                    result += "An XWiki server is not available at the provided address.";
+                    connectionFailed = true;
                 }
             } catch (Exception e) {
-                result += "Please enter a valid XWiki endpoint URL (the given URL is malformed)\n";
+                connectionFailed = true;
+                result += "Failed to contact the remote XWiki server. Make sure XWiki is started at the provided address and that it is reachable.";
+            }
+            
+            if (!connectionFailed) {
+                try {
+                    if (!Utils.checkLogin(xwikiEndpoint, xwikiUserName, xwikiPassword)) {
+                        result += "The remote XWiki server refused the provided username/password combination.\n";
+                    }
+                } catch (Exception e) {
+                    result += "Please enter a valid XWiki endpoint URL (the given URL is malformed)\n";
+                }
             }
         }
 

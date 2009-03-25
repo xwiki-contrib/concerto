@@ -56,7 +56,7 @@ import org.apache.commons.lang.StringUtils;
 import org.xwoot.xwootApp.web.XWootSite;
 
 /**
- * DOCUMENT ME!
+ * XWoot server configuration settings and initialization.
  * 
  * @version $Id$
  */
