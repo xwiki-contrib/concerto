@@ -47,14 +47,25 @@ package org.xwoot.xwootApp.web.servlets;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.util.Enumeration;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.jxta.document.AdvertisementFactory;
+import net.jxta.document.XMLElement;
+import net.jxta.endpoint.EndpointAddress;
+import net.jxta.impl.protocol.HTTPAdv;
+import net.jxta.impl.protocol.PlatformConfig;
+import net.jxta.impl.protocol.RdvConfigAdv;
+import net.jxta.impl.protocol.RelayConfigAdv;
+import net.jxta.impl.protocol.TCPAdv;
+import net.jxta.impl.protocol.RdvConfigAdv.RendezVousConfiguration;
+import net.jxta.peergroup.PeerGroup;
 import net.jxta.platform.NetworkConfigurator;
+import net.jxta.protocol.TransportAdvertisement;
 
 import org.xwoot.jxta.NetworkManager;
 import org.xwoot.jxta.NetworkManager.ConfigMode;
@@ -69,11 +80,23 @@ import org.xwoot.xwootApp.web.XWootSite;
  */
 public class BootstrapNetwork extends HttpServlet
 {
+    /** TODO DOCUMENT ME! */
+    public static final String JXTA_PUBLIC_NETWORK_RELAY_SEEDING_URI = "http://rdv.jxtahosts.net/cgi-bin/relays.cgi";
+
+    /** TODO DOCUMENT ME! */
+    public static final String JXTA_PUBLIC_NETWORK_RDV_SEEDING_URI = "http://rdv.jxtahosts.net/cgi-bin/rendezvous.cgi";
+
+    /** TODO DOCUMENT ME! */
+    public static final String CONCERTO_NETWORK_RELAY_SEEDING_URI = "http://jxta.concerto.com/relayList.do";
+
+    /** TODO DOCUMENT ME! */
+    public static final String CONCERTO_NETWORK_RDV_SEEDING_URI = "http://jxta.concerto.com/rendezvousList.do";
+
     /** Join custom network option. */
     private static final String CUSTOM_NETWORK = "custom";
 
     /** Join public jxta network option. */
-    private static final String PUBLIC_JXTA_NETWORK = "publicJxta";
+    private static final String JXTA_PUBLIC_NETWORK = "publicJxta";
 
     /** Join concerto network option. */
     private static final String CONCERTO_NETWORK = "concerto";
@@ -93,6 +116,44 @@ public class BootstrapNetwork extends HttpServlet
     /** The XWootEngine instance to manage. */
     private XWootAPI xwootEngine = XWootSite.getInstance().getXWootEngine();
 
+    private boolean useMulticast;
+
+    private int tcpPort;
+
+    private boolean useOnlyPublicTcpAddress;
+
+    private int httpPort;
+
+    private boolean useOnlyPublicHTTPAddress;
+
+    private String publicAddress;
+
+    private String rdvSeedingUris;
+
+    private String rdvSeeds;
+
+    private boolean beRendezVous;
+
+    private String relaySeedingUris;
+
+    private String relaySeeds;
+
+    private boolean beRelay;
+
+    private boolean usePublicAddress;
+
+    private boolean useTcp;
+
+    private boolean useHttp;
+
+    private boolean useOnlyPublicAddress;
+
+    private boolean usePublicJxtaNetwork;
+
+    private boolean useConcertoNetwork;
+
+    private boolean useCustomNetwork;
+
     /** {@inheritDoc} */
     @Override
     public void service(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
@@ -104,29 +165,34 @@ public class BootstrapNetwork extends HttpServlet
         String errors = "";
         
         NetworkManager networkManager = ((XWoot3) xwootEngine).getPeer().getManager();
-        NetworkConfigurator networkConfig = null;
+        NetworkConfigurator networkConfig = networkManager.getConfigurator();
 
         String networkChoice = request.getParameter("networkChoice");
 
-        if (networkChoice == null) {
+        /*if (networkChoice == null) {
             // No button clicked yet.
+            
+            if (networkConfig.exists()) {
+                this.readCurrentSettings(networkConfig);
+            }
+            
+            this.populateRequest(request);
+            
             request.getRequestDispatcher("/pages/BootstrapNetwork.jsp").forward(request, response);
             return;
-        }
+        }*/
         
-        errors += this.validateCommonFormFieldsFromRequest(request);
-        
-        // If we detect errors at this point, don`t go any further.
-        if (errors != null && errors.length() != 0) {
-            errors = errors.replaceAll("\n", "<br />");
-            request.setAttribute("errors", errors);
-
-            request.getRequestDispatcher("/pages/BootstrapNetwork.jsp").forward(request, response);
-            return;
-        }
-
-        // Common settings.
+        // If networkChoice button has been pressed, validate entered data.
         if (CREATE_BUTTON.equals(networkChoice) || JOIN_BUTTON.equals(networkChoice)) {
+            if (JOIN_BUTTON.equals(networkChoice)) {
+                errors += this.validateJoinFormFieldsFromRequest(request); 
+            }
+            errors += this.validateCommonFormFieldsFromRequest(request);
+        }
+
+        // If networkChoice button has been pressed and the entered values are good, process data.
+        if ((errors == null || errors.trim().length() == 0) &&
+            (CREATE_BUTTON.equals(networkChoice) || JOIN_BUTTON.equals(networkChoice))) {
             
             // Disconnect from any connected network.
             if (xwootEngine.isConnectedToP2PNetwork()) {
@@ -146,8 +212,8 @@ public class BootstrapNetwork extends HttpServlet
             }
             
             // Initialize the proper peer mode.
-            ConfigMode mode = null;
-            if (JOIN_BUTTON.equals(networkChoice)) {
+            ConfigMode mode = ConfigMode.EDGE;
+            if (JOIN_BUTTON.equals(networkChoice) && CUSTOM_NETWORK.equals(request.getParameter("useNetwork"))) {
                 boolean beRendezVous = TRUE.equals(request.getParameter("beRendezVous"));
                 boolean beRelay = TRUE.equals(request.getParameter("beRelay"));
                 
@@ -162,10 +228,8 @@ public class BootstrapNetwork extends HttpServlet
                 mode = ConfigMode.RENDEZVOUS_RELAY;
             }
             
-            if (mode != null) {
-                this.log("Setting this peer to " + mode + " mode.");
-                networkManager.setMode(mode);
-            } // else mode remains unchanged as EDGE.
+            this.log("Setting this peer to " + mode + " mode.");
+            networkManager.setMode(mode);
             
             // Get the now updated networkConfig or the old one if the mode remained the same.
             networkConfig = networkManager.getConfigurator();
@@ -231,125 +295,158 @@ public class BootstrapNetwork extends HttpServlet
             networkConfig.setUseMulticast(useMulticast);
             this.log("Using Multicast? " + useMulticast);
             
-        }
-
-        // Create network settings.
-        if (CREATE_BUTTON.equals(networkChoice)) {
-            this.getServletContext().log("Create network requested.");
-
-            try {
-                // Can`t use this because setmode overrides our settings. 
-                //xwootEngine.createNetwork();
-                
-                networkConfig.clearRelaySeedingURIs();
-                networkConfig.clearRelaySeeds();
-                networkConfig.clearRendezvousSeedingURIs();
-                networkConfig.clearRendezvousSeeds();
-                
-                networkManager.setUseDefaultSeeds(false);
-                
-                ((XWoot3) xwootEngine).getPeer().startNetworkAndConnect((XWoot3) xwootEngine, (XWoot3) xwootEngine);
-                // request.getSession().setAttribute("join", Boolean.valueOf(false));
-                // response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/stateManagement.do"));
-            } catch (Exception e) {
-                errors += "Can't create network:" + e.getMessage() + "\n";
-            }
-
-        // Join Network settings
-        } else if (JOIN_BUTTON.equals(networkChoice)) {
-            this.getServletContext().log("Join network requested.");
             
-            errors += this.validateJoinFormFieldsFromRequest(request);
-            if (errors == null || errors.length() == 0) {
+            // Create network settings.
+            if (CREATE_BUTTON.equals(networkChoice)) {
+                this.getServletContext().log("Create network requested.");
 
-                String useNetwork = request.getParameter("useNetwork");
-                String rdvSeedingUriString = request.getParameter("rdvSeedingUri");
-                String relaySeedingUriString = request.getParameter("relaySeedingUri");
-                String rdvSeeds = request.getParameter("rdvSeeds");
-                String relaySeeds = request.getParameter("relaySeeds");
-    
-                String[] rdvSeedsList = rdvSeeds.split("\\s*,\\s*");
-                String[] relaySeedsList = relaySeeds.split("\\s*,\\s*");
-            
                 try {
-                    // Clean any previously entered seeds and seedingUris.
-                    networkConfig.clearRendezvousSeeds();
-                    networkConfig.clearRendezvousSeedingURIs();
-                    networkConfig.clearRelaySeeds();
+                    // Can`t use this because setmode overrides our settings. 
+                    //xwootEngine.createNetwork();
+                    
                     networkConfig.clearRelaySeedingURIs();
-
-                    if (CONCERTO_NETWORK.equals(useNetwork)) {
-                        networkConfig.addRdvSeedingURI("http://jxta.concerto.com/rendezvousList.do");
-                        networkConfig.addRelaySeedingURI("http://jxta.concerto.com/relayList.do");
-
-                    } else if (PUBLIC_JXTA_NETWORK.equals(useNetwork)) {
-                        networkManager.setUseDefaultSeeds(true);
-                        networkConfig.addRdvSeedingURI("http://rdv.jxtahosts.net/cgi-bin/rendezvous.cgi");
-                        networkConfig.addRelaySeedingURI("http://rdv.jxtahosts.net/cgi-bin/relays.cgi");
-
-                    } else if (CUSTOM_NETWORK.equals(useNetwork)) {
-                        // Seeding URIs
-                        if (rdvSeedingUriString != null && rdvSeedingUriString.trim().length() > 0) {
-                            networkConfig.addRdvSeedingURI(URI.create(rdvSeedingUriString));
-                        }
-                        
-                        if (relaySeedingUriString != null && relaySeedingUriString.trim().length() > 0) {
-                            networkConfig.addRelaySeedingURI(URI.create(relaySeedingUriString));
-                        }
-
-                        // Rdv Seeds.
-                        for (String rdvSeed : rdvSeedsList) {
-                            if (rdvSeed.trim().length() != 0) {
-                                networkConfig.addSeedRendezvous(URI.create(rdvSeed));
-                            }
-                        }
-
-                        // Relay Seeds.
-                        for (String relaySeed : relaySeedsList) {
-                            if (relaySeed.trim().length() != 0) {
-                                networkConfig.addSeedRelay(URI.create(relaySeed));
-                            }
-                        }
-                        
-                    }
-
-                    xwootEngine.joinNetwork(null);
-
-                    // Catch silent exceptions jxta is not throwing but just warning about.
-                    if (!xwootEngine.isConnectedToP2PNetwork()) {
-                        errors += "Can't join network. Failed to contact a RendezVous peer for the given network.";
-                    }
+                    networkConfig.clearRelaySeeds();
+                    networkConfig.clearRendezvousSeedingURIs();
+                    networkConfig.clearRendezvousSeeds();
+                    
+                    networkManager.setUseDefaultSeeds(false);
+                    
+                    ((XWoot3) xwootEngine).getPeer().startNetworkAndConnect((XWoot3) xwootEngine, (XWoot3) xwootEngine);
+                    // request.getSession().setAttribute("join", Boolean.valueOf(false));
+                    // response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/stateManagement.do"));
                 } catch (Exception e) {
-                    // If exceptions come along the way or if joinNetwork() fails.
-                    errors += "Can't join network: " + e.getMessage() + "\n";
+                    errors += "Can't create network:" + e.getMessage() + "\n";
                 }
 
-            }
-        }
+            // Join Network settings
+            } else if (JOIN_BUTTON.equals(networkChoice)) {
+                this.getServletContext().log("Join network requested.");
+                
+                errors += this.validateJoinFormFieldsFromRequest(request);
+                if (errors == null || errors.length() == 0) {
 
-        // If no errors were encountered and successfully joined/created a network, go to next step.
-        if (errors.length() == 0) {
-            this.getServletContext().log("No errors occured.");
+                    String useNetwork = request.getParameter("useNetwork");
+                    String rdvSeedingUriString = request.getParameter("rdvSeedingUri");
+                    String relaySeedingUriString = request.getParameter("relaySeedingUri");
+                    String rdvSeeds = request.getParameter("rdvSeeds");
+                    String relaySeeds = request.getParameter("relaySeeds");
+        
+                    String[] rdvSeedingUrisList = rdvSeedingUriString.split("\\s*,\\s*");
+                    String[] relaySeedingUrisList = relaySeedingUriString.split("\\s*,\\s*");
+                    
+                    String[] rdvSeedsList = rdvSeeds.split("\\s*,\\s*");
+                    String[] relaySeedsList = relaySeeds.split("\\s*,\\s*");
+                
+                    try {
+                        // Clean any previously entered seeds and seedingUris.
+                        networkConfig.clearRendezvousSeeds();
+                        networkConfig.clearRendezvousSeedingURIs();
+                        networkConfig.clearRelaySeeds();
+                        networkConfig.clearRelaySeedingURIs();
+
+                        if (CONCERTO_NETWORK.equals(useNetwork)) {
+                            networkConfig.addRdvSeedingURI(CONCERTO_NETWORK_RDV_SEEDING_URI);
+                            networkConfig.addRelaySeedingURI(CONCERTO_NETWORK_RELAY_SEEDING_URI);
+
+                        } else if (JXTA_PUBLIC_NETWORK.equals(useNetwork)) {
+                            networkManager.setUseDefaultSeeds(true);
+                            networkConfig.addRdvSeedingURI(JXTA_PUBLIC_NETWORK_RDV_SEEDING_URI);
+                            networkConfig.addRelaySeedingURI(JXTA_PUBLIC_NETWORK_RELAY_SEEDING_URI);
+
+                        } else if (CUSTOM_NETWORK.equals(useNetwork)) {
+                            // Rdv Seeding URIs
+                            for (String rdvSeedingUri : rdvSeedingUrisList) {
+                                if (rdvSeedingUri.trim().length() != 0) {
+                                    networkConfig.addRdvSeedingURI(URI.create(rdvSeedingUri));
+                                }
+                            }
+                            
+                            // Relay Seeding URIs
+                            for (String relaySeedingUri : relaySeedingUrisList) {
+                                if (relaySeedingUri.trim().length() != 0) {
+                                    networkConfig.addRelaySeedingURI(URI.create(relaySeedingUri));
+                                }
+                            }
+
+                            // Rdv Seeds.
+                            for (String rdvSeed : rdvSeedsList) {
+                                if (rdvSeed.trim().length() != 0) {
+                                    networkConfig.addSeedRendezvous(URI.create(rdvSeed));
+                                }
+                            }
+
+                            // Relay Seeds.
+                            for (String relaySeed : relaySeedsList) {
+                                if (relaySeed.trim().length() != 0) {
+                                    networkConfig.addSeedRelay(URI.create(relaySeed));
+                                }
+                            }
+                            
+                        }
+
+                        xwootEngine.joinNetwork(null);
+
+                        // Catch silent exceptions jxta is not throwing but just warning about.
+                        if (!xwootEngine.isConnectedToP2PNetwork()) {
+                            errors += "Can't join network. Failed to contact a RendezVous peer for the given network.";
+                        }
+                    } catch (Exception e) {
+                        // If exceptions come along the way or if joinNetwork() fails.
+                        errors += "Can't join network: " + e.getMessage() + "\n";
+                    }
+
+                }
+            }
             
-            // Stop the autosynch thread if it is running.
-            XWootSite.getInstance().getAutoSynchronizationThread().stopThread();
-            
-            response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapGroup.do"));
-            return;
+            // If no errors were encountered and successfully joined/created a network, go to next step.
+            if (errors.length() == 0) {
+                this.getServletContext().log("No errors occured.");
+                
+                // Stop the autosynch thread if it is running.
+                XWootSite.getInstance().getAutoSynchronizationThread().stopThread();
+                
+                response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapGroup.do"));
+                return;
+            } else {
+                this.getServletContext().log("Errors occured.");
+                
+                // re-save the current config because it was earlier deleted.
+                if (!networkConfig.exists()) {
+                    networkConfig.save();
+                }
+            }
+        }        
+        
+        // We are here if page just opened, no button was pressed or an error occurred while processing data.
+        
+        // Fill in existing configuration.
+        if (networkConfig.exists()) {
+            this.readCurrentSettings(networkConfig);
         } else {
-            this.getServletContext().log("Errors occured.");
+            // Hint default basic settings to the GUI.
+            this.setDefaultSettingsToGUI();
         }
+        this.populateRequest(request);
 
         // If any.
         errors = errors.replaceAll("\n", "<br/>");
         request.setAttribute("errors", errors);
 
-        // No button clicked yet or an error occurred. Display the network boostrap page.
+        // Show the form.
         request.getRequestDispatcher("/pages/BootstrapNetwork.jsp").forward(request, response);
         return;
 
     }
     
+    private void setDefaultSettingsToGUI()
+    {
+        this.useTcp = true;
+        this.tcpPort = 9701;
+        this.useMulticast = true;
+        this.useHttp = true;
+        this.httpPort = 9700;
+    }
+
     public String validateCommonFormFieldsFromRequest(HttpServletRequest request)
     {
         String errors = "";
@@ -365,19 +462,19 @@ public class BootstrapNetwork extends HttpServlet
         
         if (useExternalIp) {
             if (externalIp == null || externalIp.trim().length() == 0) {
-                errors += "No external IP provided.";
+                errors += "No external IP provided.\n";
             }
         }
         
         if (!useTcp && !useHttp) {
-            errors += "At least one communication method (TCP and/or HTTP) must be chosen.";
+            errors += "At least one communication method (TCP and/or HTTP) must be chosen.\n";
         } else {
             if (useTcp) {
                 if (tcpPortString != null && tcpPortString.trim().length() != 0) {
                     try {
                         int port = Integer.parseInt(tcpPortString); 
                         if (port <= 0) {
-                            errors += "TCP port number must be greater than 0.";
+                            errors += "TCP port number must be greater than 0.\n";
                         }
                         // TODO: check if port is busy/usable.
                     } catch (NumberFormatException e) {
@@ -393,7 +490,7 @@ public class BootstrapNetwork extends HttpServlet
                     try {
                         int port = Integer.parseInt(httpPortString); 
                         if (port <= 0) {
-                            errors += "HTTP port number must be greater than 0.";
+                            errors += "HTTP port number must be greater than 0.\n";
                         }
                         // TODO: check if port is busy/usable.
                     } catch (NumberFormatException e) {
@@ -413,83 +510,298 @@ public class BootstrapNetwork extends HttpServlet
         String errors = "";
         
         String useNetwork = request.getParameter("useNetwork");
-        String rdvSeedingUri = request.getParameter("rdvSeedingUri");
-        String relaySeedingUri = request.getParameter("relaySeedingUri");
+        String rdvSeedingUriString = request.getParameter("rdvSeedingUri");
+        String relaySeedingUriString = request.getParameter("relaySeedingUri");
         String rdvSeeds = request.getParameter("rdvSeeds");
         String relaySeeds = request.getParameter("relaySeeds");
-
-        String[] rdvSeedsList = rdvSeeds.split(",");
-        String[] relaySeedsList = relaySeeds.split(",");
         
-        if (!CONCERTO_NETWORK.equals(useNetwork) && !PUBLIC_JXTA_NETWORK.equals(useNetwork) && !CUSTOM_NETWORK.equals(useNetwork)) {
+        String[] rdvSeedingUrisList = rdvSeedingUriString.split("\\s*,\\s*");
+        String[] relaySeedingUrisList = relaySeedingUriString.split("\\s*,\\s*");
+
+        String[] rdvSeedsList = rdvSeeds.split("\\s*,\\s*");
+        String[] relaySeedsList = relaySeeds.split("\\s*,\\s*");
+        
+        if (!CONCERTO_NETWORK.equals(useNetwork) && !JXTA_PUBLIC_NETWORK.equals(useNetwork) && !CUSTOM_NETWORK.equals(useNetwork)) {
             return "No network specified.\n";
         }
         
-        if (rdvSeedingUri != null && rdvSeedingUri.trim().length() > 0) {
-            try {
-                URI uri = new URI(rdvSeedingUri);
-                String scheme = uri.getScheme();
-                String host = uri.getHost();
-                if (host == null || scheme == null) {
-                    errors += rdvSeedingUri + " is not a valid location for retrieving rendezvous seeds.\n";
-                }
-            } catch (URISyntaxException e) {
-                errors += rdvSeedingUri + " is not a valid location for retrieving rendezvous seeds.\n";
-            }
-        } else {
-            // no rdv seeding uri provided.
-            if (rdvSeedsList.length == 0 || (rdvSeedsList.length == 1 && rdvSeedsList[0].length() == 0)) {
+        if (CUSTOM_NETWORK.equals(useNetwork)) {
+            
+            // Check if at least one rdv seed/seedingUri exists.
+            if ((rdvSeedingUrisList.length == 0 || (rdvSeedingUrisList.length == 1 && rdvSeedingUrisList[0].trim().length() == 0)) &&
+                (rdvSeedsList.length == 0 || (rdvSeedsList.length == 1 && rdvSeedsList[0].length() == 0))) {
                 errors += "Must specify at least one RendezVous seed or RendezVous seeding URI.\n";
             }
-        }
-        
-        if (relaySeedingUri != null && relaySeedingUri.trim().length() > 0) {
-            try {
-                URI uri = new URI(relaySeedingUri);
-                String scheme = uri.getScheme();
-                String host = uri.getHost();
-                if (host == null || scheme == null) {
-                    errors += rdvSeedingUri + " is not a valid location for retrieving relay seeds.\n";
+            
+            // Rdv Seeding Uris
+            for (String rdvSeedingUri : rdvSeedingUrisList) {
+                if (rdvSeedingUri != null && rdvSeedingUri.trim().length() != 0) {
+                    try {
+                        URI seedingUri = new URI(rdvSeedingUri);
+                        String scheme = seedingUri.getScheme();
+                        String host = seedingUri.getHost();
+                        if (host == null || scheme == null) {
+                            errors += rdvSeedingUri + " is not a valid location for retrieving RendezVous seeds.\n";
+                        }
+                    } catch (Exception e) {
+                        errors += rdvSeedingUri + " is not a valid location for retrieving RendezVous seeds.\n";
+                    }
                 }
-            } catch (URISyntaxException e) {
-                errors += relaySeedingUri + " is not a valid location for retrieving relay seeds.\n";
             }
-        }
-     
-        for (String rdvSeed : rdvSeedsList) {
-            if (rdvSeed != null && rdvSeed.trim().length() != 0) {
-                try {
-                    URI seedUri = new URI(rdvSeed);
-                    String scheme = seedUri.getScheme();
-                    String host = seedUri.getHost();
-                    if (host == null || scheme == null) {
+            
+            // Relay Seeding Uris
+            for (String relaySeedingUri : relaySeedingUrisList) {
+                if (relaySeedingUri != null && relaySeedingUri.trim().length() != 0) {
+                    try {
+                        URI seedUri = new URI(relaySeedingUri);
+                        String scheme = seedUri.getScheme();
+                        String host = seedUri.getHost();
+                        if (host == null || scheme == null) {
+                            errors += relaySeedingUri + " is not a valid location for retrieving relay seeds.\n";
+                        }
+                    } catch (Exception e) {
+                        errors += relaySeedingUri + " is not a valid location for retrieving relay seeds.\n";
+                    }
+                }
+            }
+         
+            // Rdv Seeds
+            for (String rdvSeed : rdvSeedsList) {
+                if (rdvSeed != null && rdvSeed.trim().length() != 0) {
+                    try {
+                        URI seedUri = new URI(rdvSeed);
+                        String scheme = seedUri.getScheme();
+                        String host = seedUri.getHost();
+                        if (host == null || scheme == null) {
+                            errors += rdvSeed + " is not a valid RendezVous seed.\n";
+                        } else if (seedUri.getPort() < 1) {
+                            errors += rdvSeed + " has no port specified.\n";
+                        }
+                    } catch (Exception e) {
                         errors += rdvSeed + " is not a valid RendezVous seed.\n";
-                    } else if (seedUri.getPort() < 1) {
-                        errors += rdvSeed + " has no port specified.\n";
                     }
-                } catch (Exception e) {
-                    errors += rdvSeed + " is not a valid RendezVous seed.";
                 }
             }
-        }
-    
-        for (String relaySeed : relaySeedsList) {
-            if (relaySeed != null && relaySeed.trim().length() != 0) {
-                try {
-                    URI seedUri = new URI(relaySeed);
-                    String scheme = seedUri.getScheme();
-                    String host = seedUri.getHost();
-                    if (host == null || scheme == null) {
+        
+            // Relay Seeds
+            for (String relaySeed : relaySeedsList) {
+                if (relaySeed != null && relaySeed.trim().length() != 0) {
+                    try {
+                        URI seedUri = new URI(relaySeed);
+                        String scheme = seedUri.getScheme();
+                        String host = seedUri.getHost();
+                        if (host == null || scheme == null) {
+                            errors += relaySeed + " is not a valid Relay seed.\n";
+                        } else if (seedUri.getPort() < 1) {
+                            errors += relaySeed + " has no port specified.\n";
+                        }
+                    } catch (Exception e) {
                         errors += relaySeed + " is not a valid Relay seed.\n";
-                    } else if (seedUri.getPort() < 1) {
-                        errors += relaySeed + " has no port specified.\n";
                     }
-                } catch (Exception e) {
-                    errors += relaySeed + " is not a valid Relay seed.\n";
                 }
             }
         }
         
         return errors;
+    }
+    
+    public void readCurrentSettings(NetworkConfigurator networkConfigurator) 
+    {
+        PlatformConfig platformConfig = (PlatformConfig) networkConfigurator.getPlatformConfig();
+        
+        TCPAdv tcpAdvertisement = null;
+        HTTPAdv httpAdvertisement = null;
+        
+        // TCP
+        XMLElement param = (XMLElement) platformConfig.getServiceParam(PeerGroup.tcpProtoClassID);
+        useTcp = platformConfig.isSvcEnabled(PeerGroup.tcpProtoClassID);
+        Enumeration tcpChildren = param.getChildren(TransportAdvertisement.getAdvertisementType());
+        
+        // get the TransportAdv from either TransportAdv or tcpConfig
+        if (tcpChildren.hasMoreElements()) {
+            param = (XMLElement) tcpChildren.nextElement();
+        } else {
+            throw new IllegalStateException("Missing TCP Advertisment");
+        }
+        tcpAdvertisement = (TCPAdv) AdvertisementFactory.newAdvertisement(param);
+
+        // HTTP
+        try {
+            param = (XMLElement) platformConfig.getServiceParam(PeerGroup.httpProtoClassID);
+            useHttp = platformConfig.isSvcEnabled(PeerGroup.httpProtoClassID);
+            
+            Enumeration httpChildren = param.getChildren(TransportAdvertisement.getAdvertisementType());
+            
+            // get the TransportAdv from either TransportAdv
+            if (httpChildren.hasMoreElements()) {
+                param = (XMLElement) httpChildren.nextElement();
+            } else {
+                throw new IllegalStateException("Missing HTTP Advertisment");
+            }
+            // Read-in the adv as it is now.
+            httpAdvertisement = (HTTPAdv) AdvertisementFactory.newAdvertisement(param);
+        } catch (Exception failure) {
+            // TODO: handle;
+            log("Error processing the HTTP config advertisement", failure);
+//            IOException ioe = new IOException();
+//            ioe.initCause(failure);
+//            throw ioe;
+        }
+        
+//        // Rendezvous
+//        try {
+//            param = (XMLElement) platformConfig.getServiceParam(PeerGroup.rendezvousClassID);
+//            // backwards compatibility
+//            param.addAttribute("type", RdvConfigAdv.getAdvertisementType());
+//            rdvConfig = (RdvConfigAdv) AdvertisementFactory.newAdvertisement(param);
+//        } catch (Exception failure) {
+//            IOException ioe = new IOException("error processing the rendezvous config advertisement");
+//            ioe.initCause(failure);
+//            throw ioe;
+//        }
+//        
+//        // Relay
+//        try {
+//            param = (XMLElement) platformConfig.getServiceParam(PeerGroup.relayProtoClassID);
+//            if (param != null && !platformConfig.isSvcEnabled(PeerGroup.relayProtoClassID)) {
+//                mode = mode | RELAY_OFF;
+//            }
+//            // backwards compatibility
+//            param.addAttribute("type", RelayConfigAdv.getAdvertisementType());
+//            relayConfig = (RelayConfigAdv) AdvertisementFactory.newAdvertisement(param);
+//        } catch (Exception failure) {
+//            IOException ioe = new IOException("error processing the relay config advertisement");
+//            ioe.initCause(failure);
+//            throw ioe;
+//        }
+ 
+        
+        
+//        TCPAdv tcpAdvertisement = (TCPAdv) platformConfig.getSvcConfigAdvertisement(PeerGroup.tcpProtoClassID);
+//        HTTPAdv httpAdvertisement = (HTTPAdv) platformConfig.getSvcConfigAdvertisement(PeerGroup.httpProtoClassID);
+        RelayConfigAdv relayAdvertisement = (RelayConfigAdv) platformConfig.getSvcConfigAdvertisement(PeerGroup.relayProtoClassID);
+        RdvConfigAdv rdvAdvertisement = (RdvConfigAdv) platformConfig.getSvcConfigAdvertisement(PeerGroup.rendezvousClassID);
+        
+        // TCP
+        useMulticast = tcpAdvertisement.getMulticastState();
+        tcpPort = tcpAdvertisement.getPort();
+        useOnlyPublicTcpAddress = tcpAdvertisement.getPublicAddressOnly();
+        String tcpPublicAddress = tcpAdvertisement.getServer();
+        boolean beTcpClient = tcpAdvertisement.isClientEnabled();
+        boolean beTcpServer = tcpAdvertisement.isServerEnabled();
+        
+        useTcp = useTcp && (beTcpClient || beTcpServer);
+        
+        // HTTP
+        httpPort = httpAdvertisement.getPort();
+        useOnlyPublicHTTPAddress = httpAdvertisement.getPublicAddressOnly();
+        String httpPublicAddress = httpAdvertisement.getServer();
+        boolean beHttpClient = httpAdvertisement.isClientEnabled();
+        boolean beHttpServer = httpAdvertisement.isServerEnabled();
+        
+        useHttp = useHttp && (beHttpClient || beHttpServer);
+        
+        if (tcpPublicAddress != null && tcpPublicAddress.length() > 0) {
+            publicAddress = tcpPublicAddress.substring(0, tcpPublicAddress.lastIndexOf(":"));
+            useOnlyPublicAddress = useOnlyPublicTcpAddress;
+        } else if (httpPublicAddress != null && httpPublicAddress.length() > 0) {
+            publicAddress = httpPublicAddress.substring(0, httpPublicAddress.lastIndexOf(":"));
+            useOnlyPublicAddress = useOnlyPublicHTTPAddress;
+        }
+        
+        usePublicAddress = (publicAddress != null && publicAddress.length() > 0);
+        
+        usePublicJxtaNetwork = false;
+        useConcertoNetwork = false;
+        useCustomNetwork = false;
+        
+        // RendezVous
+        rdvSeedingUris = "";
+        for(URI seedingURI : rdvAdvertisement.getSeedingURIs()) {
+            if (JXTA_PUBLIC_NETWORK_RDV_SEEDING_URI.equals(seedingURI.toString())) {
+                usePublicJxtaNetwork = true;
+            } else if (CONCERTO_NETWORK_RDV_SEEDING_URI.equals(seedingURI.toString())) {
+                useConcertoNetwork = true;
+            }
+            
+            rdvSeedingUris += seedingURI.toString() + ", ";
+        }
+        if (rdvSeedingUris.length() > 0) {
+            rdvSeedingUris = rdvSeedingUris.substring(0, rdvSeedingUris.length()-2);
+        }
+        
+        rdvSeeds = "";
+        for(URI seed : rdvAdvertisement.getSeedRendezvous()) {
+            rdvSeeds += seed.toString() + ", ";
+        }
+        if (rdvSeeds.length() > 0) {
+            rdvSeeds = rdvSeeds.substring(0, rdvSeeds.length()-2);
+        }
+        
+        beRendezVous = rdvAdvertisement.getConfiguration().equals(RendezVousConfiguration.RENDEZVOUS);
+        
+        // Relays
+        relaySeedingUris = "";
+        for(URI seedingURI : relayAdvertisement.getSeedingURIs()) {
+            if (JXTA_PUBLIC_NETWORK_RELAY_SEEDING_URI.equals(seedingURI.toString())) {
+                usePublicJxtaNetwork = true;
+            } else if (CONCERTO_NETWORK_RELAY_SEEDING_URI.equals(seedingURI.toString())) {
+                useConcertoNetwork = true;
+            }
+            
+            relaySeedingUris += seedingURI.toString() + ", ";
+        }
+        if (relaySeedingUris.length() > 0) {
+            relaySeedingUris = relaySeedingUris.substring(0, relaySeedingUris.length()-2);
+        }
+        
+        relaySeeds = "";
+        for(EndpointAddress seed : relayAdvertisement.getSeedRelays()) {
+            relaySeeds += seed.toString() + ", ";
+        }
+        if (relaySeeds.length() > 0) {
+            relaySeeds = relaySeeds.substring(0, relaySeeds.length()-2);
+        }
+        
+        beRelay = relayAdvertisement.isServerEnabled();
+        
+        if (!useConcertoNetwork && !usePublicJxtaNetwork) {
+            useCustomNetwork = true;
+        }
+    }
+    
+    public void populateRequest(HttpServletRequest request)
+    {
+        request.setAttribute("useTcp", isChecked(useTcp));
+        request.setAttribute("tcpPort", tcpPort);
+        request.setAttribute("useMulticast", isChecked(useMulticast));
+        
+        request.setAttribute("useHttp", isChecked(useHttp));
+        request.setAttribute("httpPort", httpPort);
+
+        request.setAttribute("publicAddress", publicAddress);
+        request.setAttribute("usePublicAddress", isChecked(usePublicAddress));
+        request.setAttribute("useOnlyPublicAddress", isChecked(useOnlyPublicAddress));
+        
+        request.setAttribute("rdvSeedingUris", rdvSeedingUris);
+        request.setAttribute("rdvSeeds", rdvSeeds);
+        request.setAttribute("beRendezVous", isChecked(beRendezVous));
+        
+        request.setAttribute("relaySeedingUris", relaySeedingUris);
+        request.setAttribute("relaySeeds", relaySeeds);
+        request.setAttribute("beRelay", isChecked(beRelay));
+        
+        request.setAttribute("useConcertoNetwork", isChecked(useConcertoNetwork));
+        request.setAttribute("usePublicJxtaNetwork", isChecked(usePublicJxtaNetwork));
+        request.setAttribute("useCustomNetwork", isChecked(useCustomNetwork));
+    }
+    
+    private String isChecked(boolean checked)
+    {
+        if (checked) {
+            return "checked=\"checked\"";
+        }
+        
+        return "";
     }
 }

@@ -117,6 +117,10 @@ public class BootstrapGroup extends HttpServlet
             //String keystorePassword = request.getParameter("createKeystorePassword");
             
             try {
+                if (groupName == null || groupName.trim().length() == 0) {
+                    throw new IllegalArgumentException("Group name must not be empty.");
+                }
+                
                 if (isPrivateGroup) {
                     if (groupPassword == null || groupPassword.length() == 0) {
                         throw new IllegalArgumentException("A password must be set for a private group.");
@@ -132,7 +136,7 @@ public class BootstrapGroup extends HttpServlet
                 
                 
             } catch (Exception e) {
-                errors += "Can't create group:" + e.getMessage() + "\n";
+                errors += "Can't create group: " + e.getMessage() + "\n";
             }
             
         } else if (JOIN_BUTTON.equals(groupChoice)) {
