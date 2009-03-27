@@ -270,6 +270,9 @@ public class BootstrapNetwork extends HttpServlet
                     networkConfig.setTcpPublicAddress(tcpPublicAddress, useOnlyExternalIp);
                     this.log("Using TCP External IP : " + tcpPublicAddress + " exclusively? " + useOnlyExternalIp);
                 }
+                
+                networkConfig.setUseMulticast(useMulticast);
+                this.log("Using Multicast? " + useMulticast);
             }
 
             networkConfig.setHttpEnabled(useHttp);
@@ -291,10 +294,6 @@ public class BootstrapNetwork extends HttpServlet
                         .log("Using HTTP External IP : " + httpPublicAddress + " exclusively? " + useOnlyExternalIp);
                 }
             }
-
-            networkConfig.setUseMulticast(useMulticast);
-            this.log("Using Multicast? " + useMulticast);
-            
             
             // Create network settings.
             if (CREATE_BUTTON.equals(networkChoice)) {

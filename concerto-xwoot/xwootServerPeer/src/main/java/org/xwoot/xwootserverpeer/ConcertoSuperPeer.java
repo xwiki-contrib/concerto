@@ -22,7 +22,6 @@ package org.xwoot.xwootserverpeer;
 
 import java.io.File;
 import java.net.URI;
-import java.net.URISyntaxException;
 
 import net.jxta.exception.JxtaException;
 import net.jxta.platform.NetworkConfigurator;
@@ -49,10 +48,10 @@ public class ConcertoSuperPeer
     public static final String HELP_PARAMETER = "h";
 
     /** Location of a list of seeding rdvs. */
-    public static final String RDV_SEEDING_URI_PARAMETER = "rdvSeedingUri";
+    public static final String RDV_SEEDING_URI_PARAMETER = "rdvSeedingUris";
 
     /** Location of a list of seeding relays. */
-    public static final String RELAY_SEEDING_URI_PARAMETER = "relaySeedingUri";
+    public static final String RELAY_SEEDING_URI_PARAMETER = "relaySeedingUris";
 
     /** Relay mode for this peer. */
     public static final String MODE_RELAY_PARAMETER = "relay";
@@ -78,33 +77,21 @@ public class ConcertoSuperPeer
     /** The TCP port to use. */
     public static final String TCP_PORT_PARAMETER = "tcpPort";
 
-    /** If to use TCP Incoming connections. */
-    public static final String TCP_INCOMMING_PARAMETER = "useTcpIncomming";
-
-    /** If to use TCP Outgoing connections. */
-    public static final String TCP_OUTGOING_PARAMETER = "useTcpOutgoing";
-
     /** If to use HTTP for communication. */
     public static final String USE_HTTP_PARAMETER = "useHttp";
 
     /** The HTTP port to use. */
     public static final String HTTP_PORT_PARAMETER = "httpPort";
 
-    /** If to use HTTP Incoming connections. */
-    public static final String HTTP_INCOMMING_PARAMETER = "useHttpIncomming";
-
-    /** If to use HTTP Outgoing connections. */
-    public static final String HTTP_OUTGOING_PARAMETER = "useHttpOutgoing";
-
     /** The external ip to use for this peer. */
     public static final String EXTERNAL_IP_PARAMETER = "externalIp";
 
     /** If to use only the external ip in advertisements. */
     public static final String ONLY_EXTERNAL_IP_PARAMETER = "useOnlyExternalIp";
-    
+
     /** To clean any existing configuration from the home directory. */
     public static final String CLEAN_EXISTING_CONFIG_PARAMETER = "clean";
-    
+
     /** To enable multicast for LAN communication. */
     public static final String USE_MULTICAST_PARAMETER = "useMulticast";
 
@@ -115,10 +102,10 @@ public class ConcertoSuperPeer
     private String homePath;
 
     /** Location of a list of seeding rdvs. */
-    private URI rdvSeedingUri;
+    private String[] rdvSeedingUris;
 
     /** Location of a list of seeding relays. */
-    private URI relaySeedingUri;
+    private String[] relaySeedingUris;
 
     /** list of rdv seeds. */
     private String[] rdvSeeds;
@@ -133,38 +120,26 @@ public class ConcertoSuperPeer
     private boolean modeRelay;
 
     /** The TCP port to use. */
-    private int tcpPort = 0;
+    private int tcpPort;
 
     /** The HTTP port to use. */
-    private int httpPort = 0;
+    private int httpPort;
 
     /** If to use TCP for communication. */
     private boolean useTcp;
 
-    /** If to use TCP Incoming connections. */
-    private boolean useTcpIncomming;
-
-    /** If to use TCP Outgoing connections. */
-    private boolean useTcpOutgoing;
-
     /** If to use HTTP for communication. */
     private boolean useHttp;
-
-    /** If to use HTTP Incoming connections. */
-    private boolean useHttpIncomming;
-
-    /** If to use HTTP Outgoing connections. */
-    private boolean useHttpOutgoing;
 
     /** If to use only the external ip in advertisements. */
     private boolean useOnlyExternalIp;
 
     /** The external ip to use for this peer. */
     private String externalIp;
-    
+
     /** To clean any existing configuration from the home directory. */
     private boolean clean;
-    
+
     /** To enable multicast for LAN communication. */
     private boolean useMulticast;
 
@@ -173,8 +148,9 @@ public class ConcertoSuperPeer
 
     /** Options for command line. */
     private Options options;
-    
-    private HelpFormatter formatter;  
+
+    /** Used to print the usage. */
+    private HelpFormatter formatter;
 
     /**
      * Constructor.
@@ -243,83 +219,174 @@ public class ConcertoSuperPeer
 
         if (cl.hasOption(HELP_PARAMETER)) {
             showUsage();
-        } else {
-            String rdvSeedingUriString = cl.getOptionValue(RDV_SEEDING_URI_PARAMETER);
-            String relaySeedingUriString = cl.getOptionValue(RELAY_SEEDING_URI_PARAMETER);
-            this.modeRendezvous = (cl.hasOption(MODE_RENDEZVOUS_PARAMETER) != this.modeRendezvous ? cl.hasOption(MODE_RENDEZVOUS_PARAMETER) : this.modeRendezvous);
-            this.modeRelay = cl.hasOption(MODE_RELAY_PARAMETER);
-            this.peerName = cl.getOptionValue(PEER_NAME_PARAMETER);
-            this.homePath = cl.getOptionValue(HOME_PARAMETER);
-            String rdvSeedsString = cl.getOptionValue(RDV_SEEDS_PARAMETER);
-            String relaySeedsString = cl.getOptionValue(RELAY_SEEDS_PARAMETER);
+            System.exit(0);
+        }
 
-            this.useTcp = cl.hasOption(USE_TCP_PARAMETER);
-            String tcpPortString = cl.getOptionValue(TCP_PORT_PARAMETER);
-            this.useTcpIncomming = cl.hasOption(TCP_INCOMMING_PARAMETER);
-            this.useTcpOutgoing = cl.hasOption(TCP_OUTGOING_PARAMETER);
+        String rdvSeedingUriString = cl.getOptionValue(RDV_SEEDING_URI_PARAMETER);
+        String relaySeedingUriString = cl.getOptionValue(RELAY_SEEDING_URI_PARAMETER);
+        this.modeRendezvous =
+            (cl.hasOption(MODE_RENDEZVOUS_PARAMETER) != this.modeRendezvous ? cl.hasOption(MODE_RENDEZVOUS_PARAMETER)
+                : this.modeRendezvous);
+        this.modeRelay = cl.hasOption(MODE_RELAY_PARAMETER);
+        this.peerName = cl.getOptionValue(PEER_NAME_PARAMETER);
+        this.homePath = cl.getOptionValue(HOME_PARAMETER);
+        String rdvSeedsString = cl.getOptionValue(RDV_SEEDS_PARAMETER);
+        String relaySeedsString = cl.getOptionValue(RELAY_SEEDS_PARAMETER);
 
-            this.useHttp = cl.hasOption(USE_HTTP_PARAMETER);
-            String httpPortString = cl.getOptionValue(HTTP_PORT_PARAMETER);
-            this.useHttpIncomming = cl.hasOption(HTTP_INCOMMING_PARAMETER);
-            this.useHttpOutgoing = cl.hasOption(HTTP_OUTGOING_PARAMETER);
+        this.useTcp = cl.hasOption(USE_TCP_PARAMETER);
+        String tcpPortString = cl.getOptionValue(TCP_PORT_PARAMETER);
 
-            this.externalIp = cl.getOptionValue(EXTERNAL_IP_PARAMETER);
-            this.useOnlyExternalIp = cl.hasOption(ONLY_EXTERNAL_IP_PARAMETER);
-            
-            this.clean = cl.hasOption(CLEAN_EXISTING_CONFIG_PARAMETER);
-            this.useMulticast = cl.hasOption(USE_MULTICAST_PARAMETER);
+        this.useHttp = cl.hasOption(USE_HTTP_PARAMETER);
+        String httpPortString = cl.getOptionValue(HTTP_PORT_PARAMETER);
 
-            if (tcpPortString != null) {
+        this.externalIp = cl.getOptionValue(EXTERNAL_IP_PARAMETER);
+        this.useOnlyExternalIp = cl.hasOption(ONLY_EXTERNAL_IP_PARAMETER);
+
+        this.clean = cl.hasOption(CLEAN_EXISTING_CONFIG_PARAMETER);
+        this.useMulticast = cl.hasOption(USE_MULTICAST_PARAMETER);
+
+        if (!useTcp && !useHttp) {
+            throw new ParseException("At least one communication method (TCP and/or HTTP) must be chosen.");
+        }
+
+        if (useTcp) {
+            if (tcpPortString != null && tcpPortString.trim().length() != 0) {
                 try {
                     this.tcpPort = Integer.parseInt(tcpPortString);
+                    if (this.tcpPort <= 0) {
+                        throw new ParseException("TCP port number must be greater than 0.");
+                    }
                 } catch (NumberFormatException e) {
-                    showUsage();
-                    throw new ParseException("Invalid TCP port given.");
+                    throw new ParseException("Invalid TCP port: " + tcpPortString);
                 }
+            } else {
+                throw new ParseException("No TCP port provided.");
             }
+        }
 
-            if (httpPortString != null) {
+        if (useHttp) {
+            if (httpPortString != null && httpPortString.trim().length() != 0) {
                 try {
                     this.httpPort = Integer.parseInt(httpPortString);
+                    if (this.httpPort <= 0) {
+                        throw new ParseException("HTTP port number must be greater than 0.");
+                    }
                 } catch (NumberFormatException e) {
-                    showUsage();
-                    throw new ParseException("Invalid HTTP port given.");
+                    throw new ParseException("Invalid HTTP port.");
                 }
+            } else {
+                throw new ParseException("No HTTP port provided.");
             }
-
-            if (!modeRendezvous && !modeRelay) {
-                showUsage();
-                throw new ParseException("This peer must run in relay, rendezvous or both modes.");
-            }
-
-            String delimiter = ",";
-            if (rdvSeedsString != null) {
-                this.rdvSeeds = rdvSeedsString.split(delimiter);
-            }
-
-            if (relaySeedsString != null) {
-                this.relaySeeds = relaySeedsString.split(delimiter);
-            }
-
-            if (rdvSeedingUriString != null) {
-                try {
-                    this.rdvSeedingUri = new URI(rdvSeedingUriString);
-                } catch (URISyntaxException e) {
-                    showUsage();
-                    throw new ParseException("Invalid Rendezvous seeding URI given.");
-                }
-            }
-
-            if (relaySeedsString != null) {
-                try {
-                    this.relaySeedingUri = new URI(relaySeedingUriString);
-                } catch (URISyntaxException e) {
-                    showUsage();
-                    throw new ParseException("Invalid Relay seeding URI given.");
-                }
-            }
-
         }
+
+        if (!modeRendezvous && !modeRelay) {
+            throw new ParseException("This peer must run in relay, rendezvous or both modes.");
+        }
+
+        String delimiter = ",";
+        if (rdvSeedsString != null) {
+            this.rdvSeeds = rdvSeedsString.split(delimiter);
+        }
+
+        if (relaySeedsString != null) {
+            this.relaySeeds = relaySeedsString.split(delimiter);
+        }
+
+        if (rdvSeedingUriString != null) {
+            this.rdvSeedingUris = rdvSeedingUriString.split(delimiter);
+        }
+
+        if (relaySeedsString != null) {
+            this.relaySeedingUris = relaySeedingUriString.split(delimiter);
+        }
+
+        // Check if at least one rdv seed/seedingUri exists if this peer is a relay.
+        if (!modeRendezvous
+            && (rdvSeedingUriString == null || rdvSeedingUris.length == 0 
+                || (rdvSeedingUris.length == 1 && rdvSeedingUris[0].trim().length() == 0))
+            && (rdvSeedsString == null || rdvSeeds.length == 0
+                || (rdvSeeds.length == 1 && rdvSeeds[0].length() == 0))) {
+            throw new ParseException("Must specify at least one RendezVous seed or RendezVous seeding URI.");
+        }
+
+        // Rdv Seeding Uris
+        if (this.rdvSeedingUris != null) {
+            for (String rdvSeedingUri : rdvSeedingUris) {
+                if (rdvSeedingUri != null && rdvSeedingUri.trim().length() != 0) {
+                    try {
+                        URI seedingUri = new URI(rdvSeedingUri);
+                        String scheme = seedingUri.getScheme();
+                        String host = seedingUri.getHost();
+                        if (host == null || scheme == null) {
+                            throw new Exception();
+                        }
+                    } catch (Exception e) {
+                        throw new ParseException(rdvSeedingUri
+                            + " is not a valid location for retrieving RendezVous seeds.");
+                    }
+                }
+            }
+        }
+
+        // Relay Seeding Uris
+        if (relaySeedingUris != null) {
+            for (String relaySeedingUri : relaySeedingUris) {
+                if (relaySeedingUri != null && relaySeedingUri.trim().length() != 0) {
+                    try {
+                        URI seedUri = new URI(relaySeedingUri);
+                        String scheme = seedUri.getScheme();
+                        String host = seedUri.getHost();
+                        if (host == null || scheme == null) {
+                            throw new Exception();
+                        }
+                    } catch (Exception e) {
+                        throw new ParseException(relaySeedingUri
+                            + " is not a valid location for retrieving relay seeds.");
+                    }
+                }
+            }
+        }
+
+        // Rdv Seeds
+        if (rdvSeeds != null) {
+            for (String rdvSeed : rdvSeeds) {
+                if (rdvSeed != null && rdvSeed.trim().length() != 0) {
+                    try {
+                        URI seedUri = new URI(rdvSeed);
+                        String scheme = seedUri.getScheme();
+                        String host = seedUri.getHost();
+                        if (host == null || scheme == null) {
+                            throw new Exception();
+                        } else if (seedUri.getPort() < 1) {
+                            throw new ParseException(rdvSeed + " has no port specified.");
+                        }
+                    } catch (Exception e) {
+                        throw new ParseException(rdvSeed + " is not a valid RendezVous seed.");
+                    }
+                }
+            }
+        }
+
+        // Relay Seeds
+        if (relaySeeds != null) {
+            for (String relaySeed : relaySeeds) {
+                if (relaySeed != null && relaySeed.trim().length() != 0) {
+                    try {
+                        URI seedUri = new URI(relaySeed);
+                        String scheme = seedUri.getScheme();
+                        String host = seedUri.getHost();
+                        if (host == null || scheme == null) {
+                            throw new Exception();
+                        } else if (seedUri.getPort() < 1) {
+                            throw new ParseException(relaySeed + " has no port specified.");
+                        }
+                    } catch (Exception e) {
+                        throw new ParseException(relaySeed + " is not a valid Relay seed.");
+                    }
+                }
+            }
+        }
+
     }
 
     /**
@@ -331,9 +398,9 @@ public class ConcertoSuperPeer
     {
         options.addOption(HELP_PARAMETER, false, "Prints the usage for this application.");
         options.addOption(RDV_SEEDING_URI_PARAMETER, true,
-            "The RDV seeding location where to get RDV seeds for the network.");
+            "A comma separated list of locations where to get RDV seeds for the network.");
         options.addOption(RELAY_SEEDING_URI_PARAMETER, true,
-            "The Relay seeding location where to get Relay seeds for the network.");
+            "A comma separated list of locations where to get Relay seeds for the network.");
         options.addOption(MODE_RENDEZVOUS_PARAMETER, false, "Run this super peer in rendezvous mode.");
         options.addOption(MODE_RELAY_PARAMETER, false, "Run this super peer in relay mode.");
         options.addOption(RDV_SEEDS_PARAMETER, true, "A comma separated list of RDV seeds to use for the network.");
@@ -345,20 +412,17 @@ public class ConcertoSuperPeer
 
         options.addOption(USE_TCP_PARAMETER, false, "To use TCP protocol for communication.");
         options.addOption(TCP_PORT_PARAMETER, true, "The port to use for TCP communication.");
-        options.addOption(TCP_INCOMMING_PARAMETER, false, "To use TCP incomming connections for TCP communication.");
-        options.addOption(TCP_OUTGOING_PARAMETER, false, "To use TCP outgoing connections for TCP communication.");
 
         options.addOption(USE_HTTP_PARAMETER, false, "To use HTTP protocol for communication.");
         options.addOption(HTTP_PORT_PARAMETER, true, "The port to use for HTTP communication.");
-        options.addOption(HTTP_INCOMMING_PARAMETER, false, "To use HTTP incomming connections for HTTP communication.");
-        options.addOption(HTTP_OUTGOING_PARAMETER, false, "To use HTTP outgoing connections for HTTP communication.");
 
         options.addOption(EXTERNAL_IP_PARAMETER, true,
             "An un-firewalled/un-NAT-ed IP address or DNS to use for communication instead of the local one.");
         options.addOption(ONLY_EXTERNAL_IP_PARAMETER, false, "To use HTTP protocol for communication.");
-        
-        options.addOption(CLEAN_EXISTING_CONFIG_PARAMETER, false, "To clean any existing configuration from the home directory.");
-        
+
+        options.addOption(CLEAN_EXISTING_CONFIG_PARAMETER, false,
+            "To clean any existing configuration from the home directory.");
+
         options.addOption(USE_MULTICAST_PARAMETER, false, "To enable multicast for LAN communication.");
     }
 
@@ -372,95 +436,100 @@ public class ConcertoSuperPeer
         ConfigMode mode = null;
         if (modeRendezvous && modeRelay) {
             mode = ConfigMode.RENDEZVOUS_RELAY;
-        } else if (!modeRelay) {
+        } else if (modeRendezvous) {
             mode = ConfigMode.RENDEZVOUS;
         } else {
             mode = ConfigMode.RELAY;
         }
 
-        if (this.clean) {            
+        if (this.clean) {
             String theName = (this.peerName != null ? this.peerName : Peer.DEFAULT_PEER_NAME);
-            File homeLocation = (this.homePath != null ? new File(this.homePath, theName) : new File(Peer.DEFAULT_DIR_NAME, theName));
-            
+            File homeLocation =
+                (this.homePath != null ? new File(this.homePath, theName) : new File(Peer.DEFAULT_DIR_NAME, theName));
+
             FileUtil.deleteDirectory(homeLocation);
         }
-            
+
         this.superPeer = new JxtaSuperPeer(peerName, this.homePath, mode);
 
         NetworkConfigurator networkConfigurator = this.superPeer.getConfigurator();
 
-        if (this.rdvSeedingUri != null) {
-            networkConfigurator.addRdvSeedingURI(rdvSeedingUri);
-        }
-
-        if (this.relaySeedingUri != null) {
-            networkConfigurator.addRelaySeedingURI(relaySeedingUri);
-        }
-        
-        if (this.relaySeeds != null) {
-            for (String seed : relaySeeds) {
-                try {
-                    networkConfigurator.addSeedRelay(new URI(seed));
-                } catch (URISyntaxException e) {
-                    System.err.println("Skipping invalid relay seed: " + seed);
-                    e.printStackTrace();
+        // RDV Seeding URIs
+        if (rdvSeedingUris != null) {
+            for (String rdvSeedingUri : rdvSeedingUris) {
+                if (rdvSeedingUri.trim().length() != 0) {
+                    networkConfigurator.addRdvSeedingURI(URI.create(rdvSeedingUri));
                 }
             }
         }
-        
-        if (this.rdvSeeds != null) {
-            for (String seed : rdvSeeds) {
-                try {
-                    networkConfigurator.addSeedRendezvous(new URI(seed));
-                } catch (URISyntaxException e) {
-                    System.err.println("Skipping invalid rendezvous seed: " + seed);
-                    e.printStackTrace();
+
+        // Relay Seeding URIs
+        if (relaySeedingUris != null) {
+            for (String relaySeedingUri : relaySeedingUris) {
+                if (relaySeedingUri.trim().length() != 0) {
+                    networkConfigurator.addRelaySeedingURI(URI.create(relaySeedingUri));
+                }
+            }
+        }
+
+        // Rdv Seeds.
+        if (rdvSeeds != null) {
+            for (String rdvSeed : rdvSeeds) {
+                if (rdvSeed.trim().length() != 0) {
+                    networkConfigurator.addSeedRendezvous(URI.create(rdvSeed));
+                }
+            }
+        }
+
+        // Relay Seeds.
+        if (relaySeeds != null) {
+            for (String relaySeed : relaySeeds) {
+                if (relaySeed.trim().length() != 0) {
+                    networkConfigurator.addSeedRelay(URI.create(relaySeed));
                 }
             }
         }
 
         String addressPortSeparator = ":";
+
+        networkConfigurator.setTcpEnabled(useTcp);
+
         if (useTcp) {
-            networkConfigurator.setTcpEnabled(true);
-            networkConfigurator.setTcpIncoming(this.useTcpIncomming);
-            networkConfigurator.setTcpOutgoing(this.useTcpOutgoing);
+            networkConfigurator.setTcpIncoming(true);
+            networkConfigurator.setTcpOutgoing(true);
             networkConfigurator.setTcpPort(tcpPort);
             if (this.externalIp != null) {
                 // disable dynamic ports because we use a fixed ip:port combination now.
                 networkConfigurator.setTcpStartPort(-1);
                 networkConfigurator.setTcpEndPort(-1);
-                
+
                 String tcpPublicAddress = this.externalIp;
                 if (!tcpPublicAddress.contains(addressPortSeparator)) {
                     tcpPublicAddress += addressPortSeparator + String.valueOf(tcpPort);
-                } else {
-
                 }
-                System.out.println("TCP public address: " + tcpPublicAddress);
+
                 networkConfigurator.setTcpPublicAddress(tcpPublicAddress, this.useOnlyExternalIp);
             }
+
+            this.superPeer.getManager().setUseDefaultSeeds(this.useMulticast);
         }
 
+        networkConfigurator.setHttpEnabled(useHttp);
+
         if (useHttp) {
-            networkConfigurator.setHttpEnabled(true);
-            networkConfigurator.setHttpIncoming(this.useHttpIncomming);
-            networkConfigurator.setHttpOutgoing(this.useHttpOutgoing);
+            networkConfigurator.setHttpIncoming(true);
+            networkConfigurator.setHttpOutgoing(true);
             networkConfigurator.setHttpPort(httpPort);
-            if (this.externalIp != null) {                
+            if (this.externalIp != null) {
                 String httpPublicAddress = this.externalIp;
                 if (!httpPublicAddress.contains(addressPortSeparator)) {
                     httpPublicAddress += addressPortSeparator + String.valueOf(httpPort);
-                } else {
-
                 }
-                System.out.println("HTTP public address: " + httpPublicAddress);
+
                 networkConfigurator.setHttpPublicAddress(httpPublicAddress, this.useOnlyExternalIp);
             }
         }
-        
-        if (this.useMulticast) {
-            this.superPeer.getManager().setUseDefaultSeeds(true);
-        }
+
     }
 
     /**
@@ -470,7 +539,10 @@ public class ConcertoSuperPeer
     {
         return this.superPeer;
     }
-    
+
+    /**
+     * Prints the usage.
+     */
     public void showUsage()
     {
         this.formatter.printHelp("Available parameters", this.options);
