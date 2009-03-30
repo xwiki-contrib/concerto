@@ -143,8 +143,12 @@ public class BootstrapNetwork extends HttpServlet
     private boolean usePublicAddress;
 
     private boolean useTcp;
+    
+    private boolean useTcpIncomming;
 
     private boolean useHttp;
+    
+    private boolean useHttpIncomming;
 
     private boolean useOnlyPublicAddress;
 
@@ -168,19 +172,6 @@ public class BootstrapNetwork extends HttpServlet
         NetworkConfigurator networkConfig = networkManager.getConfigurator();
 
         String networkChoice = request.getParameter("networkChoice");
-
-        /*if (networkChoice == null) {
-            // No button clicked yet.
-            
-            if (networkConfig.exists()) {
-                this.readCurrentSettings(networkConfig);
-            }
-            
-            this.populateRequest(request);
-            
-            request.getRequestDispatcher("/pages/BootstrapNetwork.jsp").forward(request, response);
-            return;
-        }*/
         
         // If networkChoice button has been pressed, validate entered data.
         if (CREATE_BUTTON.equals(networkChoice) || JOIN_BUTTON.equals(networkChoice)) {
@@ -243,9 +234,11 @@ public class BootstrapNetwork extends HttpServlet
 
             boolean useTcp = TRUE.equals(request.getParameter("useTcp"));
             int tcpPort = Integer.parseInt(request.getParameter("tcpPort"));
+            boolean useTcpIncomming = TRUE.equals(request.getParameter("useTcpIncomming"));
 
             boolean useHttp = TRUE.equals(request.getParameter("useHttp"));
             int httpPort = Integer.parseInt(request.getParameter("httpPort"));
+            boolean useHttpIncomming = TRUE.equals(request.getParameter("useHttpIncomming"));
 
             boolean useMulticast = TRUE.equals(request.getParameter("useMulticast"));
 
@@ -254,7 +247,7 @@ public class BootstrapNetwork extends HttpServlet
             if (useTcp) {
                 this.log("Using TCP");
 
-                networkConfig.setTcpIncoming(true);
+                networkConfig.setTcpIncoming(useTcpIncomming);
                 networkConfig.setTcpOutgoing(true);
                 networkConfig.setTcpPort(tcpPort);
 
@@ -280,7 +273,7 @@ public class BootstrapNetwork extends HttpServlet
             if (useHttp) {
                 this.log("Using HTTP");
 
-                networkConfig.setHttpIncoming(true);
+                networkConfig.setHttpIncoming(useHttpIncomming);
                 networkConfig.setHttpOutgoing(true);
                 networkConfig.setHttpPort(httpPort);
 
@@ -436,14 +429,16 @@ public class BootstrapNetwork extends HttpServlet
         return;
 
     }
-    
+
     private void setDefaultSettingsToGUI()
     {
         this.useTcp = true;
         this.tcpPort = 9701;
+        this.useTcpIncomming = true;
         this.useMulticast = true;
         this.useHttp = true;
         this.httpPort = 9700;
+        this.useHttpIncomming = true;
     }
 
     public String validateCommonFormFieldsFromRequest(HttpServletRequest request)
@@ -455,9 +450,11 @@ public class BootstrapNetwork extends HttpServlet
 
         boolean useTcp = TRUE.equals(request.getParameter("useTcp"));
         String tcpPortString = request.getParameter("tcpPort");
+        boolean useTcpIncomming = TRUE.equals(request.getParameter("useTcpIncomming"));
 
         boolean useHttp = TRUE.equals(request.getParameter("useHttp"));
         String httpPortString = request.getParameter("httpPort");
+        boolean useHttpIncomming = TRUE.equals(request.getParameter("useHttpIncomming"));
         
         if (useExternalIp) {
             if (externalIp == null || externalIp.trim().length() == 0) {
@@ -500,6 +497,19 @@ public class BootstrapNetwork extends HttpServlet
                 }
             }
         }
+        
+        String networkChoice = request.getParameter("networkChoice");
+        String useNetwork = request.getParameter("useNetwork");
+        boolean beRendezVous = TRUE.equals(request.getParameter("beRendezVous"));
+        boolean beRelay = TRUE.equals(request.getParameter("beRelay"));
+        
+        if (CREATE_BUTTON.equals(networkChoice) 
+            || (JOIN_BUTTON.equals(networkChoice) && CUSTOM_NETWORK.equals(useNetwork) && (beRendezVous || beRelay))) {
+            if (!useTcpIncomming && !useHttpIncomming) {
+                errors += "Incomming connections must be accepted for at least one of the selected communication method.";
+            }
+        }
+            
         
         return errors;
     }
@@ -690,6 +700,7 @@ public class BootstrapNetwork extends HttpServlet
         boolean beTcpServer = tcpAdvertisement.isServerEnabled();
         
         useTcp = useTcp && (beTcpClient || beTcpServer);
+        useTcpIncomming = beTcpServer;
         
         // HTTP
         httpPort = httpAdvertisement.getPort();
@@ -699,6 +710,7 @@ public class BootstrapNetwork extends HttpServlet
         boolean beHttpServer = httpAdvertisement.isServerEnabled();
         
         useHttp = useHttp && (beHttpClient || beHttpServer);
+        useHttpIncomming = beHttpServer;
         
         if (tcpPublicAddress != null && tcpPublicAddress.length() > 0) {
             publicAddress = tcpPublicAddress.substring(0, tcpPublicAddress.lastIndexOf(":"));
@@ -773,10 +785,12 @@ public class BootstrapNetwork extends HttpServlet
     {
         request.setAttribute("useTcp", isChecked(useTcp));
         request.setAttribute("tcpPort", tcpPort);
+        request.setAttribute("useTcpIncomming", isChecked(useTcpIncomming));
         request.setAttribute("useMulticast", isChecked(useMulticast));
         
         request.setAttribute("useHttp", isChecked(useHttp));
         request.setAttribute("httpPort", httpPort);
+        request.setAttribute("useHttpIncomming", isChecked(useHttpIncomming));
 
         request.setAttribute("publicAddress", publicAddress);
         request.setAttribute("usePublicAddress", isChecked(usePublicAddress));

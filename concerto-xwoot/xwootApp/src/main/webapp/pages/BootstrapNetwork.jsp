@@ -30,20 +30,22 @@
 			<div id="common_settings" style="border-top: 1px solid darkgray; padding-top: 10px; margin-top: 10px">
 				<b>Common(Advanced) settings</b><br/><br/>
 				<input type="checkbox" name="useExternalIp" value="true" ${useExternalIp} /> Use external IP<br/>
-				<div id="extarnal_ip_settings">
+				<div id="extarnal_ip_settings" style="padding-left: 20px">
 					External IP: <input type="text" name="externalIp" value="${externalIp}" /> <br/>
 					<input type="checkbox" name="useOnlyExternalIp" value="true" ${useOnlyExternalIp} /> Use only external IP for all communication<br/>
     			</div>
     			
     			<input type="checkbox" name="useTcp" value="true" ${useTcp} /> Use TCP<br/>
-				<div id="Tcp_settings">
+				<div id="Tcp_settings" style="padding-left: 20px">
 					TCP port: <input type="text" name="tcpPort" value="${tcpPort}" /> (Default is 9701) <br/>
+					<input type="checkbox" name="useTcpIncomming" value="true" ${useTcpIncomming} /> Accept incoming TCP connections. (Uncheck if port is blocked)<br/>
 					<input type="checkbox" name="useMulticast" value="true" ${useMulticast} /> Use TCP Multicast to discover and communicate with network members in LAN.<br/>
     			</div>
     			
     			<input type="checkbox" name="useHttp" value="true" ${useHttp} /> Use HTTP<br/>
-				<div id="Http_settings">
-					Http port: <input type="text" name="httpPort" value="${httpPort}" />  (Default is 9700. Recommended are 80 or 8080)
+				<div id="Http_settings" style="padding-left: 20px">
+					Http port: <input type="text" name="httpPort" value="${httpPort}" />  (Default is 9700. Recommended are 80 or 8080) <br/>
+					<input type="checkbox" name="useHttpIncomming" value="true" ${useHttpIncomming} /> Accept incoming Http connections. (Uncheck if port is blocked)<br/>
     			</div>
     			
 			</div>
