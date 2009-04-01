@@ -1269,7 +1269,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
 
         if (memberAuthenticator instanceof StringAuthenticator) {
             
-            ID identity = group.getPeerID();
+            ID identity = group.getPeerGroupID();
             
             StringAuthenticator stringAuthenticator = ((StringAuthenticator) memberAuthenticator);
 	        
@@ -1567,7 +1567,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
 	}*/
 	
 	/** {@inheritDoc} **/
-	public Object sendObjectToRandomPeerInGroup(Object object) throws PeerGroupException, IllegalArgumentException, JxtaException {
+	public Object sendObjectToRandomPeerInGroup(Object object, boolean expectReply) throws PeerGroupException, IllegalArgumentException, JxtaException {
 	    if (!this.isConnectedToGroup()) {
             throw new PeerGroupException("The peer has not yet joined a group and contacted a group RDV peer.");
         }
@@ -1576,7 +1576,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
             throw new IllegalArgumentException("The object does not implement the interface java.io.Serializable and can not be sent.");
         }
         
-        this.logger.info("Trying to send an object to a random peer in the group.");
+        this.logger.info("Trying to send an object to a random peer in the group. Expecting reply: " + expectReply);
         
         Object reply = null;
         PipeAdvertisement myPipeAdvertisement = getMyDirectCommunicationPipeAdvertisement();
@@ -1585,11 +1585,11 @@ public class JxtaPeer implements Peer, RendezvousListener {
         for(int i=0; i<NUMBER_OF_TRIES && !success; i++) {
             this.logger.info("Try number: " + i);
             
-            Enumeration<Advertisement> en = this.getKnownAdvertisements(PipeAdvertisement.NameTag, this.getDirectCommunicationPipeNamePrefix() + "*");
+            Enumeration<Advertisement> pipeAdvertisements = this.getKnownAdvertisements(PipeAdvertisement.NameTag, this.getDirectCommunicationPipeNamePrefix() + "*");
             
             // Try all available pipe ADVs until one succeeds.
-            while (en.hasMoreElements() && !success) {
-                Advertisement adv = en.nextElement();
+            while (pipeAdvertisements.hasMoreElements() && !success) {
+                Advertisement adv = pipeAdvertisements.nextElement();
                 
                 if (!(adv instanceof PipeAdvertisement) || adv.equals(myPipeAdvertisement)) {
                     // Not interested, skip.
@@ -1604,6 +1604,11 @@ public class JxtaPeer implements Peer, RendezvousListener {
                     reply = this.sendObject(object, pipeAdv);
                 } catch (Exception e) {
                     this.logger.error("Failed to send object to this peer.\n", e);
+                    continue;
+                }
+                
+                if (expectReply && reply == null) {
+                    this.logger.warn("Peer contacted but no reply given. Skipping");
                     continue;
                 }
                 

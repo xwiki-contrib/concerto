@@ -1142,7 +1142,7 @@ public class MockJxtaPeer implements Peer, RendezvousListener {
 	}
 	
 	/** {@inheritDoc} **/
-	public Object sendObjectToRandomPeerInGroup(Object object) throws PeerGroupException, IllegalArgumentException, JxtaException {
+	public Object sendObjectToRandomPeerInGroup(Object object, boolean expectReply) throws PeerGroupException, IllegalArgumentException, JxtaException {
 	    if (!this.isConnectedToGroup()) {
             throw new PeerGroupException("The peer has not yet joined a group and contacted a group RDV peer.");
         }
@@ -1174,6 +1174,11 @@ public class MockJxtaPeer implements Peer, RendezvousListener {
                         reply = this.sendObject(object, pipeAdv);
                     } catch (Exception e) {
                         this.logger.error("Failed to send object to this peer.\n", e);
+                        continue;
+                    }
+                    
+                    if (expectReply && reply == null) {
+                        this.logger.warn("Peer contacted but no reply given. Skipping");
                         continue;
                     }
                     

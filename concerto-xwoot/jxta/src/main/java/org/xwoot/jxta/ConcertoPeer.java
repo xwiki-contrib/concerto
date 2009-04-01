@@ -459,7 +459,7 @@ public class ConcertoPeer implements JxtaCastEventListener, DirectMessageReceive
         
         Object reply = null;
         try {
-            reply = jxta.sendObjectToRandomPeerInGroup(pipeAdvData);
+            reply = jxta.sendObjectToRandomPeerInGroup(pipeAdvData, true);
         } catch (JxtaException je) {
             System.out.println("Problem sending the message: ");
             je.printStackTrace();

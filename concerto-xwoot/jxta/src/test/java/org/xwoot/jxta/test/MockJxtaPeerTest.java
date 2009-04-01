@@ -186,8 +186,7 @@ public class MockJxtaPeerTest
         
         Message broadcastedMessage = MessageFactory.createMessage(peer1.getMyPeerAdv().getPeerID(), "a test message", Message.Action.BROADCAST_PATCH);
         
-        peer1.sendObjectToRandomPeerInGroup(broadcastedMessage);
-        
+        peer1.sendObjectToRandomPeerInGroup(broadcastedMessage, false);        
         Message receivedMessage = (Message) directMessageHandler1.getReceivedMessage();
         
         Assert.assertEquals(broadcastedMessage, receivedMessage);

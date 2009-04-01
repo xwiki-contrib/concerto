@@ -380,7 +380,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         // Send to random peer in group.
             
             try {
-                reply = this.peer.sendObjectToRandomPeerInGroup(toSend);
+                reply = this.peer.sendObjectToRandomPeerInGroup(toSend, true);
             } catch (Exception e) {
                 this.logger.error("Failed to send message to random peer.\n", e);
                 throw new XWootException("Failed to send message to random peer.\n", e);

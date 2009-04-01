@@ -88,10 +88,10 @@ public interface Peer
 {
     /** The default name for a peer. */
     final String DEFAULT_PEER_NAME = "ConcertoPeer";
-    
+
     /** The default jxta related cache directory name. */
     final String DEFAULT_DIR_NAME = ".cache";
-    
+
     /**
      * Configure the network.
      * 
@@ -410,15 +410,18 @@ public interface Peer
      * Send a variable-sized object to a random peer in the currently joined group.
      * 
      * @param object the object to send.
-     * @return the replied object returned from the receiving peer. {@code null} can also be returned, depending on the context.
+     * @param expectReply whether to explicitly expect a reply from a peer.
+     * @return the replied object returned from the receiving peer. {@code null} can also be returned, depending on the
+     *         context, but if expectReply is {@code true}, {@code null} will never be returned.
      * @throws JxtaException if the message could not be sent after {@link JxtaPeer#NUMBER_OF_TRIES}, either because of
-     *             transfer problems or because there was no peer in the group to receive it.
+     *             transfer problems or because there was no peer in the group to receive it. If expectReply is true, an
+     *             exception will also be thrown if no peer replied to this message.
      * @throws PeerGroupException if this peer has not yet joined a group other than NetPeerGroup and contacted its RDV.
      * @throws IllegalArgumentException if the object does not implement {@link Serializable} or is {@code null}.
      * @see net.jxta.jxtacast.JxtaCast#sendObject(java.lang.Object, java.lang.String)
      */
-    Object sendObjectToRandomPeerInGroup(Object object) throws PeerGroupException, IllegalArgumentException,
-        JxtaException;
+    Object sendObjectToRandomPeerInGroup(Object object, boolean expectReply) throws PeerGroupException,
+        IllegalArgumentException, JxtaException;
 
     /**
      * Handles RendezVous events in the joined group.
