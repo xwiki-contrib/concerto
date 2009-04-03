@@ -69,7 +69,7 @@ import java.util.Calendar;
 public class ThomasRuleEngine
 {
     /** FileName prefix to be used when saving the entriesList. */
-    public static final String TRE_FILE_NAME_PREFIX = "EntriesListFile";
+    public static final String TRE_FILE_NAME = "EntriesListFile";
 
     /** Used when computing the state of the TRE. */
     public static final String TRE_STATE_FILE_NAME = "treState.zip";
@@ -106,7 +106,7 @@ public class ThomasRuleEngine
             throw new ThomasRuleEngineException("Problems initializing TRE.");
         }
 
-        this.entriesList = new EntriesList(workingDir, TRE_FILE_NAME_PREFIX + this.thomasRuleEngineId);
+        this.entriesList = new EntriesList(workingDir, TRE_FILE_NAME);
 
         this.logger.info(this.thomasRuleEngineId + " - Thomas rule engine created !");
     }

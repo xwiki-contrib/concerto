@@ -203,8 +203,8 @@ public class BootstrapGroup extends HttpServlet
         if (errors.length() == 0 && (CREATE_BUTTON.equals(groupChoice) || JOIN_BUTTON.equals(groupChoice))) {
             this.getServletContext().log("No errors occured.");
             
-            // Stop the autosynch thread if it is running.
-            XWootSite.getInstance().getAutoSynchronizationThread().stopThread();
+//            // Stop the autosynch thread if it is running.
+//            XWootSite.getInstance().getAutoSynchronizationThread().stopThread();
             
             response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/stateManagement.do"));
             return;

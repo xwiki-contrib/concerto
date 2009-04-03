@@ -95,36 +95,41 @@ public class BaseFilter implements Filter
         XWootSite site = XWootSite.getInstance();
         XWootAPI xwoot = site.getXWootEngine();
 
+        
         // While the XWoot site is not fully configured, ensure the proper flow.
         if (!XWootSite.getInstance().isStarted()) {
             LOG.debug("Site is not started yet, starting the wizard.");
             if (!"/bootstrap.do".equals(request.getServletPath())) {
                 response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrap.do"));
+                return;
             }
         } else if (!((XWoot3) xwoot).getPeer().isConnectedToNetwork()) {
             LOG.debug("Site is not connected to a network yet, opening network bootstrap.");
             if (!"/bootstrapNetwork.do".equals(request.getServletPath())) {
                 response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapNetwork.do"));
+                return;
             }
         } else if (!((XWoot3) xwoot).getPeer().isConnectedToGroup()) {
             LOG.debug("Site is not connected to a group yet, opening group bootstrap.");
             if (!"/bootstrapGroup.do".equals(request.getServletPath())) {
                 response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapGroup.do"));
+                return;
             }
         } else if (!(xwoot.isStateComputed())) {
             LOG.debug("Site does not have a state yet, opening stateManagement.");
             if (!"/stateManagement.do".equals(request.getServletPath())) {
                 response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/stateManagement.do"));
+                return;
             }
         }
         
         // Add a header to inform about the presence of the xwoot service.
         response.addHeader("XWOOT_SERVICE", "xwoot service");
 
-        LOG.debug("Base Filter applied");
-
         // Let the request be further processed.
         chain.doFilter(request, response);
+        
+        LOG.debug("Base Filter applied");
         
     }
 

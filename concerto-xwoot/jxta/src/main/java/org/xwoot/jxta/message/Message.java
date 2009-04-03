@@ -25,7 +25,7 @@ import java.io.Serializable;
 /**
  * Describes a message sent through the P2P network.
  *
- * @version $Id:$
+ * @version $Id$
  */
 public interface Message extends Serializable
 {

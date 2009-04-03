@@ -29,9 +29,10 @@ import org.apache.commons.logging.LogFactory;
  * Launching the thread at the appropriate time is the user's concern. If synchronization fails at one point, the thread
  * continues.
  * 
- * @version $Id:$
+ * @version $Id$
  * @see {@link XWootAPI}
  */
+// TODO: Switch to encapsulation VS inheritance to remove the public Thread.start() confusing method(s).
 public class AutoSynchronizationThread extends Thread
 {
     /** Lock used for waiting. */
@@ -62,7 +63,7 @@ public class AutoSynchronizationThread extends Thread
         IllegalArgumentException
     {
         super("XWoot Auto-Synchronization");
-        
+
         if (xwootEngine == null) {
             throw new NullPointerException("Null wootEngine provided.");
         }
@@ -79,11 +80,9 @@ public class AutoSynchronizationThread extends Thread
     }
 
     /**
-     * Start the auto-synchronization tread.
+     * Start the auto-synchronization tread or restarts it if it has previously been stopped.
      * <p/>
-     * <b>NOTICE:</b> Use this method if you want the auto-synchronization to begin and not {@link #start()}. If you do
-     * use {@link #start()}, the {@link #run()} method will immediately finish and the thread will <b>not</b> be
-     * started.
+     * <b>NOTICE:</b> Use this method if you want the auto-synchronization to begin and not {@link #start()}.
      * 
      * @see #stopThread()
      */
@@ -91,14 +90,25 @@ public class AutoSynchronizationThread extends Thread
     {
         if (!started) {
             this.logger.debug("Starting...");
-            
+
             this.started = true;
-            super.start();
+
+            if (!this.isAlive()) {
+                // If thread is not started, start it
+                super.start();
+            } else {
+                // Else, resume it.
+                synchronized (waitingLock) {
+                    waitingLock.notifyAll();
+                }
+            }
         }
     }
 
     /**
      * Stop the auto-synchronization thread.
+     * <p/>
+     * To restart the thread, don't create another instance, use {@link #startThread()}.
      * <p/>
      * This does not use the deprecated {@link Thread#stop()} method.
      */
@@ -106,7 +116,7 @@ public class AutoSynchronizationThread extends Thread
     {
         if (started) {
             this.logger.debug("Stopping...");
-            
+
             this.started = false;
             synchronized (waitingLock) {
                 waitingLock.notifyAll();
@@ -127,8 +137,9 @@ public class AutoSynchronizationThread extends Thread
     public void run()
     {
         this.logger.debug("Started.");
-        
-        while (started /* && xwootEngine.isConnectedToP2PGroup() && xwootEngine.isStateComputed()*/) {
+
+        while (true) {
+            // Waiting sequence
             synchronized (waitingLock) {
                 try {
                     this.logger.debug("Sleeping...");
@@ -141,10 +152,25 @@ public class AutoSynchronizationThread extends Thread
 
             this.logger.debug("Woke up.");
 
+            // Stop sequence
             if (!started) {
-                break;
+                this.logger.debug("Stopped.");
+
+                while (!started) {
+                    synchronized (waitingLock) {
+                        try {
+                            // Wait until restart.
+                            waitingLock.wait();
+                        } catch (InterruptedException e) {
+                            // ignore
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                continue;
             }
 
+            // Action sequence
             this.logger.debug("Performing auto-synchronization.");
             try {
                 xwootEngine.synchronize();
@@ -152,8 +178,6 @@ public class AutoSynchronizationThread extends Thread
                 this.logger.warn("Auto-synchronization failed!", e);
             }
         }
-        
-        this.logger.debug("Stopped.");
     }
 
 }

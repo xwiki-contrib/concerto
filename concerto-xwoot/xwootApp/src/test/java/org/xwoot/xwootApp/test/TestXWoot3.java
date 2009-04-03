@@ -432,6 +432,552 @@ public class TestXWoot3 extends AbstractXWootTest
     }
     
     /**
+     * DOCUMENT ME!
+     * 
+     * @throws Exception DOCUMENT ME!
+     */
+    @Test
+    public void testGetLostMessagesWithTwoXWiki() throws Exception
+    {
+        String pageGuid = "page:" + PAGE_ID;
+        String bodusPageGuid = "page:" + PAGE_ID_FOR_STATE;
+        String contentFroBogusPage = "bogusContent\n";
+        String message1ReceivedByAll = "Line1\n";
+        String message2ReceivedByAll = "Line2\n";
+        String initialCommonContent = message1ReceivedByAll + message2ReceivedByAll;
+        String message3Lost = "Line3\n";
+        String desiredCommonContent = initialCommonContent + message3Lost;
+
+        // connect XWoot
+        this.xwoot31.reconnectToP2PNetwork();
+        this.xwoot31.connectToContentManager();
+        this.xwoot32.reconnectToP2PNetwork();
+        this.xwoot32.connectToContentManager();
+
+        // connect sites
+        this.xwoot31.createNewGroup(GROUP_NAME, GROUP_DESCRIPTION, KEYSTORE_PASSWORD, GROUP_PASSWORD);
+        this.xwoot32.joinGroup(this.xwoot31.getPeer().getCurrentJoinedPeerGroup().getPeerGroupAdvertisement(), KEYSTORE_PASSWORD, GROUP_PASSWORD);
+        
+        // check connections
+        Assert.assertTrue(this.xwoot31.getPeer().isConnectedToGroup());
+        Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroup());
+        Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroupRendezVous());
+
+        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentManager();
+        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentManager();
+        
+        this.initContentProvider(mxwcp1);
+        this.initContentProvider(mxwcp2);
+        
+        // Ignore the rest of the pages. They are not our objective.
+        mxwcp1.getModifiedPagesIds();
+        mxwcp1.clearAllModifications();
+        mxwcp2.getModifiedPagesIds();
+        mxwcp2.clearAllModifications();
+
+        // simulate XWiki user page creation in order to have data for a state.
+        XWootObject xwootObj = this.simulateXWikiUserModification(mxwcp1, PAGE_ID_FOR_STATE, contentFroBogusPage, 1, 0, true);
+
+        // synchronize xwoot
+        this.xwoot31.synchronize();
+        
+        // Compute and import a state from the current data.
+        this.xwoot31.computeState();
+        File receivedTemporaryState = this.xwoot32.askStateToGroup();
+        this.xwoot32.importState(receivedTemporaryState);
+        receivedTemporaryState.delete();
+        
+        // verify no-wootables fields
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot31.getTre().getValue(
+            new XWootObjectIdentifier(bodusPageGuid)).get()).getGuid());
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot32.getTre().getValue(
+            new XWootObjectIdentifier(bodusPageGuid)).get()).getGuid());
+
+        // verify wootable field
+        Assert.assertEquals(contentFroBogusPage, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID_FOR_STATE, bodusPageGuid,
+            "content"));
+        Assert.assertEquals(contentFroBogusPage, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID_FOR_STATE, bodusPageGuid,
+            "content"));
+        
+        
+        
+        // simulate adding a line on the first wiki and receiving it by all.
+        xwootObj = this.simulateXWikiUserModification(mxwcp1, PAGE_ID, message1ReceivedByAll, 1, 0, true);
+
+        // synchronize xwoot
+        this.xwoot31.synchronize();
+
+        // verify no-wootables fields
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot31.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot32.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+
+        // verify wootable field
+        Assert.assertEquals(message1ReceivedByAll, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        Assert.assertEquals(message1ReceivedByAll, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        
+        
+        
+        
+        
+        // simulate adding a line on the second wiki and receiving it by all. This brings us to an initial common content of 2 messages.
+        xwootObj = this.simulateXWikiUserModification(mxwcp1, PAGE_ID, initialCommonContent, 1, 0, true);
+
+        // synchronize xwoot
+        this.xwoot31.synchronize();
+
+        // verify no-wootables fields
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot31.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot32.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+
+        // verify wootable field
+        Assert.assertEquals(initialCommonContent, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        Assert.assertEquals(initialCommonContent, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        
+
+        // Peer 2 goes offline.
+        this.xwoot32.disconnectFromP2PNetwork();
+        
+        
+        
+        // simulate adding another on the first wiki and the second peer not receiving this.
+        xwootObj = this.simulateXWikiUserModification(mxwcp1, PAGE_ID, desiredCommonContent, 1, 0, true);
+
+        // synchronize xwoot
+        this.xwoot31.synchronize();
+
+        // verify no-wootables fields
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot31.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+
+        // verify wootable field
+        Assert.assertEquals(desiredCommonContent, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        Assert.assertEquals(initialCommonContent, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        
+        
+        
+        // Peer2 comes back online.
+        this.xwoot32.reconnectToP2PNetwork();
+        // It joins the group and automatically does an anti-entropy with all the group members. (mock implementation does it synchronously, real implementation does it asynchronously)
+        this.xwoot32.joinGroup(this.xwoot31.getPeer().getCurrentJoinedPeerGroup().getPeerGroupAdvertisement(), KEYSTORE_PASSWORD, GROUP_PASSWORD);
+
+        // verify no-wootables fields
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot31.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot32.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+
+        // verify wootable field
+        Assert.assertEquals(desiredCommonContent, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        Assert.assertEquals(desiredCommonContent, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        
+        
+        
+        
+        
+        
+
+        Assert.assertEquals(0, this.xwoot31.getContentManager().getModifiedPagesIds().size());
+    }
+    
+    
+    /**
+     * DOCUMENT ME!
+     * 
+     * @throws Exception DOCUMENT ME!
+     */
+    @Test
+    public void testOfflineWorkWithTwoXWiki() throws Exception
+    {
+        String pageGuid = "page:" + PAGE_ID;
+        String bodusPageGuid = "page:" + PAGE_ID_FOR_STATE;
+        String contentFroBogusPage = "bogusContent\n";
+        String message1ReceivedByAll = "Line1\n";
+        String message2ReceivedByAll = "Line2\n";
+        String initialCommonContent = message1ReceivedByAll + message2ReceivedByAll;
+        String message3Lost = "Line3\n";
+        String desiredCommonContent = initialCommonContent + message3Lost;
+
+        // connect XWoot
+        this.xwoot31.reconnectToP2PNetwork();
+        this.xwoot31.connectToContentManager();
+        this.xwoot32.reconnectToP2PNetwork();
+        this.xwoot32.connectToContentManager();
+
+        // connect sites
+        this.xwoot31.createNewGroup(GROUP_NAME, GROUP_DESCRIPTION, KEYSTORE_PASSWORD, GROUP_PASSWORD);
+        this.xwoot32.joinGroup(this.xwoot31.getPeer().getCurrentJoinedPeerGroup().getPeerGroupAdvertisement(), KEYSTORE_PASSWORD, GROUP_PASSWORD);
+        
+        // check connections
+        Assert.assertTrue(this.xwoot31.getPeer().isConnectedToGroup());
+        Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroup());
+        Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroupRendezVous());
+
+        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentManager();
+        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentManager();
+        
+        this.initContentProvider(mxwcp1);
+        this.initContentProvider(mxwcp2);
+        
+        // Ignore the rest of the pages. They are not our objective.
+        mxwcp1.getModifiedPagesIds();
+        mxwcp1.clearAllModifications();
+        mxwcp2.getModifiedPagesIds();
+        mxwcp2.clearAllModifications();
+
+        // simulate XWiki user page creation in order to have data for a state.
+        XWootObject xwootObj = this.simulateXWikiUserModification(mxwcp1, PAGE_ID_FOR_STATE, contentFroBogusPage, 1, 0, true);
+
+        // synchronize xwoot
+        this.xwoot31.synchronize();
+        
+        // Compute and import a state from the current data.
+        this.xwoot31.computeState();
+        File receivedTemporaryState = this.xwoot32.askStateToGroup();
+        this.xwoot32.importState(receivedTemporaryState);
+        receivedTemporaryState.delete();
+        
+        // verify no-wootables fields
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot31.getTre().getValue(
+            new XWootObjectIdentifier(bodusPageGuid)).get()).getGuid());
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot32.getTre().getValue(
+            new XWootObjectIdentifier(bodusPageGuid)).get()).getGuid());
+
+        // verify wootable field
+        Assert.assertEquals(contentFroBogusPage, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID_FOR_STATE, bodusPageGuid,
+            "content"));
+        Assert.assertEquals(contentFroBogusPage, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID_FOR_STATE, bodusPageGuid,
+            "content"));
+        
+        
+        
+        // simulate adding a line on the first wiki and receiving it by all.
+        xwootObj = this.simulateXWikiUserModification(mxwcp1, PAGE_ID, message1ReceivedByAll, 1, 0, true);
+
+        // synchronize xwoot
+        this.xwoot31.synchronize();
+
+        // verify no-wootables fields
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot31.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot32.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+
+        // verify wootable field
+        Assert.assertEquals(message1ReceivedByAll, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        Assert.assertEquals(message1ReceivedByAll, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        
+        
+        
+        
+        
+        // simulate adding a line on the second wiki and receiving it by all. This brings us to an initial common content of 2 messages.
+        xwootObj = this.simulateXWikiUserModification(mxwcp1, PAGE_ID, initialCommonContent, 1, 0, true);
+
+        // synchronize xwoot
+        this.xwoot31.synchronize();
+
+        // verify no-wootables fields
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot31.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot32.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+
+        // verify wootable field
+        Assert.assertEquals(initialCommonContent, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        Assert.assertEquals(initialCommonContent, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        
+
+        // Peer 2 goes offline.
+        this.xwoot32.disconnectFromP2PNetwork();
+        
+        // simulate adding another on the second (offline) wiki and the first peer not receiving this.
+        xwootObj = this.simulateXWikiUserModification(mxwcp2, PAGE_ID, desiredCommonContent, 1, 0, true);
+
+        // synchronize xwoot
+        this.xwoot32.synchronize();
+
+        // verify no-wootables fields
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot32.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+
+        // verify wootable field
+        Assert.assertEquals(initialCommonContent, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        Assert.assertEquals(desiredCommonContent, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        
+        
+        
+        // Peer2 comes back online.
+        this.xwoot32.reconnectToP2PNetwork();
+        // It joins the group and automatically does an anti-entropy with all the group members. (mock implementation does it synchronously, real implementation does it asynchronously)
+        this.xwoot32.joinGroup(this.xwoot31.getPeer().getCurrentJoinedPeerGroup().getPeerGroupAdvertisement(), KEYSTORE_PASSWORD, GROUP_PASSWORD);
+        
+        // verify no-wootables fields
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot31.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot32.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+
+        // verify wootable field
+        Assert.assertEquals(desiredCommonContent, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        Assert.assertEquals(desiredCommonContent, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        
+        
+        
+        
+        
+        
+
+        Assert.assertEquals(0, this.xwoot31.getContentManager().getModifiedPagesIds().size());
+    }
+    
+    /**
+     * DOCUMENT ME!
+     * 
+     * @throws Exception DOCUMENT ME!
+     */
+    @Test
+    public void testModifyingExistingContentWithTwoXWiki() throws Exception
+    {
+        String pageGuid = "page:" + PAGE_ID;
+        String existingLine1 = "Exsiting Line1\n";
+        String existingLine2 = "Exsiting Line2\n";
+        String existingLine3 = "Exsiting Line3\n";
+        String existingContent = existingLine1 + existingLine2 + existingLine3;
+        String contentToAddAtEnd = "Added Line3'\n";
+        String contentAddedAtEnd = existingContent + contentToAddAtEnd;
+        String contentToAddAtMiddle = "Added Line2'\n";
+        String contentAddedAtMiddle = existingLine1 + existingLine2 + contentToAddAtMiddle + existingLine3 + contentToAddAtEnd;
+        String contentToAddAtBegin = "Added Line1'\n";
+        String contentAddedAtBegin = contentToAddAtBegin + existingLine1 + existingLine2 + contentToAddAtMiddle + existingLine3 + contentToAddAtEnd;
+        String contentDeletedAtEnd = contentToAddAtBegin + existingLine1 + existingLine2 + contentToAddAtMiddle + existingLine3;
+        String contentDeletedAtMiddle = contentToAddAtBegin + existingLine1 + existingLine2 + existingLine3;
+        String contentDeletedAtBegin = existingContent;
+        String contentDeletedAll = "";
+
+        // connect XWoot
+        this.xwoot31.reconnectToP2PNetwork();
+        this.xwoot31.connectToContentManager();
+        this.xwoot32.reconnectToP2PNetwork();
+        this.xwoot32.connectToContentManager();
+
+        // connect sites
+        this.xwoot31.createNewGroup(GROUP_NAME, GROUP_DESCRIPTION, KEYSTORE_PASSWORD, GROUP_PASSWORD);
+        this.xwoot32.joinGroup(this.xwoot31.getPeer().getCurrentJoinedPeerGroup().getPeerGroupAdvertisement(), KEYSTORE_PASSWORD, GROUP_PASSWORD);
+        
+        // check connections
+        Assert.assertTrue(this.xwoot31.getPeer().isConnectedToGroup());
+        Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroup());
+        Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroupRendezVous());
+
+        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentManager();
+        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentManager();
+        
+        this.initContentProvider(mxwcp1);
+        this.initContentProvider(mxwcp2);
+        
+        // Ignore the rest of the pages. They are not our objective.
+        mxwcp1.getModifiedPagesIds();
+        mxwcp1.clearAllModifications();
+        mxwcp2.getModifiedPagesIds();
+        mxwcp2.clearAllModifications();
+
+        // Populate the first wiki with the existing data.
+        XWootObject xwootObj = this.simulateXWikiUserModification(mxwcp1, PAGE_ID, existingContent, 1, 0, true);
+        
+        // synchronize xwoot
+        this.xwoot31.synchronize(false);
+        
+        // Compute and import a state from the current data.
+        this.xwoot31.computeState();
+        File receivedTemporaryState = this.xwoot32.askStateToGroup();
+        this.xwoot32.importState(receivedTemporaryState);
+        receivedTemporaryState.delete();
+        
+        // verify non-wootables fields
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot31.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot32.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+        
+        // verify wootable field
+        Assert.assertEquals(existingContent, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        Assert.assertEquals(existingContent, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        
+        
+        
+        
+        // simulate XWiki user adding a line at the end of the existing content.
+        xwootObj = this.simulateXWikiUserModification(mxwcp1, PAGE_ID, contentAddedAtEnd, 1, 0, true);
+
+        // synchronize xwoot
+        this.xwoot31.synchronize();
+
+        // verify no-wootables fields
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot31.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot32.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+
+        // verify wootable field
+        Assert.assertEquals(contentAddedAtEnd, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        Assert.assertEquals(contentAddedAtEnd, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+
+        
+        
+        
+        // simulate XWiki user adding a line at the middle of the existing content.
+        xwootObj = this.simulateXWikiUserModification(mxwcp1, PAGE_ID, contentAddedAtMiddle, 1, 0, true);
+
+        // synchronize xwoot
+        this.xwoot31.synchronize();
+
+        // verify no-wootables fields
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot31.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot32.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+
+        // verify wootable field
+        Assert.assertEquals(contentAddedAtMiddle, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        Assert.assertEquals(contentAddedAtMiddle, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        
+        
+        
+        
+        
+        // simulate XWiki user adding a line at the the beginning of the existing content.
+        xwootObj = this.simulateXWikiUserModification(mxwcp1, PAGE_ID, contentAddedAtBegin, 1, 0, true);
+
+        // synchronize xwoot
+        this.xwoot31.synchronize();
+
+        // verify no-wootables fields
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot31.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot32.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+
+        // verify wootable field
+        Assert.assertEquals(contentAddedAtBegin, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        Assert.assertEquals(contentAddedAtBegin, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        
+        
+        
+        
+        // simulate XWiki user deleting a line at the the end of the existing content.
+        xwootObj = this.simulateXWikiUserModification(mxwcp1, PAGE_ID, contentDeletedAtEnd, 1, 0, true);
+
+        // synchronize xwoot
+        this.xwoot31.synchronize();
+
+        // verify no-wootables fields
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot31.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot32.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+
+        // verify wootable field
+        Assert.assertEquals(contentDeletedAtEnd, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        Assert.assertEquals(contentDeletedAtEnd, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        
+        
+        
+        
+        // simulate XWiki user deleting a line at the the middle of the existing content.
+        xwootObj = this.simulateXWikiUserModification(mxwcp1, PAGE_ID, contentDeletedAtMiddle, 1, 0, true);
+
+        // synchronize xwoot
+        this.xwoot31.synchronize();
+
+        // verify no-wootables fields
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot31.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot32.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+
+        // verify wootable field
+        Assert.assertEquals(contentDeletedAtMiddle, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        Assert.assertEquals(contentDeletedAtMiddle, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        
+        
+        
+        
+        // simulate XWiki user deleting a line at the the beginning of the existing content.
+        xwootObj = this.simulateXWikiUserModification(mxwcp1, PAGE_ID, contentDeletedAtBegin, 1, 0, true);
+
+        // synchronize xwoot
+        this.xwoot31.synchronize();
+
+        // verify no-wootables fields
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot31.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot32.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+
+        // verify wootable field
+        Assert.assertEquals(contentDeletedAtBegin, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        Assert.assertEquals(contentDeletedAtBegin, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        
+        
+        
+        // simulate XWiki user deleting a line at the the beginning of the existing content.
+        xwootObj = this.simulateXWikiUserModification(mxwcp1, PAGE_ID, contentDeletedAll, 1, 0, true);
+
+        // synchronize xwoot
+        this.xwoot31.synchronize();
+
+        // verify no-wootables fields
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot31.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot32.getTre().getValue(
+            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+
+        // verify wootable field
+        Assert.assertEquals(contentDeletedAll, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        Assert.assertEquals(contentDeletedAll, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
+            "content"));
+        
+        
+        
+        Assert.assertEquals(0, this.xwoot31.getContentManager().getModifiedPagesIds().size());
+    }
+    
+    /**
      * Make sure that your previous actions generated modifications in the contentProvider.
      * </p>
      * This is a workaround for the bug in the content provider.

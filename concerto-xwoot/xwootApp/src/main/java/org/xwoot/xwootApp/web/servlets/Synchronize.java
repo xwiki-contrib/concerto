@@ -193,10 +193,10 @@ public class Synchronize extends HttpServlet
             this.log("P2P connection gestion ...");
             try {
                 String mode = request.getParameter("switch");
-                if (StringUtils.equals(mode, "on")
+                if ("on".equals(mode)
                     && !XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork()) {
                     XWootSite.getInstance().getXWootEngine().reconnectToP2PNetwork();
-                } else if (StringUtils.equals(mode, "off")
+                } else if ("off".equals(mode)
                     && XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork()) {
                     XWootSite.getInstance().getXWootEngine().disconnectFromP2PNetwork();
                 } else {

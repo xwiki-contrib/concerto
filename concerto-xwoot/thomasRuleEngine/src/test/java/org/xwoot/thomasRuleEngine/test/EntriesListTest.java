@@ -44,6 +44,8 @@
 
 package org.xwoot.thomasRuleEngine.test;
 
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -102,7 +104,17 @@ public class EntriesListTest
     @BeforeClass
     public static void initFile() throws Exception
     {
+        FileUtil.deleteDirectory(WORKING_DIR_PATH);
         FileUtil.checkDirectoryPath(WORKING_DIR_PATH);
+    }
+    
+    /**
+     * Clean the workingDirectory.
+     */
+    @AfterClass
+    public static void cleanFile()
+    {
+        FileUtil.deleteDirectory(WORKING_DIR_PATH);
     }
 
     /**
@@ -128,9 +140,18 @@ public class EntriesListTest
     }
 
     /**
+     * Clean the generated files.
+     */
+    @After
+    public void cleanTest() 
+    {
+        this.entriesList.clearWorkingDir();
+    }
+    
+    /**
      * Check if the working directory is properly created.
      * 
-     * @throws Exception if wirking dir path is null.
+     * @throws Exception if working dir path is null.
      */
     @Test
     public void testInit() throws Exception

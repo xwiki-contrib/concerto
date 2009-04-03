@@ -1073,7 +1073,7 @@ public class MockJxtaPeer implements Peer, RendezvousListener {
 	    Set<MockJxtaPeer> peersInGroup = MockJxtaPeer.groupsWithPeersMap.get(this.currentJoinedGroup.getPeerGroupAdvertisement());
 	    for (MockJxtaPeer peer : peersInGroup) {
 	        if (!peer.equals(this) &&
-	            peer.getMyDirectCommunicationPipeAdvertisement().equals(pipeAdv)) {
+	            peer.getMyDirectCommunicationPipeAdvertisement().getPipeID().equals(pipeAdv.getPipeID())) {
 	            destinationPeer = peer;
 	            break;
 	        }

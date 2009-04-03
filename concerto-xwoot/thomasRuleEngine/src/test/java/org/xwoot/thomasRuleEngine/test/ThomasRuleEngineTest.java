@@ -44,6 +44,7 @@
 
 package org.xwoot.thomasRuleEngine.test;
 
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -112,7 +113,17 @@ public class ThomasRuleEngineTest
     @BeforeClass
     public static void initFile() throws Exception
     {
+        FileUtil.deleteDirectory(WORKING_DIR_PATH);
         FileUtil.checkDirectoryPath(WORKING_DIR_PATH);
+    }
+    
+    /**
+     * Clean the working directory.
+     */
+    @AfterClass
+    public static void cleanFile()
+    {
+        FileUtil.deleteDirectory(WORKING_DIR_PATH);
     }
 
     /**
@@ -134,8 +145,8 @@ public class ThomasRuleEngineTest
     @Before
     public void initTest() throws Exception
     {
-        this.tre1 = new ThomasRuleEngine(this.treId1, WORKING_DIR_PATH);
-        this.tre2 = new ThomasRuleEngine(this.treId2, WORKING_DIR_PATH);
+        this.tre1 = new ThomasRuleEngine(this.treId1, new File(WORKING_DIR_PATH, this.treId1).toString());
+        this.tre2 = new ThomasRuleEngine(this.treId2, new File(WORKING_DIR_PATH, this.treId2).toString());
 
         this.tre1.clearWorkingDir();
         this.tre2.clearWorkingDir();

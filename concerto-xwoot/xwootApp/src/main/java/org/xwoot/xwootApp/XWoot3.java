@@ -270,13 +270,15 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         
         Message message = (Message) aMessage;
         
+        this.logger.info(this.getXWootName() + " : received message...");
+        this.logger.info(this.getXWootName() + " : message type : " + message.getAction());
+        
         if (!this.isStateComputed() && !message.getAction().equals(Message.Action.STATE_REPLY)) {
             logger.warn("This XWoot node does not have a state for the group yet. Also, the message is not a state reply. Dropping message.");
             return null;
         }
         
-        this.logger.info(this.getXWootName() + " : received message...");
-        this.logger.info(this.getXWootName() + " : message type : " + message.getAction());
+        this.logger.info(this.getXWootName() + " : processing message...");
         
         if (message.getAction().equals(Message.Action.BROADCAST_PATCH)) {
             this.processPatchBroadcast(message);
@@ -340,24 +342,42 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             throw new XWootException(this.siteId + " : The message contained invalid sender identification. Can not reply.\n", cce);
         }*/
 
-        // Process the sender's log.
+        // Process the sender's log and send reply.
         // content == messageId[].
-        Collection content;
         try {
             // TODO: modify answerAntiEntropy or process it's result. (as stated in the todo of Message.Action.ANTI_ENTROPY_REPLY)
-            content = this.antiEntropy.answerAntiEntropy(message.getContent());
-        } catch (AntiEntropyException e) {
-            throw new XWootException(this.getXWootName() + " : Problem with antiEntropy \n", e);
+            Collection replyContent = this.antiEntropy.answerAntiEntropy(message.getContent());
+            
+            this.logger
+            .debug(this.getXWootName()
+                + " : New message -- content : patches : result of diff beetween given log and local log -- Action : ANTI_ENTROPY_REPLY");
+            
+            // We do not expect any reply for this message.
+            this.sendMessage(replyContent, Message.Action.ANTI_ENTROPY_REPLY, message.getOriginalPeerId());
+        } catch (AntiEntropyException aee) {
+            // TODO: can we tolerate this exception and just warn about it?
+            throw new XWootException(this.getXWootName() + " : Problem with antiEntropy\n", aee);
+        } catch (XWootException xe) {
+            // just log it.
+            this.logger.warn(this.getXWootName() + " : Failed to answer anti-entropy request to neighbor " + message.getOriginalPeerId() + "\n", xe);
         }
         
-        
-
-        this.logger
-        .debug(this.getXWootName()
-            + " : New message -- content : patches : result of diff beetween given log and local log -- Action : ANTI_ENTROPY_REPLY");
-        
-        // We do not expect any reply.
-        this.sendMessage(content, Message.Action.ANTI_ENTROPY_REPLY, message.getOriginalPeerId());
+        try {
+            Object[] missingIdsFromLocalLog = this.antiEntropy.getMessageIdsMissingFromLocalLog(message.getContent());
+            
+            // If we have missing messages, get them from the peer that has them.
+            if (missingIdsFromLocalLog != null && missingIdsFromLocalLog.length != 0) {
+//                Message missingMessages = this.sendMessage(missingIdsFromLocalLog, Message.Action.MESSAGES_REQUEST, message.getOriginalPeerId());
+//                this.processAntiEntropyReply(missingMessages);
+                this.doAntiEntropy(message.getOriginalPeerId());
+            }
+        } catch (AntiEntropyException aee) {
+            // just log it.
+            this.logger.warn(this.getXWootName() + " : Failed to compute the missing messages from the local log.\n", aee);
+        } catch (XWootException xe) {
+            // just log it. It's quite bad, but let`s hope we`ll get them next time.
+            this.logger.warn(this.getXWootName() + " : Failed to send anti-entropy request to get the missing messages from the remote peer.\n", xe);
+        }
     }
     
     /**
@@ -1061,6 +1081,17 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         // FIXME: should we keep track of the groups we created to determine if we can create a state even if we did not the first time?
         this.setGroupCreator(false);
         
+        try {
+            this.doAntiEntropyWithAllNeighbors();
+        } catch (Exception e) {
+            // just log (is this enough? is it safe to supress this exception?)
+            this.logger.warn(this.getXWootName() + " : Failed to perform anti-entropy with the group.", e);
+        }
+        
+        if (this.isContentManagerConnected()) {
+            this.synchronize();
+        }
+        
      // FIXME: store the currentlyJoinedGroup in a properties file or somewhere on drive in order to automatically rejoin (with proper password) the group on a reboot.
     }
     
@@ -1467,10 +1498,10 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         this.logger.info(this.getXWootName() + " : PipeID of neighbor: " + neighbor);
         
         String neighborPipeId = (String) neighbor;
-        PipeAdvertisement neighorPipeAdvertisement = null;
+        PipeAdvertisement neighborPipeAdvertisement = null;
         
         try {
-            neighorPipeAdvertisement = this.createPipeAdvFromStringID(neighborPipeId);
+            neighborPipeAdvertisement = this.createPipeAdvFromStringID(neighborPipeId);
         } catch (Exception e) {
             this.logger.error("Invalid neighbor. Could not create communication channel.");
             throw new XWootException("Invalid neighbor. Could not create communication channel.\n", e);
@@ -1487,7 +1518,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         this.logger.debug(this.getXWootName() + " : New message -- content : log patches -- Action : " + Message.Action.ANTI_ENTROPY_REQUEST.toString());
         
         // The reply will come as a separate message, initiated by the destination peer. This is caused by the broadcast nature of ANTI_ENTROPY_REQUEST messages.
-        this.sendMessage(content, Message.Action.ANTI_ENTROPY_REQUEST, neighorPipeAdvertisement);
+        this.sendMessage(content, Message.Action.ANTI_ENTROPY_REQUEST, neighborPipeAdvertisement);
     }
 
     public void connectToContentManager() throws XWootException
@@ -1528,14 +1559,10 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     {
         this.logger.info(this.getXWootName() + " : (Re)Connect to P2P Network.");
         if (!this.isConnectedToP2PNetwork()) {
-            if (this.isContentManagerConnected()) {
-                this.synchronize();
-            }
             
             // TODO: rejoining of the group will be done in joinNetwork().
             this.joinNetwork(null);            
-            
-            this.doAntiEntropyWithAllNeighbors();
+
         } else {
             this.logger.warn(this.getXWootName() + " : Already connected to P2P Network.");
         }

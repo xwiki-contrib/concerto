@@ -154,6 +154,7 @@ public class LogTest
 
         Serializable[] list = new Serializable[] {this.testId1, this.testId2};
         Object[] diff = this.log.getDiffKey(list);
+        Assert.assertEquals(this.log.logSize(), 4);
         Assert.assertEquals(diff.length, 2);
 
         List<Object> diffAsList = Arrays.asList(diff);

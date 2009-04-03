@@ -394,8 +394,8 @@ public class BootstrapNetwork extends HttpServlet
             if (errors.length() == 0) {
                 this.getServletContext().log("No errors occured.");
                 
-                // Stop the autosynch thread if it is running.
-                XWootSite.getInstance().getAutoSynchronizationThread().stopThread();
+//                // Stop the autosynch thread if it is running.
+//                XWootSite.getInstance().getAutoSynchronizationThread().stopThread();
                 
                 response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapGroup.do"));
                 return;

@@ -47,6 +47,8 @@ package org.xwoot.antiEntropy.Log;
 import java.io.File;
 import java.io.Serializable;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
@@ -183,20 +185,38 @@ public class Log implements Serializable
     }
 
     /**
-     * Computes the diff beetween a given table of keys and the log's keys.
+     * Computes the diff between the log's keys and a given table of keys.
      * 
-     * @param site2ids an array of message ids.
-     * @return an array of all the message ids, excluding the ones in the given array.
+     * @param site2ids an array of message IDs.
+     * @return an array of all the message IDs in the local log, excluding the ones in the given array.
      * @throws LogException if deserialization problems occur.
      */
     public Object[] getDiffKey(Object[] site2ids) throws LogException
     {
         this.loadLog();
 
-        Set<Object> diff = this.log.keySet();
+        return this.diffANotInB(this.getMessageIds(), site2ids);
+    }
 
-        for (Object id : site2ids) {
-            diff.remove(id);
+    /**
+     * @param a the first array
+     * @param b the second array
+     * @return the elements from the first array that are not contained in the second. A null array is considered an
+     *         empty array.
+     */
+    public Object[] diffANotInB(Object[] a, Object[] b)
+    {
+        if (a == null || a.length == 0) {
+            return new Object[0];
+        }
+
+        Set<Object> diff = new HashSet<Object>();
+        Collections.addAll(diff, a);
+
+        if (b != null) {
+            for (Object o : b) {
+                diff.remove(o);
+            }
         }
 
         return diff.toArray();

@@ -60,7 +60,7 @@ public class AntiEntropy
 {
     /** The name of the working directory for the Log. */
     public static final String LOG_DIRECTORY_NAME = "log";
-    
+
     /**
      * The associated log.
      * 
@@ -88,7 +88,7 @@ public class AntiEntropy
     }
 
     /**
-     * Computes the diff between content of a remote log and content of the local log by comparing keys. 
+     * Computes the diff between content of the local log and content of a remote log by comparing keys.
      * 
      * @param site2ids object representing an array of remote log keys that need to be checked.
      * @return collection of all local messages corresponding to the keys that are not in the given array.
@@ -107,6 +107,19 @@ public class AntiEntropy
         }
 
         return missingMessages;
+    }
+    
+    /**
+     * Computes the diff between content of a remote log and content of the local log by comparing keys.
+     * @param site2ids object representing an array of remote log keys that need to be checked.
+     * @return array of all remote message IDs corresponding to the keys that are not in the local log.
+     * @throws AntiEntropyException if problems while reading the log occur.
+     */
+    public Object[] getMessageIdsMissingFromLocalLog(Object site2ids) throws AntiEntropyException
+    {
+        Object[] localLogIds = this.log.getMessageIds();
+        Object[] remoteLogIds = ((Object[]) site2ids);
+        return this.log.diffANotInB(remoteLogIds, localLogIds);
     }
 
     /**

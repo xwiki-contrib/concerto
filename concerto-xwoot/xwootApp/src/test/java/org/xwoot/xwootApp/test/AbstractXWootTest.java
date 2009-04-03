@@ -71,7 +71,7 @@ import java.io.File;
  */
 public abstract class AbstractXWootTest
 {
-    protected final static String WORKINGDIR = "/tmp/xwootTests";
+    protected final static String WORKINGDIR = FileUtil.getTestsWorkingDirectoryPathForModule("xwootApp");
 
     protected int round = 6;
 
