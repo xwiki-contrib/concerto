@@ -16,13 +16,13 @@
 		<dependency>
 			<groupId>org.xwiki.platform</groupId>
 			<artifactId>xwiki-core-xmlrpc-model</artifactId>
-			<version>1.8-SNAPSHOT</version>
+			<version>1.8</version>
 		</dependency>
 		
 		<dependency>
 			<groupId>org.xwiki.platform</groupId>
 			<artifactId>xwiki-core-xmlrpc-client</artifactId>
-			<version>1.8-SNAPSHOT</version>
+			<version>1.8</version>
 		</dependency>
 		
 		<dependency>

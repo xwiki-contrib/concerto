@@ -22,12 +22,12 @@
     <dependency>
       <groupId>org.xwiki.platform</groupId>
       <artifactId>xwiki-core-xmlrpc-client</artifactId>
-      <version>1.8-SNAPSHOT</version>
+      <version>1.8</version>
     </dependency>
     <dependency>
       <groupId>org.xwiki.platform</groupId>
       <artifactId>xwiki-core-xmlrpc-model</artifactId>
-      <version>1.8-SNAPSHOT</version>
+      <version>1.8</version>
     </dependency>
     <dependency>
       <groupId>org.apache.derby</groupId>
@@ -84,7 +84,7 @@
                 <artifactItem>
                   <groupId>com.xpn.xwiki.products</groupId>
                   <artifactId>xwiki-enterprise-jetty-hsqldb</artifactId>
-                  <version>1.8-SNAPSHOT</version>
+                  <version>1.8</version>
                   <type>zip</type>
                 </artifactItem>
               </artifactItems>
@@ -114,7 +114,7 @@
             </property>
             <property>
               <name>xwikiExecutionDirectory</name>
-              <value>${basedir}/target/xwiki-enterprise-jetty-hsqldb-1.8-SNAPSHOT</value>
+              <value>${basedir}/target/xwiki-enterprise-jetty-hsqldb-1.8</value>
             </property>
             <property>
               <name>xwikiExecutionStartCommand</name>

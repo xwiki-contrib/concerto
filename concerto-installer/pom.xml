@@ -223,10 +223,10 @@
     </plugins>
   </build>
   <properties>
-    <platform.tool.configuration.version>1.16</platform.tool.configuration.version>
-    <platform.tool.jetty.version>1.14-SNAPSHOT</platform.tool.jetty.version>
-    <platform.tool.rootwebapp.version>1.1-SNAPSHOT</platform.tool.rootwebapp.version>
-    <xwiki.webapp.version>1.8-SNAPSHOT</xwiki.webapp.version>
+    <!--<platform.tool.configuration.version>1.25</platform.tool.configuration.version>
+    <platform.tool.jetty.version>1.13</platform.tool.jetty.version>
+    <platform.tool.rootwebapp.version>1.0</platform.tool.rootwebapp.version>
+    <xwiki.webapp.version>1.8</xwiki.webapp.version>-->
     <xwiki.hibernate>${project.build.directory}/maven-shared-archive-resources/hibernate.cfg.xml</xwiki.hibernate>
     <xwoot.license>${project.build.directory}/classes/LICENCE.txt</xwoot.license>
     <xwoot.readme>${project.build.directory}/classes/README.html</xwoot.readme>
