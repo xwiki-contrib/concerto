@@ -109,20 +109,20 @@ public class StateManagement extends HttpServlet
         String currentState = null;
         String exceptionMessage = null;
         
-        // Check if this should be auto-join and this xwoot node already has the state of this group.
-        if (action == null) {
-            // If we have the state of this group.
-            if (xwootEngine.isStateComputed()) {
-                // Try to import it and replace the current internal model (if any).
-                try {
-                    xwootEngine.importState(xwootEngine.getState());
-                    action = StateAction.REIMPORT_EXISTING;
-                } catch (Exception e) {
-                    exceptionMessage = e.getMessage();
-                    this.log("Failed to import the existing state for this group.", e);
-                }
-            }
-        }
+//        // Check if this should be auto-join and this xwoot node already has the state of this group.
+//        if (action == null) {
+//            // If we have the state of this group.
+//            if (xwootEngine.isStateComputed()) {
+//                // Try to import it and replace the current internal model (if any).
+//                try {
+//                    xwootEngine.importState(xwootEngine.getState());
+//                    action = StateAction.REIMPORT_EXISTING;
+//                } catch (Exception e) {
+//                    exceptionMessage = e.getMessage();
+//                    this.log("Failed to import the existing state for this group.", e);
+//                }
+//            }
+//        }
 
         /*
         // The peer specified as the network contact point.
@@ -171,7 +171,8 @@ public class StateManagement extends HttpServlet
             this.log("Problem with state: " + e.getMessage(), e);
         }
 
-        if (action != null) {
+        // If we performed an action or the state already exists.
+        if (action != null || XWootSite.getInstance().getXWootEngine().isStateComputed()) {
             // If successful.
             if (exceptionMessage == null && XWootSite.getInstance().getXWootEngine().isStateComputed()) {
                 

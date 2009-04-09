@@ -669,7 +669,9 @@ public class JxtaPeer implements Peer, RendezvousListener {
         }
 
         // Become rdv for this new group. Peers will not be able to communicate if there is no rdv in this group.
-        pg.getRendezVousService().startRendezVous();
+        RendezVousService rendezvousService = pg.getRendezVousService();
+        rendezvousService.addListener(this);
+        rendezvousService.startRendezVous();
 
   /*      System.out.println("Connected RDVs: ");
         Enumeration<ID> rdvs = pg.getRendezVousService().getConnectedRendezVous();
@@ -746,24 +748,31 @@ public class JxtaPeer implements Peer, RendezvousListener {
     		throw e;
     	}
     	
+    	// Clean the local cache for this group just in case we have previously joined it.
+        this.flushExistingAdvertisements(newGroup, DiscoveryService.PEER);
+        this.flushExistingAdvertisements(newGroup, DiscoveryService.ADV);
+    	
         if (!authenticateMembership(newGroup, keystorePassword, groupPassword)) {
         	throw new PeerGroupException("Authentication failed for joining the group.");
         }
         
+        RendezVousService rendezvousService = newGroup.getRendezVousService();
+        rendezvousService.addListener(this);
+        
         if (beRendezvous) {
-            newGroup.getRendezVousService().startRendezVous();
+            rendezvousService.startRendezVous();
         } else {
             // Wait for a connection to a RDV of this group.
             if (!waitForRendezVousConnection(newGroup, 60000)) {
                 // If none found, make this peer a RDV for the group in order to enable immediate communication.
                 this.logger.debug("Could not connect to any RDV peer in this group. Promoting this peer to RDV.");
-                newGroup.getRendezVousService().startRendezVous();
+                rendezvousService.startRendezVous();
             } else {
                 this.logger.debug("RDV connection established for this group.");
             }
             
             // Let jxta decide when to promote edge peers to rdvs.
-            newGroup.getRendezVousService().setAutoStart(true);
+            rendezvousService.setAutoStart(true);
         }
         
         // Leave the old peer group.
@@ -774,12 +783,13 @@ public class JxtaPeer implements Peer, RendezvousListener {
         
         // Publish our advertisements.  Is all of this really needed?
         disco.publish(newGroup.getPeerGroupAdvertisement());
-
-        // Add the new group to our list of joined groups.
-        //joinedGroups.add(newGroup);
         
         // Set this group as the current one
         currentJoinedGroup = newGroup;
+        
+        // Update local cache with peers and their private pipe advertisements from this group.
+        discoverPeers(null, null);
+        discoverAdvertisements(null, null, PipeAdvertisement.NameTag, this.getDirectCommunicationPipeNamePrefix() + "*");
         
  /*       
         System.out.println("Connected RDVs: ");
@@ -808,17 +818,9 @@ public class JxtaPeer implements Peer, RendezvousListener {
         // Set the group as JxtaCast's group.
         jc.setPeerGroup(newGroup);
         
-        // Init direct communication for this group and register the listener.
+        // Initialize direct communication for this group and register the listener.
         this.createDirectCommunicationServerSocket();
         
-        // Clean the local cache for this group just in case we have previously joined it.
-        this.flushExistingAdvertisements(newGroup, DiscoveryService.PEER);
-        this.flushExistingAdvertisements(newGroup, DiscoveryService.ADV);
-        
-        // Update local cache with peers and their private pipe advertisements from this group.
-        discoverPeers(null, /*groupAdv, */null);
-        discoverAdvertisements(null, null, PipeAdvertisement.NameTag, this.getDirectCommunicationPipeNamePrefix() + "*");
-
         return newGroup;
     }
     
@@ -1050,6 +1052,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
         
         // Stop being rdv for the gorup.
         RendezVousService oldGroupRendezvousService = oldGroup.getRendezVousService();
+        oldGroupRendezvousService.removeListener(this);
         oldGroupRendezvousService.stopRendezVous();
         
         // Resign from the group.
@@ -1636,20 +1639,61 @@ public class JxtaPeer implements Peer, RendezvousListener {
     }
 
 	/** {@inheritDoc} **/
-	public void rendezvousEvent(RendezvousEvent event) {
-	    // If we've connected to a new RDV or just disconnected from one.  Launch discovery,
-        // so we can see any ADVs (peers, groups, peer back-channel ADVs.) this RDV knows or used to know.
-	    
-		if (event.getType() == RendezvousEvent.RDVCONNECT    ||
-        event.getType() == RendezvousEvent.RDVRECONNECT  ||
+	public void rendezvousEvent(RendezvousEvent event) 
+	{
+		if (event.getType() == RendezvousEvent.RDVCONNECT ||
+        event.getType() == RendezvousEvent.RDVRECONNECT ||
         event.getType() == RendezvousEvent.RDVDISCONNECT ||
         event.getType() == RendezvousEvent.RDVFAILED ||
         event.getType() == RendezvousEvent.BECAMERDV) {
 		    
+		    // If we've connected to a new RDV or just disconnected from one.  Launch discovery,
+	        // so we can see any ADVs (peers, groups, peer back-channel ADVs.) this RDV knows or used to know.
+		    
 		    this.discoverGroups(event.getPeer(), null);
             this.discoverPeers(event.getPeer(), null);
             this.discoverAdvertisements(event.getPeer(), null, PipeAdvertisement.NameTag, this.getDirectCommunicationPipeNamePrefix() + "*");
+		} else if (event.getType() == RendezvousEvent.CLIENTDISCONNECT) {
+		    
+		    // If we are RDV and a client just disconnected, clean his direct communication pipe adv
+		    // and his peer adv.
+		    
+		    String leavingClientPeerId = event.getPeer();
+		    DiscoveryService discoveryService = this.currentJoinedGroup.getDiscoveryService();
+		    Enumeration<Advertisement> pipeAdvertisements = this.getKnownDirectCommunicationPipeAdvertisements();
+		    while (pipeAdvertisements.hasMoreElements()) {
+		        PipeAdvertisement pipeAdvertisement = (PipeAdvertisement) pipeAdvertisements.nextElement();
+		        
+		        String pipeName = pipeAdvertisement.getName();
+		        String ownerPeerId = JxtaPeer.getPeerIdFromBackChannelPipeName(pipeName);
+		        if (leavingClientPeerId.equals(ownerPeerId)) {
+		            try {
+                        discoveryService.flushAdvertisement(pipeAdvertisement);
+                    } catch (IOException e) {
+                        String peerName = JxtaPeer.getPeerNameFromBackChannelPipeName(pipeName);
+                        this.logger.warn("Failed to flush the pipe advertisement of the peer named "
+                            + peerName + " after he has disconnected.\n", e);
+                    }
+		        }
+		    }
+		    
+		    Enumeration<PeerAdvertisement> peerAdvertisements = this.getKnownPeers();
+            while (peerAdvertisements.hasMoreElements()) {
+                PeerAdvertisement peerAdvertisement = (PeerAdvertisement) peerAdvertisements.nextElement();
+                
+                String peerId = peerAdvertisement.getPeerID().toString();
+                if (leavingClientPeerId.equals(peerId)) {
+                    try {
+                        discoveryService.flushAdvertisement(peerAdvertisement);
+                    } catch (IOException e) {
+                        String peerName = peerAdvertisement.getName();
+                        this.logger.warn("Failed to flush the peer advertisement of the peer named "
+                            + peerName + " after he has disconnected.\n", e);
+                    }
+                }
+            }
 		}
+		    
 		
 	}
 	

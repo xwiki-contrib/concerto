@@ -44,15 +44,25 @@
 
 package org.xwoot.xwootApp.web.servlets;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Properties;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.jxta.document.Advertisement;
+import net.jxta.document.AdvertisementFactory;
+import net.jxta.document.MimeMediaType;
+import net.jxta.document.StructuredDocumentFactory;
+import net.jxta.document.XMLDocument;
+import net.jxta.peergroup.PeerGroup;
 import net.jxta.protocol.PeerGroupAdvertisement;
 
 import org.xwoot.xwootApp.XWoot3;
@@ -75,6 +85,8 @@ public class BootstrapGroup extends HttpServlet
     /** The value of the create group button. */
     private static final String CREATE_BUTTON = "Create";
     
+    private static final String AUTO_JOIN_GROUP = "autoJoinGroup";
+    
     /** The value of a checked checkbox. */
     private static final String TRUE = "true";
     
@@ -83,16 +95,15 @@ public class BootstrapGroup extends HttpServlet
     
     /** Used for serialization. */
     private static final long serialVersionUID = -3758874922535817475L;
+    
+    /** The name of the properties file where to store the current group settings. */
+    private static final String P2P_GROUP_SETTINGS_PROPERTIES_FILE_NAME = "p2p-group-settings.properties";
 
     /** {@inheritDoc} */
     @Override
     public void service(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
     {
         this.getServletContext().log("BootstrapGroup opened.");
-        
-        /*request.setAttribute("xwiki_url", XWootSite.getInstance().getXWootEngine().getContentManagerURL());
-        request.getSession().removeAttribute("neighbor");
-        request.getSession().removeAttribute("join");*/
         
         String errors = "";
         
@@ -105,8 +116,26 @@ public class BootstrapGroup extends HttpServlet
         }
         
         String groupChoice = request.getParameter("groupChoice");
+        String AbsolutePathToPropertiesFile = ((XWoot3) xwootEngine).getPeer().getManager().getInstanceHome().getPath() + File.separator + BootstrapGroup.P2P_GROUP_SETTINGS_PROPERTIES_FILE_NAME;
+        Properties groupProperties = XWootSite.getProperties(AbsolutePathToPropertiesFile);
+        String currentGroupAdvertisementXMLString = groupProperties.getProperty("current_group_advertisement");
         
-        if (CREATE_BUTTON.equals(groupChoice)) {
+        if (!xwootEngine.isConnectedToP2PGroup() && currentGroupAdvertisementXMLString != null && currentGroupAdvertisementXMLString.trim().length() != 0) {
+            groupChoice = AUTO_JOIN_GROUP;
+            
+            try {
+                StringReader advertisementContentReader = new StringReader(currentGroupAdvertisementXMLString);
+                XMLDocument advertisementXmlDocument = (XMLDocument) StructuredDocumentFactory.newStructuredDocument(MimeMediaType.XMLUTF8, advertisementContentReader);
+                
+                PeerGroupAdvertisement currentGroupAdvertisement =  (PeerGroupAdvertisement) AdvertisementFactory.newAdvertisement(advertisementXmlDocument);
+                String groupPassword = groupProperties.getProperty("current_group_password", "");
+                boolean beRendezVous = "true".equalsIgnoreCase(groupProperties.getProperty("current_group_be_rendezvous"));
+                
+                ((XWoot3) xwootEngine).joinGroup(currentGroupAdvertisement, KEYSTORE_PASSWORD, groupPassword.toCharArray(), beRendezVous);
+            } catch (Exception e) {
+                errors += "Failed to auto-rejoin group: Invalid existing group properties.";
+            }
+        } else if (CREATE_BUTTON.equals(groupChoice)) {
             this.getServletContext().log("Create group requested.");
             
             String groupName = request.getParameter("groupName");
@@ -121,6 +150,8 @@ public class BootstrapGroup extends HttpServlet
                     throw new IllegalArgumentException("Group name must not be empty.");
                 }
                 
+                PeerGroupAdvertisement newGroupAdvertisement = null;
+                
                 if (isPrivateGroup) {
                     if (groupPassword == null || groupPassword.length() == 0) {
                         throw new IllegalArgumentException("A password must be set for a private group.");
@@ -129,10 +160,18 @@ public class BootstrapGroup extends HttpServlet
                         throw new IllegalArgumentException("Passwords do not match.");
                     }
                     
-                    ((XWoot3) xwootEngine).createNewGroup(groupName, groupDescription, KEYSTORE_PASSWORD/*keystorePassword.toCharArray()*/, groupPassword.toCharArray());
+                    newGroupAdvertisement = ((XWoot3) xwootEngine).createNewGroup(groupName, groupDescription, KEYSTORE_PASSWORD/*keystorePassword.toCharArray()*/, groupPassword.toCharArray());
                 } else {
-                    ((XWoot3) xwootEngine).createNewGroup(groupName, groupDescription, null, null);
+                    newGroupAdvertisement = ((XWoot3) xwootEngine).createNewGroup(groupName, groupDescription, null, null);
                 }
+                
+                // Save the group so we can join it next time.
+                String groupAdvertisementAsXMLString = newGroupAdvertisement.getDocument(MimeMediaType.XMLUTF8).toString();
+                groupProperties.setProperty("current_group_advertisement", groupAdvertisementAsXMLString);
+                groupProperties.setProperty("current_group_password", groupPassword);
+                groupProperties.setProperty("current_group_be_rendezvous", "true");
+                
+                XWootSite.savePropertiesInFile(AbsolutePathToPropertiesFile, "Updated group settings", groupProperties);
                 
                 
             } catch (Exception e) {
@@ -159,22 +198,16 @@ public class BootstrapGroup extends HttpServlet
                         if (aGroupAdv.getPeerGroupID().toString().equals(groupID)) {
                             this.log("Joining group described by this adv:\n" + aGroupAdv);
                             
-//                            char[] keystorePassword = null;
-//                            if (groupPassword != null && groupPassword.length() != 0) {
-//                                keystorePassword = KEYSTORE_PASSWORD;
-//                            }
-                            ((XWoot3) xwootEngine).joinGroup(aGroupAdv, KEYSTORE_PASSWORD/*keystorePassword.toCharArray()*/, groupPassword.toCharArray(), beRendezVous);
+                            // Join the group.
+                            ((XWoot3) xwootEngine).joinGroup(aGroupAdv, KEYSTORE_PASSWORD, groupPassword.toCharArray(), beRendezVous);
                             
-                            // Save the group advertisement to be able to rejoin after a reboot.
-                            // FIXME: save group and keystore password then implement the deletion of the current group
-                            // advertisement file when explicitly leaving a group from the web UI.
-                            // try {
-                            // PersistencyUtil.saveObjectToXml(aGroupAdv, xwootEngine.getWorkingDir() + File.separator
-                            // + "currentGroupAdvertisement.xml");
-                            // } catch (Exception e) {
-                            // this.log("Failed to save the group advertisement. "
-                            // + "Auto-join will not be available on next restart.", e);
-                            // }
+                            // Save the group so we can join it next time.
+                            String groupAdvertisementAsXMLString = aGroupAdv.getDocument(MimeMediaType.XMLUTF8).toString();
+                            groupProperties.setProperty("current_group_advertisement", groupAdvertisementAsXMLString);
+                            groupProperties.setProperty("current_group_password", groupPassword);
+                            groupProperties.setProperty("current_group_be_rendezvous", (beRendezVous ? "true" : "false"));
+                            
+                            XWootSite.savePropertiesInFile(AbsolutePathToPropertiesFile, "Updated group settings", groupProperties);
                             
                             found = true;
                             break;
@@ -200,7 +233,7 @@ public class BootstrapGroup extends HttpServlet
         // FIXME: try to auto-join a group if a group advertisement file is found.
         
         // If no errors were encountered and successfully joined/created a network, go to next step.
-        if (errors.length() == 0 && (CREATE_BUTTON.equals(groupChoice) || JOIN_BUTTON.equals(groupChoice))) {
+        if (errors.length() == 0 && (CREATE_BUTTON.equals(groupChoice) || JOIN_BUTTON.equals(groupChoice) || AUTO_JOIN_GROUP.equals(groupChoice))) {
             this.getServletContext().log("No errors occured.");
             
 //            // Stop the autosynch thread if it is running.

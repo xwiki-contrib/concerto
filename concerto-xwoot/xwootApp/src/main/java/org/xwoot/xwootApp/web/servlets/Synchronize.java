@@ -192,20 +192,22 @@ public class Synchronize extends HttpServlet
         else if ("p2pnetworkconnection".equals(request.getParameter("action"))) {
             this.log("P2P connection gestion ...");
             try {
-                String mode = request.getParameter("switch");
-                if ("on".equals(mode)
-                    && !XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork()) {
-                    XWootSite.getInstance().getXWootEngine().reconnectToP2PNetwork();
-                } else if ("off".equals(mode)
-                    && XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork()) {
-                    XWootSite.getInstance().getXWootEngine().disconnectFromP2PNetwork();
-                } else {
+//                String mode = request.getParameter("switch");
+//                if ("on".equals(mode)
+//                    && !XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork()) {
+//                    XWootSite.getInstance().getXWootEngine().reconnectToP2PNetwork();
+//                } else if ("off".equals(mode)
+//                    && XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork()) {
+//                    XWootSite.getInstance().getXWootEngine().disconnectFromP2PNetwork();
+//                } else {
                     if (XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork()) {
                         XWootSite.getInstance().getXWootEngine().disconnectFromP2PNetwork();
                     } else {
                         XWootSite.getInstance().getXWootEngine().reconnectToP2PNetwork();
+                        response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapGroup.do"));
+                        return;
                     }
-                }
+//                }
             } catch (Exception e) {
                 throw new ServletException(e);
             }

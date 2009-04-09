@@ -95,30 +95,33 @@ public class BaseFilter implements Filter
         XWootSite site = XWootSite.getInstance();
         XWootAPI xwoot = site.getXWootEngine();
 
+        String requestedServletPath = request.getServletPath();
+        String requestedContextPath = request.getContextPath();
         
         // While the XWoot site is not fully configured, ensure the proper flow.
         if (!XWootSite.getInstance().isStarted()) {
             LOG.debug("Site is not started yet, starting the wizard.");
-            if (!"/bootstrap.do".equals(request.getServletPath())) {
-                response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrap.do"));
+            if (!"/bootstrap.do".equals(requestedServletPath)) {
+                response.sendRedirect(response.encodeRedirectURL(requestedContextPath + "/bootstrap.do"));
                 return;
             }
         } else if (!((XWoot3) xwoot).getPeer().isConnectedToNetwork()) {
             LOG.debug("Site is not connected to a network yet, opening network bootstrap.");
-            if (!"/bootstrapNetwork.do".equals(request.getServletPath())) {
-                response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapNetwork.do"));
+            if (!"/bootstrapNetwork.do".equals(requestedServletPath) && !"/synchronize.do".equals(requestedServletPath) && "p2pnetworkconnection".equals(request.getParameter("action"))) {
+                response.sendRedirect(response.encodeRedirectURL(requestedContextPath + "/bootstrapNetwork.do"));
                 return;
             }
         } else if (!((XWoot3) xwoot).getPeer().isConnectedToGroup()) {
             LOG.debug("Site is not connected to a group yet, opening group bootstrap.");
-            if (!"/bootstrapGroup.do".equals(request.getServletPath())) {
-                response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapGroup.do"));
+            // We don't force redirect if we are already there or if we changed our mind and went back one step. 
+            if (!"/bootstrapGroup.do".equals(requestedServletPath) && !"/bootstrapNetwork.do".equals(requestedServletPath)) {
+                response.sendRedirect(response.encodeRedirectURL(requestedContextPath + "/bootstrapGroup.do"));
                 return;
             }
         } else if (!(xwoot.isStateComputed())) {
             LOG.debug("Site does not have a state yet, opening stateManagement.");
-            if (!"/stateManagement.do".equals(request.getServletPath())) {
-                response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/stateManagement.do"));
+            if (!"/stateManagement.do".equals(requestedServletPath) && !"/bootstrapGroup.do".equals(requestedServletPath)) {
+                response.sendRedirect(response.encodeRedirectURL(requestedContextPath + "/stateManagement.do"));
                 return;
             }
         }

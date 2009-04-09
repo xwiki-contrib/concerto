@@ -352,8 +352,12 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             .debug(this.getXWootName()
                 + " : New message -- content : patches : result of diff beetween given log and local log -- Action : ANTI_ENTROPY_REPLY");
             
-            // We do not expect any reply for this message.
-            this.sendMessage(replyContent, Message.Action.ANTI_ENTROPY_REPLY, message.getOriginalPeerId());
+            if (!replyContent.isEmpty()) {
+                // We do not expect any reply for this message.
+                this.sendMessage(replyContent, Message.Action.ANTI_ENTROPY_REPLY, message.getOriginalPeerId());
+            } else {
+                this.logger.debug(this.getXWootName() + " : No anti entropy reply needed because the requesting peer has all our messages. Reply dropped.");
+            }
         } catch (AntiEntropyException aee) {
             // TODO: can we tolerate this exception and just warn about it?
             throw new XWootException(this.getXWootName() + " : Problem with antiEntropy\n", aee);
@@ -369,6 +373,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             if (missingIdsFromLocalLog != null && missingIdsFromLocalLog.length != 0) {
 //                Message missingMessages = this.sendMessage(missingIdsFromLocalLog, Message.Action.MESSAGES_REQUEST, message.getOriginalPeerId());
 //                this.processAntiEntropyReply(missingMessages);
+                this.logger.debug(this.getXWootName() + " : The remote peer has messages we don't have. Sending anti-entropy request.");
                 this.doAntiEntropy(message.getOriginalPeerId());
             }
         } catch (AntiEntropyException aee) {
@@ -1040,14 +1045,15 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         return false;*/
     }
 
-    public void createNewGroup(String name, String description, char[] keystorePassword, char[] groupPassword) throws XWootException
+    public PeerGroupAdvertisement createNewGroup(String name, String description, char[] keystorePassword, char[] groupPassword) throws XWootException
     {
         if (!this.isConnectedToP2PNetwork()) {
             throw new XWootException(this.getXWootName() + " : Not connected to network.");
         }
         
+        PeerGroup newGroup = null;
         try {
-            this.peer.createNewGroup(name, description, keystorePassword, groupPassword);
+            newGroup = this.peer.createNewGroup(name, description, keystorePassword, groupPassword);
         } catch (Exception e) {
             this.logger.error(this.getXWootName() + " : Failed to create new group.", e);
             throw new XWootException("Failed to create new group.", e);
@@ -1055,6 +1061,8 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         
         // We created this group that we just joined. We can create a state.`
         this.setGroupCreator(true);
+        
+        return newGroup.getPeerGroupAdvertisement();
         
      // FIXME: store the currentlyJoinedGroup in a properties file or somewhere on drive in order to automatically rejoin (with proper password) the group on a reboot.
     }
@@ -1591,17 +1599,22 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
                     this.synchronize();
                 } catch (Exception e) {
                     // just log it.
-                    this.logger.warn(this.getXWootName() + " : Failed to synchronize before disconnecting from network.");
+                    this.logger.warn(this.getXWootName() + " : Failed to synchronize before disconnecting from network.", e);
                 }
             }
             
+            // FIXME: anti-entropy with all neighbors is quite useless if we immediately disconnect because it's asynchronously designed.
             try {
                 this.doAntiEntropyWithAllNeighbors();
             } catch (Exception e) {
                 // just log it.
-                this.logger.warn(this.getXWootName() + " : Failed to do anti-entropy with all neighbors before disconnecting from network.");
+                this.logger.warn(this.getXWootName() + " : Failed to do anti-entropy with all neighbors before disconnecting from network.", e);
             }
             
+            // We could wait a fixed amount of time before disconnecting so that we get up to date, but the users might not like it.
+            // Another idea would be to do the actual stopNetwork() call in a thread and immediately return, so that the users don't get blocked,
+            //  but this thread would have to check before actually stopping the network if another reconnectToNetwork() call was made in between
+            //  and cancel stopping the network if this is the case.
             this.peer.stopNetwork();
         } else {
             this.logger.warn(this.getXWootName() + " : Already disconnected from P2P network.");

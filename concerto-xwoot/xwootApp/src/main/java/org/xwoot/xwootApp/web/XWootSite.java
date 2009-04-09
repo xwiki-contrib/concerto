@@ -140,7 +140,7 @@ public class XWootSite
         return instance;
     }
 
-    public Properties getProperties(String path)
+    public static Properties getProperties(String path)
     {
         Properties p = new Properties();
         try {
@@ -254,7 +254,7 @@ public class XWootSite
         return this.started;
     }
 
-    public void savePropertiesInFile(String path, String comments, Properties p) throws IOException
+    public static void savePropertiesInFile(String path, String comments, Properties p) throws IOException
     {
         File f = new File(path);
         f.createNewFile();
