@@ -184,6 +184,7 @@ public class MockLpbCast implements LpbCastAPI, Serializable
      * 
      * @return DOCUMENT ME!
      */
+    @SuppressWarnings("unchecked")
     public Collection getNeighborsList()
     {
         List<String> result = new ArrayList<String>();
@@ -349,6 +350,7 @@ public class MockLpbCast implements LpbCastAPI, Serializable
         }
     }
 
+    @SuppressWarnings("unchecked")
     private XWootAPI getReceiver(String originalPeerId) throws Exception
     {
         XWootAPI result = null;
@@ -373,6 +375,7 @@ public class MockLpbCast implements LpbCastAPI, Serializable
 
     }
 
+    @SuppressWarnings("unchecked")
     public void processSendAE(HttpServletResponse response, Collection ae)
     {
         // TODO Auto-generated method stub

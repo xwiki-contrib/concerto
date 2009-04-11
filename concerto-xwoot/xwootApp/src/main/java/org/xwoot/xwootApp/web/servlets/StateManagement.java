@@ -62,6 +62,7 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.xwoot.xwootApp.XWoot3;
 import org.xwoot.xwootApp.XWootAPI;
+import org.xwoot.xwootApp.XWootException;
 import org.xwoot.xwootApp.web.XWootSite;
 
 /**
@@ -176,8 +177,30 @@ public class StateManagement extends HttpServlet
             // If successful.
             if (exceptionMessage == null && XWootSite.getInstance().getXWootEngine().isStateComputed()) {
                 
+                if (!xwootEngine.isContentManagerConnected()) {
+                    try {
+                        xwootEngine.connectToContentManager();
+                    } catch (XWootException e) {
+                        this.log("Failed to connect to content manager. Please retry from the Synchronize page.", e);
+                    }
+                }
+                
+                try {
+                    // Synchronize with the Content Provider.
+                    xwootEngine.synchronize();
+                } catch (XWootException e) {
+                    this.log("Failed to synchronize before anti-entropy request with all neighbors.");
+                }
+                
                 // Start the auto-synchronization thread
                 XWootSite.getInstance().getAutoSynchronizationThread().startThread();
+                
+                // Do initial anti-entropy with all neighbors.
+                try {
+                    xwootEngine.doAntiEntropyWithAllNeighbors();
+                } catch (XWootException e) {
+                    this.log("Failed to launch initial anti-entropy request with all neighbors.");
+                }
                 
                 response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/synchronize.do"));
                 return;

@@ -99,8 +99,8 @@ public class Bootstrap extends HttpServlet
                 if (StringUtils.isBlank(errors)) {
                     this.getServletContext().log("No errors found.");
                     
-                    Properties p_xwiki = XWootSite.getInstance().getProperties(xwikiPropertiesFile);
-                    Properties p_xwoot = XWootSite.getInstance().getProperties(xwootPropertiesFile);
+                    Properties p_xwiki = XWootSite.getProperties(xwikiPropertiesFile);
+                    Properties p_xwoot = XWootSite.getProperties(xwootPropertiesFile);
                     
                     this.getServletContext().log("Bootstrap - starting instance -");
                     XWootSite.getInstance().init((String) p_xwoot.get(XWootSite.XWOOT_SERVER_NAME),
@@ -129,9 +129,9 @@ public class Bootstrap extends HttpServlet
             // If just opened the bootstrap form or an error occurred, init the form fields with default data found in the properties files.
             if (!StringUtils.isBlank(xwikiPropertiesFile) && !StringUtils.isBlank(xwootPropertiesFile)) {
                 Properties p_xwiki =
-                    XWootSite.getInstance().getProperties(xwikiPropertiesFile);
+                    XWootSite.getProperties(xwikiPropertiesFile);
                 Properties p_xwoot =
-                    XWootSite.getInstance().getProperties(xwootPropertiesFile);
+                    XWootSite.getProperties(xwootPropertiesFile);
                 
                 request.setAttribute("xwiki_properties", p_xwiki);
                 request.setAttribute("xwoot_properties", p_xwoot);

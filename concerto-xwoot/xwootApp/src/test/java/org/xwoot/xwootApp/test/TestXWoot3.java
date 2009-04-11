@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import net.jxta.impl.endpoint.mcast.McastTransport;
+
 import org.apache.xmlrpc.XmlRpcException;
 import org.junit.After;
 import org.junit.Assert;
@@ -98,7 +100,7 @@ public class TestXWoot3 extends AbstractXWootTest
         XWootObjectField f2 = new XWootObjectField(TITLE_FIELD_NAME, DEFAULT_TITLE_FIELD_VALUE, false);
         XWootObjectField f3 = new XWootObjectField(AUTHOR_FIELD_NAME, DEFAULT_AUTHOR_FIELD_VALUE, false);
         
-        List fields = new ArrayList<XWootObjectField>();
+        List<XWootObjectField> fields = new ArrayList<XWootObjectField>();
         fields.add(f1);
         fields.add(f2);
         fields.add(f3);
@@ -137,7 +139,7 @@ public class TestXWoot3 extends AbstractXWootTest
         XWootObjectField f1 = new XWootObjectField(COMMENT_CONTENT_FIELD_NAME, content, true);
         XWootObjectField f2 = new XWootObjectField(AUTHOR_FIELD_NAME, DEFAULT_AUTHOR_FIELD_VALUE, false);
         
-        List fields = new ArrayList<XWootObjectField>();
+        List<XWootObjectField> fields = new ArrayList<XWootObjectField>();
         fields.add(f1);
         fields.add(f2);
         
@@ -431,6 +433,74 @@ public class TestXWoot3 extends AbstractXWootTest
         Assert.assertEquals(0, this.xwoot31.getContentManager().getModifiedPagesIds().size());
     }
     
+//    /**
+//     * DOCUMENT ME!
+//     * 
+//     * @throws Exception DOCUMENT ME!
+//     */
+//    @Test
+//    public void testStateImportWithTwoXWiki() throws Exception
+//    {
+//        String pageGuid = "page:" + PAGE_ID_FOR_STATE;
+//        String content = "titi\n";
+//        String overriddenContent = "toto\n";
+//
+//        // connect XWoot
+//        this.xwoot31.reconnectToP2PNetwork();
+//        this.xwoot31.connectToContentManager();
+//        this.xwoot32.reconnectToP2PNetwork();
+//        this.xwoot32.connectToContentManager();
+//
+//        // connect sites
+//        this.xwoot31.createNewGroup(GROUP_NAME, GROUP_DESCRIPTION, KEYSTORE_PASSWORD, GROUP_PASSWORD);
+//        this.xwoot32.joinGroup(this.xwoot31.getPeer().getCurrentJoinedPeerGroup().getPeerGroupAdvertisement(), KEYSTORE_PASSWORD, GROUP_PASSWORD);
+//        
+//        // check connections
+//        Assert.assertTrue(this.xwoot31.getPeer().isConnectedToGroup());
+//        Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroup());
+//        Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroupRendezVous());
+//
+//        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentManager();
+//        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentManager();
+//        
+//        this.initContentProvider(mxwcp1);
+//        this.initContentProvider(mxwcp2);
+//        
+//        // Ignore the rest of the pages. They are not our objective.
+//        mxwcp1.getModifiedPagesIds();
+//        mxwcp1.clearAllModifications();
+//        mxwcp2.getModifiedPagesIds();
+//        mxwcp2.clearAllModifications();
+//
+//        // simulate XWiki user page creation in order to have data for a state.
+//        XWootObject xwootObj = this.simulateXWikiUserModification(mxwcp1, PAGE_ID_FOR_STATE, content, 1, 0, true);
+//        // simulate XWiki user page creation on the other wiki with different content that should be overridden by the state import.
+//        XWootObject xwootObj2 = this.simulateXWikiUserModification(mxwcp2, PAGE_ID_FOR_STATE, overriddenContent, 1, 0, true);
+//
+//        // synchronize xwoot
+//        this.xwoot31.synchronize();
+//        
+//        // Compute and import a state from the current data.
+//        this.xwoot31.computeState();
+//        File receivedTemporaryState = this.xwoot32.askStateToGroup();
+//        this.xwoot32.importState(receivedTemporaryState);
+//        receivedTemporaryState.delete();
+//
+//        // verify no-wootables fields
+//        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot31.getTre().getValue(
+//            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+//        Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot32.getTre().getValue(
+//            new XWootObjectIdentifier(pageGuid)).get()).getGuid());
+//
+//        // verify wootable field
+//        Assert.assertEquals(content, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID_FOR_STATE, pageGuid,
+//            "content"));
+//        Assert.assertEquals(content, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID_FOR_STATE, pageGuid,
+//            "content"));
+//
+//        Assert.assertEquals(0, this.xwoot31.getContentManager().getModifiedPagesIds().size());
+//    }
+    
     /**
      * DOCUMENT ME!
      * 
@@ -567,8 +637,10 @@ public class TestXWoot3 extends AbstractXWootTest
         
         // Peer2 comes back online.
         this.xwoot32.reconnectToP2PNetwork();
-        // It joins the group and automatically does an anti-entropy with all the group members. (mock implementation does it synchronously, real implementation does it asynchronously)
+        // It joins the group
         this.xwoot32.joinGroup(this.xwoot31.getPeer().getCurrentJoinedPeerGroup().getPeerGroupAdvertisement(), KEYSTORE_PASSWORD, GROUP_PASSWORD);
+        // Does an anti-entropy with all the group members. (mock implementation does it synchronously, real implementation does it asynchronously)
+        this.xwoot32.doAntiEntropyWithAllNeighbors();
 
         // verify no-wootables fields
         Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot31.getTre().getValue(
@@ -726,8 +798,10 @@ public class TestXWoot3 extends AbstractXWootTest
         
         // Peer2 comes back online.
         this.xwoot32.reconnectToP2PNetwork();
-        // It joins the group and automatically does an anti-entropy with all the group members. (mock implementation does it synchronously, real implementation does it asynchronously)
+        // It joins the group
         this.xwoot32.joinGroup(this.xwoot31.getPeer().getCurrentJoinedPeerGroup().getPeerGroupAdvertisement(), KEYSTORE_PASSWORD, GROUP_PASSWORD);
+        // Does an anti-entropy with all the group members. (mock implementation does it synchronously, real implementation does it asynchronously)
+        this.xwoot32.doAntiEntropyWithAllNeighbors();
         
         // verify no-wootables fields
         Assert.assertEquals(xwootObj.getGuid(), ((XWootObject) this.xwoot31.getTre().getValue(
@@ -1277,7 +1351,7 @@ public class TestXWoot3 extends AbstractXWootTest
         ((XWootObjectValue) tre_val).setObject(obj2);
         XWootObjectIdentifier tre_id = new XWootObjectIdentifier(obj2.getGuid());
         ThomasRuleOp tre_op = this.xwoot31.getTre().getOp(tre_id, tre_val);
-        List tre_ops = new ArrayList<ThomasRuleOp>();
+        List<Object> tre_ops = new ArrayList<Object>();
         tre_ops.add(tre_op);
         patch.setMDelements(tre_ops);
 
@@ -1436,7 +1510,7 @@ public class TestXWoot3 extends AbstractXWootTest
         ((XWootObjectValue) tre_val).setObject(obj3);
         XWootObjectIdentifier tre_id = new XWootObjectIdentifier(obj3.getGuid());
         ThomasRuleOp tre_op = this.xwoot31.getTre().getOp(tre_id, tre_val);
-        List tre_ops = new ArrayList<ThomasRuleOp>();
+        List<Object> tre_ops = new ArrayList<Object>();
         tre_ops.add(tre_op);
         patch.setMDelements(tre_ops);
         

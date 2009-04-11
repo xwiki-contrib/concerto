@@ -55,7 +55,6 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -68,7 +67,6 @@ import jlibdiff.Hunk;
 import jlibdiff.HunkAdd;
 import jlibdiff.HunkChange;
 import jlibdiff.HunkDel;
-import net.jxta.document.Advertisement;
 import net.jxta.document.AdvertisementFactory;
 import net.jxta.jxtacast.event.JxtaCastEvent;
 import net.jxta.jxtacast.event.JxtaCastEventListener;
@@ -97,6 +95,7 @@ import org.xwoot.jxta.message.Message;
 import org.xwoot.jxta.message.MessageFactory;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngine;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngineException;
+import org.xwoot.thomasRuleEngine.core.Identifier;
 import org.xwoot.thomasRuleEngine.core.Value;
 import org.xwoot.thomasRuleEngine.op.ThomasRuleOp;
 import org.xwoot.wootEngine.Patch;
@@ -256,7 +255,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
      * @param receivedMessage DOCUMENT ME!
      * @throws XWootException
      */
-    public synchronized Object receiveMessage(Object aMessage) throws XWootException
+    public Object receiveMessage(Object aMessage) throws XWootException
     {
         if (!(aMessage instanceof Message)) {
             logger.warn("Not and instance of org.xwoot.jxta.Message. Dropping message.");
@@ -301,7 +300,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
      * @param message the received message containing the disseminated patch.
      * @throws XWootException if problems occur integrating the reply in the anti-entropy log or processing the patch.
      */
-    private void processPatchBroadcast(Message message) throws XWootException
+    private synchronized void processPatchBroadcast(Message message) throws XWootException
     {
         // content == Patch.
         
@@ -324,6 +323,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
      * @param message the received message containing the requesting peer's anti-entropy log and a channel by which to reply back to him the diff.
      * @throws XWootException if the message does not contain information for contacting the requester, anti-entropy failed or the reply could not be set back.
      */
+    @SuppressWarnings("unchecked")
     private void processAntiEntropyRequest(Message message) throws XWootException
     {
         // send diff with local log
@@ -374,7 +374,11 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
 //                Message missingMessages = this.sendMessage(missingIdsFromLocalLog, Message.Action.MESSAGES_REQUEST, message.getOriginalPeerId());
 //                this.processAntiEntropyReply(missingMessages);
                 this.logger.debug(this.getXWootName() + " : The remote peer has messages we don't have. Sending anti-entropy request.");
-                this.doAntiEntropy(message.getOriginalPeerId());
+                //this.doAntiEntropy(message.getOriginalPeerId());
+                
+                // If we missed some messages, they may be more.
+                // TODO: any issues with this vs doAntiEntropy(neighbor)?
+                this.doAntiEntropyWithAllNeighbors();
             }
         } catch (AntiEntropyException aee) {
             // just log it.
@@ -470,7 +474,8 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
      * @param message the received message containing the reply.
      * @throws XWootException if problems occur integrating the reply in the anti-entropy log or processing the patches.
      */
-    private void processAntiEntropyReply(Message message) throws XWootException
+    @SuppressWarnings("unchecked")
+    private synchronized void processAntiEntropyReply(Message message) throws XWootException
     {
         this.logger.info(this.getXWootName() + " : Integrate antientropy messages\n\n");
 
@@ -508,6 +513,9 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             this.logger.warn(this.getXWootName() + " : This peer does not have a state. Can not answer the state request. Dropping request.");
             return null;
         }
+        
+        // Update the local zipped state before sending it so we don't send an old state.
+        this.updateState();
         
         byte[] stateFileData = null;
         try {
@@ -787,6 +795,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
 
     }
 
+    @SuppressWarnings("unchecked")
     private synchronized List<WootOp> synchronizeWithWootEngine(String pageName, String objectId, String fieldId,
         String oldPage, String newPage, boolean inCopy) throws XWootException
         {
@@ -1089,18 +1098,6 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         // FIXME: should we keep track of the groups we created to determine if we can create a state even if we did not the first time?
         this.setGroupCreator(false);
         
-        try {
-            this.doAntiEntropyWithAllNeighbors();
-        } catch (Exception e) {
-            // just log (is this enough? is it safe to supress this exception?)
-            this.logger.warn(this.getXWootName() + " : Failed to perform anti-entropy with the group.", e);
-        }
-        
-        if (this.isContentManagerConnected()) {
-            this.synchronize();
-        }
-        
-     // FIXME: store the currentlyJoinedGroup in a properties file or somewhere on drive in order to automatically rejoin (with proper password) the group on a reboot.
     }
     
     public void leaveGroup() throws XWootException 
@@ -1210,12 +1207,19 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     {
         // TODO: make return type void.
         
-        if (!this.isConnectedToP2PGroup()) {
-            throw new XWootException("Create a new grop and join it first.");
-        }
-        
         if (!this.isGroupCreator()) {
             throw new XWootException("Can not create a state for an existing group. There can be only one state creation per group. Create a new group istead.");
+        }
+        
+        this.updateState();
+
+        return new File(this.getStateFilePath());
+    }
+    
+    public synchronized void updateState() throws XWootException
+    {
+        if (!this.isConnectedToP2PGroup()) {
+            throw new XWootException("Not connected to any group.");
         }
         
         if (!this.contentManagerConnected) {
@@ -1309,8 +1313,6 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         // delete the 2 state files because they are now packed into the xwoot state.
         wootState.delete();
         treState.delete();
-
-        return new File(this.getStateFilePath());
     }
     
     /** @return true if this peer created the group he currently is member of. */
@@ -1389,7 +1391,50 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         //  already done by synchronize() ? check!
         
         // synchronize with the wiki but don`t generate any patches.
-        this.synchronize(false);
+        //this.synchronize(false);
+        
+        // MODIF BEGIN
+        
+        // Update the internal modifications table
+        Set<XWootId> allPageIDs = null;
+        try {
+            allPageIDs = this.contentManager.getModifiedPagesIds();
+        } catch (Exception e) {
+            throw new XWootException("Failed to access the XWiki.", e);
+        }
+        
+        // Mark the wiki as not modified because we just imported a state and have to override the wiki with the state's model.
+        try {
+            this.contentManager.clearAllModifications();
+        } catch (Exception e) {
+            throw new XWootException("Failed to mark the xwiki as not modified before synchronizing with it.");
+        }
+        
+        for(XWootId pageId : allPageIDs) {
+            try {
+                this.lastModifiedContentIdMap.add2XWikiIdMap(pageId.getPageId(), pageId);
+                List<Identifier> objectIdsInPage = this.tre.getIds("page:" + pageId.getPageId());
+                for(Identifier objectId : objectIdsInPage) {
+                    this.lastModifiedContentIdMap.add2PatchIdMap(pageId, objectId.getId());
+                }
+            } catch (Exception e) {
+                throw new XWootException("Failed to set up synchronization with wiki page " + pageId);
+            }
+        }
+        
+        try {
+            this.synchronizeFromModelToXWiki();
+        } catch (Exception e) {
+            this.logger.warn("Failed to synchronize internal model defined by imported state with XWiki.", e);
+            this.lastModifiedContentIdMap.removeAllPatchId();
+        }
+        
+        
+        
+        // fill the lastModified objects with all the objects in the model and do a synch of the model with the wiki.
+        //this.loa
+        
+        // MODIF END
         
         return true;
     }
@@ -1645,27 +1690,13 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
 
     }*/
 
+    @SuppressWarnings("unchecked")
     public Collection getNeighborsList() throws XWootException
-    {        
-        List<PipeAdvertisement> neighbors = new ArrayList<PipeAdvertisement>();
-        Enumeration<Advertisement> directCommunicationChannels = this.peer.getKnownAdvertisements(PipeAdvertisement.NameTag, this.peer.getDirectCommunicationPipeNamePrefix() + "*");
-        while (directCommunicationChannels.hasMoreElements()) {
-            Advertisement adv = directCommunicationChannels.nextElement();
-            if (adv instanceof PipeAdvertisement) {
-                neighbors.add((PipeAdvertisement) adv);
-            }
-        }
-        
-        return neighbors;
-        /*
-        try {
-            return this.peer.getNeighborsList();
-        } catch (SenderException e) {
-            this.logger.error(this.peerId + " : Problem to get neigbors list \n", e);
-            throw new XWootException(this.peerId + " : Problem to get neigbors list \n", e);
-        }*/
+    {      
+        return Collections.list(this.peer.getKnownDirectCommunicationPipeAdvertisements());
     }
     
+    @SuppressWarnings("unchecked")
     public Collection getGroups() throws XWootException
     {
         return Collections.list(this.peer.getKnownGroups());

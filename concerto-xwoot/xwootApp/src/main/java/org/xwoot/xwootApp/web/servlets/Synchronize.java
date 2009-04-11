@@ -58,7 +58,6 @@ import net.jxta.protocol.PipeAdvertisement;
 
 import org.apache.commons.lang.StringUtils;
 import org.xwoot.jxta.JxtaPeer;
-import org.xwoot.xwootApp.XWoot3;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.web.XWootSite;
 
@@ -78,6 +77,7 @@ public class Synchronize extends HttpServlet
      * @param request DOCUMENT ME!
      * @param response DOCUMENT ME!
      */
+    @SuppressWarnings("unchecked")
     @Override
     public void service(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
     {
@@ -246,18 +246,14 @@ public class Synchronize extends HttpServlet
         // view neighbors list
         Collection<PipeAdvertisement> neighbors = null;
         try {
-            neighbors = XWootSite.getInstance().getXWootEngine().getNeighborsList();
+            neighbors = xwootEngine.getNeighborsList();
         } catch (Exception e) {
-            // remove this with new xwootAPI addapted to XWoot3.
+            // remove this with new xwootAPI adapted to XWoot3.
         }
         
         if (neighbors != null) {
             HashMap<PipeAdvertisement, Boolean> result = new HashMap<PipeAdvertisement, Boolean>();
             for (PipeAdvertisement n : neighbors) {
-                if ( ((XWoot3)xwootEngine).getPeer().getMyDirectCommunicationPipeAdvertisement().equals(n)) {
-                    // skip out pipe adv.
-                    continue;
-                }
                 
                 // send to the UI a lighter, copy version having a human-readable name.
                 PipeAdvertisement original = n;

@@ -173,6 +173,29 @@ public class BootstrapNetwork extends HttpServlet
 
         String networkChoice = request.getParameter("networkChoice");
         
+        File platformConfigFile = new File(networkManager.getConfigurator().getHome(), "PlatformConfig");
+        if (platformConfigFile.exists()) {
+            // Auto-join network by using existing network configuration.
+            networkChoice = "AUTO_START_NETWORK";
+
+            if (!xwootEngine.isConnectedToP2PNetwork()) {
+                try {
+                    this.log("Automatically restarting existing and configured P2P network.");
+                    xwootEngine.reconnectToP2PNetwork();
+                } catch (Exception e) {
+                    errors += "Failed to automatically restart the P2P network. Reason: " + e.getMessage(); 
+                }
+            } else {
+                this.log("Already connected to P2P network. Moving on.");
+            }
+            
+            // If successfully auto-started network, go to group bootstrap.
+            if (errors == null || errors.trim().length() == 0) {
+                response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapGroup.do"));
+                return;
+            }
+        } 
+        
         // If networkChoice button has been pressed, validate entered data.
         if (CREATE_BUTTON.equals(networkChoice) || JOIN_BUTTON.equals(networkChoice)) {
             if (JOIN_BUTTON.equals(networkChoice)) {
@@ -196,10 +219,9 @@ public class BootstrapNetwork extends HttpServlet
                 }
             }
             
-            // Clear previous locally cached configuration.
-            File platformConfig = new File(networkManager.getConfigurator().getHome(), "PlatformConfig");
-            if (platformConfig.exists()) {
-                platformConfig.delete();
+            // Clear previous locally cached configuration because we do all necesary configuration in the UI.
+            if (platformConfigFile.exists()) {
+                platformConfigFile.delete();
             }
             
             // Initialize the proper peer mode.
@@ -614,6 +636,7 @@ public class BootstrapNetwork extends HttpServlet
         return errors;
     }
     
+    @SuppressWarnings("unchecked")
     public void readCurrentSettings(NetworkConfigurator networkConfigurator) 
     {
         PlatformConfig platformConfig = (PlatformConfig) networkConfigurator.getPlatformConfig();

@@ -51,6 +51,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.xwoot.thomasRuleEngine.ThomasRuleEngineException;
 import org.xwoot.xwootUtil.FileUtil;
@@ -161,7 +162,7 @@ public class EntriesList
     public List<org.xwoot.thomasRuleEngine.core.Entry> getEntries(String pageId) throws ThomasRuleEngineException
     {
         if (pageId == null || pageId.length() == 0) {
-            throw new NullPointerException("Parameters must not be null");
+            throw new NullPointerException("Page ID must not be null");
         }
 
         this.load();
@@ -175,6 +176,40 @@ public class EntriesList
         }
 
         return result;
+    }
+    
+    /**
+     * @param pageId the page ID
+     * @return all Indetifiers corresponding to the provided page.
+     * @throws ThomasRuleEngineException if problems loading the database occur.
+     */
+    
+    public List<Identifier> getIds(String pageId) throws ThomasRuleEngineException
+    {
+        if (pageId == null || pageId.length() == 0) {
+            throw new NullPointerException("Parameters must not be null");
+        }
+
+        this.load();
+
+        List<Identifier> result = new ArrayList<Identifier>();
+
+        for (Identifier id : this.entriesList.keySet()) {
+            if (id.getId().equals(pageId)) {
+                result.add(id);
+            }
+        }
+
+        return result;
+    }
+    /**
+     * @return the set of Identifiers stored in the entries list. 
+     * @throws ThomasRuleEngineException if problems loading the database occur.
+     */
+    public Set<Identifier> getAllIds() throws ThomasRuleEngineException
+    {
+        this.load();
+        return this.entriesList.keySet();
     }
 
     /**

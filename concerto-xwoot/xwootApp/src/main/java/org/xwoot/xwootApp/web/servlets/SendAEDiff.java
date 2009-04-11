@@ -74,6 +74,7 @@ public class SendAEDiff extends HttpServlet
      * @param response DOCUMENT ME!
      * @throws Exception DOCUMENT ME!
      */
+    @SuppressWarnings("unchecked")
     @Override
     public void service(HttpServletRequest request, HttpServletResponse response) throws ServletException
     {

@@ -83,6 +83,7 @@ public class XWootPage implements Serializable
      * @throws XWootException 
      * @throws FileNotFoundException DOCUMENT ME!
      */
+    @SuppressWarnings("unchecked")
     static public Collection getManagedPageNames(String lastVuePagesDir) throws XWootException 
     {
         File dir = new File(lastVuePagesDir);

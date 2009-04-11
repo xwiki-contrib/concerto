@@ -227,6 +227,7 @@ public class XWoot2 implements XWootAPI
      * @param receivedMessage DOCUMENT ME!
      * @throws XWootException
      */
+    @SuppressWarnings("unchecked")
     public synchronized Object receiveMessage(Object aMessage) throws XWootException
     {
         if (!(aMessage instanceof Message)) {
@@ -247,7 +248,6 @@ public class XWoot2 implements XWootAPI
             case LpbCastAPI.LOG_OBJECT:
                 LOG.info(this.siteId + " : Integrate antientropy messages\n\n");
 
-                @SuppressWarnings("unchecked")
                 Collection<Message> contents = (Collection<Message>) message.getContent();
 
                 for (Message mess : contents) {
@@ -569,6 +569,7 @@ public class XWoot2 implements XWootAPI
 
     }
 
+    @SuppressWarnings("unchecked")
     private synchronized List<WootOp> synchronizeWithWootEngine(String pageName, String objectId, String fieldId,
         String oldPage, String newPage, boolean inCopy) throws XWootException
     {
@@ -1015,6 +1016,7 @@ public class XWoot2 implements XWootAPI
 
     }
 
+    @SuppressWarnings("unchecked")
     public void doAntiEntropyWithAllNeighbors() throws XWootException
     {
         if (this.isConnectedToP2PNetwork()) {
@@ -1144,6 +1146,7 @@ public class XWoot2 implements XWootAPI
 
     }
 
+    @SuppressWarnings("unchecked")
     public Collection<String> getNeighborsList() throws XWootException
     {
         try {

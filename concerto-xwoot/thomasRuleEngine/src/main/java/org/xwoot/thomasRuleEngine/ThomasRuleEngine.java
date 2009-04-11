@@ -59,6 +59,7 @@ import org.xwoot.thomasRuleEngine.op.ThomasRuleOpSet;
 import org.xwoot.xwootUtil.FileUtil;
 
 import java.util.Calendar;
+import java.util.List;
 
 /**
  * Implements the maintenance of duplicate databases on a "last writer wins" basis as described in RFC677.
@@ -198,6 +199,16 @@ public class ThomasRuleEngine
         }
 
         return null;
+    }
+    
+    /**
+     * @param pageId the page id.
+     * @return a list of all the Identifiers of the objects stored for a given page.
+     * @throws ThomasRuleEngineException if problems occur while loading the database.
+     */
+    public List<Identifier> getIds(String pageId) throws ThomasRuleEngineException
+    {
+        return this.entriesList.getIds(pageId);
     }
 
     /**

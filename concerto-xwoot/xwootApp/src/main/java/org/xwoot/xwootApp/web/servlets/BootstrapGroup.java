@@ -44,7 +44,6 @@
 
 package org.xwoot.xwootApp.web.servlets;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
@@ -57,12 +56,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.jxta.document.Advertisement;
 import net.jxta.document.AdvertisementFactory;
 import net.jxta.document.MimeMediaType;
 import net.jxta.document.StructuredDocumentFactory;
 import net.jxta.document.XMLDocument;
-import net.jxta.peergroup.PeerGroup;
 import net.jxta.protocol.PeerGroupAdvertisement;
 
 import org.xwoot.xwootApp.XWoot3;
@@ -100,6 +97,7 @@ public class BootstrapGroup extends HttpServlet
     private static final String P2P_GROUP_SETTINGS_PROPERTIES_FILE_NAME = "p2p-group-settings.properties";
 
     /** {@inheritDoc} */
+    @SuppressWarnings("unchecked")
     @Override
     public void service(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
     {
@@ -229,8 +227,6 @@ public class BootstrapGroup extends HttpServlet
                 }
             }
         }
-        
-        // FIXME: try to auto-join a group if a group advertisement file is found.
         
         // If no errors were encountered and successfully joined/created a network, go to next step.
         if (errors.length() == 0 && (CREATE_BUTTON.equals(groupChoice) || JOIN_BUTTON.equals(groupChoice) || AUTO_JOIN_GROUP.equals(groupChoice))) {

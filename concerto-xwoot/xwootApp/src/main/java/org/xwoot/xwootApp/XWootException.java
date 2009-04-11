@@ -16,7 +16,6 @@ public class XWootException extends Exception
     public XWootException(Throwable arg0)
     {
         super(arg0);
-        // TODO Auto-generated constructor stub
     }
 
     public XWootException(String arg0)

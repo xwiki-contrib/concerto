@@ -90,7 +90,7 @@ public class TestXWoot2 extends AbstractXWootTest
 
     private XWootObject createObject(String pageId, String content, int major, int minor, boolean newlyCreated)
     {
-        List fields = new ArrayList<XWootObjectField>();
+        List<XWootObjectField> fields = new ArrayList<XWootObjectField>();
         XWootObjectField f1 = new XWootObjectField("content", content, true);
         XWootObjectField f2 = new XWootObjectField("title", "", false);
         XWootObjectField f3 = new XWootObjectField("author", "Terminator", false);
@@ -128,7 +128,7 @@ public class TestXWoot2 extends AbstractXWootTest
     
     private XWootObject createComment(String pageId, String content, int major, int minor, boolean newlyCreated)
     {
-        List fields = new ArrayList<XWootObjectField>();
+        List<XWootObjectField> fields = new ArrayList<XWootObjectField>();
         XWootObjectField f1 = new XWootObjectField(commentContentField, content, true);
         XWootObjectField f2 = new XWootObjectField("author", "Terminator", false);
         fields.add(f1);
@@ -648,7 +648,7 @@ public class TestXWoot2 extends AbstractXWootTest
         Patch patch = new Patch();
         List<WootOp> vector = new ArrayList<WootOp>();
         WootId wootId = new WootId(String.valueOf(0), 0);
-        WootIns op0 = new WootIns(new WootRow(wootId, content2), WootId.FIRST_WOOT_ID, wootId.LAST_WOOT_ID);
+        WootIns op0 = new WootIns(new WootRow(wootId, content2), WootId.FIRST_WOOT_ID, WootId.LAST_WOOT_ID);
         op0.setContentId(new ContentId(pageId, pageGuid, "content", false));
         op0.setOpId(wootId);
         vector.add(op0);
@@ -666,7 +666,7 @@ public class TestXWoot2 extends AbstractXWootTest
         ((XWootObjectValue) tre_val).setObject(obj2);
         XWootObjectIdentifier tre_id = new XWootObjectIdentifier(obj2.getGuid());
         ThomasRuleOp tre_op = this.xwoot21.getTre().getOp(tre_id, tre_val);
-        List tre_ops = new ArrayList<ThomasRuleOp>();
+        List<Object> tre_ops = new ArrayList<Object>();
         tre_ops.add(tre_op);
         patch.setMDelements(tre_ops);
 
@@ -817,7 +817,7 @@ public class TestXWoot2 extends AbstractXWootTest
         ((XWootObjectValue) tre_val).setObject(obj3);
         XWootObjectIdentifier tre_id = new XWootObjectIdentifier(obj3.getGuid());
         ThomasRuleOp tre_op = this.xwoot21.getTre().getOp(tre_id, tre_val);
-        List tre_ops = new ArrayList<ThomasRuleOp>();
+        List<Object> tre_ops = new ArrayList<Object>();
         tre_ops.add(tre_op);
         patch.setMDelements(tre_ops);
         Message mess = new Message();

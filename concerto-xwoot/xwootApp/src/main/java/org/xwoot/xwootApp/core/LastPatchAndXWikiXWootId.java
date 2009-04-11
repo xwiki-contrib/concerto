@@ -86,6 +86,7 @@ public class LastPatchAndXWikiXWootId
      * 
      * @throws XWootException if the loading causes deserializing problems.
      */
+    @SuppressWarnings("unchecked")
     private void loadPatchIdMap() throws XWootException
     {
         String filePath = this.getPatchIdMapFilePath();
@@ -112,6 +113,7 @@ public class LastPatchAndXWikiXWootId
      * 
      * @throws XWootException if the loading causes deserializing problems.
      */
+    @SuppressWarnings("unchecked")
     private void loadXWikiIdMap() throws XWootException
     {
         String filePath = this.getXWikiIdMapFilePath();
@@ -189,7 +191,7 @@ public class LastPatchAndXWikiXWootId
     public void add2PatchIdMap(XWootId pageName, String contentId) throws XWootException
     {
         this.loadPatchIdMap();
-        Set contents = this.getPatchIdMap().get(pageName);
+        Set<String> contents = this.getPatchIdMap().get(pageName);
         if (contents == null) {   
             contents = new TreeSet<String>();
             this.getPatchIdMap().put(pageName, contents);
@@ -244,7 +246,7 @@ public class LastPatchAndXWikiXWootId
     public void removePatchId(XWootId xwid, String objectId) throws XWootException
     {
         this.loadPatchIdMap();
-        Set contents = this.getPatchIdMap().get(xwid);
+        Set<String> contents = this.getPatchIdMap().get(xwid);
         if (contents == null) {   
            return ;
         }

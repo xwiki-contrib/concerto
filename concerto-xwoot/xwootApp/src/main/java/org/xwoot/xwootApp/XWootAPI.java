@@ -56,6 +56,7 @@ public interface XWootAPI
 
     boolean addNeighbour(String neighborURL);
 
+    @SuppressWarnings("unchecked")
     Collection getNeighborsList() throws XWootException;
 
     void removeNeighbor(String neighborURL) throws XWootException;

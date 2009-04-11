@@ -57,6 +57,12 @@ import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 
 import net.jxta.exception.JxtaException;
+import net.jxta.impl.protocol.PlatformConfig;
+import net.jxta.impl.protocol.RdvConfigAdv;
+import net.jxta.impl.protocol.RelayConfigAdv;
+import net.jxta.impl.protocol.RdvConfigAdv.RendezVousConfiguration;
+import net.jxta.peergroup.PeerGroup;
+import net.jxta.platform.NetworkConfigurator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -220,12 +226,43 @@ public class XWootSite
         // password in order to automatically start communicating after a reboot.
         // FIXME: This behavior opens a possible security hole. The group's password is no longer protected by the
         // keystore. Find a solution.
-        peer.configureNetwork(siteName, jxtaDir, ConfigMode.EDGE);
+        
+        ConfigMode initMode = ConfigMode.EDGE;
+        NetworkConfigurator existingNetworkConfigurator = new NetworkConfigurator();
+        existingNetworkConfigurator.setStoreHome(new File(jxtaDir, siteName).toURI());
+        if (existingNetworkConfigurator.exists()) {
+            try {
+                existingNetworkConfigurator.load();
+                
+                PlatformConfig platformConfig = (PlatformConfig) existingNetworkConfigurator.getPlatformConfig();
+                RelayConfigAdv relayAdvertisement = (RelayConfigAdv) platformConfig.getSvcConfigAdvertisement(PeerGroup.relayProtoClassID);
+                boolean isRelay = relayAdvertisement.isServerEnabled();
+                
+                RdvConfigAdv rdvAdvertisement = (RdvConfigAdv) platformConfig.getSvcConfigAdvertisement(PeerGroup.rendezvousClassID);
+                boolean isRendezVous = rdvAdvertisement.getConfiguration().equals(RendezVousConfiguration.RENDEZVOUS);
+                
+                if (isRendezVous && isRelay) {
+                    initMode = ConfigMode.RENDEZVOUS_RELAY;
+                } else if (isRendezVous) {
+                    initMode = ConfigMode.RENDEZVOUS;
+                } else if (isRelay) {
+                    initMode = ConfigMode.RELAY;
+                }
+            } catch (Exception e) {
+                LOG.warn("Failed to read existing network configuration.", e);
+            } 
+        }
+        
+        peer.configureNetwork(siteName, jxtaDir, initMode);
+        if (existingNetworkConfigurator.exists()) {
+            // Set the peerID to the one of the existing configuration.
+            peer.getManager().setPeerID(existingNetworkConfigurator.getPeerID());
+        }
         String peerName = peer.getMyPeerName();
         String peerId = peer.getMyPeerID().getUniqueValue().toString();
 
         // TODO better properties management
-        Properties contentProviderProperties = this.getProperties(contenProviderPropertiesFilePath);
+        Properties contentProviderProperties = XWootSite.getProperties(contenProviderPropertiesFilePath);
         LOG.debug(contentProviderProperties);
 
         String dbLocation = new File(contentProviderDir, peerName).toString();
@@ -274,14 +311,14 @@ public class XWootSite
         properties = updateXWikiPropertiesFromRequest(request, xwikiPropertiesPath);
         result += this.validateXWikiProperties(properties);
         if (result.equals("")) {
-            this.savePropertiesInFile(xwikiPropertiesPath, " -- XWiki XML-RPC connection properties --", properties);
+            XWootSite.savePropertiesInFile(xwikiPropertiesPath, " -- XWiki XML-RPC connection properties --", properties);
         }
 
         // Update XWoot properties.
         properties = updateXWootPropertiesFromRequest(request, xwootPropertiesPath);
         result += this.validateXWootProperties(properties);
         if (result.equals("")) {
-            this.savePropertiesInFile(xwootPropertiesPath, " -- XWoot properties --", properties);
+            XWootSite.savePropertiesInFile(xwootPropertiesPath, " -- XWoot properties --", properties);
         }
         return result;
     }

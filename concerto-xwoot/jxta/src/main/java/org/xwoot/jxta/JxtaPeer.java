@@ -78,7 +78,7 @@ import net.jxta.document.XMLDocument;
  * @version $Id$
  */
 @SuppressWarnings("deprecation")
-public class JxtaPeer implements Peer, RendezvousListener {
+public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 
     protected PeerGroup rootGroup;
     protected PeerGroup currentJoinedGroup;
@@ -590,12 +590,8 @@ public class JxtaPeer implements Peer, RendezvousListener {
             // Get only PipeAdvertisements that are different from this peer's.
             if (adv instanceof PipeAdvertisement) {
                 PipeAdvertisement pipeAdv = (PipeAdvertisement) adv;
-                System.out.println(pipeAdv + "\nvs\n" + this.getMyDirectCommunicationPipeAdvertisement());
                 if (!pipeAdv.equals(this.getMyDirectCommunicationPipeAdvertisement())) {
-                    System.out.println("ok!");
                     pipeAdvs.add(adv);
-                } else {
-                    System.out.println("not ok!");
                 }
             }
         }
@@ -617,9 +613,9 @@ public class JxtaPeer implements Peer, RendezvousListener {
     /** {@inheritDoc} **/
     public PeerGroup createNewGroup(String groupName, String description, char[] keystorePassword, char[] groupPassword) throws Exception {
 
-    	DiscoveryService disco = rootGroup.getDiscoveryService();
+    	DiscoveryService rootGroupDiscoveryService = rootGroup.getDiscoveryService();
     	
-        PeerGroup pg;               // new peer group
+        PeerGroup newGroup;               // new peer group
         //PeerGroupAdvertisement adv; // advertisement for the new peer group
         
         // Create a new all purpose peergroup.
@@ -633,8 +629,8 @@ public class JxtaPeer implements Peer, RendezvousListener {
 	        //System.out.println("ALTERED PEER GROUP IMPL ADV CONTAINING PSEMEMBERSHIPSERVICE, NO PSECONFIG:\n" + newGroupImpl);
 	        
 	        // Advertise this altered module impl adv
-	        disco.remotePublish(newGroupImpl);
-	        disco.publish(newGroupImpl);
+	        rootGroupDiscoveryService.remotePublish(newGroupImpl);
+	        rootGroupDiscoveryService.publish(newGroupImpl);
 	        
 	        // Generate self-signed certificate and encrypt the private key from this certificate.
 	        PSEUtils.IssuerInfo groupAuthenticationData = PSEUtils.genCert(manager.getInstanceName(), null);
@@ -648,30 +644,34 @@ public class JxtaPeer implements Peer, RendezvousListener {
 	        		groupName, description, newGroupImpl, certificateChain, encryptedGroupPrivateKey);
 	  
 	        // Publish it.
-	        disco.publish(newGroupAdv);
-	        disco.remotePublish(newGroupAdv);
+	        rootGroupDiscoveryService.publish(newGroupAdv);
+	        rootGroupDiscoveryService.remotePublish(newGroupAdv);
 	  
 	        // create a group from it.
 	        // rootGroup.loadModule(newGroupImpl.getID(), newGroupImpl);
-	        pg = rootGroup.newGroup(newGroupAdv);
+	        newGroup = rootGroup.newGroup(newGroupAdv);
         } else {
         	// Create a public group.
         	newGroupImpl = rootGroup.getAllPurposePeerGroupImplAdvertisement();
-        	pg = rootGroup.newGroup(null,         // Assign new group ID
+        	newGroup = rootGroup.newGroup(null,   // Assign new group ID
         							newGroupImpl, // The implem. adv
         							groupName,    // The name
         							description); // Helpful descr.
         }
         
         // We join the new group as well.
-        if (!authenticateMembership(pg, keystorePassword, groupPassword)) {
+        if (!authenticateMembership(newGroup, keystorePassword, groupPassword)) {
         	throw new Exception("Authentication failed for the new group!");
         }
+        
+        // Listen to discovery events and try to eliminate duplicates.
+        DiscoveryService newGroupDiscoveryService = newGroup.getDiscoveryService();
+        newGroupDiscoveryService.addDiscoveryListener(this);
 
         // Become rdv for this new group. Peers will not be able to communicate if there is no rdv in this group.
-        RendezVousService rendezvousService = pg.getRendezVousService();
-        rendezvousService.addListener(this);
-        rendezvousService.startRendezVous();
+        RendezVousService newGroupRendezvousService = newGroup.getRendezVousService();
+        newGroupRendezvousService.addListener(this);
+        newGroupRendezvousService.startRendezVous();
 
   /*      System.out.println("Connected RDVs: ");
         Enumeration<ID> rdvs = pg.getRendezVousService().getConnectedRendezVous();
@@ -690,8 +690,8 @@ public class JxtaPeer implements Peer, RendezvousListener {
      */
         
         // Not sure how much of this is needed; this might be overkill.
-        disco.remotePublish(pg.getPeerGroupAdvertisement());
-        disco.publish(pg.getPeerGroupAdvertisement());
+        rootGroupDiscoveryService.remotePublish(newGroup.getPeerGroupAdvertisement());
+        rootGroupDiscoveryService.publish(newGroup.getPeerGroupAdvertisement());
 
         // Add the new group to our list of joined groups.
         //joinedGroups.add(pg);
@@ -702,7 +702,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
         }
         
         // Set the new group as the current joined group.
-        this.currentJoinedGroup = pg;
+        this.currentJoinedGroup = newGroup;
         
         // Init JxtaCast if null.
         if (jc == null ) {
@@ -712,12 +712,12 @@ public class JxtaPeer implements Peer, RendezvousListener {
         }
         
         // Set as JxtaCast peer group.
-        jc.setPeerGroup(pg);
+        jc.setPeerGroup(newGroup);
         
         // Init direct communication for this group and register the listener.
         this.createDirectCommunicationServerSocket();
 
-        return pg;
+        return newGroup;
     }
     
     
@@ -756,9 +756,15 @@ public class JxtaPeer implements Peer, RendezvousListener {
         	throw new PeerGroupException("Authentication failed for joining the group.");
         }
         
+        // Listen to rendezvous events.
         RendezVousService rendezvousService = newGroup.getRendezVousService();
         rendezvousService.addListener(this);
         
+        // Listen to discovery events and try to eliminate duplicates.
+        DiscoveryService disco = newGroup.getDiscoveryService();
+        disco.addDiscoveryListener(this);
+        
+        // Decide the rendezvous status of this peer. 
         if (beRendezvous) {
             rendezvousService.startRendezVous();
         } else {
@@ -778,9 +784,6 @@ public class JxtaPeer implements Peer, RendezvousListener {
         // Leave the old peer group.
         this.leavePeerGroup(currentJoinedGroup);
 
-        // Advertise that we've joined this group.
-        DiscoveryService disco = newGroup.getDiscoveryService();
-        
         // Publish our advertisements.  Is all of this really needed?
         disco.publish(newGroup.getPeerGroupAdvertisement());
         
@@ -904,8 +907,8 @@ public class JxtaPeer implements Peer, RendezvousListener {
         pipeAdv.setType(PipeService.UnicastType);
 
         this.logger.debug("Publishing pipe advertisement.");
-        discoveryService.publish(pipeAdv);
-        discoveryService.remotePublish(pipeAdv);
+        discoveryService.publish(pipeAdv, DiscoveryService.INFINITE_LIFETIME, DiscoveryService.NO_EXPIRATION);
+        discoveryService.remotePublish(pipeAdv, DiscoveryService.NO_EXPIRATION);
         
         // If no listener registered, there is no point in starting a server socket and a connection handler thread.
         if (this.directMessageReceiver != null) {
@@ -1052,12 +1055,18 @@ public class JxtaPeer implements Peer, RendezvousListener {
         
         // Stop being rdv for the gorup.
         RendezVousService oldGroupRendezvousService = oldGroup.getRendezVousService();
-        oldGroupRendezvousService.removeListener(this);
         oldGroupRendezvousService.stopRendezVous();
         
         // Resign from the group.
         MembershipService oldGroupMembershipService = oldGroup.getMembershipService();
         oldGroupMembershipService.resign();
+        
+        // Stop listening to rendezvous events.
+        oldGroupRendezvousService.removeListener(this);
+        
+        // Stop listen to discovery events.
+        DiscoveryService oldGroupDiscoveryService = oldGroup.getDiscoveryService();
+        oldGroupDiscoveryService.addDiscoveryListener(this);
         
         try {
             this.closeExistingDirectCommunicationServerSocket();
@@ -1080,7 +1089,7 @@ public class JxtaPeer implements Peer, RendezvousListener {
         oldGroup.unref();
         oldGroup = null;
         
-        // FIXME: Watch out for jxtaCast object's state when leaving a group and not joining another one. It should be eliminated, but only in this case.
+        // dispose the JxtaCast instance.
         this.jc.setPeerGroup(null);
         this.jc = null;
         
@@ -1653,9 +1662,10 @@ public class JxtaPeer implements Peer, RendezvousListener {
 		    this.discoverGroups(event.getPeer(), null);
             this.discoverPeers(event.getPeer(), null);
             this.discoverAdvertisements(event.getPeer(), null, PipeAdvertisement.NameTag, this.getDirectCommunicationPipeNamePrefix() + "*");
-		} else if (event.getType() == RendezvousEvent.CLIENTDISCONNECT) {
+		} else if (event.getType() == RendezvousEvent.CLIENTDISCONNECT ||
+		    event.getType() == RendezvousEvent.CLIENTFAILED ) {
 		    
-		    // If we are RDV and a client just disconnected, clean his direct communication pipe adv
+		    // If we are RDV and a client just disconnected (gracefully or not), clean his direct communication pipe adv
 		    // and his peer adv.
 		    
 		    String leavingClientPeerId = event.getPeer();
@@ -1822,5 +1832,98 @@ public class JxtaPeer implements Peer, RendezvousListener {
                 this.logger.warn("Failed to flush advertisement:\n" + adv + "\n", e);
             }
         }
+    }
+
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Make sure we never have duplicate direct communication channels (pipe advertisements) for one peer.
+     **/
+    public void discoveryEvent(DiscoveryEvent event)
+    {
+        // FIXME: this only fixes the problem on the group RDV side and on the joining peer's side.
+        // Existing group members still have this problem.      
+        //  UPDATE: existing group members will update their local repo when a disconnected peer rejoins, but at least there will
+        //  be no duplicates.
+        
+        DiscoveryResponseMsg response = event.getResponse();
+        String queryAttribute = response.getQueryAttr();
+        String queryValue = response.getQueryValue();
+        String desiredQueryValue = this.getDirectCommunicationPipeNamePrefix() + "*";
+        if (!this.isGroupRendezVous() && (response.getDiscoveryType() != DiscoveryService.ADV || !PipeAdvertisement.NameTag.equals(queryAttribute) || !desiredQueryValue.equals(queryValue))) {
+            // Not interested in other advertisements, responses to other queries.
+            return;
+        }
+        
+        // A response to a direct communication channel advertisements discovery request or a remote publish by an EDGE peer when we are RDV.
+        
+        // Get locally stored Pipe advertisements. 
+        // Note: we don't use this.getKnownDirectCommunicationAdvertisements because we don`t want to trigger a new discovery event and enter an infinite loop.
+        DiscoveryService disco = this.currentJoinedGroup.getDiscoveryService();
+        List<Advertisement> existingLocalAdvertisements = null;
+        try {
+            // get only existing direct communication channel advs.
+            existingLocalAdvertisements = Collections.list(disco.getLocalAdvertisements(DiscoveryService.ADV, PipeAdvertisement.NameTag, desiredQueryValue));
+        } catch (Exception e) {
+            logger.warn("Failed to get locally stored known advertisements while checking for duplicate direct communication advertisements.\n", e);
+            // hope others won't have this problem.
+            return;
+        }
+        
+        Enumeration<Advertisement> receivedAdvertisements = response.getAdvertisements();
+        while (receivedAdvertisements.hasMoreElements()) {
+            Advertisement receivedAdvertisement = receivedAdvertisements.nextElement();
+            // Make sure there aren't other types of advertisements.
+            if (!(receivedAdvertisement instanceof PipeAdvertisement)) {
+                // Not interested in other advertisements.
+                continue;
+            }
+            
+            PipeAdvertisement receivedPipeAdvertisement = (PipeAdvertisement) receivedAdvertisement;
+            String receivedPipeName = receivedPipeAdvertisement.getName();
+            ID receivedPipeId = receivedPipeAdvertisement.getPipeID();
+            //String receivedPeerId = JxtaPeer.getPeerIdFromBackChannelPipeName(receivedPipeName);
+            
+            if (!receivedPipeName.startsWith(this.getDirectCommunicationPipeNamePrefix())) {
+                // Not interested in other advertisements than direct communication channel advs.
+                continue;
+            }
+            
+            // Search through the local direct communication advertisements if we already have an advertisement with the same pipeName of the new advertisement.
+            for (Advertisement existingLocalAdvertisement : existingLocalAdvertisements) {
+                // Make sure there aren't other types of advertisements.
+                if (!(existingLocalAdvertisement instanceof PipeAdvertisement)) {
+                    // Not interested in other advertisements.
+                    continue;
+                }
+                
+                PipeAdvertisement existingPipeAdvertisement = (PipeAdvertisement) existingLocalAdvertisement;
+                String existingPipeName = existingPipeAdvertisement.getName();
+                ID existingPipeId = existingPipeAdvertisement.getPipeID();
+                //String existingPeerId = JxtaPeer.getPeerIdFromBackChannelPipeName(existingPipeName);
+                
+                if (receivedPipeId.equals(existingPipeId) || !receivedPipeName.equals(existingPipeName)) {
+                    // Ignore retransmissions of the same advertisement and pipe name non-collisions.
+                    continue;
+                }
+                
+                // Different pipeIDs but same pipeNames (peerName,peerId pair)
+                // It's not the same advertisement retransmitted, but it's actually a new one, for the same owner(name collision)
+                    
+                try {
+                    // update the communication channel for the owner by deleting the old and outdated one and keeping the new one.
+                    if (disco.getAdvExpirationTime(receivedPipeAdvertisement) > disco.getAdvExpirationTime(existingPipeAdvertisement)) {
+                        this.logger.debug("Flushing outdated pipe advertisement by the name: " + existingPipeName);
+                        disco.flushAdvertisement(existingPipeAdvertisement);
+                    }
+                } catch (Exception e) {
+                    // Leave it as duplicate. The user will see the same peer twice but we hope that the next time it will be successfuly flushed.
+                    this.logger.warn("Failed to flush outdated pipe advertisement by the name: " + existingPipeName + "\n", e);
+                }
+                
+                // don't stop looking because we might have more outdated advertisements for the same peer (more collisions)
+            }
+        }   
     }
 }
