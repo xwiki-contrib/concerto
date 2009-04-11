@@ -131,9 +131,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     private AntiEntropy antiEntropy;
 
     /** Logging component. */
-    private final Log logger = LogFactory.getLog(this.getClass());
-
-    private boolean contentManagerConnected;
+    private final Log logger = LogFactory.getLog(this.getClass());    
 
     private String contentManagerURL;
 
@@ -199,8 +197,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         this.logger.info(this.getXWootName() + " : AntiEntropy component created.");
         this.antiEntropy = ae;
         this.logger.info(this.getXWootName() + " : XWoot engine created. XWoot working directory : " + workingDir + "\n\n");
-        //this.p2Pconnected = false;
-        this.contentManagerConnected = false;
+        //this.p2Pconnected = false;        
         if (this.peer.isConnectedToNetwork()) {
             this.peer.stopNetwork();
         }
@@ -1222,7 +1219,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             throw new XWootException("Not connected to any group.");
         }
         
-        if (!this.contentManagerConnected) {
+        if (!contentManager.isConnected()) {
             throw new XWootException("Can't initialize woot Storage : contentManager is not connected.");
         }
 
@@ -1581,11 +1578,10 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         if (!this.isContentManagerConnected()) {
             try {
                 this.logger.info(this.getXWootName() + " : Connect to content provider ");
-                this.contentManager.login("Admin", "admin");
+                this.contentManager.login("Admin", "admin");                
             } catch (XWootContentProviderException e) {
                 throw new XWootException("Problem with login",e);
-            }
-            this.contentManagerConnected = true;
+            }            
             this.logger.info("Content manager connected.");
         } else {
             this.logger.debug("Content manager already connected.");
@@ -1594,16 +1590,13 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
 
     public boolean isContentManagerConnected()
     {
-        return this.contentManagerConnected;
+        return contentManager.isConnected();
     }
 
     public void disconnectFromContentManager() throws XWootException
     {
         this.logger.info(this.getXWootName() + " : Disconnect from content provider ");
-        this.contentManager.logout();
-        if (this.isContentManagerConnected()) {
-            this.contentManagerConnected = false;
-        }
+        this.contentManager.logout();       
         
         this.logger.info(this.getXWootName() + " : Disconnected from content provider ");
     }
@@ -1749,7 +1742,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
      */
     public XWootContentProviderInterface getContentManager()
     {
-        if (!this.contentManagerConnected) {
+        if (!contentManager.isConnected()) {
             return null;
         }
         return this.contentManager;
@@ -1893,4 +1886,14 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     {
         return this.workingDir;
     }
+
+    /*
+     * This was added for diagnostic purpose. Since we want to inspect the content provider even though it's not
+     * connected this method is added (it is the same of getContentManager without the connection check)
+     */    
+    public XWootContentProviderInterface getContentProvider()
+    {
+        return contentManager;
+    }
+        
 }

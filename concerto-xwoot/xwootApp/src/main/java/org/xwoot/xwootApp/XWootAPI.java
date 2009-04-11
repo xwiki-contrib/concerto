@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
+import org.xwoot.contentprovider.XWootContentProviderInterface;
+
 
 public interface XWootAPI
 {
@@ -75,4 +77,8 @@ public interface XWootAPI
     
     /** @return the workingDir */
     public String getWorkingDir();
+    
+    XWootContentProviderInterface getContentManager();
+    
+    XWootContentProviderInterface getContentProvider();
 }

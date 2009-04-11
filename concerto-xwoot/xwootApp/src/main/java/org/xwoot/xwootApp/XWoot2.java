@@ -1250,4 +1250,13 @@ public class XWoot2 implements XWootAPI
     {
         return this.workingDir;
     }
+
+    /*
+     * This was added for diagnostic purpose. Since we want to inspect the content provider even though it's not
+     * connected this method is added (it is the same of getContentManager without the connection check)
+     */
+    public XWootContentProviderInterface getContentProvider()
+    {
+        return contentManager;
+    }
 }

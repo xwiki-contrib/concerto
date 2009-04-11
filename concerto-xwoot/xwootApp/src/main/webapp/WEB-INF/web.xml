@@ -96,6 +96,16 @@
     <servlet-name>information</servlet-name>
     <url-pattern>/information</url-pattern>
   </servlet-mapping>
+  
+  <!-- diagnostics -->
+  <servlet>
+    <servlet-name>contentProviderDiagnostics</servlet-name>
+    <servlet-class>org.xwoot.xwootApp.web.servlets.ContentProviderDiagnostics</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>contentProviderDiagnostics</servlet-name>
+    <url-pattern>/contentProviderDiagnostics</url-pattern>
+  </servlet-mapping>    
 
   <!-- standard mappings -->
   <servlet-mapping>
