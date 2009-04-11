@@ -457,4 +457,42 @@ public class XWootContentProviderStateManager
         ps.close();
     }
 
+    public List<Entry> getEntries(String pageId, int start, int number)
+    {
+        PreparedStatement ps = null;
+        List<Entry> result = new ArrayList<Entry>();
+
+        try {
+            if (pageId != null) {
+                ps = connection.prepareStatement("SELECT * FROM modifications WHERE pageId=? ORDER by timestamp DESC");
+                ps.setString(1, pageId);
+            } else {
+                ps = connection.prepareStatement("SELECT * FROM modifications ORDER by timestamp DESC");
+            }
+
+            ResultSet rs = ps.executeQuery();
+            
+            int i = 0;
+            int n = 0;
+            while(rs.next()) {
+                if(i >= start) {
+                    if(number == -1 || n <= number) {
+                        Entry entry = new Entry(rs.getString(1), rs.getLong(2), rs.getInt(3), rs
+                            .getInt(4), rs.getBoolean(5));
+                        result.add(entry);    
+                        n++;
+                    }
+                }
+                i++;                
+            }
+            
+            ps.close();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
 }

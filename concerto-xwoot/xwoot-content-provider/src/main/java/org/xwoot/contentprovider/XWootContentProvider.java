@@ -59,6 +59,9 @@ public class XWootContentProvider implements XWootContentProviderInterface
         }
 
         logger.info("Initialization done. [New]");
+        if(createDB) {
+            logger.info("DB Recreated");
+        }
 
         URL configurationFileUrl = configuration.getConfigurationFileUrl();
 
@@ -520,6 +523,21 @@ public class XWootContentProvider implements XWootContentProviderInterface
     public XWootContentProviderConfiguration getConfiguration()
     {
         return configuration;
+    }
+
+    public List<Entry> getEntries(String pageId, int start, int number)
+    {
+        return stateManager.getEntries(pageId, start, number);
+    }
+
+    public boolean isConnected()
+    {
+        return rpc != null;
+    }
+
+    public String getEndpoint()
+    {
+        return endpoint;
     }
 
 }

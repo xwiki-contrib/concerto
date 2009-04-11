@@ -85,4 +85,8 @@ public interface XWootContentProviderInterface
     XWootId store(XWootObject object, XWootId versionAdjustement) throws XWootContentProviderException;
 
     XWootContentProviderConfiguration getConfiguration();
+    
+    boolean isConnected();
+    
+    List<Entry> getEntries(String pageId, int start, int number);
 }

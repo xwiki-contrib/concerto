@@ -131,4 +131,14 @@ public class MockXWootContentProvider implements XWootContentProviderInterface
         // TODO Auto-generated method stub
         return null;
     }
+
+    public List<Entry> getEntries(String pageId, int start, int number)
+    {
+        return new ArrayList<Entry>();
+    }
+
+    public boolean isConnected()
+    {        
+        return true;
+    }
 }
