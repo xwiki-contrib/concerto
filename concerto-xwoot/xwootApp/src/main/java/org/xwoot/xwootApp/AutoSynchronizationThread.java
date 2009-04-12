@@ -150,7 +150,12 @@ public class AutoSynchronizationThread extends Thread
                 }
             }
 
-            this.logger.debug("Woke up.");
+            try {
+                this.logger.debug("Woke up.");
+            } catch (Exception e) {
+                // Yes, it appears we can end up here because of a NPE in Log4J.
+                e.printStackTrace();
+            }
 
             // Stop sequence
             if (!started) {

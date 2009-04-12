@@ -202,6 +202,9 @@ public class Synchronize extends HttpServlet
 //                } else {
                     if (XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork()) {
                         XWootSite.getInstance().getXWootEngine().disconnectFromP2PNetwork();
+                        
+                        // Stop auto-synchronization. We don't need redundant patches.
+                        XWootSite.getInstance().getAutoSynchronizationThread().stopThread();
                     } else {
                         XWootSite.getInstance().getXWootEngine().reconnectToP2PNetwork();
                         response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapGroup.do"));

@@ -1410,7 +1410,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         for(XWootId pageId : allPageIDs) {
             try {
                 this.lastModifiedContentIdMap.add2XWikiIdMap(pageId.getPageId(), pageId);
-                List<Identifier> objectIdsInPage = this.tre.getIds("page:" + pageId.getPageId());
+                List<Identifier> objectIdsInPage = this.tre.getIds(pageId.getPageId());
                 for(Identifier objectId : objectIdsInPage) {
                     this.lastModifiedContentIdMap.add2PatchIdMap(pageId, objectId.getId());
                 }

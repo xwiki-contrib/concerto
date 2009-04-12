@@ -45,6 +45,7 @@
 package org.xwoot.thomasRuleEngine.core;
 
 import java.io.File;
+import java.lang.reflect.Method;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -195,7 +196,16 @@ public class EntriesList
         List<Identifier> result = new ArrayList<Identifier>();
 
         for (Identifier id : this.entriesList.keySet()) {
-            if (id.getId().equals(pageId)) {
+            String objectPageId = null;
+            try {
+                Object xwootObject = this.entriesList.get(id).getValue().get();
+                Method getPageIdMethod = xwootObject.getClass().getMethod("getPageId()", new Class[0]);
+                objectPageId = (String) getPageIdMethod.invoke(xwootObject, new Object[0]);
+            } catch (Exception e) {
+                // bad content.
+            }
+            
+            if (id.getId().equals("page:" + pageId) || pageId.equals(objectPageId)) {
                 result.add(id);
             }
         }
@@ -276,6 +286,7 @@ public class EntriesList
     }
 
     /** {@inheritDoc} */
+    @SuppressWarnings("unchecked")
     @Override
     public String toString()
     {
