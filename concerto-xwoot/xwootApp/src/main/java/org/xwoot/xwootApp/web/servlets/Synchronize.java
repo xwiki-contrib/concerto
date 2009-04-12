@@ -292,6 +292,7 @@ public class Synchronize extends HttpServlet
         }
             
       /*  request.setAttribute("pages", pages);*/
+        request.setAttribute("content_provider", XWootSite.getInstance().getXWootEngine().getContentProvider());
         request.setAttribute("xwiki_url", XWootSite.getInstance().getXWootEngine().getContentManagerURL());
         request.setAttribute("p2pconnection", Boolean.valueOf(XWootSite.getInstance().getXWootEngine()
             .isConnectedToP2PNetwork()));

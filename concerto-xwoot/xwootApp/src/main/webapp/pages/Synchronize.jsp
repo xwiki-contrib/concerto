@@ -41,7 +41,7 @@
         <div id="boxes" style="padding-left:20px;">
             <img class="small_icon" src="images/xconcerto20_2.ico" style="vertical-align:middle;padding-right:5px;"/><a style="font-size:15px;" href="${xwiki_url}" title="Go to xwiki">${xwiki_url}</a>
         </div>
-        <div id="toolbar">
+        <!--<div id="toolbar">
             <c:if test="${p2pconnection eq false}">
                 <a href="synchronize.do?action=p2pnetworkconnection" title="Connect to P2P Network."><img class="icon" src="images/P2Pon.png"/></a>
                 <img class="icon" src="images/P2Poffoff.png"/>
@@ -68,10 +68,9 @@
                 <a href="synchronize.do?action=pageManagement&val=remove" title="Remove all wiki pages."><img class="icon" src="images/RemoveAllPage.png"/></a>
                 <a href="synchronize.do?action=synchronize" title="Synchronize selected pages."><img class="icon" src="images/SynchronizePage.png"/></a>
             </c:if>    
-        </div>
-        <div id="boxes">
-            
-            <div id="box-left" class="box">
+        </div>-->
+        <div id="boxes">            
+            <!--<div id="box-left" class="box">
             <c:if test="${customPage eq true}">
                 <div>
                     <c:if test="${noPageChoice eq true}">
@@ -144,8 +143,37 @@
                     </c:forEach>
                 </div>
             </c:if>
-            </div>
-            
+            </div>-->
+            <div id="box-left" class="box">
+                  <div id="box_title">
+                  Content provider configuration<br/><br/>
+                  </div>
+<table>
+	<tr>
+		<td>Endpoint:</td>
+		<td>${content_provider.endpoint}</td>
+	</tr>
+	<tr>
+		<td>Connected:</td>
+		<td>${content_provider.connected}</td>
+	</tr>
+	<tr>
+		<td>Ignore patterns:</td>
+		<td>${content_provider.configuration.ignorePatterns}</td>
+	</tr>
+	<tr>
+		<td>Accept patterns:</td>
+		<td>${content_provider.configuration.acceptPatterns}</td>
+	</tr>
+	<tr>
+		<td colspan="2">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan="2"><a href="contentProviderDiagnostics">Diagnostics
+		page</a></td>
+	</tr>
+</table>
+            </div>            
             <div id="box-right" class="box">
                 <div id="box_title">
                 -- Neighbor list -- <br> Site is 
