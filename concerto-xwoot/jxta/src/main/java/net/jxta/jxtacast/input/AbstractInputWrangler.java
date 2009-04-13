@@ -9,7 +9,7 @@ import net.jxta.jxtacast.event.JxtaCastEvent;
 /**
  * Common behavior for receiving entities.
  * 
- * @version $Id:$
+ * @version $Id$
  * 
  */
 public abstract class AbstractInputWrangler extends AbstractWrangler implements
@@ -113,8 +113,10 @@ public abstract class AbstractInputWrangler extends AbstractWrangler implements
 
 		// If this wrangler has been inactive for a long time, remove it from
 		// JxtaCast's collection.
-		if (System.currentTimeMillis() - lastActivity > jc.inWranglerLifetime)
+		if (System.currentTimeMillis() - lastActivity > jc.inWranglerLifetime) {
 			jc.removeWrangler(key);
+			JxtaCast.logMsg("Input Wrangler " + this.key + " removed for inactivity.");
+		}
 
 		// Calculate the time of inactivity that we'll endure before
 		// requesting missing blocks. First determine the average amount

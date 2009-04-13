@@ -267,7 +267,7 @@ public class XWootSite
 
         String dbLocation = new File(contentProviderDir, peerName).toString();
         XWootContentProviderInterface xwiki =
-            XWootContentProviderFactory.getXWootContentProvider(contentProviderXmlRpcUrl, dbLocation, false,
+            XWootContentProviderFactory.getXWootContentProvider(contentProviderXmlRpcUrl, dbLocation, true,
                 contentProviderProperties);
         // WikiContentManager wiki = WikiContentManagerFactory.getSwizzleFactory().createWCM(url, login, pwd);
 

@@ -941,6 +941,7 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
         
         ConnectionHandler(JxtaServerSocket serverSocket, DirectMessageReceiver receiver)
         {
+            super("DirectCommunication:ConnectionHandler");
             this.serverSocket = serverSocket;
             this.receiver = receiver;
         }
@@ -976,6 +977,7 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
         
         ConnectionThread(Socket socket, DirectMessageReceiver receiver)
         {
+            super("DirectCommunication:ConnectionThread");
             this.socket = socket;
             this.receiver = receiver;
         }
@@ -1724,7 +1726,7 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 	
 	/** {@inheritDoc} **/
 	public boolean isConnectedToNetwork() {
-		return (this.isNetworkRendezVous() && (this.getManager().getMode().equals(ConfigMode.RENDEZVOUS_RELAY) || this.getManager().getMode().equals(ConfigMode.RENDEZVOUS))) ||
+		return (this.isNetworkRendezVous() /*&& (this.getManager().getMode().equals(ConfigMode.RENDEZVOUS_RELAY) || this.getManager().getMode().equals(ConfigMode.RENDEZVOUS))*/) ||
 		    this.isConnectedToNetworkRendezVous(); 
 	}
 	

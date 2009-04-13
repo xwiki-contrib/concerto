@@ -506,8 +506,15 @@ public class JxtaCast implements PipeMsgListener, Runnable {
      * @param event PipeMsgEvent the event that contains our message.
      */
     public synchronized void pipeMsgEvent(PipeMsgEvent event) {
-
+       
         Message msg = event.getMessage();
+        
+        String msgSenderId = JxtaCast.getMsgString(msg, JxtaCast.SENDERID);
+        if (msgSenderId.equals(this.getMyPeer().getPeerID().toString())) {
+            JxtaCast.logMsg("INFO: Dropping echo message from ourselves.");
+            return;
+        }
+        
         try {
             // logMsg("Message received: " + getMsgString(msg, MESSAGETYPE));
 
@@ -632,6 +639,8 @@ public class JxtaCast implements PipeMsgListener, Runnable {
         //
         OutputFileWrangler wrangler = new OutputFileWrangler(this, file, caption);
         sendQueue.add(wrangler);
+        
+        JxtaCast.logMsg("OutputFileWrangler created and added to send queue.");
     }
     
     
@@ -655,7 +664,7 @@ public class JxtaCast implements PipeMsgListener, Runnable {
         OutputObjectWrangler wrangler = new OutputObjectWrangler(this, object, caption);
         sendQueue.add(wrangler);
         
-        JxtaCast.logMsg("OutputObjectWrangler created for this object and added to send queue.");
+        JxtaCast.logMsg("OutputObjectWrangler created and added to send queue.");
     }
 
 
@@ -763,16 +772,20 @@ public class JxtaCast implements PipeMsgListener, Runnable {
 
 
     /**
-     * Send a JxtaCastEvent to all registered listeners.
+     * Send a JxtaCastEvent to all registered listeners in a new thread for each.
      */
-    public void sendJxtaCastEvent(JxtaCastEvent e) {
-
-        JxtaCastEventListener listener = null;
+    public void sendJxtaCastEvent(final JxtaCastEvent e) {
 
         Enumeration<JxtaCastEventListener> elements = jcListeners.elements();
         while (elements.hasMoreElements()) {
-            listener = elements.nextElement();
-            listener.jxtaCastProgress(e);
+            final JxtaCastEventListener listener = elements.nextElement();
+            
+            new Thread(new Runnable() {
+                public void run()
+                {
+                    listener.jxtaCastProgress(e);
+                }
+            }, "JxtaCast:ProgressEventDispatcher").start();
         }
     }
 

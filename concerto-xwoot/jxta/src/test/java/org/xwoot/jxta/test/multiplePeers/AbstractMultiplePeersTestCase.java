@@ -83,18 +83,20 @@ public abstract class AbstractMultiplePeersTestCase implements MultiplePeersTest
             this.peer.getManager().setUseDefaultSeeds(false);
 
             NetworkConfigurator configurator = this.peer.getManager().getConfigurator();
+            
+            configurator.setHttpEnabled(false);
 
             String tcpSeedAddress = "tcp://localhost:9701";
-            String httpSeedAddress = "http://localhost:9700";
+            //String httpSeedAddress = "http://localhost:9700";
             configurator.addSeedRendezvous(new URI(tcpSeedAddress));
             configurator.addSeedRelay(new URI(tcpSeedAddress));
-            configurator.addSeedRendezvous(new URI(httpSeedAddress));
-            configurator.addSeedRelay(new URI(httpSeedAddress));
+            //configurator.addSeedRendezvous(new URI(httpSeedAddress));
+            //configurator.addSeedRelay(new URI(httpSeedAddress));
 
             configurator.setUseMulticast(false);
             
             configurator.setTcpPort(9711);
-            configurator.setHttpPort(9710);
+            //configurator.setHttpPort(9710);
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -66,7 +66,7 @@ public abstract class AbstractOutputWrangler extends AbstractWrangler implements
 		// JxtaCast's collection.
 		if (System.currentTimeMillis() - lastActivity > jc.outWranglerLifetime) {
 			jc.removeWrangler(key);
-			JxtaCast.logMsg("Wrangler " + this.key + " removed for inactivity.");
+			JxtaCast.logMsg("Output Wrangler " + this.key + " removed for inactivity.");
 		}
 	}
 

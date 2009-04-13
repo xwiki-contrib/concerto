@@ -18,6 +18,7 @@ import org.apache.xmlrpc.XmlRpcException;
 public class MockXWootContentProvider implements XWootContentProviderInterface
 {
     private Map<XWootId, List<XWootObject>> list;
+    private boolean connected;
 
     /**
      * Constructor.
@@ -38,6 +39,7 @@ public class MockXWootContentProvider implements XWootContentProviderInterface
      */
     public void login(String username, String password) throws XWootContentProviderException
     {
+        this.connected = true;
         return;
     }
 
@@ -48,6 +50,7 @@ public class MockXWootContentProvider implements XWootContentProviderInterface
      */
     public void logout()
     {
+        this.connected = false;
         return;
     }
 
@@ -92,7 +95,6 @@ public class MockXWootContentProvider implements XWootContentProviderInterface
         return;
     }
 
-    @SuppressWarnings("unused")
     public List<XWootObject> getModifiedEntities(XWootId xwootId) throws XWootContentProviderException
     {
         return this.list.get(xwootId);
@@ -100,7 +102,7 @@ public class MockXWootContentProvider implements XWootContentProviderInterface
 
     public void addEntryInList(XWootId id, XWootObject object)
     {
-        List current = this.list.get(id);
+        List<XWootObject> current = this.list.get(id);
         if (current == null) {
             current = new ArrayList<XWootObject>();
         }
@@ -110,7 +112,7 @@ public class MockXWootContentProvider implements XWootContentProviderInterface
 
     public XWootId store(XWootObject o, XWootId versionAdjustement)
     {
-        for (Iterator i = this.list.keySet().iterator(); i.hasNext();) {
+        for (Iterator<XWootId> i = this.list.keySet().iterator(); i.hasNext();) {
             XWootId id = (XWootId) i.next();
             if (id.getPageId().equals(o.getPageId())) {
                 return null;
@@ -139,6 +141,6 @@ public class MockXWootContentProvider implements XWootContentProviderInterface
 
     public boolean isConnected()
     {        
-        return true;
+        return this.connected;
     }
 }

@@ -49,4 +49,5 @@ public class MultiplePeersTest extends AbstractJxtaTestBase
     {
         MultiplePeersTestCaseLauncher.launchTest(BroadcastMessageToGroup.class.getName(), 2);
     }
+    
 }

@@ -42,7 +42,7 @@ public class ServerPeerUsedForTests extends AbstractMultiplePeersTestCase
     Boolean superInit = super.init(peerName, networkCreator);
     try {
         this.peer.getManager().getConfigurator().setTcpPort(9701);
-        this.peer.getManager().getConfigurator().setHttpPort(9700);
+        //this.peer.getManager().getConfigurator().setHttpPort(9700);
         } catch (Exception e) {
             return Boolean.FALSE;
         }
