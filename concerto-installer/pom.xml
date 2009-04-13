@@ -131,6 +131,7 @@
                   <version>${pom.version}</version>
                   <type>war</type>
                   <outputDirectory>${xwiki.webappDir}</outputDirectory>
+                  <excludes>**/xwiki-rest-1.8.1.jar</excludes>
                 </artifactItem>
                 <artifactItem>
                   <groupId>org.xwiki.concerto</groupId>
@@ -162,11 +163,18 @@
                   <version>${xwiki.db.jdbc.version}</version>
                   <outputDirectory>${xwiki.container}/webapps/xwiki/WEB-INF/lib</outputDirectory>
                 </artifactItem>
+				<artifactItem>
+                  <groupId>com.xpn.xwiki.platform</groupId>
+                  <artifactId>xwiki-rest</artifactId>
+                  <version>1.8.1-concerto</version>
+                  <outputDirectory>${xwiki.container}/webapps/xwiki/WEB-INF/lib</outputDirectory>
+                </artifactItem>
               </artifactItems>
             </configuration>
           </execution>
         </executions>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
@@ -200,6 +208,9 @@
                     <include name="**/*.bat" />
                   </fileset>
                 </move>
+                <copy todir="${xwiki.webappDir}/WEB-INF">
+                  <file file="/Users/fm/yupi.txt"/>
+				</copy>                
               </tasks>
             </configuration>
           </execution>

@@ -11,6 +11,7 @@
   <description>Parent project for all Concerto-related XWiki components</description>
   <modules>
     <!-- XWiki for Concerto modules -->
+    <module>xwiki-rest-concerto</module>
     <module>xwootManager-component</module>
     <module>xwootManager-application</module>
     <module>wiki</module>
