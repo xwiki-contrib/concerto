@@ -141,6 +141,7 @@
       </plugin>
 
       <!-- Set the encoding to UTF-8 -->
+      <!-- This could be removed since we are now using a custom web.xml 
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>xml-maven-plugin</artifactId>
@@ -165,7 +166,8 @@
             </transformationSet>
           </transformationSets>
         </configuration>
-      </plugin>
+      </plugin>-->
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
@@ -186,7 +188,7 @@
               </includes>
             </resource>
             <resource>
-              <directory>${project.build.directory}/webxml/</directory>
+              <directory>${project.build.directory}/classes</directory>
               <targetPath>WEB-INF</targetPath>
               <includes>
                 <include>web.xml</include>
