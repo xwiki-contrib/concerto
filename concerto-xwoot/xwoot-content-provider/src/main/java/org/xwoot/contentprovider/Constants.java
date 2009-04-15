@@ -18,4 +18,6 @@ public class Constants
     public static final String OBJECT_NAMESPACE = "object";
 
     public static final String CLASS_NAME_METADATA = "class_name";
+
+    public static final String ATTACHMENT_NAMESPACE = "attachment";     
 }

@@ -13,6 +13,7 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.xmlrpc.XmlRpcException;
+import org.codehaus.swizzle.confluence.Attachment;
 import org.xwiki.xmlrpc.XWikiXmlRpcClient;
 import org.xwiki.xmlrpc.model.XWikiExtendedId;
 import org.xwiki.xmlrpc.model.XWikiObject;
@@ -59,7 +60,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
         }
 
         logger.info("Initialization done. [New]");
-        if(createDB) {
+        if (createDB) {
             logger.info("DB Recreated");
         }
 
@@ -267,10 +268,12 @@ public class XWootContentProvider implements XWootContentProviderInterface
             if (lastClearedModification == null) {
                 logger.info(String.format("No last cleared version exists for %s", xwootId));
 
+                /* PAGE */
                 XWikiPage page = rpc.getPage(xwootId.getPageId(), xwootId.getVersion(), xwootId.getMinorVersion());
                 XWootObject object = Utils.xwikiPageToXWootObject(page, true);
                 result.add(object);
 
+                /* OBJECTS */
                 List<XWikiObjectSummary> xwikiObjectSummaries =
                     rpc.getObjects(xwootId.getPageId(), xwootId.getVersion(), xwootId.getMinorVersion());
                 for (XWikiObjectSummary xwikiObjectSummary : xwikiObjectSummaries) {
@@ -285,9 +288,25 @@ public class XWootContentProvider implements XWootContentProviderInterface
                     object = Utils.xwikiObjectToXWootObject(xwikiObject, true, configuration);
                     result.add(object);
                 }
+
+                /* ATTACHMENTS */
+                XWikiExtendedId extendedId = new XWikiExtendedId(xwootId.getPageId());
+                extendedId.setParameter(XWikiExtendedId.VERSION_PARAMETER, String.format("%d", xwootId.getVersion()));
+                extendedId.setParameter(XWikiExtendedId.MINOR_VERSION_PARAMETER, String.format("%d", xwootId
+                    .getMinorVersion()));
+                List<Attachment> attachments = rpc.getAttachments(extendedId.toString());
+
+                for (Attachment attachment : attachments) {
+                    byte[] data = rpc.getAttachmentData(attachment);
+
+                    /* Here we must discriminate if the attachment is newly created */
+                    result.add(Utils.attachmentToXWootObject(attachment, xwootId.getVersion(), xwootId
+                        .getMinorVersion(), data, false));
+                }
             } else {
                 logger.info(String.format("Last cleared version for %s is %s", xwootId, lastClearedModification));
 
+                /* PAGE */
                 XWikiPage page = rpc.getPage(xwootId.getPageId(), xwootId.getVersion(), xwootId.getMinorVersion());
                 XWikiPage lastClearedPage =
                     rpc.getPage(lastClearedModification.getPageId(), lastClearedModification.getVersion(),
@@ -303,6 +322,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
                     result.add(cleanedUpXWootObject);
                 }
 
+                /* OBJECTS */
                 List<XWikiObjectSummary> xwikiObjectSummaries =
                     rpc.getObjects(xwootId.getPageId(), xwootId.getVersion(), xwootId.getMinorVersion());
                 for (XWikiObjectSummary xwikiObjectSummary : xwikiObjectSummaries) {
@@ -362,6 +382,30 @@ public class XWootContentProvider implements XWootContentProviderInterface
                         result.add(Utils.xwikiObjectToXWootObject(xwikiObject, true, configuration));
                     }
                 }
+
+                /* ATTACHMENTS */
+                XWikiExtendedId extendedId = new XWikiExtendedId(xwootId.getPageId());
+                extendedId.setParameter(XWikiExtendedId.VERSION_PARAMETER, String.format("%d", xwootId.getVersion()));
+                extendedId.setParameter(XWikiExtendedId.MINOR_VERSION_PARAMETER, String.format("%d", xwootId
+                    .getMinorVersion()));
+                List<Attachment> attachments = rpc.getAttachments(extendedId.toString());
+
+                extendedId = new XWikiExtendedId(xwootId.getPageId());
+                extendedId.setParameter(XWikiExtendedId.VERSION_PARAMETER, String.format("%d", lastClearedModification
+                    .getVersion()));
+                extendedId.setParameter(XWikiExtendedId.MINOR_VERSION_PARAMETER, String.format("%d",
+                    lastClearedModification.getMinorVersion()));
+                List<Attachment> previousAttachments = rpc.getAttachments(extendedId.toString());
+
+                List<Attachment> modifiedAttachments =
+                    Utils.removeUnchangedAttachments(attachments, previousAttachments);
+                for (Attachment attachment : modifiedAttachments) {
+                    byte[] data = rpc.getAttachmentData(attachment);
+
+                    /* Here we should discriminate if the attachment is newly created. For the moment let's consider every attachment as newly created. */
+                    result.add(Utils.attachmentToXWootObject(attachment, xwootId.getVersion(), xwootId
+                        .getMinorVersion(), data, false));
+                }
             }
 
             logger.info(String.format("Got modified entities: %s", result));
@@ -404,9 +448,34 @@ public class XWootContentProvider implements XWootContentProviderInterface
             return storeXWikiPage(object, versionAdjustment);
         } else if (namespace.equals(Constants.OBJECT_NAMESPACE)) {
             return storeXWikiObject(object, versionAdjustment);
+        } else if (namespace.equals(Constants.ATTACHMENT_NAMESPACE)) {
+            return storeXWikiAttachment(object);
         }
 
         throw new IllegalArgumentException(String.format("Invalid namespace %s\n", namespace));
+    }
+
+    private XWootId storeXWikiAttachment(XWootObject object)
+    {
+        try {
+            Attachment attachment = Utils.xwootObjectToAttachment(object);
+            byte[] data = Utils.xwootObjectToAttachmentData(object);
+
+            rpc.addAttachment(0, attachment, data);
+
+            /* Retrieve the page this object was stored to in order to get additional information like the timestamp. */
+            XWikiPage page = rpc.getPage(attachment.getPageId());
+
+            XWootId xwootId =
+                new XWootId(page.getId(), page.getModified().getTime(), page.getVersion(), page.getMinorVersion());
+
+            stateManager.clearModification(xwootId);
+
+            return xwootId;
+        } catch (Exception e) {
+            logger.error(String.format("'%s' not stored due to an exception.", object.getGuid()), e);
+            return null;
+        }
     }
 
     private XWootId storeXWikiObject(XWootObject object, XWootId versionAdjustment)

@@ -1,11 +1,13 @@
 package org.xwoot.contentprovider;
 
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import junit.framework.TestCase;
 
 import org.apache.xmlrpc.XmlRpcException;
+import org.codehaus.swizzle.confluence.Attachment;
 import org.xwiki.xmlrpc.XWikiXmlRpcClient;
 import org.xwiki.xmlrpc.model.XWikiPage;
 import org.xwoot.contentprovider.Constants;
@@ -49,7 +51,7 @@ public class XWootContentProviderTest extends TestCase
         Set<XWootId> result = xwc.getModifiedPagesIds();
 
         XWootId xwootId = (XWootId) result.toArray()[0];
-
+        
         xwc.clearModification(xwootId);
         Set<XWootId> resultAfter = xwc.getModifiedPagesIds();
 
@@ -205,6 +207,35 @@ public class XWootContentProviderTest extends TestCase
         assertEquals(page.getMinorVersion(), result.get(0).getMinorVersion());
 
         System.out.format("*****************************\n\n");
+    }
+    
+    public void testAttachments() throws Exception {
+        XWikiXmlRpcClient rpc = xwc.getRpc();
+        Random random = new Random();
+        
+        System.out.format("*** testAttachments()\n");
+        xwc.getModifiedPagesIds();
+        xwc.clearAllModifications();
+        
+        String attachmentName = String.format("test_attachment_%d.png", random.nextInt());
+        byte[] data = (new String("This is a test").getBytes());
+        Attachment attachment = new Attachment();
+        attachment.setPageId("Main.WebHome");
+        attachment.setFileName(attachmentName);
+        attachment = rpc.addAttachment(0, attachment, data);
+        
+        System.out.format("%s\n", attachment);
+        
+        Set<XWootId> modifiedPagesIds = xwc.getModifiedPagesIds();
+        List<XWootObject> modifiedEntities = xwc.getModifiedEntities(modifiedPagesIds.iterator().next());
+        System.out.format("%s\n%s\n", modifiedPagesIds, modifiedEntities);
+        
+        assertTrue(modifiedEntities.size() == 1);
+        
+        XWootObject xwootObject = modifiedEntities.get(0);
+        assertTrue(xwootObject.getGuid().startsWith(Constants.ATTACHMENT_NAMESPACE));
+        
+        xwc.store(xwootObject, null);        
     }
 
 }

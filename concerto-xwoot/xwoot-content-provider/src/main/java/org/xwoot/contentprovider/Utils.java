@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.xmlrpc.XmlRpcException;
+import org.codehaus.swizzle.confluence.Attachment;
 import org.xwiki.xmlrpc.XWikiXmlRpcClient;
 import org.xwiki.xmlrpc.model.XWikiObject;
 import org.xwiki.xmlrpc.model.XWikiPage;
@@ -257,6 +258,69 @@ public class Utils
     }
 
     /**
+     * Build an XWootObject from an Attachment and its associated data.
+     * 
+     * @param attachment
+     * @param pageVersion
+     * @param pageMinorVersion
+     * @param attachmentData
+     * @param newlyCreated
+     * @return The created XWootObject.
+     */
+    public static XWootObject attachmentToXWootObject(Attachment attachment, int pageVersion, int pageMinorVersion,
+        byte[] attachmentData, boolean newlyCreated)
+    {
+        List<XWootObjectField> fields = new ArrayList<XWootObjectField>();
+
+        XWootObjectField field;
+
+        /* These are the relevant fields */
+        field = new XWootObjectField("fileName", attachment.getFileName(), false);
+        fields.add(field);
+
+        field = new XWootObjectField("attachmentData", attachmentData, false);
+        fields.add(field);
+
+        XWootObject result =
+            new XWootObject(attachment.getPageId(), pageVersion, pageMinorVersion, String.format("%s:%s:%s",
+                Constants.ATTACHMENT_NAMESPACE, attachment.getPageId(), attachment.getFileName()), false, fields,
+                newlyCreated);
+
+        return result;
+    }
+
+    /**
+     * Create the Attachment from the corresponding XWootObject
+     * 
+     * @param object The XWoot object encoding attachment data.
+     * @return The Attachment structure.
+     */
+    public static Attachment xwootObjectToAttachment(XWootObject object)
+    {
+        Attachment attachment = new Attachment();
+
+        attachment.setPageId(object.getPageId());
+
+        String value = (String) object.getFieldValue("fileName");
+        attachment.setFileName(value != null ? value : "");
+
+        return attachment;
+    }
+
+    /**
+     * Retrieve the attachment data from the corresponding XWootObject
+     * 
+     * @param object The XWootObject containing attachment data.
+     * @return The attachment data.
+     */
+    public static byte[] xwootObjectToAttachmentData(XWootObject object)
+    {        
+        byte[] result = (byte[]) object.getFieldValue("attachmentData");
+
+        return result;
+    }
+
+    /**
      * This function removes from the current object all the fields that have not changed with respect to the reference
      * object.
      * 
@@ -280,6 +344,37 @@ public class Utils
         return new XWootObject(currentObject.getPageId(), currentObject.getPageVersion(), currentObject
             .getPageMinorVersion(), currentObject.getGuid(), currentObject.isCumulative(), resultFields, currentObject
             .isNewlyCreated());
+    }
+
+    /**
+     * Remove all attachments that haven't been modified from a list of attachments.
+     * 
+     * @param currentAttachments The list of attachments at current page version. 
+     * @param previousAttachments The list of attachments at a previous page version.
+     * @return A list containing only changed/added attachments.
+     */
+    public static List<Attachment> removeUnchangedAttachments(List<Attachment> currentAttachments,
+        List<Attachment> previousAttachments)
+    {
+        List<Attachment> result = new ArrayList<Attachment>();
+
+        for (Attachment current : currentAttachments) {
+            boolean add = true;
+            for (Attachment previous : previousAttachments) {
+                if (current.getFileName().equals(previous.getFileName())) {
+                    if (current.getFileSize().equals(previous.getFileSize())) {                        
+                        add = false;
+                        break;
+                    }
+                }
+            }
+
+            if (add) {
+                result.add(current);
+            }
+        }
+
+        return result;
     }
 
     /**

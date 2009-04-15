@@ -210,19 +210,34 @@ public class XWootContentProviderStateManager
      */
     public void clearAllModificationExcept(XWootId xwootId) throws Exception
     {
-        PreparedStatement ps =
-            connection.prepareStatement("UPDATE modifications SET cleared=1 WHERE pageId=? AND timestamp<>?");
-        ps.setString(1, xwootId.getPageId());
-        ps.setLong(2, xwootId.getTimestamp());
-
-        int rowsUpdated = ps.executeUpdate();
+        // PreparedStatement ps =
+        // connection.prepareStatement("UPDATE modifications SET cleared=1 WHERE pageId=? AND timestamp<>?");
+        // ps.setString(1, xwootId.getPageId());
+        // ps.setLong(2, xwootId.getTimestamp());
+        //
+        // int rowsUpdated = ps.executeUpdate();
+        //
+        // /*
+        // * logger.info(String.format("Cleared all pages '%s' with timestamp different from at %d. %d rows updated",
+        // * xwootId.getPageId(), xwootId.getTimestamp(), rowsUpdated));
+        // */
+        //
+        // ps.close();
 
         /*
-         * logger.info(String.format("Cleared all pages '%s' with timestamp different from at %d. %d rows updated",
-         * xwootId.getPageId(), xwootId.getTimestamp(), rowsUpdated));
+         * When we clear a modification we must also update the last cleared field. So we rely on the clearModification
+         * method that does the job.
          */
-
+        PreparedStatement ps =
+            connection.prepareStatement("SELECT * FROM modifications WHERE pageId=? AND timestamp<>?");
+        ps.setString(1, xwootId.getPageId());
+        ps.setLong(2, xwootId.getTimestamp());
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+            clearModification(new XWootId(rs.getString(1), rs.getLong(2), rs.getInt(3), rs.getInt(4)));
+        }
         ps.close();
+
     }
 
     /**
@@ -448,12 +463,21 @@ public class XWootContentProviderStateManager
 
     public void clearAllModifications() throws Exception
     {
-        PreparedStatement ps = connection.prepareStatement("UPDATE modifications SET cleared=1");
-
-        int rowsUpdated = ps.executeUpdate();
-
-        logger.info(String.format("Cleared all modifications. %d rows updated", rowsUpdated));
-
+        //PreparedStatement ps = connection.prepareStatement("UPDATE modifications SET cleared=1");
+        //int rowsUpdated = ps.executeUpdate();
+        //logger.info(String.format("Cleared all modifications. %d rows updated", rowsUpdated));
+        //ps.close();
+        
+        /*
+         * When we clear a modification we must also update the last cleared field. So we rely on the clearModification
+         * method that does the job.
+         */
+        PreparedStatement ps =
+            connection.prepareStatement("SELECT * FROM modifications");
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+            clearModification(new XWootId(rs.getString(1), rs.getLong(2), rs.getInt(3), rs.getInt(4)));
+        }
         ps.close();
     }
 
@@ -471,23 +495,23 @@ public class XWootContentProviderStateManager
             }
 
             ResultSet rs = ps.executeQuery();
-            
+
             int i = 0;
             int n = 0;
-            while(rs.next()) {
-                if(i >= start) {
-                    if(number == -1 || n <= number) {
-                        Entry entry = new Entry(rs.getString(1), rs.getLong(2), rs.getInt(3), rs
-                            .getInt(4), rs.getBoolean(5));
-                        result.add(entry);    
+            while (rs.next()) {
+                if (i >= start) {
+                    if (number == -1 || n <= number) {
+                        Entry entry =
+                            new Entry(rs.getString(1), rs.getLong(2), rs.getInt(3), rs.getInt(4), rs.getBoolean(5));
+                        result.add(entry);
                         n++;
                     }
                 }
-                i++;                
+                i++;
             }
-            
+
             ps.close();
-            
+
         } catch (Exception e) {
             e.printStackTrace();
         }

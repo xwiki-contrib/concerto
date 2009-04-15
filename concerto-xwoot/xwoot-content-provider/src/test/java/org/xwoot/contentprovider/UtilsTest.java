@@ -7,6 +7,7 @@ import java.util.Random;
 import junit.framework.TestCase;
 
 import org.apache.xmlrpc.XmlRpcException;
+import org.codehaus.swizzle.confluence.Attachment;
 import org.xwiki.xmlrpc.XWikiXmlRpcClient;
 import org.xwiki.xmlrpc.model.XWikiObject;
 import org.xwiki.xmlrpc.model.XWikiObjectSummary;
@@ -29,7 +30,6 @@ public class UtilsTest extends TestCase
         rpc.login(TestConstants.USERNAME, TestConstants.PASSWORD);
         random = new Random();
         configuration = new XWootContentProviderConfiguration();
-
     }
 
     public void tearDown() throws Exception
@@ -81,7 +81,7 @@ public class UtilsTest extends TestCase
         XWikiObject object = rpc.getObject("Main.WebHome", "XWiki.TagClass", 0);
         XWootObject xwootObject = Utils.xwikiObjectToXWootObject(object, false, configuration);
 
-        xwootObject.setFieldValue("tags", value);
+        xwootObject.setFieldValue("tags", value); 
 
         object = Utils.xwootObjectToXWikiObject(xwootObject);
 
@@ -107,5 +107,24 @@ public class UtilsTest extends TestCase
         object = Utils.xwootObjectToXWikiObject(xwootObject);
 
         assertTrue(List.class.isAssignableFrom(object.getProperty("tags").getClass()));
+    }
+    
+    public void testAttachmentToXWootObjectAndViceversa() {
+        final String PAGE_ID = "Main.WebHome";
+        final String FILENAME = "test.png";
+        final String DATA_STRING = "THIS IS A TEST";
+        
+        Attachment attachment = new Attachment();
+        attachment.setPageId(PAGE_ID);
+        attachment.setFileName(FILENAME);
+        byte[] data = DATA_STRING.getBytes();
+        
+        XWootObject xwootObject = Utils.attachmentToXWootObject(attachment, 0, 0, data, false);
+        attachment = Utils.xwootObjectToAttachment(xwootObject);
+        data = Utils.xwootObjectToAttachmentData(xwootObject);
+        
+        assertEquals(PAGE_ID, attachment.getPageId());
+        assertEquals(FILENAME, attachment.getFileName());
+        assertEquals(DATA_STRING, new String(data));
     }
 }
