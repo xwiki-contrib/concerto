@@ -709,7 +709,7 @@ public class JxtaCast implements PipeMsgListener, Runnable {
      *  for a long time will remove themselves from the collection.  Input
      *  wranglers that are missing data blocks will request them.
      */
-    protected void checkWranglers() {
+    protected synchronized void checkWranglers() {
 
         Enumeration<Wrangler> elements = wranglers.elements();
         Wrangler wrangler;
@@ -726,7 +726,7 @@ public class JxtaCast implements PipeMsgListener, Runnable {
      * is called by the worker thread.  It reads them from the queue, and triggers
      * the data load and send process.
      */
-    protected void checkSendQueue() {
+    protected synchronized void checkSendQueue() {
 
         OutputWrangler wrangler = null;
       
