@@ -230,12 +230,16 @@ public class XWootContentProviderTest extends TestCase
         List<XWootObject> modifiedEntities = xwc.getModifiedEntities(modifiedPagesIds.iterator().next());
         System.out.format("%s\n%s\n", modifiedPagesIds, modifiedEntities);
         
-        assertTrue(modifiedEntities.size() == 1);
+        assertTrue(modifiedPagesIds.size() == 1);
         
-        XWootObject xwootObject = modifiedEntities.get(0);
-        assertTrue(xwootObject.getGuid().startsWith(Constants.ATTACHMENT_NAMESPACE));
-        
-        xwc.store(xwootObject, null);        
+        XWootObject attachmentObject = null;
+        for(XWootObject xwo : modifiedEntities) {
+            if(xwo.getGuid().startsWith(Constants.ATTACHMENT_NAMESPACE)) {
+                attachmentObject = xwo;
+            }
+        }
+                
+        assertEquals(attachmentName, attachmentObject.getFieldValue("fileName"));
     }
 
 }
