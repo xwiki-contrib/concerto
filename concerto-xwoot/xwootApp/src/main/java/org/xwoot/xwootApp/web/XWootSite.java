@@ -275,7 +275,7 @@ public class XWootSite
 
         ThomasRuleEngine tre = new ThomasRuleEngine(peerId, treDir.toString());
 
-        this.XWootEngine = new XWoot3(xwiki, wootEngine, peer, xwootDir.toString(), tre, ae);
+        this.XWootEngine = new XWoot3(xwiki, wootEngine, peer, xwootDir.toString(), tre, ae, contentProviderLogin, contentProviderPassword);
 
         // FIXME: read the interval from the properties file.
         this.autoSynchronizationThread = new AutoSynchronizationThread(this.XWootEngine, AUTO_SYNCHRONIZE_INTERVAL);

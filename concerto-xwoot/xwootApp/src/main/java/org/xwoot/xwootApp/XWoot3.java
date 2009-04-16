@@ -157,6 +157,10 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
      */
     private LastPatchAndXWikiXWootId lastModifiedContentIdMap;
 
+    private String contentProviderLogin;
+
+    private String contentProviderPassword;
+
     /**
      * Creates a new XWoot object.
      * 
@@ -173,7 +177,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
      * @throws XWootContentProviderException
      */
     public XWoot3(XWootContentProviderInterface contentManager, WootEngine wootEngine, Peer peer, String workingDir,
-        ThomasRuleEngine tre, AntiEntropy ae) throws XWootException
+        ThomasRuleEngine tre, AntiEntropy ae, String contentProviderLogin, String contentProviderPassword) throws XWootException
         {
         // TODO: Remove parameter peerId and siteId. They will be replaced with jxta values.
         
@@ -185,6 +189,8 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         //String endpoint="http://concerto1:8080/xwiki/xmlrpc";
 
         this.contentManager = contentManager;
+        this.contentProviderLogin = contentProviderLogin;
+        this.contentProviderPassword = contentProviderPassword;
 
         //TODO
         this.contentManagerURL = "";
@@ -1578,7 +1584,8 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         if (!this.isContentManagerConnected()) {
             try {
                 this.logger.info(this.getXWootName() + " : Connect to content provider ");
-                this.contentManager.login("Admin", "admin");                
+                
+                this.contentManager.login(this.contentProviderLogin, this.contentProviderPassword);                
             } catch (XWootContentProviderException e) {
                 throw new XWootException("Problem with login",e);
             }            
