@@ -304,7 +304,8 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
         //
         String name = getDirectCommunicationPipeNamePrefix() + JxtaCast.DELIM +
                       this.getMyPeerName()            + JxtaCast.DELIM +
-                      this.getMyPeerID().toString();
+                      this.getMyPeerID().toString() + JxtaCast.DELIM +
+                      new Date().getTime();
 
         return name;
     }
@@ -365,11 +366,32 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
     /** @return the peer ID of the peer from a direct communication pipe name. */
     public static String getPeerIdFromBackChannelPipeName(String pipeName) {
 
-        // The peer ID is located after the second delimiter.
-        int pos = pipeName.indexOf(JxtaCast.DELIM);
-        if (pos < 0)
+        // The peer ID is located between the second and the third delimiter.
+        int start = pipeName.indexOf(JxtaCast.DELIM);
+        if (start < 0)
             return null;
-        pos = pipeName.indexOf(JxtaCast.DELIM, ++pos);
+        
+        start = pipeName.indexOf(JxtaCast.DELIM, ++start);
+        if (start < 0)
+            return null;
+
+        int end = pipeName.indexOf(JxtaCast.DELIM, start + 1);
+        if (end < 0)
+            return null;
+
+        // Extract the peer name.
+        start += JxtaCast.DELIM.length();
+        if (start > end)
+            return null;
+        return pipeName.substring(start, end);
+    }
+    
+    
+    /** @return the creation time of the direct communication channel from its pipe name. */
+    public static String getCreationTimeFromBackChannelPipeName(String pipeName) {
+
+        // The peer ID is located after the second delimiter.
+        int pos = pipeName.lastIndexOf(JxtaCast.DELIM);
         if (pos < 0)
             return null;
 
@@ -1860,18 +1882,7 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
         
         // A response to a direct communication channel advertisements discovery request or a remote publish by an EDGE peer when we are RDV.
         
-        // Get locally stored Pipe advertisements. 
-        // Note: we don't use this.getKnownDirectCommunicationAdvertisements because we don`t want to trigger a new discovery event and enter an infinite loop.
         DiscoveryService disco = this.currentJoinedGroup.getDiscoveryService();
-        List<Advertisement> existingLocalAdvertisements = null;
-        try {
-            // get only existing direct communication channel advs.
-            existingLocalAdvertisements = Collections.list(disco.getLocalAdvertisements(DiscoveryService.ADV, PipeAdvertisement.NameTag, desiredQueryValue));
-        } catch (Exception e) {
-            logger.warn("Failed to get locally stored known advertisements while checking for duplicate direct communication advertisements.\n", e);
-            // hope others won't have this problem.
-            return;
-        }
         
         Enumeration<Advertisement> receivedAdvertisements = response.getAdvertisements();
         while (receivedAdvertisements.hasMoreElements()) {
@@ -1883,13 +1894,44 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
             }
             
             PipeAdvertisement receivedPipeAdvertisement = (PipeAdvertisement) receivedAdvertisement;
+            if (!receivedPipeAdvertisement.getName().startsWith(this.getDirectCommunicationPipeNamePrefix())) {
+                // Could be another pipe advertisement, one we are note interested in.
+                continue;
+            }
+            
             String receivedPipeName = receivedPipeAdvertisement.getName();
             ID receivedPipeId = receivedPipeAdvertisement.getPipeID();
-            //String receivedPeerId = JxtaPeer.getPeerIdFromBackChannelPipeName(receivedPipeName);
+            String receivedPeerId = JxtaPeer.getPeerIdFromBackChannelPipeName(receivedPipeName);
+            long receivedCreationTime = 0;
+            try {
+                receivedCreationTime = Long.parseLong(JxtaPeer.getCreationTimeFromBackChannelPipeName(receivedPipeName));
+            } catch (Exception failedGetCreationTime) {
+                this.logger.warn("Removing invalid received pipe advertisement named " + receivedPipeName, failedGetCreationTime);
+                try {
+                    disco.flushAdvertisement(receivedPipeAdvertisement);
+                } catch (Exception failedFlushAdvertisement) {
+                    this.logger.warn("Failed to remove invalid received pipe advertisement named " + receivedPipeName, failedFlushAdvertisement);    
+                } 
+                
+                // Go to next received advertisement.
+                continue;
+            }
             
             if (!receivedPipeName.startsWith(this.getDirectCommunicationPipeNamePrefix())) {
                 // Not interested in other advertisements than direct communication channel advs.
                 continue;
+            }
+            
+            // Get locally stored Pipe advertisements. 
+            // Note: we don't use this.getKnownDirectCommunicationAdvertisements because we don`t want to trigger a new discovery event and enter an infinite loop.
+            List<Advertisement> existingLocalAdvertisements = null;
+            try {
+                // get only existing direct communication channel advs.
+                existingLocalAdvertisements = Collections.list(disco.getLocalAdvertisements(DiscoveryService.ADV, PipeAdvertisement.NameTag, desiredQueryValue));
+            } catch (Exception e) {
+                logger.warn("Failed to get locally stored known advertisements while checking for duplicate direct communication advertisements.\n", e);
+                // hope others won't have this problem.
+                return;
             }
             
             // Search through the local direct communication advertisements if we already have an advertisement with the same pipeName of the new advertisement.
@@ -1903,21 +1945,43 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
                 PipeAdvertisement existingPipeAdvertisement = (PipeAdvertisement) existingLocalAdvertisement;
                 String existingPipeName = existingPipeAdvertisement.getName();
                 ID existingPipeId = existingPipeAdvertisement.getPipeID();
-                //String existingPeerId = JxtaPeer.getPeerIdFromBackChannelPipeName(existingPipeName);
+                String existingPeerId = JxtaPeer.getPeerIdFromBackChannelPipeName(existingPipeName);
                 
-                if (receivedPipeId.equals(existingPipeId) || !receivedPipeName.equals(existingPipeName)) {
-                    // Ignore retransmissions of the same advertisement and pipe name non-collisions.
+                if (receivedPipeId.equals(existingPipeId) || !receivedPeerId.equals(existingPeerId)) {
+                    // Ignore retransmissions of the same advertisement and owning peer ID non-collisions.
                     continue;
                 }
                 
-                // Different pipeIDs but same pipeNames (peerName,peerId pair)
                 // It's not the same advertisement retransmitted, but it's actually a new one, for the same owner(name collision)
+                // Different pipeIDs but same owning peerId.
+                
+                long existingCreationTime = 0;
+                try {
+                    existingCreationTime = Long.parseLong(JxtaPeer.getCreationTimeFromBackChannelPipeName(existingPipeName));
+                } catch (Exception failedGetCreationTime) {
+                    this.logger.warn("Removing invalid existing pipe advertisement named " + receivedPipeName, failedGetCreationTime);
+                    try {
+                        disco.flushAdvertisement(receivedPipeAdvertisement);
+                    } catch (Exception failedFlushAdvertisement) {
+                        this.logger.warn("Failed to remove invalid existing pipe advertisement named " + receivedPipeName, failedFlushAdvertisement);    
+                    }
+                    
+                    // Go to next existing advertisement.
+                    continue;
+                }
                     
                 try {
                     // update the communication channel for the owner by deleting the old and outdated one and keeping the new one.
-                    if (disco.getAdvExpirationTime(receivedPipeAdvertisement) > disco.getAdvExpirationTime(existingPipeAdvertisement)) {
+                    PipeAdvertisement toFlush = null;
+                    if (receivedCreationTime > existingCreationTime) {
+                        toFlush = existingPipeAdvertisement;
+                    } else if (existingCreationTime > receivedCreationTime){
+                        toFlush = receivedPipeAdvertisement;
+                    }
+                    
+                    if (toFlush != null) {
                         this.logger.debug("Flushing outdated pipe advertisement by the name: " + existingPipeName);
-                        disco.flushAdvertisement(existingPipeAdvertisement);
+                        disco.flushAdvertisement(toFlush);
                     }
                 } catch (Exception e) {
                     // Leave it as duplicate. The user will see the same peer twice but we hope that the next time it will be successfuly flushed.
