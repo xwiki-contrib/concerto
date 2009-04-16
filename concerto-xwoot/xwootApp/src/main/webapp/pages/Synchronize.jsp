@@ -41,7 +41,7 @@
         <div id="boxes" style="padding-left:20px;">
             <img class="small_icon" src="images/xconcerto20_2.ico" style="vertical-align:middle;padding-right:5px;"/><a style="font-size:15px;" href="${xwiki_url}" title="Go to xwiki">${xwiki_url}</a>
         </div>
-        <!--<div id="toolbar">
+        <div id="toolbar">
             <c:if test="${p2pconnection eq false}">
                 <a href="synchronize.do?action=p2pnetworkconnection" title="Connect to P2P Network."><img class="icon" src="images/P2Pon.png"/></a>
                 <img class="icon" src="images/P2Poffoff.png"/>
@@ -50,25 +50,25 @@
                 <img class="icon" src="images/P2Ponoff.png"/>
                 <a href="synchronize.do?action=p2pnetworkconnection" title="Disconnect from P2P Network."><img class="icon" src="images/P2Poff.png"/></a>
             </c:if>
-            <a href="synchronize.do?action=addNeighbor" title="Add a new neighbor."><img class="icon" src="images/AddNeighbor.png"/></a>
+            <!--  <a href="synchronize.do?action=addNeighbor" title="Add a new neighbor."><img class="icon" src="images/AddNeighbor.png"/></a>-->
             <img class="icon" src="images/barre.png"/>
             <c:if test="${cpconnection eq false}">
                 <a href="synchronize.do?action=cpconnection" title="Connect to xwiki server."><img class="icon" src="images/xwikion.png"/></a>
                 <img class="icon" src="images/xwikioffoff.png"/>
-                <img class="icon" src="images/CustomPageoff.png"/>
+                <!--  <img class="icon" src="images/CustomPageoff.png"/>
                 <img class="icon" src="images/AddAllPageoff.png"/>
                 <img class="icon" src="images/RemoveAllPageoff.png"/>
-                <img class="icon" src="images/SynchronizePageoff.png"/>
+                <img class="icon" src="images/SynchronizePageoff.png"/>-->
             </c:if>    
             <c:if test="${cpconnection eq true}">
                 <img class="icon" src="images/xwikionoff.png"/>
                 <a href="synchronize.do?action=cpconnection" title="Disconnect from xwiki server."><img class="icon" src="images/xwikioff.png"/></a>
-                <a href="synchronize.do?action=pageManagement&val=custom" title="Custom add/remove wiki page."><img class="icon" src="images/CustomPage.png"/></a>
+                <!-- <a href="synchronize.do?action=pageManagement&val=custom" title="Custom add/remove wiki page."><img class="icon" src="images/CustomPage.png"/></a>
                 <a href="synchronize.do?action=pageManagement&val=all" title="Add all wiki pages."><img class="icon" src="images/AddAllPage.png"/></a>
                 <a href="synchronize.do?action=pageManagement&val=remove" title="Remove all wiki pages."><img class="icon" src="images/RemoveAllPage.png"/></a>
-                <a href="synchronize.do?action=synchronize" title="Synchronize selected pages."><img class="icon" src="images/SynchronizePage.png"/></a>
+                <a href="synchronize.do?action=synchronize" title="Synchronize selected pages."><img class="icon" src="images/SynchronizePage.png"/></a>-->
             </c:if>    
-        </div>-->
+        </div>
         <div id="boxes">            
             <!--<div id="box-left" class="box">
             <c:if test="${customPage eq true}">
