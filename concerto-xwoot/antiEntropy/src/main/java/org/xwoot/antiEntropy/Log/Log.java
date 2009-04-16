@@ -67,25 +67,20 @@ import org.xwoot.xwootUtil.PersistencyUtil;
  */
 public class Log implements Serializable
 {
-    /**
-     * The name of the file where the hashtable will be serialized.
-     */
+    /** The name of the file where the hashtable will be serialized. */
     public static final String LOG_FILE_NAME = "log";
 
-    /**
-     * Unique ID used in the serialization process.
-     */
+    /** Unique ID used in the serialization process. */
     private static final long serialVersionUID = -3836149914436685731L;
 
-    /**
-     * The serialized hashtable storing key-value having the id as key and the message as value.
-     */
+    /** The serialized hashtable storing key-value having the id as key and the message as value. */
     private Map<Object, Object> log;
 
-    /**
-     * The path on drive where to serialize the log.
-     */
+    /** The path on drive where to serialize the log. */
     private String logFilePath;
+
+    /** The directory where to store the anti-entropy log. */
+    private String logDir;
 
     /**
      * Creates a new Log object.
@@ -101,12 +96,17 @@ public class Log implements Serializable
             throw new LogException("Problems with the specified log file path: ", e);
         }
 
-        this.logFilePath = logFilePath + File.separator + LOG_FILE_NAME;
+        this.logDir = logFilePath;
+        this.logFilePath = logDir + File.separator + LOG_FILE_NAME;
     }
 
-    /**
-     * Deletes the working directory containing the log file.
-     */
+    /** @return the directory where to store the anti-entropy log. */
+    public String getWorkingDirectory()
+    {
+        return this.logDir;
+    }
+
+    /** Deletes the log file from the working directory. */
     public void clearWorkingDir()
     {
         File file = new File(this.logFilePath);

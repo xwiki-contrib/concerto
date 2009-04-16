@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import net.jxta.impl.endpoint.mcast.McastTransport;
-
 import org.apache.xmlrpc.XmlRpcException;
 import org.junit.After;
 import org.junit.Assert;
@@ -1690,7 +1688,7 @@ public class TestXWoot3 extends AbstractXWootTest
         f.createNewFile();
         Assert.assertTrue(f.exists());
         this.xwoot31 =
-            new XWoot3(this.xwiki21, this.wootEngine1, this.peer1, f.toString(), this.tre1, this.ae1);
+            new XWoot3(this.xwiki21, this.wootEngine1, this.peer1, f.toString(), this.tre1, this.ae1, null, null);
     }
 
     /* FIXME: same root-user-running-tests problem.
@@ -1725,7 +1723,7 @@ public class TestXWoot3 extends AbstractXWootTest
         Assert.assertTrue(this.peer1.isConnectedToNetwork());
         
         this.xwoot31 =
-            new XWoot3(this.xwiki21, this.wootEngine1, this.peer1, f.toString(), this.tre1, this.ae1);
+            new XWoot3(this.xwiki21, this.wootEngine1, this.peer1, f.toString(), this.tre1, this.ae1, null, null);
         
         Assert.assertNotNull(this.xwoot31);
     }

@@ -232,11 +232,11 @@ public abstract class AbstractXWootTest
                 new Integer(3), this.tre3, this.ae3);
         
         this.xwoot31 =
-            new XWoot3(this.xwiki21, this.wootEngine1, this.peer1, WORKINGDIR + File.separator + "Site1", this.tre1, this.ae1);
+            new XWoot3(this.xwiki21, this.wootEngine1, this.peer1, WORKINGDIR + File.separator + "Site1", this.tre1, this.ae1, "Admin", "admin");
         this.xwoot32 =
-            new XWoot3(this.xwiki22, this.wootEngine2, this.peer2, WORKINGDIR + File.separator + "Site2", this.tre2, this.ae2);
+            new XWoot3(this.xwiki22, this.wootEngine2, this.peer2, WORKINGDIR + File.separator + "Site2", this.tre2, this.ae2, "Admin", "admin");
         this.xwoot33 =
-            new XWoot3(this.xwiki23, this.wootEngine3, this.peer3, WORKINGDIR + File.separator + "Site3", this.tre3, this.ae3);
+            new XWoot3(this.xwiki23, this.wootEngine3, this.peer3, WORKINGDIR + File.separator + "Site3", this.tre3, this.ae3, "Admin", "admin");
     }
 
     @BeforeClass

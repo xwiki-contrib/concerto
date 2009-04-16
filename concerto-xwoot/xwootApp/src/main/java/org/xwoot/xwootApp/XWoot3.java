@@ -1158,14 +1158,16 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         
         File wootState = null;
         File treState = null;
+        File antiEntropyState = null;
         try{
             FileUtil.unzipInDirectory(state, this.stateDirPath);
             
             wootState = new File(this.stateDirPath, this.getWootEngineStateFileName());
             treState = new File(this.stateDirPath, this.getTreStateFileName());
+            antiEntropyState = new File(this.stateDirPath, this.getAntiEntropyStateFileName());
             
-            if (!wootState.exists() || !treState.exists()) {
-                throw new WootEngineException("Expected " + wootState + " and " + treState + " files were not found after unpacking an xwoot state.");
+            if (!wootState.exists() || !treState.exists() || !antiEntropyState.exists()) {
+                throw new WootEngineException("Expected " + wootState + ", " + treState + " and " + antiEntropyState + " files were not found after unpacking an xwoot state.");
             }
 
             // Clear WootEngine data.
@@ -1179,9 +1181,12 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             FileUtil.deleteDirectory(treWorkingDir);
             FileUtil.checkDirectoryPath(treWorkingDir);
             // Update ThomasRuleEngine data.
-            ZipFile mDState = new ZipFile(treState);
-            File mDFile = new File(this.tre.getWorkingDir());            
-            FileUtil.unzipInDirectory(mDState, mDFile.getAbsolutePath());
+            FileUtil.unzipInDirectory(treState.toString(), this.tre.getWorkingDir());
+            
+            // Clean Anti-Entropy data.
+            this.antiEntropy.clearWorkingDir();
+            // Update Anti-Entropy data.
+            FileUtil.unzipInDirectory(antiEntropyState.toString(), this.antiEntropy.getLog().getWorkingDirectory());
 
             return;
         } catch (WootEngineException e) {
@@ -1278,10 +1283,19 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             throw new XWootException(this.getXWootName() + " : The TRE state did not compute successfuly.\n", e);
         }
         
-        // package the WOOT state and the TRE state together.
+        // get Anti-Entropy log's state
+        File antiEntropyState = new File(this.stateDirPath, this.getAntiEntropyStateFileName());
+        try {
+            FileUtil.zipDirectory(this.antiEntropy.getLog().getWorkingDirectory(), antiEntropyState.toString());
+        } catch (Exception e) {
+            this.logger.error(this.getXWootName() + " : The Anti-entropy state did not compute successfuly.\n", e);
+            throw new XWootException(this.getXWootName() + " : The Anti-entropy state did not compute successfuly.\n", e);
+        }
+        
+        // package the WOOT state, TRE state and Anti-Entropy log together.
         try {
             //String zip=FileUtil.zipDirectory(this.stateDirPath/*, File.createTempFile("state", ".zip").getPath()*/);
-            FileUtil.zipFiles(new File[]{wootState, treState}, this.getStateFilePath());
+            FileUtil.zipFiles(new File[]{wootState, treState, antiEntropyState}, this.getStateFilePath());
             /*if (zip!=null){
                 File r = new File(zip);
                 File result = new File(this.stateDirPath + File.separatorChar + STATEFILENAME);
@@ -1316,6 +1330,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         // delete the 2 state files because they are now packed into the xwoot state.
         wootState.delete();
         treState.delete();
+        antiEntropyState.delete();
     }
     
     /** @return true if this peer created the group he currently is member of. */
@@ -1353,7 +1368,12 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         
         return result.toString();*/
         return ThomasRuleEngine.TRE_STATE_FILE_NAME;
-    }    
+    } 
+    
+    private String getAntiEntropyStateFileName()
+    {
+        return "antiEntropyState.zip";
+    }
 
     public boolean isStateComputed()
     {
