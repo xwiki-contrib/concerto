@@ -505,7 +505,7 @@ public class JxtaCast implements PipeMsgListener, Runnable {
      *
      * @param event PipeMsgEvent the event that contains our message.
      */
-    public synchronized void pipeMsgEvent(PipeMsgEvent event) {
+    public /*synchronized*/ void pipeMsgEvent(PipeMsgEvent event) {
        
         Message msg = event.getMessage();
         
@@ -542,7 +542,7 @@ public class JxtaCast implements PipeMsgListener, Runnable {
      *
      * @param msg an object transfer message.
      */
-	public synchronized void receiveMsg(Message msg) {
+	public /*synchronized*/ void receiveMsg(Message msg) {
 
         try {
             String msgType = getMsgString(msg, MESSAGETYPE);
@@ -554,28 +554,29 @@ public class JxtaCast implements PipeMsgListener, Runnable {
             // new Wrangler to handle it.  (But only if it's a
             // MSG_OBJECT/MSG_FILE message from the original sender.)
             //
-            Wrangler wrangler = (Wrangler)wranglers.get(getMsgString(msg, TRANSACTION_KEY));
-            if (wrangler == null) {
-            	if (msgType.equals(MSG_FILE)) {
-            		wrangler = new InputFileWrangler(this, msg);
-            	} else if (msgType.equals(MSG_OBJECT)) {
-            		wrangler = new InputObjectWrangler(this, msg);
-            	}
-            	
-            	if (wrangler != null) {
-	                wranglers.put(wrangler.getKey(), wrangler);
-            	}
+            synchronized (wranglers) {
+                Wrangler wrangler = (Wrangler)wranglers.get(getMsgString(msg, TRANSACTION_KEY));
+                if (wrangler == null) {
+                	if (msgType.equals(MSG_FILE)) {
+                		wrangler = new InputFileWrangler(this, msg);
+                	} else if (msgType.equals(MSG_OBJECT)) {
+                		wrangler = new InputObjectWrangler(this, msg);
+                	}
+                	
+                	if (wrangler != null) {
+    	                wranglers.put(wrangler.getKey(), wrangler);
+                	}
+                }
+                
+                if (wrangler == null) {
+                    logMsg("Unable to obtain wrangler for message. This is either a late or an early ACK. Ignoring.");
+                    logMsg(" Msg type: " + msgType + "  key: " + getMsgString(msg, TRANSACTION_KEY));
+                } else {
+                    wrangler.processMsg(msg);
+                }
             }
-            
-            if (wrangler == null) {
-                logMsg("Unable to obtain wrangler for message. This is either a late or an early ACK. Ignoring.");
-                logMsg(" Msg type: " + msgType + "  key: " + getMsgString(msg, TRANSACTION_KEY));
-            } else {
-                wrangler.processMsg(msg);
-            }
-            
-
         } catch (Exception e) {
+            JxtaCast.logMsg("ERROR: Failed to receive message: " + e.getMessage());
             e.printStackTrace();   
         }
     }
@@ -586,7 +587,7 @@ public class JxtaCast implements PipeMsgListener, Runnable {
      *
      * @param msg a chat message.
      */
-    public synchronized void receiveChatMsg(Message msg) {
+    public /*synchronized*/ void receiveChatMsg(Message msg) {
 
         try {
             String sender   = getMsgString(msg, SENDERNAME);
@@ -606,7 +607,7 @@ public class JxtaCast implements PipeMsgListener, Runnable {
      *
      *  @param  text   the message text.
      */
-    public synchronized void sendChatMsg(String text) {
+    public /*synchronized*/ void sendChatMsg(String text) {
         try {
             // Create a message, fill it with our standard headers.
             Message msg = new Message();
@@ -630,7 +631,7 @@ public class JxtaCast implements PipeMsgListener, Runnable {
      *  @param  file       the file to send.
      *  @param  caption    description of the file (optional)
      */
-    public synchronized void sendFile(File file, String caption) {
+    public /*synchronized*/ void sendFile(File file, String caption) {
 
         // Create a wrangler to handle the file transfer, and then queue it
         // in our sendFileQueue Vector.  Another thread will retrieve it
@@ -650,7 +651,7 @@ public class JxtaCast implements PipeMsgListener, Runnable {
      *  @param  object     the object to send. It must not be null or a {@link NullPointerException} will be thrown on the spot.
      *  @param  caption    description of the object (optional)
      */
-    public synchronized void sendObject(Object object, String caption) {
+    public /*synchronized*/ void sendObject(Object object, String caption) {
 
     	if (object == null) {
     		throw new NullPointerException("Object must not be null.");
@@ -709,7 +710,7 @@ public class JxtaCast implements PipeMsgListener, Runnable {
      *  for a long time will remove themselves from the collection.  Input
      *  wranglers that are missing data blocks will request them.
      */
-    protected synchronized void checkWranglers() {
+    protected void checkWranglers() {
 
         Enumeration<Wrangler> elements = wranglers.elements();
         Wrangler wrangler;
@@ -726,7 +727,7 @@ public class JxtaCast implements PipeMsgListener, Runnable {
      * is called by the worker thread.  It reads them from the queue, and triggers
      * the data load and send process.
      */
-    protected synchronized void checkSendQueue() {
+    protected void checkSendQueue() {
 
         OutputWrangler wrangler = null;
       

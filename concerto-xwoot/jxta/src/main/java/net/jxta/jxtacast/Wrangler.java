@@ -19,7 +19,7 @@ public interface Wrangler {
 	 */
 	void processMsg(Message msg);
 
-	/** Receive a regular 'maintainence' check-in from the TrailBoss thread. */
+	/** Receive a regular 'maintenance' check-in from the TrailBoss thread. */
 	void bossCheck();
 
 	/**

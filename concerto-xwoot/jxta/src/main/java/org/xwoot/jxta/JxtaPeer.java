@@ -31,7 +31,6 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.net.Socket;
-import java.net.SocketException;
 
 import javax.crypto.EncryptedPrivateKeyInfo;
 
@@ -99,11 +98,14 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 	/** Number of ms to wait between tries to discover pipe ADVs in a group and send an object to one of them. */ 
 	public static final long WAIT_INTERVAL_BETWEEN_TRIES = 5000;
 	
+	/** Number of ms to wait for a reply to be sent back. */
+	public static final int WAIT_INTERVAL_FOR_INCOMMING_MESSAGE = 30 * 1000;
+	
 	/** Number tries to discover pipe ADVs in a group and send an object to one of them. */
 	public static final int NUMBER_OF_TRIES = 5;
 	
 	/** Number of ms to wait for a rdv connection to a group. */ 
-    public static final long WAIT_FOR_RDV_CONNECTION_PERIOD = 120000;
+    public static final long WAIT_FOR_RDV_CONNECTION_PERIOD = 120 * 1000;
 	
 	/** Server socket used to accept incoming direct messages in a reliable way. This could also be made secure.*/
 	protected JxtaServerSocket serverSocket;
@@ -955,105 +957,6 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
         }
     }
     
-    // Daemon
-    class ConnectionHandler extends Thread
-    {
-        JxtaServerSocket serverSocket;
-        DirectMessageReceiver receiver;
-        
-        ConnectionHandler(JxtaServerSocket serverSocket, DirectMessageReceiver receiver)
-        {
-            super("DirectCommunication:ConnectionHandler");
-            this.serverSocket = serverSocket;
-            this.receiver = receiver;
-        }
-        
-        /** {@inheritDoc} **/
-        @Override
-        public void run()
-        {
-            while (true) {
-                try {
-                    Socket socket = this.serverSocket.accept();
-                    new ConnectionThread(socket, this.receiver).start();
-                } catch (SocketException closed) {
-                    // FIXME: can we use JxtaPeer.this.logger instead?
-                    
-                    if (this.receiver.getLog() != null) {
-                        this.receiver.getLog().debug("Socket server got closed. Stopping this ConnectionHandler thread.", closed);
-                    }
-                    
-                    return;
-                } catch (IOException e) {
-                    this.receiver.getLog().error("Error: Failed to accept connection from client.", e);
-                } 
-            }
-        }
-    }
-    
-    // One thread per connection.
-    class ConnectionThread extends Thread
-    {
-        Socket socket;
-        DirectMessageReceiver receiver;
-        
-        ConnectionThread(Socket socket, DirectMessageReceiver receiver)
-        {
-            super("DirectCommunication:ConnectionThread");
-            this.socket = socket;
-            this.receiver = receiver;
-        }
-        
-        /** {@inheritDoc} **/
-        @Override
-        public void run()
-        {
-            InputStream is = null;
-            OutputStream os = null;
-            ObjectInputStream ois = null;
-            ObjectOutputStream oos = null;
-            try {
-                is = this.socket.getInputStream();
-                os = this.socket.getOutputStream();
-                ois = new ObjectInputStream(is);
-                oos = new ObjectOutputStream(os);
-                
-                Object message = ois.readObject();
-                receiver.receiveDirectMessage(message, oos);
-                
-                // Make sure to flush in case receiver did not.
-                oos.flush();
-                os.flush();
-            } catch (Exception e) {
-                this.receiver.getLog().error("Failed to receive message or to send reply.", e);
-            } finally {
-                try{
-                    if (ois != null) {
-                        ois.close();
-                    }
-                    if (is != null) {
-                        is.close();
-                    }
-                    
-                    if (oos != null) {
-                        oos.close();
-                    }
-                    if (os != null) {
-                        os.close();
-                    }
-                    
-                    if (this.socket != null) {
-                        socket.close();
-                    }
-                } catch (Exception e) {
-                    // Just log it.
-                    this.receiver.getLog().warn("Failed to close streams for this conenction.");
-                }
-            }
-            
-            // die.
-        }
-    }
     
     /** {@inheritDoc} **/
     public void leavePeerGroup(PeerGroup oldGroup) throws PeerGroupException {
@@ -1567,6 +1470,7 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
             is = socket.getInputStream();
             ois = new ObjectInputStream(is);
             
+            socket.setSoTimeout(WAIT_INTERVAL_FOR_INCOMMING_MESSAGE);
             replyMessage = ois.readObject(); 
             
         } catch (EOFException eof) {
@@ -1579,17 +1483,28 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
                 if (ois != null) {
                     ois.close();
                 }
+            } catch (Exception e) {
+            	// Just log it.
+                this.logger.warn("Failed to close object input stream for this conenction.", e);
+            }
+            
+            try {
                 if (is != null) {
                     is.close();
                 }
+            } catch (Exception e) {
+            	// Just log it.
+                this.logger.warn("Failed to close input stream for this conenction.", e);
+            }
                 
+            try {
                 // Close the socket, we are done.
                 if (socket != null) {
                     socket.close();
                 }
             } catch (Exception e) {
                 // Just log it.
-                this.logger.warn("Failed to close streams for this conenction.");
+                this.logger.warn("Failed to close socket for this conenction.");
             }
         }
         

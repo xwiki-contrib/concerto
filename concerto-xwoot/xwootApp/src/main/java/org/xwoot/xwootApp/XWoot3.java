@@ -1150,7 +1150,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         this.logger.debug(this.getXWootName() + " : Importing file " + newState);
         ZipFile state=null;
         try {
-           state = new ZipFile(newState);
+        	state = new ZipFile(newState);
         }catch(Exception e){
             this.logger.error(this.getXWootName() + " : Invalid state file. Aborting.", e);
             throw new XWootException("Invalid state file. Set state aborted.", e);
@@ -1166,8 +1166,8 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             treState = new File(this.stateDirPath, this.getTreStateFileName());
             antiEntropyState = new File(this.stateDirPath, this.getAntiEntropyStateFileName());
             
-            if (!wootState.exists() || !treState.exists() || !antiEntropyState.exists()) {
-                throw new WootEngineException("Expected " + wootState + ", " + treState + " and " + antiEntropyState + " files were not found after unpacking an xwoot state.");
+            if (!wootState.exists() || !treState.exists()) {
+                throw new WootEngineException("Expected " + wootState + " and " + treState + " files were not found after unpacking an xwoot state.");
             }
 
             // Clear WootEngine data.
@@ -1185,8 +1185,10 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             
             // Clean Anti-Entropy data.
             this.antiEntropy.clearWorkingDir();
-            // Update Anti-Entropy data.
-            FileUtil.unzipInDirectory(antiEntropyState.toString(), this.antiEntropy.getLog().getWorkingDirectory());
+            if (antiEntropyState.exists()) {
+	            // Update Anti-Entropy data.
+	            FileUtil.unzipInDirectory(antiEntropyState.toString(), this.antiEntropy.getLog().getWorkingDirectory());
+            }
 
             return;
         } catch (WootEngineException e) {
@@ -1202,6 +1204,9 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             }
             if (treState != null && treState.exists()) {
                 treState.delete();
+            }
+            if (antiEntropyState != null && antiEntropyState.exists()) {
+            	antiEntropyState.delete();
             }
         }
     }
@@ -1248,9 +1253,11 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         this.logger.debug(this.getXWootName() + " : Synchronizing with wiki.");
         this.synchronize(false);
         
-        this.logger.debug(this.getXWootName() + " : Creating state.");
+        this.logger.debug(this.getXWootName() + " : " + (this.isStateComputed() ? "Updating" : "Creating") + " state.");
 
         // TODO: could be better handled and more consistent.
+        
+        List<File> xwootStateFiles = new ArrayList<File>();
         
         // get WOOT state
         File wootState;
@@ -1273,6 +1280,8 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             this.logger.error(this.getXWootName() + " : The Woot state did not compute successfuly.\n");
             throw new XWootException(this.getXWootName() + " : The Woot state did not compute successfuly.");
         }
+        
+        xwootStateFiles.add(wootState);
 
         // get TRE state
         File treState = new File(this.stateDirPath, this.getTreStateFileName());
@@ -1283,19 +1292,34 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             throw new XWootException(this.getXWootName() + " : The TRE state did not compute successfuly.\n", e);
         }
         
-        // get Anti-Entropy log's state
-        File antiEntropyState = new File(this.stateDirPath, this.getAntiEntropyStateFileName());
+        xwootStateFiles.add(treState);
+        
+        File antiEntropyState = null;
+        int logSize = 0;
         try {
-            FileUtil.zipDirectory(this.antiEntropy.getLog().getWorkingDirectory(), antiEntropyState.toString());
+        	logSize = this.antiEntropy.getLog().logSize();
         } catch (Exception e) {
-            this.logger.error(this.getXWootName() + " : The Anti-entropy state did not compute successfuly.\n", e);
+        	this.logger.error(this.getXWootName() + " : The Anti-entropy state did not compute successfuly.\n", e);
             throw new XWootException(this.getXWootName() + " : The Anti-entropy state did not compute successfuly.\n", e);
+        }
+        
+        if (logSize != 0) {
+	        // get Anti-Entropy log's state
+        	antiEntropyState = new File(this.stateDirPath, this.getAntiEntropyStateFileName());
+	        try {
+	            FileUtil.zipDirectory(this.antiEntropy.getLog().getWorkingDirectory(), antiEntropyState.toString());
+	        } catch (Exception e) {
+	            this.logger.error(this.getXWootName() + " : The Anti-entropy state did not compute successfuly.\n", e);
+	            throw new XWootException(this.getXWootName() + " : The Anti-entropy state did not compute successfuly.\n", e);
+	        }
+	        
+	        xwootStateFiles.add(antiEntropyState);
         }
         
         // package the WOOT state, TRE state and Anti-Entropy log together.
         try {
             //String zip=FileUtil.zipDirectory(this.stateDirPath/*, File.createTempFile("state", ".zip").getPath()*/);
-            FileUtil.zipFiles(new File[]{wootState, treState, antiEntropyState}, this.getStateFilePath());
+            FileUtil.zipFiles(xwootStateFiles.toArray(new File[0]), this.getStateFilePath());
             /*if (zip!=null){
                 File r = new File(zip);
                 File result = new File(this.stateDirPath + File.separatorChar + STATEFILENAME);
@@ -1327,10 +1351,12 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             throw new XWootException(this.getXWootName() + " : Problems creating the XWoot state.\n", e);
         }
         
-        // delete the 2 state files because they are now packed into the xwoot state.
-        wootState.delete();
-        treState.delete();
-        antiEntropyState.delete();
+        // delete the state files because they are now packed into the xwoot state.
+        for (File componentStateFile : xwootStateFiles) {
+        	if (componentStateFile != null && componentStateFile.exists()) {
+        		componentStateFile.delete();
+        	}
+        }
     }
     
     /** @return true if this peer created the group he currently is member of. */
