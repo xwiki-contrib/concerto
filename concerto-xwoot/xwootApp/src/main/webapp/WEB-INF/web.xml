@@ -105,6 +105,16 @@
   <servlet-mapping>
     <servlet-name>contentProviderDiagnostics</servlet-name>
     <url-pattern>/contentProviderDiagnostics</url-pattern>
+  </servlet-mapping>   
+  
+  <!-- status -->
+  <servlet>
+    <servlet-name>status</servlet-name>
+    <servlet-class>org.xwoot.xwootApp.web.servlets.Status</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>status</servlet-name>
+    <url-pattern>/status</url-pattern>
   </servlet-mapping>    
 
   <!-- standard mappings -->

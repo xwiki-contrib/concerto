@@ -922,7 +922,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
 
     
     public synchronized void synchronize() throws XWootException
-    {
+    {        
         this.synchronize(true);
     }
     
