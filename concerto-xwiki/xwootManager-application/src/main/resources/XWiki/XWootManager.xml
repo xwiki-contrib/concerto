@@ -55,24 +55,25 @@
 <tags/>
 </property>
 </object>
-<content>#if("$!{request.action}" != "")
-  #if($request.action == "connectWiki")
-    $xwoot.connectWiki()
-  #elseif($request.action == "disconnectWiki")
-    $xwoot.disconnectWiki()
-  #elseif($request.action == "connectP2P")
-    $xwoot.connectP2P()
-  #elseif($request.action == "disconnectP2P")
-    $xwoot.disconnectP2P()
-  #elseif($request.action == "manage")
-    $xwoot.manageDocument($request.document)
-  #elseif($request.action == "unmanage")
-    $xwoot.unmanageDocument($request.document)
-  #elseif($request.action == "synchronize")
-    $xwoot.sychronize()
-  #end
-  #if("$!{request.xredirect}" != "")
-    $response.sendRedirect($request.xredirect)
-  #end
+<content>#if("$!{request.action}" != "")                                                                                               
+  #if($request.action == "connectWiki")                                                                                                
+    $xwoot.connectWiki()                                                                                                               
+  #elseif($request.action == "disconnectWiki")                                                                                         
+    $xwoot.disconnectWiki()                                                                                                            
+  #elseif($request.action == "connectP2P")                                                                                             
+    $xwoot.connectP2P()                                                                                                                
+  #elseif($request.action == "disconnectP2P")                                                                                          
+    $xwoot.disconnectP2P()                                                                                                             
+  #elseif($request.action == "manage")                                                                                                 
+    $xwoot.manageDocument($request.document)                                                                                           
+  #elseif($request.action == "unmanage")                                                                                               
+    $xwoot.unmanageDocument($request.document)                                                                                         
+  #elseif($request.action == "synchronize")                                                                                            
+    $xwoot.sychronize()                                                                                                                
+  #end                                                                                                                                 
+
+  #if("$!{request.xredirect}" != "")                                                                                                   
+    $response.sendRedirect($request.xredirect)                                                                                         
+  #end                                                                                                                                 
 #end</content>
 </xwikidoc>

@@ -99,27 +99,44 @@
 </property>
 <property>
 <content>#panelheader('XWoot')
-#if("$!{xwoot}" == '')
+#if("$!{xwoot}" == '')                                                                                                                 
   #warning('The XWoot management component is not installed.')
-#elseif(!$xwoot.isAvailable())
-  #warning('XWoot server is not available.')
-#elseif(!$xwoot.isInitialised())
-  XWoot is not initialized. Please [bootstrap XWoot&gt;$xwoot.getBootstrapURL()] in order to use XWoot.
 #else
-  #if($xwoot.isWikiConnected())
-* XWoot is connected to the wiki. \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=disconnectWiki&amp;amp;xredirect=$request.getRequestURL()")"&gt;Disconnect&lt;/a&gt;\]
-    #if($xwoot.isDocumentManaged($doc.fullName))
-* The current document is managed. \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=unmanage&amp;amp;document=$doc.fullName&amp;amp;xredirect=$request.getRequestURL()")"&gt;Unmanage&lt;/a&gt;\]
-    #else
-* The current document is not managed. \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=manage&amp;amp;document=$doc.fullName&amp;amp;xredirect=$request.getRequestURL()")"&gt;Manage&lt;/a&gt;\]
+  #set($connectionsStatus = $xwoot.getConnectionsStatus())
+  #if($connectionsStatus.getProperty("xwootStarted") == "true")
+    &lt;a href="$xwoot.getXWootAppAddress()"&gt;XWoot&lt;/a&gt; is started
+    &lt;hr/&gt;
+
+    #if($connectionsStatus.getProperty("xwootConnectedToP2PNetwork") == "true")
+      Connected to P2P network. \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=disconnectP2P&amp;amp;xredirect=$request.getRequestURL()")"&gt;Disconnect&lt;/a&gt;\]
+
+      #if($connectionsStatus.getProperty("xwootConnectedToP2PGroup") == "true")
+         Connected to P2P group.
+
+        Neighbours: $connectionsStatus.getProperty("xwootNeighbours")
+      #end
+ 
+     \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=disconnectWiki&amp;amp;xredirect=$request.getRequestURL()")"&gt;Synchronize&lt;/a&gt;\]
+
+    #else 
+      Disconnected from P2P network. \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=connectP2P&amp;amp;xredirect=$request.getRequestURL()")"&gt;Connect&lt;/a&gt;\]
     #end
+
+    &lt;hr/&gt;
+
+    #if($connectionsStatus.getProperty("xwootConnectedToXWiki") == "true")
+      Connected to XWiki. \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=disconnectWiki&amp;amp;xredirect=$request.getRequestURL()")"&gt;Disconnect&lt;/a&gt;\]
+
+      Ignore patterns: {pre}$connectionsStatus.getProperty("xwootIgnorePatterns"){/pre}
+
+      Accept patterns: {pre}$connectionsStatus.getProperty("xwootAcceptPatterns"){/pre}
+    #else
+      Disconnected from XWiki. \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=connectWiki&amp;amp;xredirect=$request.getRequestURL()")"&gt;Connect&lt;/a&gt;\]
+    #end
+
   #else
-* XWoot is not connected to the wiki. \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=connectWiki&amp;amp;xredirect=$request.getRequestURL()")"&gt;Connect&lt;/a&gt;\]
-  #end
-  #if($xwoot.isP2PConnected())
-* XWoot is connected to the P2P network. \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=disconnectP2P&amp;amp;xredirect=$request.getRequestURL()")"&gt;Disconnect&lt;/a&gt;\] \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=synchronize&amp;amp;xredirect=$request.getRequestURL()")"&gt;Synchronize&lt;/a&gt;\]
-  #else
-* XWoot is not connected to the P2P network. \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=connectP2P&amp;amp;xredirect=$request.getRequestURL()")"&gt;Connect&lt;/a&gt;\]
+    &lt;a href="$xwoot.getXWootAppAddress()"&gt;XWoot&lt;/a&gt; is not started
+    &lt;hr/&gt;
   #end
 #end
 #panelfooter()</content>
