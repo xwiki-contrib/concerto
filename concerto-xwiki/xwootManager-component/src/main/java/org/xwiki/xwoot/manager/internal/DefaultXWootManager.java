@@ -19,7 +19,8 @@
  */
 package org.xwiki.xwoot.manager.internal;
 
-import java.util.List;
+import java.io.ByteArrayInputStream;
+import java.util.Properties;
 
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpClient;
@@ -36,7 +37,7 @@ import org.xwiki.xwoot.manager.XWootManager;
 public class DefaultXWootManager extends AbstractLogEnabled implements XWootManager, LogEnabled, Initializable
 {
     /** The base address of the XWoot server. Should be configurable... */
-    private String wootAddress = "http://localhost:8080/xwootApp";
+    private String xwootAppAddress = "http://localhost:8080/xwootApp";
 
     /** A HTTP client used to communicate with XWoot. */
     private HttpClient client;
@@ -54,80 +55,53 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
         client.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(1, true));
     }
 
-    /**
-     * {@inheritDoc}
-     * 
-     * @see XWootManager#isAvailable()
-     */
-    public boolean isAvailable()
+    private String call(String service)
     {
-        String result = call("/information?request=isXWootInitialized");
-        return !"failed".equals(result);
+        HttpMethod method = new GetMethod(xwootAppAddress + service);
+        try {
+            getLogger().debug("Requesting: " + method.getURI());
+            if (client.executeMethod(method) < 400) {
+                String result = method.getResponseBodyAsString();
+                getLogger().debug("Result: " + result);
+                return result;
+            }
+            getLogger().info("Failed call: " + method.getStatusLine());
+        } catch (Exception ex) {
+            getLogger().warn("Exception occured while calling [" + service + "] on [" + xwootAppAddress + "]", ex);
+        } finally {
+            // Release the connection, since HTTPClient reuses connections for improved performance
+            method.releaseConnection();
+        }
+        return "failed";
+    }
+    
+    private Properties parsePropertiesFromXML(String xml) {
+        Properties result = new Properties();
+        ByteArrayInputStream bais = new ByteArrayInputStream(xml.getBytes());
+        try {
+            result.loadFromXML(bais);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return result;
     }
 
-    /**
-     * {@inheritDoc}
-     * 
-     * @see XWootManager#getBootstrapURL()
-     */
-    public String getBootstrapURL()
+    public Properties getConnectionsStatus()
     {
-        return wootAddress;
+        return parsePropertiesFromXML(call("/status?type=connections"));
+    }        
+
+    public void setXWootAppAddress(String xwootAppAddress)
+    {
+        this.xwootAppAddress = xwootAppAddress;
     }
 
-    /**
-     * {@inheritDoc}
-     * 
-     * @see XWootManager#isInitialised()
-     */
-    public boolean isInitialised()
+    public String getXWootAppAddress()
     {
-        String result = call("/information?request=isXWootInitialized");
-        return result.indexOf("true") >= 0;
+        return this.xwootAppAddress;
     }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see XWootManager#isP2PConnected()
-     */
-    public boolean isP2PConnected()
-    {
-        String result = call("/information?request=isP2PNetworkConnected");
-        return result.indexOf("true") >= 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see XWootManager#connectP2P()
-     */
-    public void connectP2P()
-    {
-        call("/synchronize.do?action=p2pnetworkconnection&switch=on");
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see XWootManager#disconnectP2P()
-     */
-    public void disconnectP2P()
-    {
-        call("/synchronize.do?action=p2pnetworkconnection&switch=off");
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see XWootManager#isWikiConnected()
-     */
-    public boolean isWikiConnected()
-    {
-        String result = call("/information?request=isWikiConnected");
-        return result.indexOf("true") >= 0;
-    }
-
+    
     /**
      * {@inheritDoc}
      * 
@@ -151,45 +125,23 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
     /**
      * {@inheritDoc}
      * 
-     * @see XWootManager#isDocumentManaged(String)
+     * @see XWootManager#connectP2P()
      */
-    public boolean isDocumentManaged(String documentName)
+    public void connectP2P()
     {
-        String result = call("/information?request=isDocumentManaged&document=" + documentName);
-        return result.indexOf("true") >= 0;
+        call("/synchronize.do?action=p2pnetworkconnection&switch=on");
     }
 
     /**
      * {@inheritDoc}
      * 
-     * @see XWootManager#manageDocument(String)
+     * @see XWootManager#disconnectP2P()
      */
-    public void manageDocument(String documentName)
+    public void disconnectP2P()
     {
-        call("/pageManagement.do?action=addPage&document=" + documentName);
+        call("/synchronize.do?action=p2pnetworkconnection&switch=off");
     }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see XWootManager#unmanageDocument(String)
-     */
-    public void unmanageDocument(String documentName)
-    {
-        call("/pageManagement.do?action=removePage&document=" + documentName);
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see XWootManager#listPeers()
-     */
-    public List<String> listPeers()
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
+    
     /**
      * {@inheritDoc}
      * 
@@ -198,25 +150,5 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
     public void synchronize()
     {
         call("/synchronize.do?action=synchronize");
-    }
-
-    private String call(String service)
-    {
-        HttpMethod method = new GetMethod(wootAddress + service);
-        try {
-            getLogger().debug("Requesting: " + method.getURI());
-            if (client.executeMethod(method) < 400) {
-                String result = method.getResponseBodyAsString();
-                getLogger().debug("Result: " + result);
-                return result;
-            }
-            getLogger().info("Failed call: " + method.getStatusLine());
-        } catch (Exception ex) {
-            getLogger().warn("Exception occured while calling [" + service + "] on [" + wootAddress + "]", ex);
-        } finally {
-            // Release the connection, since HTTPClient reuses connections for improved performance
-            method.releaseConnection();
-        }
-        return "failed";
     }
 }

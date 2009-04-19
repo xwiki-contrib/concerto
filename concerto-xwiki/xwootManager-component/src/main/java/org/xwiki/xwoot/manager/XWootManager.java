@@ -20,6 +20,7 @@
 package org.xwiki.xwoot.manager;
 
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Helper component for managing an XWoot server.
@@ -31,36 +32,19 @@ public interface XWootManager
     /** This component's role, used when code needs to look it up. */
     String ROLE = XWootManager.class.getName();
 
-    /**
-     * Checks if the configured XWoot server is available, meaning that a connection can be established.
-     * 
-     * @return <code>true</code> if the server could be contacted and the
-     */
-    boolean isAvailable();
+    String getXWootAppAddress();
 
-    boolean isInitialised();
+    void setXWootAppAddress(String xwootAppAddress);
 
-    String getBootstrapURL();
-
-    boolean isDocumentManaged(String documentName);
-
-    void manageDocument(String documentName);
-
-    void unmanageDocument(String documentName);
-
-    boolean isWikiConnected();
-
+    Properties getConnectionsStatus();
+   
     void disconnectWiki();
 
     void connectWiki();
 
-    boolean isP2PConnected();
-
     void disconnectP2P();
 
     void connectP2P();
-
-    List<String> listPeers();
-
+    
     void synchronize();
 }
