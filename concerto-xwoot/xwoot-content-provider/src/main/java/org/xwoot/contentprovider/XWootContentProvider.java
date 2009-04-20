@@ -598,6 +598,10 @@ public class XWootContentProvider implements XWootContentProviderInterface
     {
         return stateManager.getEntries(pageId, start, number);
     }
+    
+    public List<Entry> getLastClearedEntries(String pageId, int start, int number) {
+        return stateManager.getLastClearedEntries(pageId, start,number);
+    }
 
     public boolean isConnected()
     {

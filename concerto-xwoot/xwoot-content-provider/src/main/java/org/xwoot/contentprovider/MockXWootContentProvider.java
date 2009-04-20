@@ -143,4 +143,14 @@ public class MockXWootContentProvider implements XWootContentProviderInterface
     {        
         return this.connected;
     }
+
+    public List<Entry> getLastClearedEntries(String pageId, int start, int number)
+    {
+        return new ArrayList<Entry>();
+    }
+
+    public String getEndpoint()
+    {
+        return "mock";
+    }
 }

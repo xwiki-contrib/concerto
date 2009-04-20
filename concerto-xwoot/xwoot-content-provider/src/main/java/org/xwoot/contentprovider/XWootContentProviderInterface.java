@@ -89,4 +89,8 @@ public interface XWootContentProviderInterface
     boolean isConnected();
     
     List<Entry> getEntries(String pageId, int start, int number);
+    
+    List<Entry> getLastClearedEntries(String pageId, int start, int number);
+    
+    String getEndpoint();
 }
