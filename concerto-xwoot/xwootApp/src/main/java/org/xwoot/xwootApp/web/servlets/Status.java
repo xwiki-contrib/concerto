@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -15,6 +16,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import net.jxta.protocol.PipeAdvertisement;
 
+import org.xwoot.contentprovider.Entry;
+import org.xwoot.contentprovider.XWootContentProviderInterface;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.XWootException;
 import org.xwoot.xwootApp.web.XWootSite;
@@ -30,19 +33,62 @@ public class Status extends HttpServlet
 
     private static final String CONNECTIONS = "connections";
 
+    private static final String CONTENT_PROVIDER = "contentProvider";
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-    {        
+    {
         Map<String, Object> result = new HashMap<String, Object>();
 
         if (CONNECTIONS.equalsIgnoreCase(req.getParameter(TYPE_QUERY_PARAMETER))) {
             result = getConnectionsStatus();
+        } else if (CONTENT_PROVIDER.equalsIgnoreCase(req.getParameter(TYPE_QUERY_PARAMETER))) {
+            result = getContentProviderStatus();
         }
 
         resp.setContentType("application/xml");
 
         XStream xstream = new XStream(new DomDriver());
-        xstream.toXML(result, resp.getOutputStream());        
+        xstream.toXML(result, resp.getOutputStream());
+    }
+
+    private Map<String, Object> getContentProviderStatus()
+    {
+        XWootSite xwootSite = XWootSite.getInstance();
+        XWootAPI xwootAPI = xwootSite.getXWootEngine();
+
+        Map<String, Object> result = new HashMap<String, Object>();
+        
+        if (xwootAPI != null) {
+            XWootContentProviderInterface cp = xwootAPI.getContentProvider();
+            
+            List<Entry> entries = cp.getEntries(null, 0, -1);
+            List<Map> entriesList = new ArrayList<Map>();
+            for (Entry entry : entries) {
+                Map<String, Object> entryProperties = new HashMap<String, Object>();
+                entryProperties.put("pageId", entry.getPageId());
+                entryProperties.put("timestamp", entry.getTimestamp());
+                entryProperties.put("version", String.format("%d.%d", entry.getVersion(), entry.getMinorVersion()));
+                entryProperties.put("cleared", entry.isCleared());
+                entriesList.add(entryProperties);
+            }
+
+            result.put("contentProviderEntries", entriesList);
+            
+            entries = cp.getLastClearedEntries(null, 0, -1);
+            entriesList = new ArrayList<Map>();
+            for (Entry entry : entries) {
+                Map<String, Object> entryProperties = new HashMap<String, Object>();
+                entryProperties.put("pageId", entry.getPageId());
+                entryProperties.put("timestamp", entry.getTimestamp());
+                entryProperties.put("version", String.format("%d.%d", entry.getVersion(), entry.getMinorVersion()));                
+                entriesList.add(entryProperties);
+            }
+
+            result.put("contentProviderLastClearedEntries", entriesList);            
+        }
+
+        return result;
     }
 
     private Map<String, Object> getConnectionsStatus()
@@ -56,8 +102,10 @@ public class Status extends HttpServlet
         result.put("xwootConnectedToP2PNetwork", xwootAPI != null ? xwootAPI.isConnectedToP2PNetwork() : false);
         result.put("xwootConnectedToP2PGroup", xwootAPI != null ? xwootAPI.isConnectedToP2PGroup() : false);
         result.put("xwootConnectedToXWiki", xwootAPI != null ? xwootAPI.isContentManagerConnected() : false);
+        result.put("xwootTargetXWiki", xwootAPI != null ? xwootAPI.getContentProvider().getEndpoint() : "None");
         result.put("xwootLastSynchronization", xwootAPI != null ? xwootAPI.getLastSynchronizationDate() : null);
-        result.put("xwootLastSynchronizationFailure", xwootAPI != null ? xwootAPI.getLastSynchronizationFailure() : null);
+        result.put("xwootLastSynchronizationFailure", xwootAPI != null ? xwootAPI.getLastSynchronizationFailure()
+            : null);
         result.put("xwootIgnorePatterns", xwootAPI != null ? xwootAPI.getContentProvider().getConfiguration()
             .getIgnorePatterns() : "No content provider available.");
         result.put("xwootAcceptPatterns", xwootAPI != null ? xwootAPI.getContentProvider().getConfiguration()
