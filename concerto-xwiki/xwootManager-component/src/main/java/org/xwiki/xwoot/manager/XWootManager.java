@@ -34,8 +34,6 @@ public interface XWootManager
     String ROLE = XWootManager.class.getName();
 
     String getXWootAppAddress();
-
-    void setXWootAppAddress(String xwootAppAddress);
     
     Map<String, Object> getConnectionsInfo();
    

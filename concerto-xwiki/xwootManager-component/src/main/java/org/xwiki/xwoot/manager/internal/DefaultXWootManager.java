@@ -28,7 +28,11 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
+import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.logging.AbstractLogEnabled;
+import org.xwiki.component.manager.ComponentLookupException;
+import org.xwiki.component.manager.ComponentManager;
+import org.xwiki.component.phase.Composable;
 import org.xwiki.component.phase.Initializable;
 import org.xwiki.component.phase.InitializationException;
 import org.xwiki.component.phase.LogEnabled;
@@ -37,13 +41,19 @@ import org.xwiki.xwoot.manager.XWootManager;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
 
-public class DefaultXWootManager extends AbstractLogEnabled implements XWootManager, LogEnabled, Initializable
+public class DefaultXWootManager extends AbstractLogEnabled implements XWootManager, LogEnabled, Initializable, Composable
 {
     /** The base address of the XWoot server. Should be configurable... */
-    private String xwootAppAddress = "http://localhost:8080/xwootApp";
+    private String DEFAULT_XWOOTAPP_ENDPOINT = "http://localhost:8080/xwootApp";
 
     /** A HTTP client used to communicate with XWoot. */
     private HttpClient client;
+    
+    private ComponentManager componentManager;
+    
+    private DocumentAccessBridge documentBridge;
+    
+    private String XWOOTAPP_ENDPOINT_PAGE = "XWiki.XWootAppEndpoint";
 
     /**
      * Initializes the HTTP client utility. Called by the component manager when this component is instantiated.
@@ -56,10 +66,18 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
         client = new HttpClient(connectionManager);
         client.getParams().setSoTimeout(2000);
         client.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(1, true));
+        
+        try {
+            documentBridge = (DocumentAccessBridge) componentManager.lookup(DocumentAccessBridge.class.getName());
+        } catch (ComponentLookupException e) {            
+            throw new InitializationException(e.getMessage());
+        }
     }
 
     private String call(String service)
     {
+        String xwootAppAddress = getXWootAppAddress();
+        
         HttpMethod method = new GetMethod(xwootAppAddress + service);
         try {
             getLogger().debug("Requesting: " + method.getURI());
@@ -80,7 +98,7 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
     
     private Map<String, Object> getStatusMap(String type)
     {
-        String uri = String.format("%s/status?type=%s", xwootAppAddress, type);
+        String uri = String.format("%s/status?type=%s", getXWootAppAddress(), type);
         HttpMethod method = new GetMethod(uri);
         try {
             getLogger().debug("Requesting: " + method.getURI());
@@ -105,14 +123,20 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
         return getStatusMap("connections");
     }
 
-    public void setXWootAppAddress(String xwootAppAddress)
-    {
-        this.xwootAppAddress = xwootAppAddress;
-    }
-
     public String getXWootAppAddress()
     {
-        return this.xwootAppAddress;
+        String xwootAppAddress = DEFAULT_XWOOTAPP_ENDPOINT;
+        if(documentBridge.exists("XWiki.XWootAppEndpoint")) {
+            try {
+                xwootAppAddress = documentBridge.getDocumentContent(XWOOTAPP_ENDPOINT_PAGE);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        
+        System.out.format("Using XWoot at: %s\n", xwootAppAddress);
+        
+        return xwootAppAddress;
     }
     
     /**
@@ -163,5 +187,11 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
     public void synchronize()
     {
         call("/synchronize.do?action=synchronize");
+    }
+
+    public void compose(ComponentManager componentManager)
+    {
+        System.out.format("Composing: %s\n", componentManager);
+        this.componentManager = componentManager;        
     }
 }
