@@ -19,8 +19,8 @@
  */
 package org.xwiki.xwoot.manager.internal;
 
-import java.io.ByteArrayInputStream;
-import java.util.Properties;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpClient;
@@ -33,6 +33,9 @@ import org.xwiki.component.phase.Initializable;
 import org.xwiki.component.phase.InitializationException;
 import org.xwiki.component.phase.LogEnabled;
 import org.xwiki.xwoot.manager.XWootManager;
+
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.xml.DomDriver;
 
 public class DefaultXWootManager extends AbstractLogEnabled implements XWootManager, LogEnabled, Initializable
 {
@@ -75,22 +78,32 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
         return "failed";
     }
     
-    private Properties parsePropertiesFromXML(String xml) {
-        Properties result = new Properties();
-        ByteArrayInputStream bais = new ByteArrayInputStream(xml.getBytes());
-        try {
-            result.loadFromXML(bais);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        
-        return result;
-    }
-
-    public Properties getConnectionsStatus()
+    private Map<String, Object> getStatusMap(String type)
     {
-        return parsePropertiesFromXML(call("/status?type=connections"));
-    }        
+        String uri = String.format("%s/status?type=%s", xwootAppAddress, type);
+        HttpMethod method = new GetMethod(uri);
+        try {
+            getLogger().debug("Requesting: " + method.getURI());
+            if (client.executeMethod(method) < 400) {
+                XStream xstream = new XStream(new DomDriver());
+                Map<String, Object> result = (Map<String, Object>) xstream.fromXML(method.getResponseBodyAsStream());
+                getLogger().debug("Result: " + result);
+                return result;
+            }
+            getLogger().info("Failed call: " + method.getStatusLine());
+        } catch (Exception ex) {
+            getLogger().warn("Exception occured while calling [" + uri + "]", ex);
+        } finally {
+            // Release the connection, since HTTPClient reuses connections for improved performance
+            method.releaseConnection();
+        }
+
+        return new HashMap<String, Object>();
+    }
+    
+    public Map<String, Object> getConnectionsInfo() {
+        return getStatusMap("connections");
+    }
 
     public void setXWootAppAddress(String xwootAppAddress)
     {

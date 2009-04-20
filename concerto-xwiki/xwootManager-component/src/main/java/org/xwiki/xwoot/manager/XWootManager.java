@@ -20,6 +20,7 @@
 package org.xwiki.xwoot.manager;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -35,8 +36,8 @@ public interface XWootManager
     String getXWootAppAddress();
 
     void setXWootAppAddress(String xwootAppAddress);
-
-    Properties getConnectionsStatus();
+    
+    Map<String, Object> getConnectionsInfo();
    
     void disconnectWiki();
 
