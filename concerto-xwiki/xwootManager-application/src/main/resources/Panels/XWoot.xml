@@ -102,6 +102,8 @@
 #if("$!{xwoot}" == '')                                                                                                                 
   #warning('The XWoot management component is not installed.')
 #else
+  &lt;a href="$xwiki.getURL('XWiki.XWootAppEndpoint', 'edit')"&gt;Configure endpoint&lt;/a&gt;
+  &lt;hr/&gt;
   #set($connectionsInfo = $xwoot.getConnectionsInfo())
   #if($connectionsInfo.get("xwootStarted"))
     &lt;a href="$xwoot.getXWootAppAddress()"&gt;XWoot&lt;/a&gt; is &lt;b&gt;started&lt;/b&gt;
