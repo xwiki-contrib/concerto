@@ -139,11 +139,12 @@
     #else
       &lt;b&gt;Disconnected&lt;/b&gt; from XWiki. \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=connectWiki&amp;amp;xredirect=$request.getRequestURL()")"&gt;Connect&lt;/a&gt;\]
     #end
-
+    &lt;hr/&gt;
   #else
     &lt;a href="$xwoot.getXWootAppAddress()"&gt;XWoot&lt;/a&gt; is &lt;b&gt;not started&lt;/b&gt;
     &lt;hr/&gt;
-  #end
+  #end   
+     &lt;a href="$xwiki.getURL('XWiki.XWootApp', 'view')"&gt;XWoot application page&lt;/a&gt;
 #end
 #panelfooter()</content>
 </property>
