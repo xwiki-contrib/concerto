@@ -102,40 +102,44 @@
 #if("$!{xwoot}" == '')                                                                                                                 
   #warning('The XWoot management component is not installed.')
 #else
-  #set($connectionsStatus = $xwoot.getConnectionsStatus())
-  #if($connectionsStatus.getProperty("xwootStarted") == "true")
-    &lt;a href="$xwoot.getXWootAppAddress()"&gt;XWoot&lt;/a&gt; is started
+  #set($connectionsInfo = $xwoot.getConnectionsInfo())
+  #if($connectionsInfo.get("xwootStarted"))
+    &lt;a href="$xwoot.getXWootAppAddress()"&gt;XWoot&lt;/a&gt; is &lt;b&gt;started&lt;/b&gt;
     &lt;hr/&gt;
 
-    #if($connectionsStatus.getProperty("xwootConnectedToP2PNetwork") == "true")
-      Connected to P2P network. \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=disconnectP2P&amp;amp;xredirect=$request.getRequestURL()")"&gt;Disconnect&lt;/a&gt;\]
+    #if($connectionsInfo.get("xwootConnectedToP2PNetwork"))
+      &lt;b&gt;Connected&lt;/b&gt; to P2P network. \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=disconnectP2P&amp;amp;xredirect=$request.getRequestURL()")"&gt;Disconnect&lt;/a&gt;\]&lt;br/&gt;&lt;br/&gt;
 
-      #if($connectionsStatus.getProperty("xwootConnectedToP2PGroup") == "true")
-         Connected to P2P group.
+      #if($connectionsInfo.get("xwootConnectedToP2PGroup"))
+         &lt;b&gt;Connected&lt;/b&gt; to P2P group.&lt;br/&gt;&lt;br/&gt;
 
-        Neighbours: $connectionsStatus.getProperty("xwootNeighbours")
+        &lt;b&gt;Neighbours&lt;/b&gt;: {pre}$connectionsInfo.get("xwootNeighbours"){/pre}&lt;br/&gt;&lt;br/&gt;
       #end
+
+      &lt;b&gt;Last synch&lt;/b&gt;: $connectionsInfo.get("xwootLastSynchronization")&lt;br/&gt;&lt;br/&gt;
  
-     \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=disconnectWiki&amp;amp;xredirect=$request.getRequestURL()")"&gt;Synchronize&lt;/a&gt;\]
+      &lt;b&gt;Last synch failure&lt;/b&gt;: $connectionsInfo.get("xwootLastSynchronizationFailure")&lt;br/&gt;&lt;br/&gt;
+
+     \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=disconnectWiki&amp;amp;xredirect=$request.getRequestURL()")"&gt;Synchronize&lt;/a&gt;\]&lt;br/&gt;&lt;br/&gt;
 
     #else 
-      Disconnected from P2P network. \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=connectP2P&amp;amp;xredirect=$request.getRequestURL()")"&gt;Connect&lt;/a&gt;\]
+      &lt;b&gt;Disconnected&lt;/b&gt; from P2P network. \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=connectP2P&amp;amp;xredirect=$request.getRequestURL()")"&gt;Connect&lt;/a&gt;\]
     #end
 
     &lt;hr/&gt;
 
-    #if($connectionsStatus.getProperty("xwootConnectedToXWiki") == "true")
-      Connected to XWiki. \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=disconnectWiki&amp;amp;xredirect=$request.getRequestURL()")"&gt;Disconnect&lt;/a&gt;\]
+    #if($connectionsInfo.get("xwootConnectedToXWiki"))
+      &lt;b&gt;Connected&lt;/b&gt; to XWiki. \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=disconnectWiki&amp;amp;xredirect=$request.getRequestURL()")"&gt;Disconnect&lt;/a&gt;\]&lt;br/&gt;&lt;br/&gt;
 
-      Ignore patterns: {pre}$connectionsStatus.getProperty("xwootIgnorePatterns"){/pre}
+      &lt;b&gt;Ignore patterns&lt;/b&gt;: {pre}$connectionsInfo.get("xwootIgnorePatterns"){/pre}&lt;br/&gt;&lt;br/&gt;
 
-      Accept patterns: {pre}$connectionsStatus.getProperty("xwootAcceptPatterns"){/pre}
+      &lt;b&gt;Accept patterns&lt;/b&gt;: {pre}$connectionsInfo.get("xwootAcceptPatterns"){/pre}&lt;br/&gt;&lt;br/&gt;
     #else
-      Disconnected from XWiki. \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=connectWiki&amp;amp;xredirect=$request.getRequestURL()")"&gt;Connect&lt;/a&gt;\]
+      &lt;b&gt;Disconnected&lt;/b&gt; from XWiki. \[&lt;a href="$xwiki.getURL('XWiki.XWootManager', 'view', "action=connectWiki&amp;amp;xredirect=$request.getRequestURL()")"&gt;Connect&lt;/a&gt;\]
     #end
 
   #else
-    &lt;a href="$xwoot.getXWootAppAddress()"&gt;XWoot&lt;/a&gt; is not started
+    &lt;a href="$xwoot.getXWootAppAddress()"&gt;XWoot&lt;/a&gt; is &lt;b&gt;not started&lt;/b&gt;
     &lt;hr/&gt;
   #end
 #end
