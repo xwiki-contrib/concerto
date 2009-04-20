@@ -52,6 +52,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -1258,5 +1259,17 @@ public class XWoot2 implements XWootAPI
     public XWootContentProviderInterface getContentProvider()
     {
         return contentManager;
+    }
+
+    public Date getLastSynchronizationDate()
+    {
+        /* Don't care. XWoot2 is not used anymore */
+        return new Date();
+    }
+    
+    public String getLastSynchronizationFailure()
+    {
+        /* Don't care. XWoot2 is not used anymore */
+        return "None";
     }
 }

@@ -55,6 +55,7 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -115,6 +116,12 @@ import org.xwoot.xwootUtil.FileUtil;
  */
 public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageReceiver
 {
+    /** When the last synchronization took place */
+    private Date lastSynchronizationDate;
+    
+    /** The last synchronization failure */
+    private String lastSynchronizationFailure;
+    
     /** The content manager providing the connection with the wiki. */
     private XWootContentProviderInterface contentManager;
 
@@ -923,7 +930,18 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     
     public synchronized void synchronize() throws XWootException
     {        
+        try {
         this.synchronize(true);
+        }
+        catch(XWootException e) {
+            lastSynchronizationFailure = e.getMessage();
+            throw e;
+        }
+        finally {
+            lastSynchronizationDate = new Date(System.currentTimeMillis());
+        }
+        
+        lastSynchronizationFailure = "Synch OK";
     }
     
     /**
@@ -957,7 +975,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             this.logger.info("No changes in the model => No changes done in the xwiki.");
         }
         
-        this.logger.info(this.getXWootName() + " : Synchronising OK.");
+        this.logger.info(this.getXWootName() + " : Synchronising OK.");                
     }
     
     public boolean createNetwork() throws XWootException
@@ -1948,5 +1966,15 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     {
         return contentManager;
     }
-        
+
+    public Date getLastSynchronizationDate()
+    {
+        return lastSynchronizationDate;
+    }
+
+    public String getLastSynchronizationFailure()
+    {        
+        return lastSynchronizationFailure;
+    }
+    
 }

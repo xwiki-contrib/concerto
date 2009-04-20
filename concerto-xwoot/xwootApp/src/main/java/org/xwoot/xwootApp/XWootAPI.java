@@ -2,6 +2,7 @@ package org.xwoot.xwootApp;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import org.xwoot.contentprovider.XWootContentProviderInterface;
@@ -81,4 +82,8 @@ public interface XWootAPI
     XWootContentProviderInterface getContentManager();
     
     XWootContentProviderInterface getContentProvider();
+    
+    Date getLastSynchronizationDate();
+    
+    String getLastSynchronizationFailure();
 }
