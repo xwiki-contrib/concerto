@@ -128,7 +128,7 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
         String xwootAppAddress = DEFAULT_XWOOTAPP_ENDPOINT;
         if(documentBridge.exists("XWiki.XWootAppEndpoint")) {
             try {
-                xwootAppAddress = documentBridge.getDocumentContent(XWOOTAPP_ENDPOINT_PAGE);
+                xwootAppAddress = documentBridge.getDocumentContent(XWOOTAPP_ENDPOINT_PAGE).trim();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -190,8 +190,12 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
     }
 
     public void compose(ComponentManager componentManager)
-    {
-        System.out.format("Composing: %s\n", componentManager);
+    {        
         this.componentManager = componentManager;        
+    }
+
+    public Map<String, Object> getContentProviderInfo()
+    {
+        return getStatusMap("contentProvider");        
     }
 }

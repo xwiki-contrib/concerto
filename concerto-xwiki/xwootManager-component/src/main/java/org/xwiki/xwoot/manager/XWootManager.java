@@ -36,6 +36,8 @@ public interface XWootManager
     String getXWootAppAddress();
     
     Map<String, Object> getConnectionsInfo();
+    
+    Map<String, Object> getContentProviderInfo();
    
     void disconnectWiki();
 
