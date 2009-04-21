@@ -41,18 +41,19 @@ import org.xwiki.xwoot.manager.XWootManager;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
 
-public class DefaultXWootManager extends AbstractLogEnabled implements XWootManager, LogEnabled, Initializable, Composable
+public class DefaultXWootManager extends AbstractLogEnabled implements XWootManager, LogEnabled, Initializable,
+    Composable
 {
-    /** The base address of the XWoot server. Should be configurable... */
     private String DEFAULT_XWOOTAPP_ENDPOINT = "http://localhost:8080/xwootApp";
 
     /** A HTTP client used to communicate with XWoot. */
     private HttpClient client;
-    
+
     private ComponentManager componentManager;
-    
+
     private DocumentAccessBridge documentBridge;
-    
+
+    /** This is the page that is queried in order to retrieve the XWootApp endpoint */
     private String XWOOTAPP_ENDPOINT_PAGE = "XWiki.XWootAppEndpoint";
 
     /**
@@ -66,10 +67,10 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
         client = new HttpClient(connectionManager);
         client.getParams().setSoTimeout(2000);
         client.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(1, true));
-        
+
         try {
             documentBridge = (DocumentAccessBridge) componentManager.lookup(DocumentAccessBridge.class.getName());
-        } catch (ComponentLookupException e) {            
+        } catch (ComponentLookupException e) {
             throw new InitializationException(e.getMessage());
         }
     }
@@ -77,7 +78,7 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
     private String call(String service)
     {
         String xwootAppAddress = getXWootAppAddress();
-        
+
         HttpMethod method = new GetMethod(xwootAppAddress + service);
         try {
             getLogger().debug("Requesting: " + method.getURI());
@@ -95,7 +96,7 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
         }
         return "failed";
     }
-    
+
     private Map<String, Object> getStatusMap(String type)
     {
         String uri = String.format("%s/status?type=%s", getXWootAppAddress(), type);
@@ -118,27 +119,26 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
 
         return new HashMap<String, Object>();
     }
-    
-    public Map<String, Object> getConnectionsInfo() {
+
+    public Map<String, Object> getConnectionsInfo()
+    {
         return getStatusMap("connections");
     }
 
     public String getXWootAppAddress()
     {
         String xwootAppAddress = DEFAULT_XWOOTAPP_ENDPOINT;
-        if(documentBridge.exists("XWiki.XWootAppEndpoint")) {
+        if (documentBridge.exists("XWiki.XWootAppEndpoint")) {
             try {
                 xwootAppAddress = documentBridge.getDocumentContent(XWOOTAPP_ENDPOINT_PAGE).trim();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        
-        System.out.format("Using XWoot at: %s\n", xwootAppAddress);
-        
+
         return xwootAppAddress;
     }
-    
+
     /**
      * {@inheritDoc}
      * 
@@ -178,7 +178,7 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
     {
         call("/synchronize.do?action=p2pnetworkconnection&switch=off");
     }
-    
+
     /**
      * {@inheritDoc}
      * 
@@ -190,12 +190,12 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
     }
 
     public void compose(ComponentManager componentManager)
-    {        
-        this.componentManager = componentManager;        
+    {
+        this.componentManager = componentManager;
     }
 
     public Map<String, Object> getContentProviderInfo()
     {
-        return getStatusMap("contentProvider");        
+        return getStatusMap("contentProvider");
     }
 }

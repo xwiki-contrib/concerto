@@ -80,7 +80,9 @@
                 com.xpn.xwiki.monitor.api.MonitorPlugin,\
                 com.xpn.xwiki.plugin.calendar.CalendarPlugin,\
                 com.xpn.xwiki.plugin.skinx.JsSkinExtensionPlugin,\
+                com.xpn.xwiki.plugin.skinx.JsSkinFileExtensionPlugin,\
                 com.xpn.xwiki.plugin.skinx.CssSkinExtensionPlugin,\
+                com.xpn.xwiki.plugin.skinx.CssSkinFileExtensionPlugin,\
                 com.xpn.xwiki.plugin.feed.FeedPlugin,\
                 com.xpn.xwiki.plugin.ldap.LDAPPlugin,\
                 com.xpn.xwiki.plugin.google.GooglePlugin,\
@@ -115,7 +117,7 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
+      <!--<plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <executions>
@@ -138,7 +140,7 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>
+      </plugin>-->
 
       <!-- Set the encoding to UTF-8 -->
       <!-- This could be removed since we are now using a custom web.xml 
@@ -172,7 +174,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
         <configuration>
-<!--          <webXml>${project.build.directory}/webxml/web.xml</webXml>-->
+		  <webXml>${project.build.directory}/classes/web.xml</webXml>
           <webResources>
             <!-- Include License resources -->
             <resource>

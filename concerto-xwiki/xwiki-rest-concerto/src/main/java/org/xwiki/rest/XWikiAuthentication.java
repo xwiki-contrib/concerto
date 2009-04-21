@@ -45,27 +45,33 @@ public class XWikiAuthentication extends Guard
     @Override
     public int authenticate(Request request)
     {
-        /* This is a special case that is used to send back a challenge to popup the authentication dialog in browsers */
+        /*
+         * Hack to send authentication challenge to the XWiki iPhone application. Reason: the iPhone application needs
+         * to be challenged in order to make it provide credentials. However this is incompatible with the standard
+         * behavior of the REST subsystem which authenticates as guest if no credentials are provided (it doesn't send
+         * any challenge back). So in order to make the XWiki iPhone application to authenticate we must recognize if a
+         * request comes from it and send back a challenge in order to make it correctly send credentials.
+         */
+        if (request.getClientInfo().getAgent().toUpperCase().contains("XWIKI")
+            || request.getClientInfo().getAgent().toUpperCase().contains("CFNETWORK")) {
+            /* This request is made by an iPhone using the XWIKI application so challenge it */
+            return super.authenticate(request);
+        }
+
         if (request.getResourceRef().getPath().endsWith(BrowserAuthenticationResource.URI_PATTERN)) {
             return super.authenticate(request);
         }
 
-        /*
-         * Try to authenticate using information in the request (authorization header or a URI in the form of
-         * http://user:password@host/..., etc.)
-         */
-        if (super.authenticate(request) == 1) {
-            /* If it's succesfull then the context has ben set with the authenticated user */
-            return 1;
-        }
+        XWikiContext xwikiContext = (XWikiContext) getContext().getAttributes().get(Constants.XWIKI_CONTEXT);
+        XWiki xwiki = (XWiki) getContext().getAttributes().get(Constants.XWIKI);
 
         Form headers = (Form) request.getAttributes().get(HttpConstants.ATTRIBUTE_HEADERS);
 
         if (headers.getValues(HttpConstants.HEADER_AUTHORIZATION) == null) {
-            /* If authentication failed then no information is present in headers or URI, try to check cookies */
-            XWikiContext xwikiContext = (XWikiContext) getContext().getAttributes().get(Constants.XWIKI_CONTEXT);
-            XWiki xwiki = (XWiki) getContext().getAttributes().get(Constants.XWIKI);
-
+            /*
+             * If there isn't an authorization header, check if the context contains an already authenticated session.
+             * If it's the case use the previously authenticated user.
+             */
             try {
                 XWikiUser xwikiUser = xwiki.getAuthService().checkAuth(xwikiContext);
                 if (xwikiUser != null) {
