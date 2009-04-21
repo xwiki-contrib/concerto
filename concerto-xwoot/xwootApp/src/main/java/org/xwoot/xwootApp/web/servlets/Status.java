@@ -14,10 +14,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.jxta.document.AdvertisementFactory;
 import net.jxta.protocol.PipeAdvertisement;
 
 import org.xwoot.contentprovider.Entry;
 import org.xwoot.contentprovider.XWootContentProviderInterface;
+import org.xwoot.jxta.JxtaPeer;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.XWootException;
 import org.xwoot.xwootApp.web.XWootSite;
@@ -116,8 +118,14 @@ public class Status extends HttpServlet
             Collection<PipeAdvertisement> neighbors;
             try {
                 neighbors = xwootAPI.getNeighborsList();
-                for (PipeAdvertisement advertisement : neighbors) {
-                    neighborNames.add(advertisement.getName());
+                for (PipeAdvertisement n : neighbors) {
+                    PipeAdvertisement original = n;
+                    n = (PipeAdvertisement) AdvertisementFactory.newAdvertisement(PipeAdvertisement.getAdvertisementType());
+                    n.setPipeID(original.getPipeID());
+                    n.setName(JxtaPeer.getPeerNameFromBackChannelPipeName(original.getName()));
+                    n.setType(original.getType());
+                    
+                    neighborNames.add(n.getName());
                 }
             } catch (XWootException e) {
                 e.printStackTrace();
