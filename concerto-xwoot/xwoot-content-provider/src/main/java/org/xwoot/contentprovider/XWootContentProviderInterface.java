@@ -75,22 +75,35 @@ public interface XWootContentProviderInterface
     List<XWootObject> getModifiedEntities(XWootId xwootId) throws XWootContentProviderException;
 
     /**
-     * Updates xwiki's data.
-     * 
-     * @param object : the object to update
-     * @return An XWootId containing the pageId and the new updated version of the page, or null if concurrent
-     *         modification detected.
-     * @throws XWootContentProviderException
+     * Equivalent to store(object, versionAdjustement, true)
      */
     XWootId store(XWootObject object, XWootId versionAdjustement) throws XWootContentProviderException;
 
+    /**
+     * Updates XWiki's data.
+     * 
+     * @param object : the object to update
+     * @param versionAdjustement : An XWootId that contains version number information for adjusting the
+     *            page-to-be-sent's version. This is useful because clients (i.e., the synchronizer) can set the
+     *            "last known version number" before trying to store the page.
+     * @param useAtomicStore : true if the version-checking store should be used. This store operation checks that the
+     *            entity that is going to be stored has the same version of the page on the wiki, preventing the
+     *            overwriting of remotely modified pages.
+     * @return An XWootId containing the pageId and the new updated version of the stored page so that clients are able
+     *         to know what is the version that they have stored on the server, or null if concurrent modification
+     *         detected in the meanwhile.
+     * @throws XWootContentProviderException
+     */
+    XWootId store(XWootObject object, XWootId versionAdjustement, boolean useAtomicStore)
+        throws XWootContentProviderException;
+
     XWootContentProviderConfiguration getConfiguration();
-    
+
     boolean isConnected();
-    
+
     List<Entry> getEntries(String pageId, int start, int number);
-    
+
     List<Entry> getLastClearedEntries(String pageId, int start, int number);
-    
+
     String getEndpoint();
 }

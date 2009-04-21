@@ -402,7 +402,10 @@ public class XWootContentProvider implements XWootContentProviderInterface
                 for (Attachment attachment : modifiedAttachments) {
                     byte[] data = rpc.getAttachmentData(attachment);
 
-                    /* Here we should discriminate if the attachment is newly created. For the moment let's consider every attachment as newly created. */
+                    /*
+                     * Here we should discriminate if the attachment is newly created. For the moment let's consider
+                     * every attachment as newly created.
+                     */
                     result.add(Utils.attachmentToXWootObject(attachment, xwootId.getVersion(), xwootId
                         .getMinorVersion(), data, false));
                 }
@@ -415,7 +418,12 @@ public class XWootContentProvider implements XWootContentProviderInterface
             throw new XWootContentProviderException(e);
         }
     }
-
+   
+    public XWootId store(XWootObject object, XWootId versionAdjustment) throws XWootContentProviderException
+    {
+        return store(object, versionAdjustment, true);
+    }
+    
     /**
      * Updates XWiki's data.
      * 
@@ -423,12 +431,16 @@ public class XWootContentProvider implements XWootContentProviderInterface
      * @param versionAdjustement : An XWootId that contains version number information for adjusting the
      *            page-to-be-sent's version. This is useful because clients (i.e., the synchronizer) can set the
      *            "last known version number" before trying to store the page.
+     * @param useAtomicStore : true if the version-checking store should be used. This store operation checks that the
+     *            entity that is going to be stored has the same version of the page on the wiki, preventing the
+     *            overwriting of remotely modified pages.
      * @return An XWootId containing the pageId and the new updated version of the stored page so that clients are able
      *         to know what is the version that they have stored on the server, or null if concurrent modification
      *         detected in the meanwhile.
      * @throws XWootContentProviderException
      */
-    public XWootId store(XWootObject object, XWootId versionAdjustment) throws XWootContentProviderException
+    public XWootId store(XWootObject object, XWootId versionAdjustment, boolean useAtomicStore)
+        throws XWootContentProviderException
     {
         if (configuration.isIgnored(object.getPageId())) {
             logger.info(String.format("'%s' not stored because '%s' is on ignore list.", object.getGuid(), object
@@ -445,17 +457,17 @@ public class XWootContentProvider implements XWootContentProviderInterface
             object.getPageId(), object.getPageVersion(), object.getPageMinorVersion()));
 
         if (namespace.equals(Constants.PAGE_NAMESPACE)) {
-            return storeXWikiPage(object, versionAdjustment);
+            return storeXWikiPage(object, versionAdjustment, useAtomicStore);
         } else if (namespace.equals(Constants.OBJECT_NAMESPACE)) {
-            return storeXWikiObject(object, versionAdjustment);
+            return storeXWikiObject(object, versionAdjustment, useAtomicStore);
         } else if (namespace.equals(Constants.ATTACHMENT_NAMESPACE)) {
-            return storeXWikiAttachment(object);
+            return storeXWikiAttachment(object, useAtomicStore);
         }
 
         throw new IllegalArgumentException(String.format("Invalid namespace %s\n", namespace));
     }
 
-    private XWootId storeXWikiAttachment(XWootObject object)
+    private XWootId storeXWikiAttachment(XWootObject object, boolean useAtomicStore)
     {
         try {
             Attachment attachment = Utils.xwootObjectToAttachment(object);
@@ -478,7 +490,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
         }
     }
 
-    private XWootId storeXWikiObject(XWootObject object, XWootId versionAdjustment)
+    private XWootId storeXWikiObject(XWootObject object, XWootId versionAdjustment, boolean useAtomicStore)
     {
         try {
             XWikiObject xwikiObject = Utils.xwootObjectToXWikiObject(object);
@@ -487,7 +499,11 @@ public class XWootContentProvider implements XWootContentProviderInterface
                 xwikiObject.setPageMinorVersion(versionAdjustment.getMinorVersion());
             }
 
-            xwikiObject = rpc.storeObject(xwikiObject, true);
+            if (useAtomicStore) {
+                xwikiObject = rpc.storeObject(xwikiObject, true);
+            } else {
+                xwikiObject = rpc.storeObject(xwikiObject);
+            }
 
             /* If an empty object is returned then the store failed */
             if (xwikiObject.getPageId().equals("")) {
@@ -538,7 +554,8 @@ public class XWootContentProvider implements XWootContentProviderInterface
      * @return
      * @throws XWootContentProviderException
      */
-    private XWootId storeXWikiPage(XWootObject object, XWootId versionAdjustement) throws XWootContentProviderException
+    private XWootId storeXWikiPage(XWootObject object, XWootId versionAdjustement, boolean useAtomicStore)
+        throws XWootContentProviderException
     {
         try {
             XWikiPage page = Utils.xwootObjectToXWikiPage(object);
@@ -555,7 +572,11 @@ public class XWootContentProvider implements XWootContentProviderInterface
                 page.setVersion(1);
             }
 
-            page = rpc.storePage(page, true);
+            if (useAtomicStore) {
+                page = rpc.storePage(page, true);
+            } else {
+                page = rpc.storePage(page);
+            }
 
             /* If an empty page is returned then the store failed */
             if (page.getId().equals("")) {
@@ -598,9 +619,10 @@ public class XWootContentProvider implements XWootContentProviderInterface
     {
         return stateManager.getEntries(pageId, start, number);
     }
-    
-    public List<Entry> getLastClearedEntries(String pageId, int start, int number) {
-        return stateManager.getLastClearedEntries(pageId, start,number);
+
+    public List<Entry> getLastClearedEntries(String pageId, int start, int number)
+    {
+        return stateManager.getLastClearedEntries(pageId, start, number);
     }
 
     public boolean isConnected()

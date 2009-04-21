@@ -153,4 +153,10 @@ public class MockXWootContentProvider implements XWootContentProviderInterface
     {
         return "mock";
     }
+
+    public XWootId store(XWootObject object, XWootId versionAdjustement, boolean useAtomicStore)
+        throws XWootContentProviderException
+    {
+        return store(object, versionAdjustement);
+    }
 }
