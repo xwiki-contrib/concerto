@@ -45,7 +45,6 @@
 package org.xwoot.thomasRuleEngine.core;
 
 import java.io.File;
-import java.lang.reflect.Method;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -142,7 +141,7 @@ public class EntriesList
      * @throws NullPointerException if the id is null.
      * @see #load()
      */
-    public org.xwoot.thomasRuleEngine.core.Entry getEntry(org.xwoot.thomasRuleEngine.core.Identifier id)
+    public Entry getEntry(Identifier id)
         throws ThomasRuleEngineException
     {
         if (id == null) {
@@ -155,23 +154,23 @@ public class EntriesList
     }
 
     /**
-     * @param pageId the page ID.
-     * @return a list of entries that refer to the supplied pageId.
+     * @param internalId the internal ID of an Identifier stored in the database.
+     * @return a list of entries that refer to the supplied id.
      * @throws ThomasRuleEngineException if problems occur while loading.
      * @throws NullPointerException if the pageId is null.
      */
-    public List<org.xwoot.thomasRuleEngine.core.Entry> getEntries(String pageId) throws ThomasRuleEngineException
+    public List<Entry> getEntries(String internalId) throws ThomasRuleEngineException
     {
-        if (pageId == null || pageId.length() == 0) {
-            throw new NullPointerException("Page ID must not be null");
+        if (internalId == null || internalId.length() == 0) {
+            throw new NullPointerException("Parameters must not be null");
         }
 
         this.load();
 
-        List<org.xwoot.thomasRuleEngine.core.Entry> result = new ArrayList<org.xwoot.thomasRuleEngine.core.Entry>();
+        List<Entry> result = new ArrayList<Entry>();
 
-        for (org.xwoot.thomasRuleEngine.core.Identifier id : this.entriesList.keySet()) {
-            if (id.getId().equals(pageId)) {
+        for (Identifier id : this.getAllIds()) {
+            if (id.getId().equals(internalId)) {
                 result.add(this.entriesList.get(id));
             }
         }
@@ -180,39 +179,6 @@ public class EntriesList
     }
     
     /**
-     * @param pageId the page ID
-     * @return all Indetifiers corresponding to the provided page.
-     * @throws ThomasRuleEngineException if problems loading the database occur.
-     */
-    
-    public List<Identifier> getIds(String pageId) throws ThomasRuleEngineException
-    {
-        if (pageId == null || pageId.length() == 0) {
-            throw new NullPointerException("Parameters must not be null");
-        }
-
-        this.load();
-
-        List<Identifier> result = new ArrayList<Identifier>();
-
-        for (Identifier id : this.entriesList.keySet()) {
-            String objectPageId = null;
-            try {
-                Object xwootObject = this.entriesList.get(id).getValue().get();
-                Method getPageIdMethod = xwootObject.getClass().getMethod("getPageId()", new Class[0]);
-                objectPageId = (String) getPageIdMethod.invoke(xwootObject, new Object[0]);
-            } catch (Exception e) {
-                // bad content.
-            }
-            
-            if (id.getId().equals("page:" + pageId) || pageId.equals(objectPageId)) {
-                result.add(id);
-            }
-        }
-
-        return result;
-    }
-    /**
      * @return the set of Identifiers stored in the entries list. 
      * @throws ThomasRuleEngineException if problems loading the database occur.
      */
@@ -220,6 +186,23 @@ public class EntriesList
     {
         this.load();
         return this.entriesList.keySet();
+    }
+    
+    /**
+     * @return the list of entries.
+     * @throws ThomasRuleEngineException if problems loading the database occur.
+     */
+    public List<Entry> getAllEntries() throws ThomasRuleEngineException
+    {
+        this.load();
+        
+        List<Entry> result = new ArrayList<Entry>();
+        
+        for (Map.Entry<Identifier, Entry> mapEntry : this.entriesList.entrySet()) {
+            result.add(mapEntry.getValue());
+        }
+        
+        return result;
     }
 
     /**

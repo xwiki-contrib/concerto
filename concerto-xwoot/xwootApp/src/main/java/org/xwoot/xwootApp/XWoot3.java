@@ -96,6 +96,7 @@ import org.xwoot.jxta.message.Message;
 import org.xwoot.jxta.message.MessageFactory;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngine;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngineException;
+import org.xwoot.thomasRuleEngine.core.Entry;
 import org.xwoot.thomasRuleEngine.core.Identifier;
 import org.xwoot.thomasRuleEngine.core.Value;
 import org.xwoot.thomasRuleEngine.op.ThomasRuleOp;
@@ -1428,21 +1429,82 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     public boolean importState(File stateFileToImport) throws XWootException
     {
         // TODO: make return type void.
-        
+
         if (stateFileToImport == null) {
             this.logger.warn(this.getXWootName() + " : Tried to import a null state. Operation ignored.");
             return false;
         }
-        
+
         if (!this.isContentManagerConnected()) {
             this.connectToContentManager();
         }
-       
+
         File currentState = new File(this.getStateFilePath());
-        
+
         // set the state
         this.setState(stateFileToImport);
-        
+
+        // Mark the wiki as not modified because we just imported a state and have to override the wiki with the state's model.
+        try {
+            this.contentManager.getModifiedPagesIds();
+            this.contentManager.clearAllModifications();
+        } catch (Exception e) {
+            this.logger.error(this.getXWootPeerId() + " : Failed to mark the xwiki as not modified before synchronizing with it.", e);
+            throw new XWootException(this.getXWootPeerId() + " : Failed to mark the xwiki as not modified before synchronizing with it.", e);
+        }        
+
+        // FIXME: do some preprocessing of the entries and align them in a map from pageID to list of page objects.
+        // to reduce complexity
+
+        try {
+            List<Entry> entries = this.tre.getAllEntries();
+            for (Entry pageEntry : entries) {
+                Identifier id = pageEntry.getId();
+                String objectId = id.getId();
+                if (!objectId.startsWith("page:")) {
+                    // Skip objects that don't describe an XWiki page.
+                    continue;
+                }
+
+                this.logger.debug("Synchronizing page from model: " + objectId);
+                String pageId = objectId.substring(objectId.indexOf(":") + 1);
+
+                // Update/Create the page first before doing the same for page objects.
+                Value pageObjectValue = pageEntry.getValue();
+                XWootObject pageObject = (XWootObject) pageObjectValue.get();
+                this.contentManager.store(pageObject);
+
+                // Update/Create page objects.
+
+                for(Entry objectEntry : entries) {
+                    Identifier idOfObjectEntry = objectEntry.getId();
+                    if (idOfObjectEntry.getId().startsWith("page:")) {
+                        // Skip page-entries.
+                        continue;
+                    }
+
+                    XWootObject objectInPage = (XWootObject) objectEntry.getValue().get();
+                    String pageIdOfObjectEntry = objectInPage.getPageId(); 
+                    if (!pageIdOfObjectEntry.equals(pageId)) {
+                        // Skip entries that are not for our current page.
+                        continue;
+                    }
+
+                    this.logger.debug("Synchronizing object from model: " + objectId);
+
+                    // Store the object.
+                    this.contentManager.store(objectInPage);
+                }
+
+            }
+        } catch (ThomasRuleEngineException tree) {
+            this.logger.error(this.getXWootPeerId() + " : Failed to get objects from the XWoot model.\n", tree);
+            throw new XWootException(this.getXWootPeerId() + " : Failed to get objects from the XWoot model.\n", tree);
+        } catch (XWootContentProviderException xwcpe) {
+            this.logger.error(this.getXWootPeerId() + " : Failed to update XWiki with objects from the XWoot model.\n", xwcpe);
+            throw new XWootException(this.getXWootPeerId() + " : Failed to update XWiki with objects from the XWoot model.\n", xwcpe);
+        }
+
         // If it is not a re-import of an existing state, then copy it and make it the current state.
         if (/*!stateFileToImport.equals(currentState) || */!stateFileToImport.getParent().toString().equals(this.workingDir)) {
             try {
@@ -1452,57 +1514,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
                 throw new XWootException(this.getXWootName() + " : Problem when copying state file ", e);
             }
         }
-        
-        // FIXME: completely replace the old content of the xwiki. (for group switching)
-        // FIXME: HIGH PRIORITY!
-        //  already done by synchronize() ? check!
-        
-        // synchronize with the wiki but don`t generate any patches.
-        //this.synchronize(false);
-        
-        // MODIF BEGIN
-        
-        // Update the internal modifications table
-        Set<XWootId> allPageIDs = null;
-        try {
-            allPageIDs = this.contentManager.getModifiedPagesIds();
-        } catch (Exception e) {
-            throw new XWootException("Failed to access the XWiki.", e);
-        }
-        
-        // Mark the wiki as not modified because we just imported a state and have to override the wiki with the state's model.
-        try {
-            this.contentManager.clearAllModifications();
-        } catch (Exception e) {
-            throw new XWootException("Failed to mark the xwiki as not modified before synchronizing with it.");
-        }
-        
-        for(XWootId pageId : allPageIDs) {
-            try {
-                this.lastModifiedContentIdMap.add2XWikiIdMap(pageId.getPageId(), pageId);
-                List<Identifier> objectIdsInPage = this.tre.getIds(pageId.getPageId());
-                for(Identifier objectId : objectIdsInPage) {
-                    this.lastModifiedContentIdMap.add2PatchIdMap(pageId, objectId.getId());
-                }
-            } catch (Exception e) {
-                throw new XWootException("Failed to set up synchronization with wiki page " + pageId);
-            }
-        }
-        
-        try {
-            this.synchronizeFromModelToXWiki();
-        } catch (Exception e) {
-            this.logger.warn("Failed to synchronize internal model defined by imported state with XWiki.", e);
-            this.lastModifiedContentIdMap.removeAllPatchId();
-        }
-        
-        
-        
-        // fill the lastModified objects with all the objects in the model and do a synch of the model with the wiki.
-        //this.loa
-        
-        // MODIF END
-        
+
         return true;
     }
 

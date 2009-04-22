@@ -58,8 +58,11 @@ import org.xwoot.thomasRuleEngine.op.ThomasRuleOpNew;
 import org.xwoot.thomasRuleEngine.op.ThomasRuleOpSet;
 import org.xwoot.xwootUtil.FileUtil;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Implements the maintenance of duplicate databases on a "last writer wins" basis as described in RFC677.
@@ -80,6 +83,9 @@ public class ThomasRuleEngine
     
     /** The file extension of the output file containing the zipped state. */
     public static final String STATE_FILE_EXTENSION = ".zip";
+    
+    /** Method name to get pageID from an XWootObject. */
+    public static final String GET_PAGE_ID_METHOD_NAME = "getPageId";
 
     /** @see #getThomasRuleEngineId() */
     private String thomasRuleEngineId;
@@ -208,7 +214,79 @@ public class ThomasRuleEngine
      */
     public List<Identifier> getIds(String pageId) throws ThomasRuleEngineException
     {
-        return this.entriesList.getIds(pageId);
+        if (pageId == null || pageId.length() == 0) {
+            throw new NullPointerException("Parameters must not be null");
+        }
+
+        List<Identifier> result = new ArrayList<Identifier>();
+
+        for (Identifier id : this.entriesList.getAllIds()) {
+            String objectPageId = null;
+            try {
+                Object xwootObject = this.entriesList.getEntry(id).getValue().get();
+                Method getPageIdMethod = xwootObject.getClass().getMethod(GET_PAGE_ID_METHOD_NAME, new Class[0]);
+                objectPageId = (String) getPageIdMethod.invoke(xwootObject, new Object[0]);
+            } catch (Exception e) {
+                // bad content.
+            }
+            
+            if (id.getId().equals("page:" + pageId) || pageId.equals(objectPageId)) {
+                result.add(id);
+            }
+        }
+
+        return result;
+    }
+    
+    /**
+     * @param pageId the id of the page.
+     * @return a list of entries that correspond to the a page. 
+     * @throws ThomasRuleEngineException if problems occur while loading the database.
+     */
+    public List<Value> getValues(String pageId) throws ThomasRuleEngineException
+    {
+        if (pageId == null || pageId.length() == 0) {
+            throw new NullPointerException("Page ID must not be null");
+        }
+
+        List<Value> result = new ArrayList<Value>();
+
+        for (Identifier id : this.entriesList.getAllIds()) {
+            String objectPageId = null;
+            Entry entry = null;
+            try {
+                entry = this.entriesList.getEntry(id);
+                Object xwootObject = entry.getValue().get();
+                Method getPageIdMethod = xwootObject.getClass().getMethod(GET_PAGE_ID_METHOD_NAME, new Class[0]);
+                objectPageId = (String) getPageIdMethod.invoke(xwootObject, new Object[0]);
+            } catch (Exception e) {
+                // bad content.
+            }
+            
+            if (pageId.equals(objectPageId)) {
+                result.add(entry.getValue());
+            }
+        }
+
+        return result;
+    }
+    
+    /**
+     * @return IDs of all objects in the model.
+     * @throws ThomasRuleEngineException if problems occur while loading the database.
+     */
+    public Set<Identifier> getAllIds() throws ThomasRuleEngineException
+    {
+        return this.entriesList.getAllIds();
+    }
+    
+    /**
+     * @return the list of all entries stored in the database.
+     * @throws ThomasRuleEngineException if problems loading the database occur.
+     */
+    public List<Entry> getAllEntries() throws ThomasRuleEngineException 
+    {
+        return this.entriesList.getAllEntries();
     }
 
     /**

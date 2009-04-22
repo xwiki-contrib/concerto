@@ -49,8 +49,7 @@ class ConnectionThread extends Thread {
 		ObjectInputStream ois = null;
 		ObjectOutputStream oos = null;
 		try {
-			socket.setSoTimeout(JxtaPeer.WAIT_INTERVAL_FOR_INCOMMING_MESSAGE);
-
+		    
 			is = this.socket.getInputStream();
 			os = this.socket.getOutputStream();
 			ois = new ObjectInputStream(is);

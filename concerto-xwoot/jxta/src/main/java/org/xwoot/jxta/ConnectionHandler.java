@@ -51,6 +51,8 @@ class ConnectionHandler extends Thread
         while (true) {
             try {
                 Socket socket = this.serverSocket.accept();
+                socket.setSoTimeout(JxtaPeer.WAIT_INTERVAL_FOR_DIRECT_COMMUNICATION_CONNECTIONS);
+                
                 new ConnectionThread(socket, this.receiver).start();
             } catch (SocketException closed) {
                 // FIXME: can we use JxtaPeer.this.logger instead?

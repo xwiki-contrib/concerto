@@ -99,7 +99,7 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 	public static final long WAIT_INTERVAL_BETWEEN_TRIES = 5000;
 	
 	/** Number of ms to wait for a reply to be sent back. */
-	public static final int WAIT_INTERVAL_FOR_INCOMMING_MESSAGE = 30 * 1000;
+	public static final int WAIT_INTERVAL_FOR_DIRECT_COMMUNICATION_CONNECTIONS = 120 * 1000;
 	
 	/** Number tries to discover pipe ADVs in a group and send an object to one of them. */
 	public static final int NUMBER_OF_TRIES = 5;
@@ -1373,54 +1373,7 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 	    if (!(object instanceof Serializable)) {
 	        throw new IllegalArgumentException("The object does not implement the interface java.io.Serializable and can not be sent.");
 	    }
-	 /*
-	    // Create a message, fill it with our standard headers.
-        Message msg = new Message();
-        JxtaCast.setMsgString(msg, JxtaCast.MESSAGETYPE, JxtaCast.MSG_OBJECT);
-        JxtaCast
-                .setMsgString(msg, JxtaCast.SENDERNAME, this.getMyPeerName());
-        JxtaCast.setMsgString(msg, JxtaCast.SENDERID, this.getMyPeerAdv().getPeerID()
-                .toString());
-        JxtaCast.setMsgString(msg, JxtaCast.VERSION, JxtaCast.version);
-        JxtaCast.setMsgString(msg, JxtaCast.TRANSACTION_KEY, UUID.randomUUID().toString());
-        JxtaCast.setMsgString(msg, JxtaCast.FILENAME, caption);
-        
-        JxtaCast.setMsgString(msg, JxtaCast.CAPTION, caption);
-        
-        // Place the object's data in the message.
-        try {
-            MessageUtil.addObjectToMessage(msg, null, JxtaCast.DATABLOCK, object);
-        } catch (Exception e) {
-            throw new JxtaException("Error serializing the object.", e);
-        }
 
-        // Place the block info in the message.
-        JxtaCast.setMsgString(msg, JxtaCast.BLOCKNUM, String
-                .valueOf(0));
-        JxtaCast.setMsgString(msg, JxtaCast.TOTALBLOCKS, String
-                .valueOf(1));
-        
-        long dataSize = msg.getMessageElement(JxtaCast.DATABLOCK).getByteLength();
-        
-        JxtaCast.setMsgString(msg, JxtaCast.FILESIZE, String.valueOf(dataSize));
-        JxtaCast.setMsgString(msg, JxtaCast.BLOCKSIZE, String.valueOf(dataSize));
-
-        // Send the message.
-        this.logger.info("Sending message...");
-        
-        PipeService pipeService = currentJoinedGroup.getPipeService();
-        OutputPipe output = null;
-        try {
-            output = pipeService.createOutputPipe(pipeAdv, BACK_CHANNEL_OUTPUT_PIPE_RESOLVE_TIMEOUT);
-            return output.send(msg);
-        } catch (Exception e) {
-            throw new JxtaException("Error sending the message:\n", e);
-        } finally {
-            if (output != null) {
-                output.close();
-            }
-        }
-*/
 	    boolean failed = false;
 	    
 	    Socket socket = null;
@@ -1430,7 +1383,8 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
         ObjectInputStream ois = null;
         ObjectOutputStream oos = null;
         try {
-            socket = new JxtaSocket(this.currentJoinedGroup, pipeAdv);            
+            socket = new JxtaSocket(this.currentJoinedGroup, pipeAdv);     
+            socket.setSoTimeout(WAIT_INTERVAL_FOR_DIRECT_COMMUNICATION_CONNECTIONS);
         } catch (Exception e) {
             throw new JxtaException("Failed to create a direct connection using the provided pipe advertisement.", e);
         }
@@ -1470,7 +1424,6 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
             is = socket.getInputStream();
             ois = new ObjectInputStream(is);
             
-            socket.setSoTimeout(WAIT_INTERVAL_FOR_INCOMMING_MESSAGE);
             replyMessage = ois.readObject(); 
             
         } catch (EOFException eof) {
@@ -1511,12 +1464,6 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
         return replyMessage;
 	}
 	
-	/*public boolean sendObject(Object object, String caption, String pipeID) throws JxtaException {
-	    PipeID.create(pipeID);
-	    //PipeAdvertisement pipeAdv = AdvertisementFactory.newAdvertisement(PipeAdvertisement.getAdvertisementType());
-	    //pipeAdv.setPipeID()
-	}*/
-	
 	/** {@inheritDoc} **/
 	public Object sendObjectToRandomPeerInGroup(Object object, boolean expectReply) throws PeerGroupException, IllegalArgumentException, JxtaException {
 	    if (!this.isConnectedToGroup()) {
@@ -1536,7 +1483,7 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
         for(int i=0; i<NUMBER_OF_TRIES && !success; i++) {
             this.logger.info("Try number: " + i);
             
-            Enumeration<Advertisement> pipeAdvertisements = this.getKnownAdvertisements(PipeAdvertisement.NameTag, this.getDirectCommunicationPipeNamePrefix() + "*");
+            Enumeration<Advertisement> pipeAdvertisements = this.getKnownDirectCommunicationPipeAdvertisements();
             
             // Try all available pipe ADVs until one succeeds.
             while (pipeAdvertisements.hasMoreElements() && !success) {
@@ -1602,7 +1549,7 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
             this.discoverPeers(event.getPeer(), null);
             this.discoverAdvertisements(event.getPeer(), null, PipeAdvertisement.NameTag, this.getDirectCommunicationPipeNamePrefix() + "*");
 		} else if (event.getType() == RendezvousEvent.CLIENTDISCONNECT ||
-		    event.getType() == RendezvousEvent.CLIENTFAILED ) {
+		    event.getType() == RendezvousEvent.CLIENTFAILED) {
 		    
 		    // If we are RDV and a client just disconnected (gracefully or not), clean his direct communication pipe adv
 		    // and his peer adv.
