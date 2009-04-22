@@ -419,6 +419,11 @@ public class XWootContentProvider implements XWootContentProviderInterface
         }
     }
    
+    public XWootId store(XWootObject object) throws XWootContentProviderException
+    {
+        return store(object, null, false);
+    }
+    
     public XWootId store(XWootObject object, XWootId versionAdjustment) throws XWootContentProviderException
     {
         return store(object, versionAdjustment, true);

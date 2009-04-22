@@ -75,6 +75,11 @@ public interface XWootContentProviderInterface
     List<XWootObject> getModifiedEntities(XWootId xwootId) throws XWootContentProviderException;
 
     /**
+     * Equivalent to store(object, null, false)
+     */
+    XWootId store(XWootObject object) throws XWootContentProviderException;
+    
+    /**
      * Equivalent to store(object, versionAdjustement, true)
      */
     XWootId store(XWootObject object, XWootId versionAdjustement) throws XWootContentProviderException;
