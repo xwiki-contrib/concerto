@@ -162,6 +162,7 @@ public class StateManagement extends HttpServlet
                 this.getServletContext().log("Retrieving state from group.");
                 File newStateFile = ((XWoot3) xwootEngine).askStateToGroup();
                 xwootEngine.importState(newStateFile);
+                newStateFile.delete();
             } else if (action == StateAction.CREATE) {
                 this.log("Want to compute state");
                 XWootSite.getInstance().getXWootEngine().connectToContentManager();

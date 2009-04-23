@@ -541,18 +541,6 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         return stateReply;
     }
     
-//    /**
-//     * Process a reply to a state request this peer earlier did and replace it with out own.
-//     * 
-//     * @param message the received message containing the state of a certain XWoot node.
-//     * @throws XWootException if problems occur.
-//     */
-//    private void processStateReply(Message message) throws XWootException
-//    {
-//        // TODO: move servlet code here.
-//        // TODO: Have a list of requests and if the reply comes from elsewhere, drop it?
-//        throw new IllegalStateException("NOT IMPLEMENTED YET!");
-//    }
 
     private void treatePatch(Patch patch) throws XWootException
     { 
@@ -628,7 +616,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
 
 
                     List<XWootObject> objects = this.contentManager.getModifiedEntities(id);
-                    System.out.println(this.getXWootName()+" - "+id+" : entites => "+this.contentManager.getModifiedEntities(id));
+                    System.out.println(this.getXWootName()+" - "+id+" : entites => "+objects);
 
                     // need some security : the id is cleared server side but 
                     // all the modifiedEntities are not already consumed...
@@ -1268,9 +1256,9 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             throw new XWootException("The state directory can not be used to store newly created states.", e);
         }
 
-        // Make sure the internal model is up to date but don't generate patches.
+        // Make sure the internal model is up to date and generate patches only when we are updating the state and not creating it.
         this.logger.debug(this.getXWootName() + " : Synchronizing with wiki.");
-        this.synchronize(false);
+        this.synchronize(this.isStateComputed());
         
         this.logger.debug(this.getXWootName() + " : " + (this.isStateComputed() ? "Updating" : "Creating") + " state.");
 
@@ -1339,25 +1327,6 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         try {
             //String zip=FileUtil.zipDirectory(this.stateDirPath/*, File.createTempFile("state", ".zip").getPath()*/);
             FileUtil.zipFiles(xwootStateFiles.toArray(new File[0]), this.getStateFilePath());
-            /*if (zip!=null){
-                File r = new File(zip);
-                File result = new File(this.stateDirPath + File.separatorChar + STATEFILENAME);
-                if (!r.renameTo(result)) {
-                    this.logger.warn(this.peerId + " : Failed to move the temporary state file to the state dir. Using fallback.");
-                    
-                    try {
-                        FileUtil.copyFile(r.getPath(), result.getPath());
-                    } catch (Exception e) {
-                        this.logger.error(this.peerId + " : Failed to replace old state file with new one. State creation process failed.\n", e);
-                        throw new XWootException(this.peerId + " : Failed to replace old state file with new one. State creation process failed.\n", e);
-                    }
-                    
-                    r.delete();
-                }
-                
-                // return the package as the state of this XWoot node.
-                return result;
-            }*/
            
             /* I think we should not make isStateComputed() return true if we failed.
             File result = new File(this.getStateFilePath());
@@ -1376,6 +1345,8 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         		componentStateFile.delete();
         	}
         }
+        
+        this.logger.debug(this.getXWootName() + " : Finished processing state.");
     }
     
     /** @return true if this peer created the group he currently is member of. */
