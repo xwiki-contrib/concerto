@@ -425,7 +425,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
     }
     
     public XWootId store(XWootObject object, XWootId versionAdjustment) throws XWootContentProviderException
-    {
+    {        
         return store(object, versionAdjustment, true);
     }
     
@@ -585,8 +585,7 @@ public class XWootContentProvider implements XWootContentProviderInterface
 
             /* If an empty page is returned then the store failed */
             if (page.getId().equals("")) {
-                logger.info(String.format("Server refused to store page '%s' version %d.%d", page.getId(), page
-                    .getVersion(), page.getMinorVersion()));
+                logger.info("Server refused to store page.");
                 return null;
             }
 

@@ -22,6 +22,7 @@ package org.xwiki.xwoot.manager.internal;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.httpclient.CircularRedirectException;
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -80,6 +81,10 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
         String xwootAppAddress = getXWootAppAddress();
 
         HttpMethod method = new GetMethod(xwootAppAddress + service);
+
+        /* This is needed because the xwootApp servlet might send redirects to perform initializations */
+        method.setFollowRedirects(true);
+
         try {
             getLogger().debug("Requesting: " + method.getURI());
             if (client.executeMethod(method) < 400) {
@@ -88,6 +93,12 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
                 return result;
             }
             getLogger().info("Failed call: " + method.getStatusLine());
+        } catch (CircularRedirectException e) {
+            /*
+             * Ignore. This could be normal. For example in the case of connecting/disconnecting the P2P network we call
+             * the synchronize servlet that redirects to the boostrap that redirects to synchronize again, causing this
+             * exception.
+             */
         } catch (Exception ex) {
             getLogger().warn("Exception occured while calling [" + service + "] on [" + xwootAppAddress + "]", ex);
         } finally {
@@ -145,7 +156,7 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
      * @see XWootManager#connectWiki()
      */
     public void connectWiki()
-    {
+    {        
         call("/synchronize.do?action=cpconnection&switch=on");
     }
 
@@ -166,7 +177,8 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
      */
     public void connectP2P()
     {
-        call("/synchronize.do?action=p2pnetworkconnection&switch=on");
+        /* This is not working anymore... */
+        call("/synchronize.do?action=p2pnetworkconnection");
     }
 
     /**
@@ -176,7 +188,8 @@ public class DefaultXWootManager extends AbstractLogEnabled implements XWootMana
      */
     public void disconnectP2P()
     {
-        call("/synchronize.do?action=p2pnetworkconnection&switch=off");
+        /* This is not working anymore... */
+        call("/synchronize.do?action=p2pnetworkconnection");
     }
 
     /**

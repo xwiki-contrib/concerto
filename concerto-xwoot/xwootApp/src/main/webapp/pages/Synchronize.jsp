@@ -67,7 +67,9 @@
                 <a href="synchronize.do?action=pageManagement&val=all" title="Add all wiki pages."><img class="icon" src="images/AddAllPage.png"/></a>
                 <a href="synchronize.do?action=pageManagement&val=remove" title="Remove all wiki pages."><img class="icon" src="images/RemoveAllPage.png"/></a>
                 <a href="synchronize.do?action=synchronize" title="Synchronize selected pages."><img class="icon" src="images/SynchronizePage.png"/></a>-->
-            </c:if>    
+            </c:if>
+            <img class="icon" src="images/barre.png"/>
+            <a href="<%= request.getHeader("referer") %>"><img class="icon" src="images/goback.png"/>Back to <%= request.getHeader("referer") %></a>
         </div>
         <div id="boxes">            
             <!--<div id="box-left" class="box">
