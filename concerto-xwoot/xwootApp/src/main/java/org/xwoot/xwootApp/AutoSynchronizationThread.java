@@ -179,7 +179,7 @@ public class AutoSynchronizationThread extends Thread
             this.logger.debug("Performing auto-synchronization.");
             try {
                 xwootEngine.synchronize();
-            } catch (XWootException e) {
+            } catch (Exception e) {
                 this.logger.warn("Auto-synchronization failed!", e);
             }
         }
