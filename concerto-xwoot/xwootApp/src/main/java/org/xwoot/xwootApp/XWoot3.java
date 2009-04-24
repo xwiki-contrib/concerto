@@ -1444,8 +1444,6 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
                 Value pageObjectValue = pageEntry.getValue();
                 XWootObject pageObject = (XWootObject) pageObjectValue.get();
                 XWootId pageXWootID = this.contentManager.store(pageObject);
-                // Save it's last known version as fix for http://jira.xwiki.org/jira/browse/CONCERTO-21
-                this.getLastModifiedContentIdMap().add2XWikiIdMap(pageId, pageXWootID);
 
                 // Update/Create page objects.
 
@@ -1466,8 +1464,11 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
                     this.logger.debug("Synchronizing object from model: " + objectId);
 
                     // Store the object.
-                    this.contentManager.store(objectInPage);
+                    pageXWootID = this.contentManager.store(objectInPage);
                 }
+                
+                // Save it's last known version as fix for http://jira.xwiki.org/jira/browse/CONCERTO-21
+                this.getLastModifiedContentIdMap().add2XWikiIdMap(pageId, pageXWootID);
 
             }
         } catch (ThomasRuleEngineException tree) {
