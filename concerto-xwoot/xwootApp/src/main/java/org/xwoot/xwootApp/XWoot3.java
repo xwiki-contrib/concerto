@@ -1443,7 +1443,9 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
                 // Update/Create the page first before doing the same for page objects.
                 Value pageObjectValue = pageEntry.getValue();
                 XWootObject pageObject = (XWootObject) pageObjectValue.get();
-                this.contentManager.store(pageObject);
+                XWootId pageXWootID = this.contentManager.store(pageObject);
+                // Save it's last known version as fix for http://jira.xwiki.org/jira/browse/CONCERTO-21
+                this.getLastModifiedContentIdMap().add2XWikiIdMap(pageId, pageXWootID);
 
                 // Update/Create page objects.
 

@@ -636,11 +636,10 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 
     /** {@inheritDoc} **/
     public PeerGroup createNewGroup(String groupName, String description, char[] keystorePassword, char[] groupPassword) throws Exception {
-
-    	DiscoveryService rootGroupDiscoveryService = rootGroup.getDiscoveryService();
     	
         PeerGroup newGroup;               // new peer group
-        //PeerGroupAdvertisement adv; // advertisement for the new peer group
+        
+        DiscoveryService rootGroupDiscoveryService = this.rootGroup.getDiscoveryService();
         
         // Create a new all purpose peergroup.
         ModuleImplAdvertisement newGroupImpl = null;
@@ -652,9 +651,9 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
        
 	        //System.out.println("ALTERED PEER GROUP IMPL ADV CONTAINING PSEMEMBERSHIPSERVICE, NO PSECONFIG:\n" + newGroupImpl);
 	        
-	        // Advertise this altered module impl adv
-	        rootGroupDiscoveryService.remotePublish(newGroupImpl);
-	        rootGroupDiscoveryService.publish(newGroupImpl);
+	        // Advertise this altered module impl adv so we can instantiate the group.
+	        rootGroupDiscoveryService.remotePublish(newGroupImpl, DiscoveryService.DEFAULT_LIFETIME);
+	        rootGroupDiscoveryService.publish(newGroupImpl, DiscoveryService.DEFAULT_LIFETIME, DiscoveryService.DEFAULT_LIFETIME);
 	        
 	        // Generate self-signed certificate and encrypt the private key from this certificate.
 	        PSEUtils.IssuerInfo groupAuthenticationData = PSEUtils.genCert(manager.getInstanceName(), null);
@@ -667,9 +666,9 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 	        PeerGroupAdvertisement newGroupAdv = buildGroupAdvWithPSE(
 	        		groupName, description, newGroupImpl, certificateChain, encryptedGroupPrivateKey);
 	  
-	        // Publish it.
-	        rootGroupDiscoveryService.publish(newGroupAdv);
-	        rootGroupDiscoveryService.remotePublish(newGroupAdv);
+//	        // Publish it.
+//	        rootGroupDiscoveryService.publish(newGroupAdv, DiscoveryService.DEFAULT_LIFETIME, DiscoveryService.DEFAULT_LIFETIME);
+//	        rootGroupDiscoveryService.remotePublish(newGroupAdv, DiscoveryService.DEFAULT_LIFETIME);
 	  
 	        // create a group from it.
 	        // rootGroup.loadModule(newGroupImpl.getID(), newGroupImpl);
@@ -713,12 +712,8 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
         System.out.println("Is RDV?" + pg.getRendezVousService().isRendezVous());
      */
         
-        // Not sure how much of this is needed; this might be overkill.
-        rootGroupDiscoveryService.remotePublish(newGroup.getPeerGroupAdvertisement());
-        rootGroupDiscoveryService.publish(newGroup.getPeerGroupAdvertisement());
-
-        // Add the new group to our list of joined groups.
-        //joinedGroups.add(pg);
+        // Republish the group with increased expiration times.
+        this.publishGroup(this.rootGroup, newGroup);
         
         // If we were previously a member of a group, we have to leave it now.
         if (this.isConnectedToGroup()) {
@@ -808,8 +803,8 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
         // Leave the old peer group.
         this.leavePeerGroup(currentJoinedGroup);
 
-        // Publish our advertisements.  Is all of this really needed?
-        disco.publish(newGroup.getPeerGroupAdvertisement());
+        // Re-Publish the group to mark it as still alive.
+        this.publishGroup(this.rootGroup, newGroup);
         
         // Set this group as the current one
         currentJoinedGroup = newGroup;
@@ -907,6 +902,22 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
         IOException, ProtocolNotSupportedException
     {
         return joinPeerGroup(groupAdv, null, null, beRendezvous);
+    }
+    
+    protected void publishGroup(PeerGroup parentGroup, PeerGroup childrenGroup) throws IOException {
+        DiscoveryService parentGroupDiscoveryService = parentGroup.getDiscoveryService();
+        
+        Advertisement childGroupPeerGroupAdvertisement = childrenGroup.getPeerGroupAdvertisement();
+        Advertisement childGroupImplementationAdvertisement = childrenGroup.getImplAdvertisement();
+        
+        // Use 1 year for both.
+        long groupExpirationTime = DiscoveryService.DEFAULT_LIFETIME;
+        long groupLifetime = DiscoveryService.DEFAULT_LIFETIME;
+        
+        parentGroupDiscoveryService.remotePublish(childGroupPeerGroupAdvertisement, groupLifetime);
+        parentGroupDiscoveryService.publish(childGroupPeerGroupAdvertisement, groupLifetime, groupExpirationTime);
+        parentGroupDiscoveryService.remotePublish(childGroupImplementationAdvertisement, groupLifetime);
+        parentGroupDiscoveryService.publish(childGroupImplementationAdvertisement, groupLifetime, groupExpirationTime);
     }
     
     protected void createDirectCommunicationServerSocket() throws IOException
