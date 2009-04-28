@@ -220,7 +220,7 @@ public class StateManagement extends HttpServlet
                     currentState = "Problem with state: can't compute a new state." + "\n(Details: "+exceptionMessage+")";;
                     break;
                 case RETRIEVE:
-                    currentState = "Problem with state: can't import the state from the given peer." + "\n(Details: "+exceptionMessage+")";;
+                    currentState = "Problem with state: can't receive a state from the group." + "\n(Details: "+exceptionMessage+")";;
                     break;
                 case REIMPORT_EXISTING:
                     currentState = "Failed to import the existing state for this group. Please get the group's state again." + " (Details: " + exceptionMessage + ")";

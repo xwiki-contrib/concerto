@@ -1566,6 +1566,8 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 		    // and his peer adv.
 		    
 		    String leavingClientPeerId = event.getPeer();
+		    this.logger.debug("Peer " + leavingClientPeerId + " disconnected.");
+		    
 		    DiscoveryService discoveryService = this.currentJoinedGroup.getDiscoveryService();
 		    Enumeration<Advertisement> pipeAdvertisements = this.getKnownDirectCommunicationPipeAdvertisements();
 		    while (pipeAdvertisements.hasMoreElements()) {
@@ -1575,6 +1577,7 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 		        String ownerPeerId = JxtaPeer.getPeerIdFromBackChannelPipeName(pipeName);
 		        if (leavingClientPeerId.equals(ownerPeerId)) {
 		            try {
+		                this.logger.debug("Flushing pipe advertisement of disconnected peer named " + pipeName);
                         discoveryService.flushAdvertisement(pipeAdvertisement);
                     } catch (IOException e) {
                         String peerName = JxtaPeer.getPeerNameFromBackChannelPipeName(pipeName);
@@ -1587,13 +1590,14 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 		    Enumeration<PeerAdvertisement> peerAdvertisements = this.getKnownPeers();
             while (peerAdvertisements.hasMoreElements()) {
                 PeerAdvertisement peerAdvertisement = (PeerAdvertisement) peerAdvertisements.nextElement();
+                String peerName = peerAdvertisement.getName();
                 
                 String peerId = peerAdvertisement.getPeerID().toString();
                 if (leavingClientPeerId.equals(peerId)) {
                     try {
+                        this.logger.debug("Flushing pipe advertisement of disconnected peer named " + peerName);
                         discoveryService.flushAdvertisement(peerAdvertisement);
                     } catch (IOException e) {
-                        String peerName = peerAdvertisement.getName();
                         this.logger.warn("Failed to flush the peer advertisement of the peer named "
                             + peerName + " after he has disconnected.\n", e);
                     }
