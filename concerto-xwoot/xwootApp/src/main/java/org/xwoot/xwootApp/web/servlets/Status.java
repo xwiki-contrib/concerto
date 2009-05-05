@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -116,7 +115,7 @@ public class Status extends HttpServlet
         List<String> neighborNames = new ArrayList<String>();
         if (xwootAPI != null) {
             Collection<PipeAdvertisement> neighbors;
-            try {
+            //try {
                 neighbors = xwootAPI.getNeighborsList();
                 for (PipeAdvertisement n : neighbors) {
                     PipeAdvertisement original = n;
@@ -127,9 +126,9 @@ public class Status extends HttpServlet
                     
                     neighborNames.add(n.getName());
                 }
-            } catch (XWootException e) {
-                e.printStackTrace();
-            }
+//            } catch (XWootException e) {
+//                e.printStackTrace();
+//            }
         }
 
         result.put("xwootNeighbours", neighborNames);
@@ -159,14 +158,14 @@ public class Status extends HttpServlet
         List<String> neighborNames = new ArrayList<String>();
         if (xwootAPI != null) {
             Collection<PipeAdvertisement> neighbors;
-            try {
+//            try {
                 neighbors = xwootAPI.getNeighborsList();
                 for (PipeAdvertisement advertisement : neighbors) {
                     neighborNames.add(advertisement.getName());
                 }
-            } catch (XWootException e) {
-                e.printStackTrace();
-            }
+//            } catch (XWootException e) {
+//                e.printStackTrace();
+//            }
         }
 
         properties.setProperty("xwootNeighbours", neighborNames.toString());

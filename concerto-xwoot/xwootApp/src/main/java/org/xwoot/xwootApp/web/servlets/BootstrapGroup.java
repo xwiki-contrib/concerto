@@ -62,7 +62,6 @@ import net.jxta.document.StructuredDocumentFactory;
 import net.jxta.document.XMLDocument;
 import net.jxta.protocol.PeerGroupAdvertisement;
 
-import org.xwoot.xwootApp.XWoot3;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.web.XWootSite;
 
@@ -114,7 +113,7 @@ public class BootstrapGroup extends HttpServlet
         }
         
         String groupChoice = request.getParameter("groupChoice");
-        String AbsolutePathToPropertiesFile = ((XWoot3) xwootEngine).getPeer().getManager().getInstanceHome().getPath() + File.separator + BootstrapGroup.P2P_GROUP_SETTINGS_PROPERTIES_FILE_NAME;
+        String AbsolutePathToPropertiesFile =  xwootEngine.getPeer().getManager().getInstanceHome().getPath() + File.separator + BootstrapGroup.P2P_GROUP_SETTINGS_PROPERTIES_FILE_NAME;
         Properties groupProperties = XWootSite.getProperties(AbsolutePathToPropertiesFile);
         String currentGroupAdvertisementXMLString = groupProperties.getProperty("current_group_advertisement");
         
@@ -129,7 +128,7 @@ public class BootstrapGroup extends HttpServlet
                 String groupPassword = groupProperties.getProperty("current_group_password", "");
                 boolean beRendezVous = "true".equalsIgnoreCase(groupProperties.getProperty("current_group_be_rendezvous"));
                 
-                ((XWoot3) xwootEngine).joinGroup(currentGroupAdvertisement, KEYSTORE_PASSWORD, groupPassword.toCharArray(), beRendezVous);
+                xwootEngine.joinGroup(currentGroupAdvertisement, KEYSTORE_PASSWORD, groupPassword.toCharArray(), beRendezVous);
             } catch (Exception e) {
                 errors += "Failed to auto-rejoin group: Invalid existing group properties.";
             }
@@ -158,9 +157,9 @@ public class BootstrapGroup extends HttpServlet
                         throw new IllegalArgumentException("Passwords do not match.");
                     }
                     
-                    newGroupAdvertisement = ((XWoot3) xwootEngine).createNewGroup(groupName, groupDescription, KEYSTORE_PASSWORD/*keystorePassword.toCharArray()*/, groupPassword.toCharArray());
+                    newGroupAdvertisement = xwootEngine.createNewGroup(groupName, groupDescription, KEYSTORE_PASSWORD/*keystorePassword.toCharArray()*/, groupPassword.toCharArray());
                 } else {
-                    newGroupAdvertisement = ((XWoot3) xwootEngine).createNewGroup(groupName, groupDescription, null, null);
+                    newGroupAdvertisement = xwootEngine.createNewGroup(groupName, groupDescription, null, null);
                 }
                 
                 // Save the group so we can join it next time.
@@ -189,7 +188,7 @@ public class BootstrapGroup extends HttpServlet
                 errors += "Please select a group to join first.";
             } else {
                 try {
-                    Collection groups = ((XWoot3) xwootEngine).getGroups();
+                    Collection groups = xwootEngine.getGroups();
                     boolean found = false;
                     for (Object group : groups) {
                         PeerGroupAdvertisement aGroupAdv = (PeerGroupAdvertisement) group;
@@ -197,7 +196,7 @@ public class BootstrapGroup extends HttpServlet
                             this.log("Joining group described by this adv:\n" + aGroupAdv);
                             
                             // Join the group.
-                            ((XWoot3) xwootEngine).joinGroup(aGroupAdv, KEYSTORE_PASSWORD, groupPassword.toCharArray(), beRendezVous);
+                            xwootEngine.joinGroup(aGroupAdv, KEYSTORE_PASSWORD, groupPassword.toCharArray(), beRendezVous);
                             
                             // Save the group so we can join it next time.
                             String groupAdvertisementAsXMLString = aGroupAdv.getDocument(MimeMediaType.XMLUTF8).toString();
@@ -242,7 +241,7 @@ public class BootstrapGroup extends HttpServlet
         }
         
         try {
-            request.setAttribute(AVAILABLE_GROUPS_ATTRIBUTE, ((XWoot3) xwootEngine).getGroups());
+            request.setAttribute(AVAILABLE_GROUPS_ATTRIBUTE, xwootEngine.getGroups());
             this.getServletContext().log("Available groups: " + request.getAttribute(AVAILABLE_GROUPS_ATTRIBUTE));
         } catch (Exception e) {
             request.setAttribute(AVAILABLE_GROUPS_ATTRIBUTE, new ArrayList());

@@ -949,7 +949,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         }
        
         try {
-            if (!this.getContentManager().getModifiedPagesIds().isEmpty()){
+            if (!this.getContentProvider().getModifiedPagesIds().isEmpty()){
                 this.synchronizeFromXWikiToModel(!this.lastModifiedContentIdMap.getCurrentPatchIdMap().isEmpty(), generatePatches);
             } else {
                 this.logger.info("No changes in xwiki => No changes done to the model.");
@@ -1064,6 +1064,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         return false;*/
     }
 
+    /** {@inheritDoc} */
     public PeerGroupAdvertisement createNewGroup(String name, String description, char[] keystorePassword, char[] groupPassword) throws XWootException
     {
         if (!this.isConnectedToP2PNetwork()) {
@@ -1086,11 +1087,13 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
      // FIXME: store the currentlyJoinedGroup in a properties file or somewhere on drive in order to automatically rejoin (with proper password) the group on a reboot.
     }
     
+    /** {@inheritDoc} */
     public void joinGroup(PeerGroupAdvertisement groupAdvertisement, char[] keystorePassword, char[] groupPassword) throws XWootException
     {
         this.joinGroup(groupAdvertisement, keystorePassword, groupPassword, false);
     }
     
+    /** {@inheritDoc} */
     public void joinGroup(PeerGroupAdvertisement groupAdvertisement, char[] keystorePassword, char[] groupPassword, boolean beRendezVous) throws XWootException
     {
         if (!this.isConnectedToP2PNetwork()) {
@@ -1349,7 +1352,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         this.logger.debug(this.getXWootName() + " : Finished processing state.");
     }
     
-    /** @return true if this peer created the group he currently is member of. */
+    /** {@inheritDoc} */
     public boolean isGroupCreator() {
         return createdCurrentGroup;
     }
@@ -1490,11 +1493,6 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         }
 
         return true;
-    }
-
-    public File askState(String from, String to) throws XWootException
-    {
-        return this.askStateToGroup();
     }
     
     public File askStateToGroup() throws XWootException
@@ -1741,13 +1739,13 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     }*/
 
     @SuppressWarnings("unchecked")
-    public Collection getNeighborsList() throws XWootException
+    public Collection getNeighborsList()
     {      
         return Collections.list(this.peer.getKnownDirectCommunicationPipeAdvertisements());
     }
     
     @SuppressWarnings("unchecked")
-    public Collection getGroups() throws XWootException
+    public Collection getGroups()
     {
         return Collections.list(this.peer.getKnownGroups());
     }
@@ -1797,11 +1795,8 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
      * 
      * @return DOCUMENT ME!
      */
-    public XWootContentProviderInterface getContentManager()
+    public XWootContentProviderInterface getContentProvider()
     {
-        if (!contentManager.isConnected()) {
-            return null;
-        }
         return this.contentManager;
     }
 
@@ -1859,16 +1854,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
 
     /** {@inheritDoc} **/
     public void jxtaCastProgress(JxtaCastEvent event)
-    {
-        /*if (e.transType == JxtaCastEvent.RECV) {
-            System.out.println("Received: ");
-        } else {
-            System.out.println("Sent: ");
-        }
-        System.out.println("% complete:" + e.percentDone);
-        System.out.println("senderID:" + e.senderId);
-        System.out.println("transferedData: " + e.transferedData);*/
-        
+    {        
         if (event.percentDone == 100) {
             if (event.transType == JxtaCastEvent.RECV) {
                 this.logger.debug(this.getXWootName() + " : Received a broadcasted message.");
@@ -1918,19 +1904,6 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
             return;
         }
     }
-    
-    /** {@inheritDoc} **/
-    public boolean addNeighbour(String neighborURL)
-    {
-        this.logger.warn("addNeighbour("+neighborURL+") called. NOT IMPLEMENTED OR REQUIRED!");
-        return false;
-    }
-
-    /** {@inheritDoc} **/
-    public void removeNeighbor(String neighborURL) throws XWootException
-    {
-        this.logger.warn("removeNeighbor("+neighborURL+") called. NOT IMPLEMENTED OR REQUIRED!");
-    }
 
     /** {@inheritDoc} **/
     public Log getLog()
@@ -1942,15 +1915,6 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     public String getWorkingDir()
     {
         return this.workingDir;
-    }
-
-    /*
-     * This was added for diagnostic purpose. Since we want to inspect the content provider even though it's not
-     * connected this method is added (it is the same of getContentManager without the connection check)
-     */    
-    public XWootContentProviderInterface getContentProvider()
-    {
-        return contentManager;
     }
 
     public Date getLastSynchronizationDate()

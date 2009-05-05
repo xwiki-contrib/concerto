@@ -236,7 +236,7 @@ public class TestXWoot3 extends AbstractXWootTest
         // connect XWoot to content provider
         this.xwoot31.connectToContentManager();
 
-        XWootContentProviderInterface mxwcp = this.xwoot31.getContentManager();
+        XWootContentProviderInterface mxwcp = this.xwoot31.getContentProvider();
         this.initContentProvider(mxwcp);
         
         // Ignore the rest of the pages. They are not our objective.
@@ -259,7 +259,7 @@ public class TestXWoot3 extends AbstractXWootTest
         Assert.assertEquals(content, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
             "content"));
 
-        Assert.assertEquals(0, this.xwoot31.getContentManager().getModifiedPagesIds().size());
+        Assert.assertEquals(0, this.xwoot31.getContentProvider().getModifiedPagesIds().size());
 
         XWootObject xwootObj2 = this.simulateXWikiUserModification(mxwcp, PAGE_ID, content2, 2, 0, false);
 
@@ -292,7 +292,7 @@ public class TestXWoot3 extends AbstractXWootTest
         // connect XWoot to content provider
         this.xwoot31.connectToContentManager();
 
-        XWootContentProviderInterface mxwcp = this.xwoot31.getContentManager();
+        XWootContentProviderInterface mxwcp = this.xwoot31.getContentProvider();
         this.initContentProvider(mxwcp);
         
         // Ignore the rest of the pages. They are not our objective.
@@ -385,8 +385,8 @@ public class TestXWoot3 extends AbstractXWootTest
         Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroup());
         Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroupRendezVous());
 
-        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentManager();
-        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentManager();
+        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentProvider();
+        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentProvider();
         
         this.initContentProvider(mxwcp1);
         this.initContentProvider(mxwcp2);
@@ -428,7 +428,7 @@ public class TestXWoot3 extends AbstractXWootTest
         Assert.assertEquals(content, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
             "content"));
 
-        Assert.assertEquals(0, this.xwoot31.getContentManager().getModifiedPagesIds().size());
+        Assert.assertEquals(0, this.xwoot31.getContentProvider().getModifiedPagesIds().size());
     }
     
 //    /**
@@ -531,8 +531,8 @@ public class TestXWoot3 extends AbstractXWootTest
         Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroup());
         Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroupRendezVous());
 
-        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentManager();
-        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentManager();
+        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentProvider();
+        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentProvider();
         
         this.initContentProvider(mxwcp1);
         this.initContentProvider(mxwcp2);
@@ -658,7 +658,7 @@ public class TestXWoot3 extends AbstractXWootTest
         
         
 
-        Assert.assertEquals(0, this.xwoot31.getContentManager().getModifiedPagesIds().size());
+        Assert.assertEquals(0, this.xwoot31.getContentProvider().getModifiedPagesIds().size());
     }
     
     
@@ -694,8 +694,8 @@ public class TestXWoot3 extends AbstractXWootTest
         Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroup());
         Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroupRendezVous());
 
-        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentManager();
-        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentManager();
+        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentProvider();
+        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentProvider();
         
         this.initContentProvider(mxwcp1);
         this.initContentProvider(mxwcp2);
@@ -819,7 +819,7 @@ public class TestXWoot3 extends AbstractXWootTest
         
         
 
-        Assert.assertEquals(0, this.xwoot31.getContentManager().getModifiedPagesIds().size());
+        Assert.assertEquals(0, this.xwoot31.getContentProvider().getModifiedPagesIds().size());
     }
     
     /**
@@ -861,8 +861,8 @@ public class TestXWoot3 extends AbstractXWootTest
         Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroup());
         Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroupRendezVous());
 
-        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentManager();
-        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentManager();
+        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentProvider();
+        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentProvider();
         
         this.initContentProvider(mxwcp1);
         this.initContentProvider(mxwcp2);
@@ -1046,7 +1046,7 @@ public class TestXWoot3 extends AbstractXWootTest
         
         
         
-        Assert.assertEquals(0, this.xwoot31.getContentManager().getModifiedPagesIds().size());
+        Assert.assertEquals(0, this.xwoot31.getContentProvider().getModifiedPagesIds().size());
     }
     
     /**
@@ -1109,8 +1109,8 @@ public class TestXWoot3 extends AbstractXWootTest
         Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroup());
         Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroupRendezVous());
 
-        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentManager();
-        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentManager();
+        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentProvider();
+        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentProvider();
         
         /*this.initContentProvider(mxwcp1);
         this.initContentProvider(mxwcp2);*/
@@ -1160,7 +1160,7 @@ public class TestXWoot3 extends AbstractXWootTest
         Assert.assertEquals(commentContent1, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID, comment1XW1.getGuid(),
             COMMENT_CONTENT_FIELD_NAME));
 
-        Assert.assertEquals(0, this.xwoot31.getContentManager().getModifiedPagesIds().size());
+        Assert.assertEquals(0, this.xwoot31.getContentProvider().getModifiedPagesIds().size());
         
         
         // Create 2 more comments on xw2.
@@ -1203,7 +1203,7 @@ public class TestXWoot3 extends AbstractXWootTest
         Assert.assertEquals(commentContent3, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID, comment3XW2.getGuid(),
             COMMENT_CONTENT_FIELD_NAME));
 
-        Assert.assertEquals(0, this.xwoot31.getContentManager().getModifiedPagesIds().size());
+        Assert.assertEquals(0, this.xwoot31.getContentProvider().getModifiedPagesIds().size());
     }
 
     /**
@@ -1233,8 +1233,8 @@ public class TestXWoot3 extends AbstractXWootTest
         Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroup());
         Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroupRendezVous());
 
-        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentManager();
-        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentManager();
+        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentProvider();
+        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentProvider();
         
         this.initContentProvider(mxwcp1);
         this.initContentProvider(mxwcp2);
@@ -1279,7 +1279,7 @@ public class TestXWoot3 extends AbstractXWootTest
         Assert.assertEquals(result, this.xwoot32.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
             "content"));
 
-        Assert.assertEquals(0, this.xwoot31.getContentManager().getModifiedPagesIds().size());
+        Assert.assertEquals(0, this.xwoot31.getContentProvider().getModifiedPagesIds().size());
     }
 
     /**
@@ -1305,7 +1305,7 @@ public class TestXWoot3 extends AbstractXWootTest
         // check connections
         Assert.assertTrue(this.xwoot31.getPeer().isConnectedToGroup());
         
-        XWootContentProviderInterface mxwcp = this.xwoot31.getContentManager();
+        XWootContentProviderInterface mxwcp = this.xwoot31.getContentProvider();
         
         this.initContentProvider(mxwcp);
         
@@ -1365,7 +1365,7 @@ public class TestXWoot3 extends AbstractXWootTest
         Assert.assertEquals(result, this.xwoot31.getWootEngine().getContentManager().getContent(PAGE_ID, pageGuid,
             CONTENT_FIELD_NAME));
 
-        Assert.assertEquals(0, this.xwoot31.getContentManager().getModifiedPagesIds().size());
+        Assert.assertEquals(0, this.xwoot31.getContentProvider().getModifiedPagesIds().size());
     }
 
     // /**
@@ -1458,8 +1458,8 @@ public class TestXWoot3 extends AbstractXWootTest
         Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroup());
         Assert.assertTrue(this.xwoot32.getPeer().isConnectedToGroupRendezVous());
 
-        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentManager();
-        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentManager();
+        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentProvider();
+        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentProvider();
         
         this.initContentProvider(mxwcp1);
         this.initContentProvider(mxwcp2);
@@ -1601,9 +1601,9 @@ public class TestXWoot3 extends AbstractXWootTest
         // simulate a change from wikiContentManager user...
 
         // simulate XWiki user page creation
-        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentManager();
-        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentManager();
-        XWootContentProviderInterface mxwcp3 = this.xwoot33.getContentManager();
+        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentProvider();
+        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentProvider();
+        XWootContentProviderInterface mxwcp3 = this.xwoot33.getContentProvider();
         this.initContentProvider(mxwcp1);
         this.initContentProvider(mxwcp2);
         this.initContentProvider(mxwcp3);
@@ -1809,8 +1809,8 @@ public class TestXWoot3 extends AbstractXWootTest
 
         this.xwoot31.connectToContentManager();
         this.xwoot32.connectToContentManager();
-        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentManager();
-        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentManager();
+        XWootContentProviderInterface mxwcp1 = this.xwoot31.getContentProvider();
+        XWootContentProviderInterface mxwcp2 = this.xwoot32.getContentProvider();
 
         // Ignore the rest of the pages. They are not our objective.
         mxwcp1.getModifiedPagesIds();

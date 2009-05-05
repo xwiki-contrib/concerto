@@ -60,7 +60,6 @@ import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.xwoot.xwootApp.XWoot3;
 import org.xwoot.xwootApp.XWootAPI;
 import org.xwoot.xwootApp.XWootException;
 import org.xwoot.xwootApp.web.XWootSite;
@@ -109,31 +108,6 @@ public class StateManagement extends HttpServlet
         // The result of the action
         String currentState = null;
         String exceptionMessage = null;
-        
-//        // Check if this should be auto-join and this xwoot node already has the state of this group.
-//        if (action == null) {
-//            // If we have the state of this group.
-//            if (xwootEngine.isStateComputed()) {
-//                // Try to import it and replace the current internal model (if any).
-//                try {
-//                    xwootEngine.importState(xwootEngine.getState());
-//                    action = StateAction.REIMPORT_EXISTING;
-//                } catch (Exception e) {
-//                    exceptionMessage = e.getMessage();
-//                    this.log("Failed to import the existing state for this group.", e);
-//                }
-//            }
-//        }
-
-        /*
-        // The peer specified as the network contact point.
-        String neighbor = (String) request.getSession().getAttribute("neighbor");
-        if (StringUtils.isBlank(neighbor)) {
-            neighbor = null;
-            System.out.println("No neighbor provided");
-        } else {
-            System.out.println("Neighbor: " + neighbor);
-        }*/
 
         try {
             if (action == StateAction.UPLOAD) {
@@ -142,8 +116,8 @@ public class StateManagement extends HttpServlet
                     this.temp = File.createTempFile("uploadedState", ".zip");
                     FileItem fileToUpload = requestParameters.get("statefile");
                     
-                    if (!((XWoot3)xwootEngine).isGroupCreator() && 
-                        !fileToUpload.getName().equals(((XWoot3)xwootEngine).getStateFileName())) {
+                    if (!xwootEngine.isGroupCreator() && 
+                        !fileToUpload.getName().equals(xwootEngine.getStateFileName())) {
                         exceptionMessage = "A state for a different group was provided. Please upload the state of this group if you already have it or ask a new one instead.";
                     } else if (this.upload(fileToUpload)) {
                         uploadSuccessful = true;
@@ -160,7 +134,7 @@ public class StateManagement extends HttpServlet
                 }
             } else if (action == StateAction.RETRIEVE) {
                 this.getServletContext().log("Retrieving state from group.");
-                File newStateFile = ((XWoot3) xwootEngine).askStateToGroup();
+                File newStateFile = xwootEngine.askStateToGroup();
                 xwootEngine.importState(newStateFile);
                 newStateFile.delete();
             } else if (action == StateAction.CREATE) {
@@ -232,7 +206,7 @@ public class StateManagement extends HttpServlet
 
         request.setAttribute("xwiki_url", XWootSite.getInstance().getXWootEngine().getContentManagerURL());
         request.setAttribute("errors", currentState);
-        request.setAttribute("groupCreator", ((XWoot3)xwootEngine).isGroupCreator());
+        request.setAttribute("groupCreator", xwootEngine.isGroupCreator());
 
         request.getRequestDispatcher("/pages/StateManagement.jsp").forward(request, response);
         return;

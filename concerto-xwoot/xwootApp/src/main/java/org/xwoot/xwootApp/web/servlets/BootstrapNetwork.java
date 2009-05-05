@@ -164,7 +164,7 @@ public class BootstrapNetwork extends HttpServlet
     {
         String errors = "";
         
-        NetworkManager networkManager = ((XWoot3) xwootEngine).getPeer().getManager();
+        NetworkManager networkManager = xwootEngine.getPeer().getManager();
         NetworkConfigurator networkConfig = networkManager.getConfigurator();
 
         String networkChoice = request.getParameter("networkChoice");
@@ -301,7 +301,7 @@ public class BootstrapNetwork extends HttpServlet
                         
                         networkManager.setUseDefaultSeeds(false);
                         
-                        ((XWoot3) xwootEngine).getPeer().startNetworkAndConnect((XWoot3) xwootEngine, (XWoot3) xwootEngine);
+                        xwootEngine.getPeer().startNetworkAndConnect((XWoot3) xwootEngine, (XWoot3) xwootEngine);
                         // request.getSession().setAttribute("join", Boolean.valueOf(false));
                         // response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/stateManagement.do"));
                     } catch (Exception e) {

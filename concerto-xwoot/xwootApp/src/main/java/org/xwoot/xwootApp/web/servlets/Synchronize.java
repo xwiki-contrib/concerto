@@ -84,81 +84,6 @@ public class Synchronize extends HttpServlet
         System.out.print("Site " + XWootSite.getInstance().getXWootEngine().getXWootPeerId() + " : Synchronize page -");
         
         XWootAPI xwootEngine = XWootSite.getInstance().getXWootEngine();
-/*
-        // test
-        if (request.getParameter("test") != null) {
-
-            if (!XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork()) {
-                System.out.println("Neighbor not connected");
-                response.getWriter().print("Neighbor not connected");
-                response.setHeader("connected", "false");
-            } else {
-                response.setHeader("connected", "true");
-                System.out.println("Neighbor " + XWootSite.getInstance().getXWootEngine().getXWootPeerId()
-                    + " is connected.");
-            }
-            return;
-        }
-        // add neighbor
-        else if ("addNeighbor".equals(request.getParameter("action"))) {
-            String neighbor = request.getParameter("neighbor");
-            if (neighbor != null && !neighbor.trim().equals("")) {
-                try {
-                    System.out.println(" receive neighbour : " + neighbor + " -");
-                    if (XWootSite.getInstance().getXWootEngine().addNeighbour(neighbor)) {
-                        XWootSite.getInstance().getXWootEngine().doAntiEntropy(neighbor);
-                    }
-                } catch (Exception e) {
-                    throw new ServletException(e);
-                }
-            } else {
-                System.out.println(" want to add a neighbor");
-                request.setAttribute("action", "addneighbor");
-            }
-        }
-
-        // remove neighbor
-        else if ("removeNeighbor".equals(request.getParameter("action"))) {
-            String neighbor = request.getParameter("neighbor");
-            System.out.println(" remove neighbour : " + neighbor + " -");
-            try {
-                XWootSite.getInstance().getXWootEngine().removeNeighbor(NetUtil.normalize(neighbor));
-            } catch (URISyntaxException e) {
-                throw new ServletException(e);
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-*/
-        // else if ("true".equals(request.getParameter("addneighbor"))) {
-        // System.out.println(" want to add a neighbor");
-        // request.setAttribute("addneighbor", Boolean.TRUE);
-        // }
-
-        // page management
-       /* else if ("pageManagement".equals(request.getParameter("action"))
-            && XWootSite.getInstance().getXWootEngine().isContentManagerConnected()) {
-            System.out.print("pageManagement -- ");
-            try {
-                if ("all".equals(request.getParameter(("val")))) {
-                    System.out.println(" add all pages -");
-
-                    ((XWoot) XWootSite.getInstance().getXWootEngine()).addAllPageManagement();
-
-                } else if ("remove".equals(request.getParameter("val"))) {
-                    System.out.println(" remove all pages -");
-                    ((XWoot) XWootSite.getInstance().getXWootEngine()).removeAllManagedPages();
-                } else if ("custom".equals(request.getParameter("val"))) {
-                    this.customPageManagement(request);
-                }
-            } catch (WikiContentManagerException e) {
-                throw new ServletException(e);
-            } catch (XWootException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }*/
 
         // synchronize
         if ("synchronize".equals(request.getParameter("action"))
@@ -282,16 +207,12 @@ public class Synchronize extends HttpServlet
                     result.put(n, Boolean.TRUE);
                 }
             }
-            /* NetUtil.READ_TIME_OUT=temp; */
-            /*Collection pages = ((XWoot2) XWootSite.getInstance().getXWootEngine()).getListOfManagedPages();*/
-           /* request.setAttribute("nopage", Boolean.valueOf(pages.size() == 0));*/
             request.setAttribute("noneighbor", Boolean.valueOf(neighbors.size() == 0));
             request.setAttribute("neighbors", result);
         } else {
             request.setAttribute("noneighbor", true);
         }
             
-      /*  request.setAttribute("pages", pages);*/
         request.setAttribute("content_provider", XWootSite.getInstance().getXWootEngine().getContentProvider());
         request.setAttribute("xwiki_url", XWootSite.getInstance().getXWootEngine().getContentManagerURL());
         request.setAttribute("p2pconnection", Boolean.valueOf(XWootSite.getInstance().getXWootEngine()
@@ -303,51 +224,4 @@ public class Synchronize extends HttpServlet
 
         return;
     }
-
-  /*  private void customPageManagement(HttpServletRequest request) throws WikiContentManagerException, XWootException
-    {
-        System.out.print("Site " + XWootSite.getInstance().getXWootEngine().getXWootPeerId()
-            + " : Page management page -");
-
-        if (!XWootSite.getInstance().getXWootEngine().isContentManagerConnected()) {
-            return;
-        }
-
-        Collection spaces = ((XWoot) XWootSite.getInstance().getXWootEngine()).getContentManager().getListSpaceId();
-        request.setAttribute("customPage", Boolean.TRUE);
-        request.setAttribute("spaces", spaces);
-        request.setAttribute("noPageChoice", Boolean.TRUE);
-
-        if ("printPages".equals(request.getParameter("actionManagement"))) {
-
-            String currentSpace = request.getParameter("currentSpace");
-            Collection pages =
-                ((XWoot) XWootSite.getInstance().getXWootEngine()).getContentManager().getListPageId(currentSpace);
-            Map managedPagesMap = ((XWoot) XWootSite.getInstance().getXWootEngine()).isPagesManaged(pages);
-
-            request.setAttribute("currentSpace", currentSpace);
-            request.setAttribute("managedPages", managedPagesMap);
-            request.setAttribute("noPageChoice", Boolean.FALSE);
-        } else if ("validate".equals(request.getParameter("actionManagement"))) {
-            System.out.println(" validate -");
-
-            String space = request.getParameter("space");
-            List<String> managedPages = new ArrayList<String>();
-
-            for (Enumeration e = request.getParameterNames(); e.hasMoreElements();) {
-                String paramName = (String) e.nextElement();
-
-                if (paramName.startsWith("PAGE-")) {
-                    String pageName = paramName.substring(5);
-                    managedPages.add(pageName);
-                }
-            }
-
-            ((XWoot) XWootSite.getInstance().getXWootEngine()).setPageManagement(space, managedPages);
-
-            request.setAttribute("noPageChoice", Boolean.TRUE);
-        } else {
-            System.out.println(" no action ! -");
-        }
-    }*/
 }

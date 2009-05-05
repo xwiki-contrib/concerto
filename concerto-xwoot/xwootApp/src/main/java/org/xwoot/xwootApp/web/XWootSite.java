@@ -222,10 +222,6 @@ public class XWootSite
         AntiEntropy ae = new AntiEntropy(aeDir.toString());
 
         Peer peer = PeerFactory.createPeer();
-        // FIXME: Use a properties file or something similar to store the current group, it's password, the keystore
-        // password in order to automatically start communicating after a reboot.
-        // FIXME: This behavior opens a possible security hole. The group's password is no longer protected by the
-        // keystore. Find a solution.
         
         ConfigMode initMode = ConfigMode.EDGE;
         NetworkConfigurator existingNetworkConfigurator = new NetworkConfigurator();
@@ -269,7 +265,6 @@ public class XWootSite
         XWootContentProviderInterface xwiki =
             XWootContentProviderFactory.getXWootContentProvider(contentProviderXmlRpcUrl, dbLocation, false,
                 contentProviderProperties);
-        // WikiContentManager wiki = WikiContentManagerFactory.getSwizzleFactory().createWCM(url, login, pwd);
 
         WootEngine wootEngine = new WootEngine(peerId, wootEngineDir.toString(), wootEngineClock);
 

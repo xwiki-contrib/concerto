@@ -202,8 +202,6 @@
     <module>antiEntropy</module>
     <!-- to give a clock -->
     <module>clockEngine</module>
-    <!-- middleware gestion -->
-    <module>lpbcast</module>
     <!-- to synchronize flate structure like string datas -->
     <module>wootEngine</module>
     <!-- Utility module for tasks common to most of the modules -->

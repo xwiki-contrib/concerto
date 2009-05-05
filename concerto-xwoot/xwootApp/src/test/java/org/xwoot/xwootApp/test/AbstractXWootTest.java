@@ -54,10 +54,8 @@ import org.xwoot.clockEngine.Clock;
 import org.xwoot.jxta.Peer;
 import org.xwoot.jxta.PeerFactory;
 import org.xwoot.jxta.NetworkManager.ConfigMode;
-import org.xwoot.lpbcast.sender.LpbCastAPI;
 import org.xwoot.thomasRuleEngine.ThomasRuleEngine;
 import org.xwoot.wootEngine.WootEngine;
-import org.xwoot.xwootApp.XWoot2;
 import org.xwoot.xwootApp.XWoot3;
 import org.xwoot.xwootUtil.FileUtil;
 
@@ -94,18 +92,6 @@ public abstract class AbstractXWootTest
     WootEngine wootEngine2;
 
     WootEngine wootEngine3;
-
-    LpbCastAPI lpbCast1;
-
-    LpbCastAPI lpbCast2;
-
-    LpbCastAPI lpbCast3;
-
-    XWoot2 xwoot21;
-
-    XWoot2 xwoot22;
-
-    XWoot2 xwoot23;
 
     AntiEntropy ae1;
 
@@ -194,20 +180,6 @@ public abstract class AbstractXWootTest
         this.wootEngine3 =
             new WootEngine(String.valueOf(3), new File(this.xwoot3Directory, "wootEngine").toString(), this.opClock3);
 
-        // 3 sender for 3 xwoot
-        this.lpbCast1 =
-            new MockLpbCast(WORKINGDIR + File.separator + "Site1" + File.separator + "receiver", this.round,
-                this.logDelay, this.maxNeighbors);
-        this.lpbCast2 =
-            new MockLpbCast(WORKINGDIR + File.separator + "Site2" + File.separator + "receiver", this.round,
-                this.logDelay, this.maxNeighbors);
-        this.lpbCast3 =
-            new MockLpbCast(WORKINGDIR + File.separator + "Site3" + File.separator + "receiver", this.round,
-                this.logDelay, this.maxNeighbors);
-        // this.lpbCast1 = null;
-        // this.lpbCast2 = null;
-        // this.lpbCast3 = null;
-
         // 3 antiEntropy
         this.ae1 = new AntiEntropy(WORKINGDIR + File.separator + "Site1" + File.separator + "ae");
         this.ae2 = new AntiEntropy(WORKINGDIR + File.separator + "Site2" + File.separator + "ae");
@@ -220,16 +192,6 @@ public abstract class AbstractXWootTest
         this.tre3 = new ThomasRuleEngine(String.valueOf(3), WORKINGDIR + File.separator + "Site3" + File.separator + "tre");
 
         // 3 xwoot
-        
-        this.xwoot21 =
-            new XWoot2(this.xwiki21, this.wootEngine1, this.lpbCast1, WORKINGDIR + File.separator + "Site1", "Site1",
-                new Integer(1), this.tre1, this.ae1);
-        this.xwoot22 =
-            new XWoot2(this.xwiki22, this.wootEngine2, this.lpbCast2, WORKINGDIR + File.separator + "Site2", "Site2",
-                new Integer(2), this.tre2, this.ae2);
-        this.xwoot23 =
-            new XWoot2(this.xwiki23, this.wootEngine3, this.lpbCast3, WORKINGDIR + File.separator + "Site3", "Site3",
-                new Integer(3), this.tre3, this.ae3);
         
         this.xwoot31 =
             new XWoot3(this.xwiki21, this.wootEngine1, this.peer1, WORKINGDIR + File.separator + "Site1", this.tre1, this.ae1, "Admin", "admin");
