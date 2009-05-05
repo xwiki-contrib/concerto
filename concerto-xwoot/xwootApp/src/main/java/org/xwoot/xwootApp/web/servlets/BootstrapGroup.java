@@ -140,7 +140,7 @@ public class BootstrapGroup extends HttpServlet
                 // Save the group so we can join it next time.
                 String groupAdvertisementAsXMLString = newGroupAdvertisement.getDocument(MimeMediaType.XMLUTF8).toString();
                 groupProperties.setProperty("current_group_advertisement", groupAdvertisementAsXMLString);
-                groupProperties.setProperty("current_group_password", groupPassword);
+                groupProperties.setProperty("current_group_password", (groupPassword == null ? "" : groupPassword));
                 groupProperties.setProperty("current_group_be_rendezvous", "true");
                 
                 XWootSite.savePropertiesInFile(AbsolutePathToPropertiesFile, "Updated group settings", groupProperties);
