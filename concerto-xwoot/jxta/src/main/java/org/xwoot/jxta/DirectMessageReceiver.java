@@ -17,7 +17,6 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-
 package org.xwoot.jxta;
 
 import java.io.ObjectOutputStream;
@@ -27,7 +26,7 @@ import org.apache.commons.logging.Log;
 /**
  * Describes the structure of a receiver for direct messages from other peer group members.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public interface DirectMessageReceiver
 {

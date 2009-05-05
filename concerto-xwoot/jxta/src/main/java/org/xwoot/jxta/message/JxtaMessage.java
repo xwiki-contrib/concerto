@@ -17,7 +17,6 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-
 package org.xwoot.jxta.message;
 
 import java.util.UUID;
@@ -25,7 +24,7 @@ import java.util.UUID;
 /**
  * Implements a message sent through the P2P network.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class JxtaMessage implements Message
 {
