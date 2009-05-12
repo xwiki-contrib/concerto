@@ -40,6 +40,28 @@
         </div>
         <div id="boxes" style="padding-left:20px;">
             <img class="small_icon" src="images/xconcerto20_2.ico" style="vertical-align:middle;padding-right:5px;"/><a style="font-size:15px;" href="${xwiki_url}" title="Go to xwiki">${xwiki_url}</a>
+            
+            <!-- Network connection status -->
+            <c:if test="${p2pconnection eq true}">
+            	<img class="icon" src="images/networkConnected.png" alt="Connected to network" style="vertical-align:middle;padding-right:5px;" />
+            </c:if>
+            <c:if test="${p2pconnection eq false}">
+            	<img class="icon" src="images/networkNotConnected.png" alt="Not connected to network" style="vertical-align:middle;padding-right:5px;" />
+            </c:if>
+            <c:if test="${networkReconnecting eq true}">
+            	<img class="icon" src="images/networkReconnecting.png" alt="Reconnecting to network" style="vertical-align:middle;padding-right:5px;" />
+            </c:if>
+            
+            <!-- Group connection status -->
+            <c:if test="${groupConnection eq -1}">
+                <img class="icon" src="images/groupNotConnected.png" alt="Not connected to group" style="vertical-align:middle;padding-right:5px;" />
+            </c:if>
+            <c:if test="${groupConnection eq 0}">
+                <img class="icon" src="images/groupRDVWithNoConnections.png" alt="No peers connected to this RDV" style="vertical-align:middle;padding-right:5px;" />
+            </c:if>
+            <c:if test="${groupConnection eq 1}">
+                <img class="icon" src="images/groupConnected.png" alt="Connected to group" style="vertical-align:middle;padding-right:5px;" />
+            </c:if>
         </div>
         <div id="toolbar">
             <c:if test="${p2pconnection eq false}">
@@ -50,6 +72,7 @@
                 <img class="icon" src="images/P2Ponoff.png"/>
                 <a href="synchronize.do?action=p2pnetworkconnection" title="Disconnect from P2P Network."><img class="icon" src="images/P2Poff.png"/></a>
             </c:if>
+            
             <!--  <a href="synchronize.do?action=addNeighbor" title="Add a new neighbor."><img class="icon" src="images/AddNeighbor.png"/></a>-->
             <img class="icon" src="images/barre.png"/>
             <c:if test="${cpconnection eq false}">

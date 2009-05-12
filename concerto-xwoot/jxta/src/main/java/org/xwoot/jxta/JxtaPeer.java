@@ -184,14 +184,15 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 			this.stopNetwork();
 			throw new JxtaException("Unable to connect to rendezvous server. Network stopped.");
 		}
-		
-		// Contribute to the network's connectivity if we don`t already.
-		if (!(manager.getMode().equals(ConfigMode.RENDEZVOUS) || 
-		    manager.getMode().equals(ConfigMode.RENDEZVOUS_RELAY) || 
-		    manager.getMode().equals(ConfigMode.SUPER))) {
-		    
-		    this.rootGroup.getRendezVousService().setAutoStart(true);
-		}
+
+//      TODO: See if this can still be added. Currently is causing problems when Network RDV disconnects.
+//		// Contribute to the network's connectivity if we don`t already.
+//		if (!(manager.getMode().equals(ConfigMode.RENDEZVOUS) || 
+//		    manager.getMode().equals(ConfigMode.RENDEZVOUS_RELAY) || 
+//		    manager.getMode().equals(ConfigMode.SUPER))) {
+//		    
+//		    this.rootGroup.getRendezVousService().setAutoStart(true);
+//		}
 
 		// Register ourselves to detect new RDVs that broadcast their presence and resources.
 		// FIXME: reenable this . this.rootGroup.getRendezVousService().addListener(this);
@@ -613,7 +614,9 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
             // Get only PipeAdvertisements that are different from this peer's.
             if (adv instanceof PipeAdvertisement) {
                 PipeAdvertisement pipeAdv = (PipeAdvertisement) adv;
-                if (!pipeAdv.equals(this.getMyDirectCommunicationPipeAdvertisement())) {
+                if (!pipeAdv.equals(this.getMyDirectCommunicationPipeAdvertisement())
+                    && pipeAdv.getName().startsWith(this.getDirectCommunicationPipeNamePrefix())) {
+                    
                     pipeAdvs.add(adv);
                 }
             }
@@ -1624,7 +1627,7 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 	
 	/** {@inheritDoc} **/
 	public boolean isConnectedToNetwork() {
-		return (this.isNetworkRendezVous() /*&& (this.getManager().getMode().equals(ConfigMode.RENDEZVOUS_RELAY) || this.getManager().getMode().equals(ConfigMode.RENDEZVOUS))*/) ||
+		return (this.isNetworkRendezVous() && !this.rootGroup.getRendezVousService().getRendezVousStatus().equals(RendezVousStatus.AUTO_RENDEZVOUS) /*&& (this.getManager().getMode().equals(ConfigMode.RENDEZVOUS_RELAY) || this.getManager().getMode().equals(ConfigMode.RENDEZVOUS))*/) ||
 		    this.isConnectedToNetworkRendezVous(); 
 	}
 	
@@ -1771,7 +1774,7 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
             
             PipeAdvertisement receivedPipeAdvertisement = (PipeAdvertisement) receivedAdvertisement;
             if (!receivedPipeAdvertisement.getName().startsWith(this.getDirectCommunicationPipeNamePrefix())) {
-                // Could be another pipe advertisement, one we are note interested in.
+                // Not interested in other advertisements than direct communication channel advs.
                 continue;
             }
             
@@ -1793,11 +1796,6 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
                 continue;
             }
             
-            if (!receivedPipeName.startsWith(this.getDirectCommunicationPipeNamePrefix())) {
-                // Not interested in other advertisements than direct communication channel advs.
-                continue;
-            }
-            
             // Get locally stored Pipe advertisements. 
             // Note: we don't use this.getKnownDirectCommunicationAdvertisements because we don`t want to trigger a new discovery event and enter an infinite loop.
             List<Advertisement> existingLocalAdvertisements = null;
@@ -1809,6 +1807,9 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
                 // hope others won't have this problem.
                 return;
             }
+            
+            // Reset flag.
+            boolean receivedFoundInExisting = false;
             
             // Search through the local direct communication advertisements if we already have an advertisement with the same pipeName of the new advertisement.
             for (Advertisement existingLocalAdvertisement : existingLocalAdvertisements) {
@@ -1823,8 +1824,30 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
                 ID existingPipeId = existingPipeAdvertisement.getPipeID();
                 String existingPeerId = JxtaPeer.getPeerIdFromBackChannelPipeName(existingPipeName);
                 
-                if (receivedPipeId.equals(existingPipeId) || !receivedPeerId.equals(existingPeerId)) {
-                    // Ignore retransmissions of the same advertisement and owning peer ID non-collisions.
+                if (!existingPipeName.startsWith(this.getDirectCommunicationPipeNamePrefix())) {
+                    // Not interested in other pipe advertisements.
+                    continue;
+                }
+            
+                if (receivedPipeId.equals(existingPipeId)) {
+                    if (receivedFoundInExisting) {
+                        // Duplicate advertisement found. Deleting.
+                        try {
+                            disco.flushAdvertisement(existingPipeAdvertisement);
+                        } catch (Exception failedFlushAdvertisement) {
+                            this.logger.warn("Failed to remove duplicate existing pipe advertisement named " + receivedPipeName, failedFlushAdvertisement);    
+                        }
+                    } else {
+                        // Mark that we found the received advertisement trough the existing ones.
+                        receivedFoundInExisting = true;
+                    }
+                    
+                    // Ignore retransmissions of the same advertisement.
+                    continue;
+                }
+                
+                if (!receivedPeerId.equals(existingPeerId)) {
+                    // Ignore owning peer ID non-collisions. 
                     continue;
                 }
                 
@@ -1837,7 +1860,7 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
                 } catch (Exception failedGetCreationTime) {
                     this.logger.warn("Removing invalid existing pipe advertisement named " + receivedPipeName, failedGetCreationTime);
                     try {
-                        disco.flushAdvertisement(receivedPipeAdvertisement);
+                        disco.flushAdvertisement(existingPipeAdvertisement);
                     } catch (Exception failedFlushAdvertisement) {
                         this.logger.warn("Failed to remove invalid existing pipe advertisement named " + receivedPipeName, failedFlushAdvertisement);    
                     }
@@ -1845,10 +1868,10 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
                     // Go to next existing advertisement.
                     continue;
                 }
-                    
+                
+                PipeAdvertisement toFlush = null;
                 try {
                     // update the communication channel for the owner by deleting the old and outdated one and keeping the new one.
-                    PipeAdvertisement toFlush = null;
                     if (receivedCreationTime > existingCreationTime) {
                         toFlush = existingPipeAdvertisement;
                     } else if (existingCreationTime > receivedCreationTime){
@@ -1856,12 +1879,12 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
                     }
                     
                     if (toFlush != null) {
-                        this.logger.debug("Flushing outdated pipe advertisement by the name: " + existingPipeName);
+                        this.logger.debug("Flushing outdated pipe advertisement by the name: " + toFlush.getName());
                         disco.flushAdvertisement(toFlush);
                     }
                 } catch (Exception e) {
                     // Leave it as duplicate. The user will see the same peer twice but we hope that the next time it will be successfuly flushed.
-                    this.logger.warn("Failed to flush outdated pipe advertisement by the name: " + existingPipeName + "\n", e);
+                    this.logger.warn("Failed to flush outdated pipe advertisement by the name: " + toFlush.getName() + "\n", e);
                 }
                 
                 // don't stop looking because we might have more outdated advertisements for the same peer (more collisions)

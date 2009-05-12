@@ -1089,11 +1089,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     }
     
     public void leaveGroup() throws XWootException 
-    {
-        if (!this.isConnectedToP2PGroup()) {
-            throw new XWootException(this.getXWootName() + " : Not connected to network.");
-        }
-        
+    {        
         try {
             this.peer.leavePeerGroup();
         } catch (Exception e) {
@@ -1473,7 +1469,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     public File askStateToGroup() throws XWootException
     {
         if (!this.isConnectedToP2PGroup()) {
-            throw new XWootException(this.getXWootName() + " : Failed to ask the state bacause there currently is no joined group.");
+            throw new XWootException(this.getXWootName() + " : Failed to ask the state bacause there currently is no joined group or no group member has been contacted.");
         }
         
         this.logger.debug(this.getXWootName() + " : Asking the XWoot state to the current group.");
@@ -1528,11 +1524,11 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
         }*/        
         
         if (!this.isConnectedToP2PGroup()) {
-            this.logger.warn(this.getXWootName() + " : Not successfuly joined a P2P group yet.");
+            this.logger.warn(this.getXWootName() + " : Not successfuly joined or connected to a P2P group yet.");
             return;
         }
         
-        this.logger.info(this.getXWootName() + " : Asking antiEntropy with al neighbors.");
+        this.logger.info(this.getXWootName() + " : Asking antiEntropy with all neighbors.");
 
         Object content = null;
         try {
@@ -1565,7 +1561,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     public void doAntiEntropy(Object neighbor) throws XWootException
     {        
         if (!this.isConnectedToP2PGroup()) {
-            this.logger.warn(this.getXWootName() + " : Not successfuly joined a P2P group yet.");
+            this.logger.warn(this.getXWootName() + " : Not successfuly joined or connected to a P2P group yet.");
             return;
         }
         
@@ -1649,6 +1645,12 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     public boolean isConnectedToP2PGroup()
     {
         return this.peer.isConnectedToGroup();
+    }
+    
+    /** {@inheritDoc} */
+    public boolean hasJoinedAP2PGroup()
+    {
+        return this.peer.hasJoinedAGroup();
     }
     
     public boolean isConnectedToP2PNetwork()
@@ -1806,7 +1808,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     
     public String getStateFileName()
     {
-        if (!this.isConnectedToP2PGroup()) {
+        if (!this.hasJoinedAP2PGroup()) {
             throw new IllegalStateException("Unable to get the state for the currently joined group because this peer has not joined any group yet.");
         }
         

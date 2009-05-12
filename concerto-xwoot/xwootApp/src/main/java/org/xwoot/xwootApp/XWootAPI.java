@@ -100,6 +100,9 @@ public interface XWootAPI
     @SuppressWarnings("unchecked")
     public Collection getGroups();
     
+    /** @return true if this node has joined a group. */
+    public boolean hasJoinedAP2PGroup();
+    
     /**
      * Create a new group in the current P2P network.
      * <p/>

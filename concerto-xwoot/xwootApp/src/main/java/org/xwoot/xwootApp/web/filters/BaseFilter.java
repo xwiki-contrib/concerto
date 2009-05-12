@@ -85,8 +85,8 @@ public class BaseFilter implements Filter
                 response.sendRedirect(response.encodeRedirectURL(requestedContextPath + "/bootstrapNetwork.do"));
                 return;
             }
-        } else if (!xwoot.isConnectedToP2PGroup()) {
-            LOG.debug("Site is not connected to a group yet, opening group bootstrap.");
+        } else if (!xwoot.getPeer().hasJoinedAGroup()/*isConnectedToP2PGroup()*/) {
+            LOG.debug("Site has not joined a group yet, opening group bootstrap.");
             // We don't force redirect if we are already there or if we changed our mind and went back one step. 
             if (!"/bootstrapGroup.do".equals(requestedServletPath) && !"/bootstrapNetwork.do".equals(requestedServletPath)) {
                 response.sendRedirect(response.encodeRedirectURL(requestedContextPath + "/bootstrapGroup.do"));

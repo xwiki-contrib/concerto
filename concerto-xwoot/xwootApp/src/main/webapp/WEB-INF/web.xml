@@ -67,26 +67,6 @@
     <url-pattern>/stateManagement.do</url-pattern>
   </servlet-mapping>    
 
-  <!--receiveMessage-->
-  <servlet>
-    <servlet-name>receiveMessage</servlet-name>
-    <servlet-class>org.xwoot.xwootApp.web.servlets.ReceiveMessage</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>receiveMessage</servlet-name>
-    <url-pattern>/receiveMessage.do</url-pattern>
-  </servlet-mapping>
-
-  <!--sendState--> 
-  <servlet>
-    <servlet-name>sendState</servlet-name>
-    <servlet-class>org.xwoot.xwootApp.web.servlets.SendState</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>sendState</servlet-name>
-    <url-pattern>/sendState.do</url-pattern>
-  </servlet-mapping>  
-
   <!--information--> 
   <servlet>
     <servlet-name>information</servlet-name>

@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import net.jxta.document.AdvertisementFactory;
 import net.jxta.protocol.PipeAdvertisement;
+import net.jxta.rendezvous.RendezVousService;
 
 import org.apache.commons.lang.StringUtils;
 import org.xwoot.jxta.JxtaPeer;
@@ -101,19 +102,29 @@ public class Synchronize extends HttpServlet
 //                    && XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork()) {
 //                    XWootSite.getInstance().getXWootEngine().disconnectFromP2PNetwork();
 //                } else {
-                    if (XWootSite.getInstance().getXWootEngine().isConnectedToP2PNetwork()) {
-                        XWootSite.getInstance().getXWootEngine().disconnectFromP2PNetwork();
+                    if (xwootEngine.isConnectedToP2PNetwork()) {
+                        xwootEngine.disconnectFromP2PNetwork();
                         
                         // Stop auto-synchronization. We don't need redundant patches.
                         XWootSite.getInstance().getAutoSynchronizationThread().stopThread();
                     } else {
-                        XWootSite.getInstance().getXWootEngine().reconnectToP2PNetwork();
-                        response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapGroup.do"));
-                        return;
+                        if (xwootEngine.getPeer().isJxtaStarted()) {
+                            // Network was trying to reconnect.
+                            xwootEngine.disconnectFromP2PNetwork();
+                        } else {
+                            xwootEngine.reconnectToP2PNetwork();
+                            response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapGroup.do"));
+                            
+    //                        // Redirect to network bootstrap which will automatically rejoin the existing network configuration.
+    //                        response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/bootstrapNetwork.do"));
+                            return;
+                        }
                     }
 //                }
             } catch (Exception e) {
-                throw new ServletException(e);
+                // Disconnecting/Reconnecting failed, do nothing, make the user try again.
+                //  We should show an error or something.
+                //throw new ServletException(e);
             }
         }
 
@@ -188,11 +199,33 @@ public class Synchronize extends HttpServlet
         } else {
             request.setAttribute("noneighbor", true);
         }
+        
+        
+        int groupConnection = -1;
+        if (xwootEngine.isConnectedToP2PNetwork()) {
+            RendezVousService rdvStatus = xwootEngine.getPeer().getCurrentJoinedPeerGroup().getRendezVousService();
+            boolean isGroupRDV = rdvStatus.isRendezVous();
+            boolean isConnectedToPeers = rdvStatus.getConnectedPeerIDs().size() > 0;
             
+            if (isConnectedToPeers) {
+                groupConnection = 1;
+            } else if (isGroupRDV) {
+                groupConnection = 0;
+            }
+        } else {
+            // -1 by default, when network is down.
+        }
+        
+        Boolean reconnectingToNetwork = xwootEngine.getPeer().isJxtaStarted() && !xwootEngine.isConnectedToP2PNetwork();
+        Boolean connectedToNetwork = xwootEngine.isConnectedToP2PNetwork() || reconnectingToNetwork;
+        
         request.setAttribute("content_provider", XWootSite.getInstance().getXWootEngine().getContentProvider());
         request.setAttribute("xwiki_url", XWootSite.getInstance().getXWootEngine().getContentManagerURL());
-        request.setAttribute("p2pconnection", Boolean.valueOf(XWootSite.getInstance().getXWootEngine()
-            .isConnectedToP2PNetwork()));
+        request.setAttribute("p2pconnection", connectedToNetwork);
+        // TODO: reflect the fact that the network is disconnected but trying to reconnect. It is not stopped.
+        request.setAttribute("networkReconnecting", reconnectingToNetwork);
+        // TODO: reflect the groupConnection status in the jsp.
+        request.setAttribute("groupConnection", groupConnection);
         request.setAttribute("cpconnection", Boolean.valueOf(XWootSite.getInstance().getXWootEngine()
             .isContentManagerConnected()));
         request.getRequestDispatcher("/pages/Synchronize.jsp").forward(request, response);

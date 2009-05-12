@@ -92,7 +92,7 @@ public class BootstrapGroup extends HttpServlet
         Properties groupProperties = XWootSite.getProperties(AbsolutePathToPropertiesFile);
         String currentGroupAdvertisementXMLString = groupProperties.getProperty("current_group_advertisement");
         
-        if (!xwootEngine.isConnectedToP2PGroup() && currentGroupAdvertisementXMLString != null && currentGroupAdvertisementXMLString.trim().length() != 0) {
+        if (!xwootEngine.hasJoinedAP2PGroup() && currentGroupAdvertisementXMLString != null && currentGroupAdvertisementXMLString.trim().length() != 0) {
             groupChoice = AUTO_JOIN_GROUP;
             
             try {
@@ -202,8 +202,8 @@ public class BootstrapGroup extends HttpServlet
             }
         }
         
-        // If no errors were encountered and successfully joined/created a network, go to next step.
-        if (errors.length() == 0 && (CREATE_BUTTON.equals(groupChoice) || JOIN_BUTTON.equals(groupChoice) || AUTO_JOIN_GROUP.equals(groupChoice))) {
+        // If no errors were encountered and successfully joined/created a group, go to next step.
+        if (errors.length() == 0 && xwootEngine.hasJoinedAP2PGroup()/*(CREATE_BUTTON.equals(groupChoice) || JOIN_BUTTON.equals(groupChoice) || AUTO_JOIN_GROUP.equals(groupChoice))*/) {
             this.getServletContext().log("No errors occured.");
             
 //            // Stop the autosynch thread if it is running.
