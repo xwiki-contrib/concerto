@@ -43,24 +43,24 @@
             
             <!-- Network connection status -->
             <c:if test="${p2pconnection eq true}">
-            	<img class="icon" src="images/networkConnected.png" alt="Connected to network" style="vertical-align:middle;padding-right:5px;" />
+            	<img class="icon" src="images/networkConnected.png" alt="Connected to network" title="Connected to network" style="vertical-align:middle;padding-right:5px;" />
             </c:if>
             <c:if test="${p2pconnection eq false}">
-            	<img class="icon" src="images/networkNotConnected.png" alt="Not connected to network" style="vertical-align:middle;padding-right:5px;" />
+            	<img class="icon" src="images/networkNotConnected.png" alt="Not connected to network" title="Not connected to network" style="vertical-align:middle;padding-right:5px;" />
             </c:if>
             <c:if test="${networkReconnecting eq true}">
-            	<img class="icon" src="images/networkReconnecting.png" alt="Reconnecting to network" style="vertical-align:middle;padding-right:5px;" />
+            	<img class="icon" src="images/networkReconnecting.png" alt="Reconnecting to network" title="Reconnecting to network" style="vertical-align:middle;padding-right:5px;" />
             </c:if>
             
             <!-- Group connection status -->
             <c:if test="${groupConnection eq -1}">
-                <img class="icon" src="images/groupNotConnected.png" alt="Not connected to group" style="vertical-align:middle;padding-right:5px;" />
+                <img class="icon" src="images/groupNotConnected.png" alt="Not connected to group" title="Not connected to group" style="vertical-align:middle;padding-right:5px;" />
             </c:if>
             <c:if test="${groupConnection eq 0}">
-                <img class="icon" src="images/groupRDVWithNoConnections.png" alt="No peers connected to this RDV" style="vertical-align:middle;padding-right:5px;" />
+                <img class="icon" src="images/groupRDVWithNoConnections.png" alt="No peers connected to this RDV" title="No peers connected to this RDV" style="vertical-align:middle;padding-right:5px;" />
             </c:if>
             <c:if test="${groupConnection eq 1}">
-                <img class="icon" src="images/groupConnected.png" alt="Connected to group" style="vertical-align:middle;padding-right:5px;" />
+                <img class="icon" src="images/groupConnected.png" alt="Connected to group" title="Connected to group" style="vertical-align:middle;padding-right:5px;" />
             </c:if>
         </div>
         <div id="toolbar">
