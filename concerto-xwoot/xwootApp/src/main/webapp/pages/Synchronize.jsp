@@ -42,14 +42,14 @@
             <img class="small_icon" src="images/xconcerto20_2.ico" style="vertical-align:middle;padding-right:5px;"/><a style="font-size:15px;" href="${xwiki_url}" title="Go to xwiki">${xwiki_url}</a>
             
             <!-- Network connection status -->
-            <c:if test="${p2pconnection eq true}">
-            	<img class="icon" src="images/networkConnected.png" alt="Connected to network" title="Connected to network" style="vertical-align:middle;padding-right:5px;" />
-            </c:if>
-            <c:if test="${p2pconnection eq false}">
+            <c:if test="${networkConnection eq -1}">
             	<img class="icon" src="images/networkNotConnected.png" alt="Not connected to network" title="Not connected to network" style="vertical-align:middle;padding-right:5px;" />
             </c:if>
-            <c:if test="${networkReconnecting eq true}">
-            	<img class="icon" src="images/networkReconnecting.png" alt="Reconnecting to network" title="Reconnecting to network" style="vertical-align:middle;padding-right:5px;" />
+            <c:if test="${networkConnection eq 0}">
+            	<img class="icon" src="images/networkRDVWithNoConnections.png" alt="No peers conencted to this network RDV" title="No peers conencted to this network RDV" style="vertical-align:middle;padding-right:5px;" />
+            </c:if>
+            <c:if test="${networkConnection eq 1}">
+            	<img class="icon" src="images/networkConnected.png" alt="Connected to network" title="Connected to network" style="vertical-align:middle;padding-right:5px;" />
             </c:if>
             
             <!-- Group connection status -->
@@ -91,8 +91,11 @@
                 <a href="synchronize.do?action=pageManagement&val=remove" title="Remove all wiki pages."><img class="icon" src="images/RemoveAllPage.png"/></a>
                 <a href="synchronize.do?action=synchronize" title="Synchronize selected pages."><img class="icon" src="images/SynchronizePage.png"/></a>-->
             </c:if>
+            
+            <!-- There should be no need for this anymore.
             <img class="icon" src="images/barre.png"/>
             <a href="<%= request.getHeader("referer") %>"><img class="icon" src="images/goback.png"/>Back to <%= request.getHeader("referer") %></a>
+             -->
         </div>
         <div id="boxes">            
             <!--<div id="box-left" class="box">

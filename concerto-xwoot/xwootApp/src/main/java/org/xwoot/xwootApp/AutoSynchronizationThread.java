@@ -173,6 +173,14 @@ public class AutoSynchronizationThread extends Thread
                 }
                 continue;
             }
+            
+            if (!xwootEngine.isConnectedToP2PNetwork()) {
+                this.logger.warn("P2P Network not connected, skipping Auto-synchronization.");
+                continue;
+            } else if (!xwootEngine.isConnectedToP2PGroup()) {
+                this.logger.warn("P2P Group not connected, skipping Auto-synchronization.");
+                continue;
+            }
 
             // Action sequence
             this.logger.debug("Performing auto-synchronization.");

@@ -229,6 +229,11 @@ public class XWootSite
             // Set the peerID to the one of the existing configuration.
             peer.getManager().setPeerID(existingNetworkConfigurator.getPeerID());
         }
+        PlatformConfig platformConfig = (PlatformConfig) existingNetworkConfigurator.getPlatformConfig();
+        RdvConfigAdv rdvAdvertisement = (RdvConfigAdv) platformConfig.getSvcConfigAdvertisement(PeerGroup.rendezvousClassID);
+        rdvAdvertisement.setLeaseDuration(11 * 60 * 1000L);
+        rdvAdvertisement.setLeaseMargin(11 * 60 * 1000L);
+        
         String peerName = peer.getMyPeerName();
         String peerId = peer.getMyPeerID().getUniqueValue().toString();
 

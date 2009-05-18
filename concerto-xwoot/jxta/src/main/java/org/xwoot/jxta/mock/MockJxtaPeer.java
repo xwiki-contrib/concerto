@@ -683,6 +683,10 @@ public class MockJxtaPeer implements Peer, RendezvousListener {
     public boolean findRdvPeerInGroup(PeerGroupAdvertisement groupAdv)
     {
         Set<MockJxtaPeer> peersInGroup = MockJxtaPeer.groupsWithPeersMap.get(groupAdv);
+        if (peersInGroup == null) {
+            return false;
+        }
+        
         for(MockJxtaPeer peer : peersInGroup) {
             if (peer.isRendezVousForGroup()) {
                 return true;
@@ -703,7 +707,7 @@ public class MockJxtaPeer implements Peer, RendezvousListener {
     {
         this.logger.debug("Creating direct communication server socket.");
         
-        if (!this.isConnectedToGroup()) {
+        if (!this.hasJoinedAGroup()) {
             this.logger.warn("Not connected to any group. Aborting.");
             return;
         }
@@ -1247,7 +1251,14 @@ public class MockJxtaPeer implements Peer, RendezvousListener {
 	
 	/** {@inheritDoc} **/
 	public boolean isConnectedToGroup() {
-		return this.isGroupRendezVous() || this.isConnectedToGroupRendezVous(); 
+	    if (!hasJoinedAGroup()) {
+	        return false;
+	    }
+	    
+	    Set<MockJxtaPeer> peersInGroup = MockJxtaPeer.groupsWithPeersMap.get(this.getCurrentJoinedPeerGroup().getPeerGroupAdvertisement());
+	    boolean knowsOtherPeers = peersInGroup != null && peersInGroup.size() > 1;
+	    
+		return (this.isGroupRendezVous() && knowsOtherPeers) || this.isConnectedToGroupRendezVous(); 
 	}
 	
 	/** {@inheritDoc} **/

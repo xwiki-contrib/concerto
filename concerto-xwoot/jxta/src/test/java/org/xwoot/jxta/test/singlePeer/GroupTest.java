@@ -66,7 +66,7 @@ public class GroupTest extends AbstractSinglePeerTestBase
 
         // Make sure we successfully joined the group.
         Assert.assertTrue(PEER.hasJoinedAGroup());
-        Assert.assertTrue(PEER.isConnectedToGroup());
+        Assert.assertTrue(PEER.isGroupRendezVous());
         Assert.assertEquals(group, PEER.getCurrentJoinedPeerGroup());
 
         // Make sure the group is public.
@@ -90,7 +90,7 @@ public class GroupTest extends AbstractSinglePeerTestBase
 
         // Make sure we successfully joined the group.
         Assert.assertTrue(PEER.hasJoinedAGroup());
-        Assert.assertTrue(PEER.isConnectedToGroup());
+        Assert.assertTrue(PEER.isGroupRendezVous());
         Assert.assertEquals(group, PEER.getCurrentJoinedPeerGroup());
 
         // Make sure the group is public.
@@ -110,7 +110,7 @@ public class GroupTest extends AbstractSinglePeerTestBase
 
         // Make sure we successfully joined the group.
         Assert.assertTrue(PEER.hasJoinedAGroup());
-        Assert.assertTrue(PEER.isConnectedToGroup());
+        Assert.assertTrue(PEER.isGroupRendezVous());
 
         // Make sure we joined the right group.
         Assert.assertEquals(groupAdv.getPeerGroupID(), joinedGroup.getPeerGroupID());
@@ -134,7 +134,7 @@ public class GroupTest extends AbstractSinglePeerTestBase
 
         // Make sure we successfully joined the group.
         Assert.assertTrue(PEER.hasJoinedAGroup());
-        Assert.assertTrue(PEER.isConnectedToGroup());
+        Assert.assertTrue(PEER.isGroupRendezVous());
         Assert.assertEquals(group, PEER.getCurrentJoinedPeerGroup());
 
         // Make sure the group is private.
@@ -158,7 +158,7 @@ public class GroupTest extends AbstractSinglePeerTestBase
 
         // Make sure we successfully joined the group.
         Assert.assertTrue(PEER.hasJoinedAGroup());
-        Assert.assertTrue(PEER.isConnectedToGroup());
+        Assert.assertTrue(PEER.isGroupRendezVous());
         Assert.assertEquals(group, PEER.getCurrentJoinedPeerGroup());
 
         // Make sure the group is private.
@@ -179,7 +179,7 @@ public class GroupTest extends AbstractSinglePeerTestBase
 
         // Make sure we successfully joined the group.
         Assert.assertTrue(PEER.hasJoinedAGroup());
-        Assert.assertTrue(PEER.isConnectedToGroup());
+        Assert.assertTrue(PEER.isGroupRendezVous());
 
         // Make sure we joined the right group.
         Assert.assertEquals(groupAdv.getPeerGroupID(), joinedGroup.getPeerGroupID());

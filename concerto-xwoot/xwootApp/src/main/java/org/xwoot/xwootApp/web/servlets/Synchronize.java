@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 import net.jxta.document.AdvertisementFactory;
 import net.jxta.protocol.PipeAdvertisement;
 import net.jxta.rendezvous.RendezVousService;
+import net.jxta.rendezvous.RendezVousStatus;
 
 import org.apache.commons.lang.StringUtils;
 import org.xwoot.jxta.JxtaPeer;
@@ -205,7 +206,10 @@ public class Synchronize extends HttpServlet
         if (xwootEngine.isConnectedToP2PNetwork()) {
             RendezVousService rdvStatus = xwootEngine.getPeer().getCurrentJoinedPeerGroup().getRendezVousService();
             boolean isGroupRDV = rdvStatus.isRendezVous();
+            // Check number of connected clients or connected rdvs
             boolean isConnectedToPeers = rdvStatus.getConnectedPeerIDs().size() > 0;
+            // Check number of known rdvs in the network (If RDV peer).
+            isConnectedToPeers |= rdvStatus.getLocalWalkView().size() > 0;
             
             if (isConnectedToPeers) {
                 groupConnection = 1;
@@ -216,16 +220,33 @@ public class Synchronize extends HttpServlet
             // -1 by default, when network is down.
         }
         
-        Boolean reconnectingToNetwork = xwootEngine.getPeer().isJxtaStarted() && !xwootEngine.isConnectedToP2PNetwork();
-        Boolean connectedToNetwork = xwootEngine.isConnectedToP2PNetwork() || reconnectingToNetwork;
+        int networkConnection = -1;
+        if (xwootEngine.isConnectedToP2PNetwork()) {
+            RendezVousService rdvStatus = xwootEngine.getPeer().getDefaultGroup().getRendezVousService();
+            boolean isGroupRDV = rdvStatus.isRendezVous();
+            // Check number of connected clients or connected rdvs
+            boolean isConnectedToPeers = rdvStatus.getConnectedPeerIDs().size() > 0;
+            // Check number of known rdvs in the network (If RDV peer).
+            isConnectedToPeers |= rdvStatus.getLocalWalkView().size() > 0;
+            
+            if (isConnectedToPeers) {
+                networkConnection = 1;
+            } else if (isGroupRDV) {
+                networkConnection = 0;
+            }
+        } else {
+            // -1 by default, when network is down.
+        }
+        
+        
+        //Boolean reconnectingToNetwork = xwootEngine.getPeer().isJxtaStarted() && !xwootEngine.isConnectedToP2PNetwork();
+        //Boolean connectedToNetwork = xwootEngine.isConnectedToP2PNetwork() || reconnectingToNetwork;
         
         request.setAttribute("content_provider", XWootSite.getInstance().getXWootEngine().getContentProvider());
         request.setAttribute("xwiki_url", XWootSite.getInstance().getXWootEngine().getContentManagerURL());
-        request.setAttribute("p2pconnection", connectedToNetwork);
-        // TODO: reflect the fact that the network is disconnected but trying to reconnect. It is not stopped.
-        request.setAttribute("networkReconnecting", reconnectingToNetwork);
-        // TODO: reflect the groupConnection status in the jsp.
+        request.setAttribute("p2pconnection", xwootEngine.getPeer().isJxtaStarted());
         request.setAttribute("groupConnection", groupConnection);
+        request.setAttribute("networkConnection", networkConnection);        
         request.setAttribute("cpconnection", Boolean.valueOf(XWootSite.getInstance().getXWootEngine()
             .isContentManagerConnected()));
         request.getRequestDispatcher("/pages/Synchronize.jsp").forward(request, response);

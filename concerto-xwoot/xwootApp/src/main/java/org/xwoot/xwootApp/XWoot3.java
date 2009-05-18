@@ -1212,8 +1212,8 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     
     public synchronized void updateState() throws XWootException
     {
-        if (!this.isConnectedToP2PGroup()) {
-            throw new XWootException("Not connected to any group.");
+        if (!this.hasJoinedAP2PGroup()) {
+            throw new XWootException("Not joined any group.");
         }
         
         if (!contentManager.isConnected()) {
@@ -1469,7 +1469,7 @@ public class XWoot3 implements XWootAPI, JxtaCastEventListener, DirectMessageRec
     public File askStateToGroup() throws XWootException
     {
         if (!this.isConnectedToP2PGroup()) {
-            throw new XWootException(this.getXWootName() + " : Failed to ask the state bacause there currently is no joined group or no group member has been contacted.");
+            throw new XWootException(this.getXWootName() + " : Failed to ask the state bacause there is no other group member connected.");
         }
         
         this.logger.debug(this.getXWootName() + " : Asking the XWoot state to the current group.");

@@ -80,7 +80,6 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 
     protected PeerGroup rootGroup;
     protected PeerGroup currentJoinedGroup;
-    //protected Vector<PeerGroup> joinedGroups;  // Holds PeerGroup objects that we've joined.
     protected NetworkManager manager;
     protected JxtaCast jc;
     protected Credential groupCredential;
@@ -98,7 +97,7 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 	public static final long WAIT_INTERVAL_BETWEEN_TRIES = 5000;
 	
 	/** Number of ms to wait for a reply to be sent back. */
-	public static final int WAIT_INTERVAL_FOR_DIRECT_COMMUNICATION_CONNECTIONS = 120 * 1000;
+	public static final int WAIT_INTERVAL_FOR_DIRECT_COMMUNICATION_CONNECTIONS = 60 * 1000;
 	
 	/** Number tries to discover pipe ADVs in a group and send an object to one of them. */
 	public static final int NUMBER_OF_TRIES = 5;
@@ -108,12 +107,6 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 	
 	/** Server socket used to accept incoming direct messages in a reliable way. This could also be made secure.*/
 	protected JxtaServerSocket serverSocket;
-	
-//    /** Constructor - Starts JXTA.
-//     */
-//    public JxtaPeer() {
-//        //joinedGroups = new Vector<PeerGroup>(20);
-//    }
     
 	/** {@inheritDoc} **/
 	public void configureNetwork(String peerName, File jxtaCacheDirectoryPath, ConfigMode mode) throws JxtaException
@@ -186,13 +179,13 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 		}
 
 //      TODO: See if this can still be added. Currently is causing problems when Network RDV disconnects.
-//		// Contribute to the network's connectivity if we don`t already.
-//		if (!(manager.getMode().equals(ConfigMode.RENDEZVOUS) || 
-//		    manager.getMode().equals(ConfigMode.RENDEZVOUS_RELAY) || 
-//		    manager.getMode().equals(ConfigMode.SUPER))) {
-//		    
-//		    this.rootGroup.getRendezVousService().setAutoStart(true);
-//		}
+		// Contribute to the network's connectivity if we don`t already.
+		if (!(manager.getMode().equals(ConfigMode.RENDEZVOUS) || 
+		    manager.getMode().equals(ConfigMode.RENDEZVOUS_RELAY) || 
+		    manager.getMode().equals(ConfigMode.SUPER))) {
+		    
+		    this.rootGroup.getRendezVousService().setAutoStart(true);
+		}
 
 		// Register ourselves to detect new RDVs that broadcast their presence and resources.
 		// FIXME: reenable this . this.rootGroup.getRendezVousService().addListener(this);
@@ -718,7 +711,7 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
         this.publishGroup(this.rootGroup, newGroup);
         
         // If we were previously a member of a group, we have to leave it now.
-        if (this.isConnectedToGroup()) {
+        if (this.hasJoinedAGroup()) {
         	this.leavePeerGroup(this.currentJoinedGroup);
         }
         
@@ -926,8 +919,8 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
     {
         this.logger.debug("Creating direct communication server socket.");
         
-        if (!this.isConnectedToGroup()) {
-            this.logger.warn("Not connected to any group. Aborting.");
+        if (!this.hasJoinedAGroup()) {
+            this.logger.warn("Not joined a group. Aborting.");
             return;
         }
         
@@ -1004,9 +997,9 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
         // Stop listening to rendezvous events.
         oldGroupRendezvousService.removeListener(this);
         
-        // Stop listen to discovery events.
+        // Stop listening to discovery events.
         DiscoveryService oldGroupDiscoveryService = oldGroup.getDiscoveryService();
-        oldGroupDiscoveryService.addDiscoveryListener(this);
+        oldGroupDiscoveryService.removeDiscoveryListener(this);
         
         try {
             this.closeExistingDirectCommunicationServerSocket();
@@ -1328,7 +1321,7 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 
     /** {@inheritDoc} **/
 	public void addJxtaCastEventListener(JxtaCastEventListener listener) {
-		if (!this.isConnectedToGroup()) {
+		if (!this.hasJoinedAGroup()) {
 			throw new IllegalStateException("The peer has not yet joined a group and contacted a RDV peer.");
 		}
 		
@@ -1337,11 +1330,15 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 	
 	/** {@inheritDoc} **/
 	public void removeJxtaCastEventListener(JxtaCastEventListener listener) {
-		if (!this.isConnectedToGroup()) {
-			throw new IllegalStateException("The peer has not yet joined a group and contacted a RDV peer.");
+		if (!this.hasJoinedAGroup()) {
+			throw new IllegalStateException("The peer has not yet joined a group.");
 		}
 		
-		jc.removeJxtaCastEventListener(listener);
+		if (jc != null) {
+		    jc.removeJxtaCastEventListener(listener);
+		} else {
+		    this.logger.warn("JxtaCast module not initiated. Remove listener request aborded.");
+		}
 	}
 
 	/** {@inheritDoc} **/
@@ -1627,13 +1624,26 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 	
 	/** {@inheritDoc} **/
 	public boolean isConnectedToNetwork() {
-		return (this.isNetworkRendezVous() && !this.rootGroup.getRendezVousService().getRendezVousStatus().equals(RendezVousStatus.AUTO_RENDEZVOUS) /*&& (this.getManager().getMode().equals(ConfigMode.RENDEZVOUS_RELAY) || this.getManager().getMode().equals(ConfigMode.RENDEZVOUS))*/) ||
-		    this.isConnectedToNetworkRendezVous(); 
+		return (this.isNetworkRendezVous()
+		    /* && !this.rootGroup.getRendezVousService().getRendezVousStatus().equals(RendezVousStatus.AUTO_RENDEZVOUS)*/
+		    /*&& (this.getManager().getMode().equals(ConfigMode.RENDEZVOUS_RELAY) || this.getManager().getMode().equals(ConfigMode.RENDEZVOUS))*/
+		    ) || this.isConnectedToNetworkRendezVous(); 
 	}
 	
 	/** {@inheritDoc} **/
 	public boolean isConnectedToGroup() {
-		return this.isGroupRendezVous() || this.isConnectedToGroupRendezVous(); 
+	    if (!this.hasJoinedAGroup()) {
+	        return false;
+	    }
+	    
+	    RendezVousService rdvService = this.currentJoinedGroup.getRendezVousService();
+	    boolean knowsOtherRdvs = rdvService.getLocalWalkView().size() > 0;
+	    boolean hasClientPeersConnected = rdvService.getConnectedPeerIDs().size() > 0;
+	    
+		return (this.isGroupRendezVous() && (knowsOtherRdvs || hasClientPeersConnected)) ||
+		    this.isConnectedToGroupRendezVous(); 
+	    
+//	    return this.isGroupRendezVous() || this.isConnectedToGroupRendezVous();
 	}
 	
 	/** {@inheritDoc} **/
