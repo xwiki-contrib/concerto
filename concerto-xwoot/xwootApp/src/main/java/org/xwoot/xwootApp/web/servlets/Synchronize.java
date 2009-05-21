@@ -32,7 +32,6 @@ import javax.servlet.http.HttpServletResponse;
 import net.jxta.document.AdvertisementFactory;
 import net.jxta.protocol.PipeAdvertisement;
 import net.jxta.rendezvous.RendezVousService;
-import net.jxta.rendezvous.RendezVousStatus;
 
 import org.apache.commons.lang.StringUtils;
 import org.xwoot.jxta.JxtaPeer;

@@ -153,7 +153,7 @@ public interface Peer
     void discoverPeers(String targetPeerId, DiscoveryListener discoListener);
 
     /**
-     * Launch advertisement discovery, for the specified group.
+     * Launch advertisement discovery, for the currently joined group.
      * <p>
      * If this peer did not join a group and did not contact(or is not) a group RDV, nothing will happen.
      * 
@@ -165,6 +165,13 @@ public interface Peer
      * @see #isConnectedToGroup()
      */
     void discoverAdvertisements(String targetPeerId, DiscoveryListener discoListener, String attribute, String value);
+    
+    /**
+     * Convenience method to discover pipe advertisements used for direct communication.
+     * <p/>
+     * Has the same effect as {@code discoverAdvertisements(null, null, PipeAdvertisement.NameTag, getDirectCommunicationPipeNamePrefix() + "*");}
+     */
+    void discoverDirectCommunicationPipeAdvertisements();
 
     /**
      * @return PeerGroupAdvertisement objects representing the groups known so far or an empty enumeration if this peer
@@ -304,6 +311,16 @@ public interface Peer
      * @throws PeerGroupException if problems occur while leaving the group.
      */
     void leavePeerGroup() throws PeerGroupException;
+
+    /**
+     * Republishes the direct communication pipe advertisement for the currently joined peer group.
+     * <p/>
+     * This is normally used by the {@link PresenceTask} task that periodically republishes the pipe advertisement.
+     * <p/>
+     * If no group is joined ({@link #hasJoinedAGroup()} returns false) or if for some reason the server socket is not
+     * initialized, a warning will be issued and the method will return.
+     */
+    void republishDirectCommunicationPipeAdvertisement();
 
     /**
      * @param peerAdv the peer advertisement of the peer to check.

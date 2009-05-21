@@ -87,6 +87,15 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
     protected DirectMessageReceiver directMessageReceiver;
     protected Log logger = LogFactory.getLog(this.getClass());
     
+    protected Timer timer = new Timer("XWoot:JxtaModule:CommonTimer", true);
+    protected TimerTask presenceTask = null;
+    
+    /** The interval in ms by which to update peer presence data (to run the presenceTask). */
+    public static final int PEER_PRESENCE_UPDATE_INTERVAL = 5 * 60 * 1000;
+    
+    /** How long until the peer presence (pipe advertisements) will expire if not republished. */ 
+    public static final int PEER_PRESENCE_ADVERTISEMENT_EXPIRATION = 6 * 60 * 1000;
+    
     /** The pipe name to be used when broadcasting messages. Interested peers will look for this. */
 	public static final String PROPAGATE_PIPE_ADVERTISEMENT_NAME = "ConcertoMessageBroadcast";
 	
@@ -178,7 +187,9 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 			throw new JxtaException("Unable to connect to rendezvous server. Network stopped.");
 		}
 
-//      TODO: See if this can still be added. Currently is causing problems when Network RDV disconnects.
+		// TODO: See if this can still be added. Currently is causing problems when Network RDV disconnects.
+		//  fixed and no is no longer an issue?
+		
 		// Contribute to the network's connectivity if we don`t already.
 		if (!(manager.getMode().equals(ConfigMode.RENDEZVOUS) || 
 		    manager.getMode().equals(ConfigMode.RENDEZVOUS_RELAY) || 
@@ -189,6 +200,7 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 
 		// Register ourselves to detect new RDVs that broadcast their presence and resources.
 		// FIXME: reenable this . this.rootGroup.getRendezVousService().addListener(this);
+		//  maybe netPeerGroup is not that important.
 		
 		// Save the listeners.
 		this.jxtaCastListener = jxtaCastListener;
@@ -196,6 +208,7 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
 		
 		// Clean the local cache of known groups.
 		//this.flushExistingAdvertisements(this.rootGroup, DiscoveryService.GROUP);
+		// Not good for rdvs, and probably not good for normal peers too.
 		
 		// Do a discovery for available groups.
 		discoverGroups(null, null);
@@ -486,6 +499,13 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
                                              discoListener);
         thread.start();
     }
+    
+    
+    /** {@inheritDoc} */
+    public void discoverDirectCommunicationPipeAdvertisements()
+    {
+        this.discoverAdvertisements(null, null, PipeAdvertisement.NameTag, this.getDirectCommunicationPipeNamePrefix() + "*");
+    }
 
 
     /** {@inheritDoc} **/
@@ -730,6 +750,10 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
         
         // Init direct communication for this group and register the listener.
         this.createDirectCommunicationServerSocket();
+        
+        // Schedule presence maintenance task.
+        this.presenceTask = new PresenceTask(this);
+        this.timer.schedule(this.presenceTask, PEER_PRESENCE_UPDATE_INTERVAL, PEER_PRESENCE_UPDATE_INTERVAL);
 
         return newGroup;
     }
@@ -838,6 +862,10 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
         // Initialize direct communication for this group and register the listener.
         this.createDirectCommunicationServerSocket();
         
+        // Schedule presence maintenance task.
+        this.presenceTask = new PresenceTask(this);
+        this.timer.schedule(this.presenceTask, PEER_PRESENCE_UPDATE_INTERVAL, PEER_PRESENCE_UPDATE_INTERVAL);
+        
         return newGroup;
     }
     
@@ -926,19 +954,10 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
         
         this.closeExistingDirectCommunicationServerSocket();
         
-        DiscoveryService discoveryService = this.currentJoinedGroup.getDiscoveryService();
-        
-        PipeAdvertisement pipeAdv = (PipeAdvertisement)AdvertisementFactory.newAdvertisement(
-            PipeAdvertisement.getAdvertisementType());
-
-        PipeID id = (PipeID)IDFactory.newPipeID(currentJoinedGroup.getPeerGroupID());
-        pipeAdv.setPipeID(id);
-        pipeAdv.setName(getMyDirectCommunicationPipeName());
-        pipeAdv.setType(PipeService.UnicastType);
+        PipeAdvertisement pipeAdv = this.createDirectCommunicationPipeAdvertisement();
 
         this.logger.debug("Publishing pipe advertisement.");
-        discoveryService.publish(pipeAdv, DiscoveryService.INFINITE_LIFETIME, DiscoveryService.NO_EXPIRATION);
-        discoveryService.remotePublish(pipeAdv, DiscoveryService.NO_EXPIRATION);
+        this.publishDirectCommunicationPipeAdvertisement(pipeAdv);
         
         // If no listener registered, there is no point in starting a server socket and a connection handler thread.
         if (this.directMessageReceiver != null) {
@@ -953,12 +972,92 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
         }
     }
     
+    protected PipeAdvertisement createDirectCommunicationPipeAdvertisement()
+    {
+        if (!this.hasJoinedAGroup()) {
+            this.logger.warn("Not joined a group. Returning null pipe advertisement.");
+            return null;
+        }
+        
+        PipeAdvertisement pipeAdv = (PipeAdvertisement)AdvertisementFactory.newAdvertisement(
+            PipeAdvertisement.getAdvertisementType());
+
+        PipeID id = (PipeID)IDFactory.newPipeID(currentJoinedGroup.getPeerGroupID());
+        pipeAdv.setPipeID(id);
+        pipeAdv.setName(getMyDirectCommunicationPipeName());
+        pipeAdv.setType(PipeService.UnicastType);
+        
+        return pipeAdv;
+    }
+    
+    protected void publishDirectCommunicationPipeAdvertisement(PipeAdvertisement pipeAdv, long lifetime, long expirationTime) throws IOException
+    {
+        if (!this.hasJoinedAGroup()) {
+            this.logger.warn("Not joined a group. Publish aborted.");
+            return;
+        }
+        
+        if (pipeAdv == null) {
+            this.logger.warn("Refusing to publish null pipe advertisement.");
+            return;
+        }
+        
+        DiscoveryService discoveryService = this.currentJoinedGroup.getDiscoveryService();
+        
+        discoveryService.publish(pipeAdv, lifetime, expirationTime);
+        discoveryService.remotePublish(pipeAdv, expirationTime);
+    }
+    
+    protected void publishDirectCommunicationPipeAdvertisement(PipeAdvertisement pipeAdv) throws IOException
+    {
+        this.publishDirectCommunicationPipeAdvertisement(pipeAdv, PEER_PRESENCE_ADVERTISEMENT_EXPIRATION, PEER_PRESENCE_ADVERTISEMENT_EXPIRATION);
+    }
+    
+    protected void republishDirectCommunicationPipeAdvertisement(long lifetime, long expirationTime)
+    {
+        this.logger.debug("Republishing pipe advertisement.");
+        
+        if (!this.hasJoinedAGroup()) {
+            this.logger.warn("No group joined. Republish aborted.");
+            return;
+        }
+        
+        if (this.serverSocket == null) {
+            this.logger.warn("Server socket not initialized. Republish abotred.");
+            return;
+        }
+        
+        try {
+            this.publishDirectCommunicationPipeAdvertisement(getMyDirectCommunicationPipeAdvertisement(), lifetime, expirationTime);
+        } catch (Exception e) {
+            this.logger.error("Failed to publish pipe advertisement.", e);
+        }
+    }
+    
+    /** {@inheritDoc} */
+    public void republishDirectCommunicationPipeAdvertisement()
+    {
+        this.republishDirectCommunicationPipeAdvertisement(PEER_PRESENCE_ADVERTISEMENT_EXPIRATION, PEER_PRESENCE_ADVERTISEMENT_EXPIRATION);
+    }
+    
+    /**
+     * Invalidate the direct communication pipe advertisement by republishing with an immediate expiration time which
+     * will cause it to immediately expire on remote peers that will discover it.
+     */
+    protected void invalidateDirectCommunicationPipeAdvertisement()
+    {
+        this.republishDirectCommunicationPipeAdvertisement(1, 1);
+    }
+    
     protected void closeExistingDirectCommunicationServerSocket() throws IOException
     {
         this.logger.debug("Closing existing direct communication server socket.");
         
         if (this.serverSocket != null) {
             this.serverSocket.close();
+            
+            this.invalidateDirectCommunicationPipeAdvertisement();
+            
             this.serverSocket = null;
         }
     }
@@ -1018,11 +1117,16 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
         this.flushExistingAdvertisements(oldGroup, DiscoveryService.PEER);
         this.flushExistingAdvertisements(oldGroup, DiscoveryService.ADV);
         
+        // Stop peer presence task.
+        this.presenceTask.cancel();
+        this.timer.purge();
+        
+        // Stop group services and free used memory
         oldGroup.stopApp();
         oldGroup.unref();
         oldGroup = null;
         
-        // dispose the JxtaCast instance.
+        // Dispose of the the JxtaCast instance.
         this.jc.setPeerGroup(null);
         this.jc = null;
         
@@ -1071,7 +1175,7 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
         newGroupImpl.setDescription(newGroupName + " Peer Group Implementation");
         newGroupImpl.setModuleSpecID(IDFactory.newModuleSpecID(PeerGroup.peerGroupClassID));
 
-        // FIXME bondolo Use something else to edit the params.
+        // FIXME Use something else to edit the params. Could be no longer needed in jxta 2.6
         StdPeerGroupParamAdv params = new StdPeerGroupParamAdv(newGroupImpl.getParam());
 
         Map<ModuleClassID, Object> newGroupServices = params.getServices();
@@ -1759,6 +1863,7 @@ public class JxtaPeer implements Peer, RendezvousListener, DiscoveryListener {
         // Existing group members still have this problem.      
         //  UPDATE: existing group members will update their local repo when a disconnected peer rejoins, but at least there will
         //  be no duplicates.
+        // Existing group members need to be notified of disconnecting peers.
         
         DiscoveryResponseMsg response = event.getResponse();
         String queryAttribute = response.getQueryAttr();

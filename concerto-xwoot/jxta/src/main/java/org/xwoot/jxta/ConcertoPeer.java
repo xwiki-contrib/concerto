@@ -259,12 +259,22 @@ public class ConcertoPeer implements JxtaCastEventListener, DirectMessageReceive
 	public void listKnownPeersInCurrentGroup() {
 		System.out.println("Current group: " + jxta.getCurrentJoinedPeerGroup());
 		
+		System.out.println("Peer advertisements:");
 		Enumeration<PeerAdvertisement> peers = jxta.getKnownPeers();
 		if (peers != null) {
 			while(peers.hasMoreElements()) {
 				PeerAdvertisement peer = peers.nextElement();
-				System.out.println(" " + peer.getName() + "(" + peer.getID() + ")");
+				System.out.println(" " + peer.getName() + " (PeerID" + peer.getID() + ")");
 			}
+		}
+		
+		System.out.println("Pipe advertisements:");
+		Enumeration<Advertisement> pipeAdvs = jxta.getKnownDirectCommunicationPipeAdvertisements();
+		if (pipeAdvs != null) {
+		    while(pipeAdvs.hasMoreElements()) {
+		        PipeAdvertisement pipeAdv = (PipeAdvertisement) pipeAdvs.nextElement();
+		        System.out.println(" " + pipeAdv.getName() + " (PipeID: " + pipeAdv.getID() + ")");
+		    }
 		}
 	}
 	

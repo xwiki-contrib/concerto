@@ -1311,4 +1311,18 @@ public class MockJxtaPeer implements Peer, RendezvousListener {
         this.networkConfigured = networkConfigured;
     }
 
+    /** {@inheritDoc} **/
+    public void discoverDirectCommunicationPipeAdvertisements()
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+    /** {@inheritDoc} **/
+    public void republishDirectCommunicationPipeAdvertisement()
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
 }
