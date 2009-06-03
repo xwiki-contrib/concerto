@@ -23,6 +23,7 @@ import java.io.File;
 import java.net.URI;
 
 import net.jxta.exception.JxtaException;
+import net.jxta.peergroup.PeerGroupID;
 import net.jxta.platform.NetworkConfigurator;
 
 import org.apache.commons.cli.BasicParser;
@@ -93,6 +94,9 @@ public class ConcertoSuperPeer
 
     /** To enable multicast for LAN communication. */
     public static final String USE_MULTICAST_PARAMETER = "useMulticast";
+    
+    /** To specify an infrastructure id for a private network. */
+    public static final String INFRASTRUCTURE_ID = "infrastructureID";
 
     /** Name of this peer. */
     private String peerName;
@@ -150,6 +154,8 @@ public class ConcertoSuperPeer
 
     /** Used to print the usage. */
     private HelpFormatter formatter;
+
+    private PeerGroupID infrastructureID;
 
     /**
      * Constructor.
@@ -243,6 +249,8 @@ public class ConcertoSuperPeer
 
         this.clean = cl.hasOption(CLEAN_EXISTING_CONFIG_PARAMETER);
         this.useMulticast = cl.hasOption(USE_MULTICAST_PARAMETER);
+        
+        String infrastructureIDString = cl.getOptionValue(INFRASTRUCTURE_ID);
 
         if (!useTcp && !useHttp) {
             throw new ParseException("At least one communication method (TCP and/or HTTP) must be chosen.");
@@ -386,6 +394,13 @@ public class ConcertoSuperPeer
             }
         }
 
+        if (infrastructureIDString != null && infrastructureIDString.length() != 0) {
+            try {
+                this.infrastructureID = PeerGroupID.create(URI.create(infrastructureIDString));
+            } catch (Exception e) {
+                throw new ParseException(infrastructureIDString + " is not a valid infrastructure ID.");
+            }
+        }
     }
 
     /**
@@ -423,6 +438,8 @@ public class ConcertoSuperPeer
             "To clean any existing configuration from the home directory.");
 
         options.addOption(USE_MULTICAST_PARAMETER, false, "To enable multicast for LAN communication.");
+        
+        options.addOption(INFRASTRUCTURE_ID, true, "The infrastructure id, in jxta uuid format, if it is a private network.");
     }
 
     /**
@@ -527,6 +544,10 @@ public class ConcertoSuperPeer
 
                 networkConfigurator.setHttpPublicAddress(httpPublicAddress, this.useOnlyExternalIp);
             }
+        }
+        
+        if (this.infrastructureID != null) {
+            networkConfigurator.setInfrastructureID(this.infrastructureID);
         }
 
     }

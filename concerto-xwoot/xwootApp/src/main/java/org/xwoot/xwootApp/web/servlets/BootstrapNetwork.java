@@ -39,6 +39,7 @@ import net.jxta.impl.protocol.RelayConfigAdv;
 import net.jxta.impl.protocol.TCPAdv;
 import net.jxta.impl.protocol.RdvConfigAdv.RendezVousConfiguration;
 import net.jxta.peergroup.PeerGroup;
+import net.jxta.peergroup.PeerGroupID;
 import net.jxta.platform.NetworkConfigurator;
 import net.jxta.protocol.TransportAdvertisement;
 
@@ -62,10 +63,10 @@ public class BootstrapNetwork extends HttpServlet
     public static final String JXTA_PUBLIC_NETWORK_RDV_SEEDING_URI = "http://rdv.jxtahosts.net/cgi-bin/rendezvous.cgi";
 
     /** TODO DOCUMENT ME! */
-    public static final String CONCERTO_NETWORK_RELAY_SEEDING_URI = "http://jxta.concerto.com/relayList.do";
+    public static final String CONCERTO_NETWORK_RELAY_SEEDING_URI = "http://concerto.xwiki.org/xwiki/bin/view/Network/ConcertoRendezvousSeeds?xpage=plain";
 
     /** TODO DOCUMENT ME! */
-    public static final String CONCERTO_NETWORK_RDV_SEEDING_URI = "http://jxta.concerto.com/rendezvousList.do";
+    public static final String CONCERTO_NETWORK_RDV_SEEDING_URI = "http://concerto.xwiki.org/xwiki/bin/view/Network/ConcertoRelaySeeds?xpage=plain";
 
     /** Join custom network option. */
     private static final String CUSTOM_NETWORK = "custom";
@@ -87,6 +88,12 @@ public class BootstrapNetwork extends HttpServlet
 
     /** The value of a checked checkbox. */
     private static final String TRUE = "true";
+    
+    /** The infrastructure ID of the Concerto network. */
+    private static final String CONCERTO_NETWORK_INFRASTRUCTURE_ID = "urn:jxta:uuid-C79D17467D584790985FF99F06CCF4FB02";
+    
+    /** The MSID of the COncerto network. */
+    private static final String CONCERTO_NETWORK_MSID = "urn:jxta:uuid-DEADBEEFDEAFBABAFEEDBABE000000017DCDE6F257D0421A8FD9E3F13A06F93806";
 
     /** The XWootEngine instance to manage. */
     private XWootAPI xwootEngine = XWootSite.getInstance().getXWootEngine();
@@ -295,11 +302,19 @@ public class BootstrapNetwork extends HttpServlet
                         networkConfig.clearRendezvousSeedingURIs();
                         networkConfig.clearRelaySeeds();
                         networkConfig.clearRelaySeedingURIs();
+                        
+                        // Reset the infrastructure id to default.
+                        networkConfig.setInfrastructureID(PeerGroupID.defaultNetPeerGroupID);
 
                         if (CONCERTO_NETWORK.equals(useNetwork)) {
                             
+                            // Specify how to contact the Concerto network.
                             networkConfig.addRdvSeedingURI(CONCERTO_NETWORK_RDV_SEEDING_URI);
                             networkConfig.addRelaySeedingURI(CONCERTO_NETWORK_RELAY_SEEDING_URI);
+                            
+                            // Specify the infrastructure id of the Concerto netowrk and a name.
+                            networkConfig.setInfrastructureName("Concerto Network");
+                            networkConfig.setInfrastructureID(CONCERTO_NETWORK_INFRASTRUCTURE_ID);
 
                         } else if (JXTA_PUBLIC_NETWORK.equals(useNetwork)) {
                             
