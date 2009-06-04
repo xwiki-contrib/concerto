@@ -97,6 +97,9 @@ public class ConcertoSuperPeer
     
     /** To specify an infrastructure id for a private network. */
     public static final String INFRASTRUCTURE_ID = "infrastructureID";
+    
+    /** To specify an infrastructure name for the private network. */
+    public static final String INFRASTRUCTURE_NAME = "infrastructureName";
 
     /** Name of this peer. */
     private String peerName;
@@ -156,6 +159,8 @@ public class ConcertoSuperPeer
     private HelpFormatter formatter;
 
     private PeerGroupID infrastructureID;
+
+    private String infrastructureName;
 
     /**
      * Constructor.
@@ -251,6 +256,7 @@ public class ConcertoSuperPeer
         this.useMulticast = cl.hasOption(USE_MULTICAST_PARAMETER);
         
         String infrastructureIDString = cl.getOptionValue(INFRASTRUCTURE_ID);
+        this.infrastructureName = cl.getOptionValue(INFRASTRUCTURE_NAME);
 
         if (!useTcp && !useHttp) {
             throw new ParseException("At least one communication method (TCP and/or HTTP) must be chosen.");
@@ -440,6 +446,7 @@ public class ConcertoSuperPeer
         options.addOption(USE_MULTICAST_PARAMETER, false, "To enable multicast for LAN communication.");
         
         options.addOption(INFRASTRUCTURE_ID, true, "The infrastructure id, in jxta uuid format, if it is a private network.");
+        options.addOption(INFRASTRUCTURE_NAME, true, "The infrastructure name of the network if it is private.");
     }
 
     /**
@@ -546,8 +553,12 @@ public class ConcertoSuperPeer
             }
         }
         
+        // Private network setup.
         if (this.infrastructureID != null) {
             networkConfigurator.setInfrastructureID(this.infrastructureID);
+            if (this.infrastructureName != null && this.infrastructureName.length() != 0) {
+                networkConfigurator.setInfrastructureName(this.infrastructureName);
+            }
         }
 
     }
