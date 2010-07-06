@@ -7,13 +7,13 @@
 
 	<parent>
 		<artifactId>xwoot</artifactId>
-		<groupId>org.xwoot</groupId>
+		<groupId>org.xwiki.contrib.concerto</groupId>
 		<version>1.0-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
-			<groupId>org.xwoot</groupId>
+			<groupId>org.xwiki.contrib.concerto</groupId>
 			<artifactId>jxta</artifactId>
 			<version>1.0-SNAPSHOT</version>
 			<scope>compile</scope>

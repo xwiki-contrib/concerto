@@ -29,7 +29,7 @@
     <artifactId>xwiki-applications</artifactId>
     <version>14</version>
   </parent>
-  <groupId>org.xwiki.concerto</groupId>
+  <groupId>org.xwiki.contrib.concerto</groupId>
   <artifactId>xwiki-application-xwootManager</artifactId>
   <name>XWiki Concerto - XWoot Management Application</name>
   <version>1.0-SNAPSHOT</version>
@@ -37,7 +37,7 @@
   <description>Basic XWoot management from within XWiki</description>
   <dependencies>
     <dependency>
-      <groupId>org.xwiki.concerto</groupId>
+      <groupId>org.xwiki.contrib.concerto</groupId>
       <artifactId>xwiki-concerto-xwootManager</artifactId>
       <version>${pom.version}</version>
       <scope>runtime</scope>

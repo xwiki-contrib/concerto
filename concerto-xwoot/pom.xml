@@ -3,11 +3,10 @@
   <!-- general project informations -->
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.xwiki.concerto</groupId>
+    <groupId>org.xwiki.contrib.concerto</groupId>
     <artifactId>concerto</artifactId>
     <version>1.0-SNAPSHOT</version>
   </parent>
-  <groupId>org.xwoot</groupId>
   <artifactId>xwoot</artifactId>
   <packaging>pom</packaging>
   <name>xwoot</name>

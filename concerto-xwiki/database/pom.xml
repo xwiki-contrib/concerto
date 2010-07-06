@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.xwiki.concerto</groupId>
+    <groupId>org.xwiki.contrib.concerto</groupId>
     <artifactId>concerto-xwiki</artifactId>
     <version>1.0-SNAPSHOT</version>
   </parent>
@@ -16,7 +16,7 @@
       <version>1.8.0.7</version>
     </dependency>
     <dependency>
-      <groupId>org.xwiki.concerto</groupId>
+      <groupId>org.xwiki.contrib.concerto</groupId>
       <artifactId>xwiki-concerto-wiki</artifactId>
       <version>${pom.version}</version>
       <type>xar</type>
@@ -52,7 +52,7 @@
         <artifactId>xwiki-xar-plugin</artifactId>
         <version>${platform.tool.xar-plugin.version}</version>
         <configuration>
-          <groupId>org.xwiki.concerto</groupId>
+          <groupId>org.xwiki.contrib.concerto</groupId>
           <artifactId>xwiki-concerto-wiki</artifactId>
           <outputDirectory>${project.build.directory}/xar</outputDirectory>
         </configuration>

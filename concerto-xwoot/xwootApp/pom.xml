@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
-    <groupId>org.xwoot</groupId>
+    <groupId>org.xwiki.contrib.concerto</groupId>
     <artifactId>xwoot</artifactId>
     <version>1.0-SNAPSHOT</version>
   </parent>
@@ -13,37 +13,37 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.xwoot</groupId>
+      <groupId>org.xwiki.contrib.concerto</groupId>
       <artifactId>wootEngine</artifactId>
       <version>${pom.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.xwoot</groupId>
+      <groupId>org.xwiki.contrib.concerto</groupId>
       <artifactId>clockEngine</artifactId>
       <version>${pom.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.xwoot</groupId>
+      <groupId>org.xwiki.contrib.concerto</groupId>
       <artifactId>thomasRuleEngine</artifactId>
       <version>${pom.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.xwoot</groupId>
+      <groupId>org.xwiki.contrib.concerto</groupId>
       <artifactId>antiEntropy</artifactId>
       <version>${pom.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.xwoot</groupId>
+      <groupId>org.xwiki.contrib.concerto</groupId>
       <artifactId>jxta</artifactId>
       <version>${pom.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.xwoot</groupId>
+      <groupId>org.xwiki.contrib.concerto</groupId>
       <artifactId>xwootUtil</artifactId>
       <version>${pom.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.xwoot</groupId>
+      <groupId>org.xwiki.contrib.concerto</groupId>
       <artifactId>xwoot-content-provider</artifactId>
       <version>${pom.version}</version>
     </dependency>

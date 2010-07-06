@@ -2,11 +2,10 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
 		<artifactId>xwoot</artifactId>
-		<groupId>org.xwoot</groupId>
+		<groupId>org.xwiki.contrib.concerto</groupId>
 		<version>1.0-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.xwoot</groupId>
 	<artifactId>jxta</artifactId>
 	<name>jxta</name>
 	<description>P2P communication module using Jxta as P2P platform.</description>
@@ -53,7 +52,7 @@
 		</dependency>
 		
 		<dependency>
-			<groupId>org.xwoot</groupId>
+			<groupId>org.xwiki.contrib.concerto</groupId>
 			<artifactId>xwootUtil</artifactId>
 			<version>1.0-SNAPSHOT</version>
 		</dependency>
