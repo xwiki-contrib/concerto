@@ -32,7 +32,7 @@ import org.xwoot.xwootApp.core.LastPatchAndXWikiXWootId;
 /**
  * Test the LastModifiedPageNameList class.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class LastModifiedContentIdMapTest extends AbstractXWootTest
 {

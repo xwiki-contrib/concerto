@@ -29,7 +29,7 @@ import net.jxta.socket.JxtaServerSocket;
  * Daemon thread waiting for connections and spawning a new {@link ConnectionThread} for each
  * connection.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 class ConnectionHandler extends Thread
 {

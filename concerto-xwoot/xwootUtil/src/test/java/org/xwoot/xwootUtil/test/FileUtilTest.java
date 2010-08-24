@@ -38,7 +38,7 @@ import junit.framework.Assert;
 /**
  * Tests for the utility class FileUtil.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class FileUtilTest extends AbstractXwootUtilTestBase
 {

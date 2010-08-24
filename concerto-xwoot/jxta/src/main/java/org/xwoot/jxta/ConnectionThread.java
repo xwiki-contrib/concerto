@@ -29,7 +29,7 @@ import java.net.Socket;
  * Daemon thread launched to handle an incoming connection and to send back a
  * reply if there is one.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 class ConnectionThread extends Thread {
 	Socket socket;
