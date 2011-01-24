@@ -5,7 +5,7 @@ import org.xwoot.lpbcast.receiver.ReceiverException;
 /**
  * Exception handling for MockReceiver.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class MockReceiverException extends ReceiverException
 {

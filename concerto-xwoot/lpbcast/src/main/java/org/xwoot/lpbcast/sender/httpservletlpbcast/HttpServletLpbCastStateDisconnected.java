@@ -14,7 +14,7 @@ import org.xwoot.lpbcast.sender.AbstractLpbCastState;
  * Almost, if not all, methods do nothing because these operations can not be performed while disconnected from the P2P
  * network but instead they are logged.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class HttpServletLpbCastStateDisconnected extends AbstractLpbCastState
 {

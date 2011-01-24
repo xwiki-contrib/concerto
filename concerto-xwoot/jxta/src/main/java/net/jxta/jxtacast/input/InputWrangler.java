@@ -15,7 +15,7 @@ import net.jxta.jxtacast.event.JxtaCastEvent;
  * arrive. The wrangler can send out requests for missing blocks, and also
  * provide blocks for other peers that are missing them.
  * 
- * @version $Id:$
+ * @version $Id$
  *
  */
 public interface InputWrangler extends Wrangler {

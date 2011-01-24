@@ -3,7 +3,7 @@ package org.xwoot.lpbcast;
 /**
  * Exception handling for LPBcast module.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class LpbCastException extends Exception
 {

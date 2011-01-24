@@ -28,7 +28,7 @@ import java.util.TimerTask;
  * <p/>
  * It also launches a discovery request to detect new peers.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class PresenceTask extends TimerTask
 {

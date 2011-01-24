@@ -34,7 +34,7 @@ import org.xwoot.lpbcast.util.NetUtil;
  * <p>
  * Note: These tests can run only with another xwoot instance running.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class NetUtilTest
 {

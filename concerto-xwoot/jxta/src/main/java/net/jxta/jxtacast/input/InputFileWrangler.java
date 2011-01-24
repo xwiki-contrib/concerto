@@ -10,7 +10,7 @@ import net.jxta.jxtacast.event.JxtaCastEvent;
 /**
  * Class for receiving a file.
  * 
- * @version $Id:$
+ * @version $Id$
  * @see InputWrangler
  */
 public class InputFileWrangler extends AbstractInputWrangler {

@@ -6,7 +6,7 @@ import net.jxta.endpoint.Message;
 /**
  * Base class implementation.
  * 
- * @version $Id:$
+ * @version $Id$
  * @see Wrangler
  */
 public abstract class AbstractWrangler implements Wrangler {

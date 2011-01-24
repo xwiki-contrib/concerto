@@ -5,7 +5,7 @@ import org.xwoot.lpbcast.message.Message;
 /**
  * Defines the functionality of a Receiver in the P2P Network.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public interface ReceiverApi
 {

@@ -5,7 +5,7 @@ import org.xwoot.lpbcast.receiver.ReceiverException;
 /**
  * Exception handling for HttpServletReceiver.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class HttpServletReceiverException extends ReceiverException
 {

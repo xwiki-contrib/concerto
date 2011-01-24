@@ -5,7 +5,7 @@ import org.xwoot.lpbcast.LpbCastException;
 /**
  * Exception handling for Neighbors.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class NeighborsException extends LpbCastException
 {

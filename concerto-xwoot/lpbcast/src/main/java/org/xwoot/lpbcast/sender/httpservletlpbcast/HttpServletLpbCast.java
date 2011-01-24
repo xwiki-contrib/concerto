@@ -63,7 +63,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Implements a Sender using servlets for communication trough the HTTP protocol.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class HttpServletLpbCast implements LpbCastAPI
 {

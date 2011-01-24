@@ -5,7 +5,7 @@ import org.xwoot.lpbcast.sender.SenderException;
 /**
  * Exception handling for HttpServletLpbCast.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class HttpServletLpbCastException extends SenderException
 {

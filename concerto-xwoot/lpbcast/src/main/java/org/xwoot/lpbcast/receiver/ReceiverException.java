@@ -5,7 +5,7 @@ import org.xwoot.lpbcast.LpbCastException;
 /**
  * Exception handling for Receiver.
  * 
- * @version $Id:$
+ * @version $Id$
  */
 public class ReceiverException extends LpbCastException
 {
