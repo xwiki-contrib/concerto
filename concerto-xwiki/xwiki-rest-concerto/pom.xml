@@ -91,6 +91,14 @@
 		</dependency>
 	</dependencies>
 	<build>
+		<extensions>
+                        <extension>
+                                <!-- We're deploying using the SCP protocol so we need the SSH Wagon for Maven 3 to work -->
+                                <groupId>org.apache.maven.wagon</groupId>
+                                <artifactId>wagon-ssh</artifactId>
+                                <version>1.0-beta-7</version>
+                        </extension>
+                </extensions>
 		<plugins>
 			<plugin>
 				<groupId>org.jvnet.jaxb2.maven2</groupId>
