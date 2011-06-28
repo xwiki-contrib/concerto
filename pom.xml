@@ -54,6 +54,12 @@
         <artifactId>xwiki-xar-handlers</artifactId>
         <version>${platform.tool.xar-handler.version}</version>
       </extension>
+      <extension>
+        <!-- We're deploying using the SCP protocol so we need the SSH Wagon for Maven 3 to work -->
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-ssh</artifactId>
+        <version>1.0-beta-7</version>
+      </extension>
     </extensions>
     <plugins>
       <plugin>
